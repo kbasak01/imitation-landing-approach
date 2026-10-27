@@ -122,7 +122,7 @@ approval. No threshold changes.
 
 | Criterion (plan Phase 0 exit gate) | Evidence | Verdict |
 |---|---|---|
-| `make lint` green locally and in CI | Local: ruff and format clean, `mypy --strict` 46 files. CI run 40518656883 / job 122245991307 (run 40520506247, commit `28ff2cc`): same, 46 files | PASS |
+| `make lint` green locally and in CI | Local: ruff and format clean, `mypy --strict` 46 files. CI run 40520506247 (job 122245991307, commit `28ff2cc`): same, 46 files | PASS |
 | `make test` / `make smoke` green locally | 5 passed (includes the `checkpoints` provenance test) | PASS |
 | Tests green in CI (CI skips `checkpoints`) | Run 40520506247: 4 passed, 1 deselected | PASS |
 | `python -c "import rld, ila"` | Works locally and in the CI install step | PASS |
