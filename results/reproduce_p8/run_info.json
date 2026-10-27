@@ -1,0 +1,64 @@
+{
+  "started_utc": "2026-10-27T18:34:24+00:00",
+  "finished_utc": "2026-10-27T18:38:44+00:00",
+  "wall_s": 256.4,
+  "episodes_flown": 3200,
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "9d29486b45319b2e09c85b31107078d2f99655e3",
+  "ila_dirty_paths": [
+    "M Makefile",
+    " M src/ila/data/episodes.py",
+    " M src/ila/eval/batched.py",
+    " M src/ila/eval/runner.py",
+    " M src/ila/p8_adapter.py",
+    " M src/ila/policies/bc.py",
+    " M src/ila/policies/dp/chunking.py",
+    " M src/ila/policies/dp/policy.py",
+    " M src/ila/policies/dp/unet1d.py",
+    " M src/ila/policies/encoder.py",
+    " M src/ila/policies/registry.py",
+    " M tests/test_p8_adapter.py",
+    "?? scripts/make_splits.py",
+    "?? scripts/reproduce_p8.py",
+    "?? splits/",
+    "?? src/ila/eval/reproduce.py",
+    "?? tests/runner_support.py",
+    "?? tests/test_data_episodes.py",
+    "?? tests/test_dp_chunking.py",
+    "?? tests/test_eval_batched.py",
+    "?? tests/test_eval_runner.py",
+    "?? tests/test_eval_shared_net.py",
+    "?? tests/test_eval_window.py",
+    "?? tests/test_policies.py"
+  ],
+  "host": "DATTA-BASAK",
+  "cpu_count": 36,
+  "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "torch_num_threads": 1
+  },
+  "workers": 24,
+  "chunk": 25,
+  "start_method": "spawn",
+  "render": "full",
+  "render_cfg_sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380",
+  "manifest_sha256": "e6f30e55e478d39061b94e38de33959ca99b16e8cac38a3bd99b34f6543ad4a2",
+  "success_yaml_sha256": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+  "ppo_model_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+  "rows": {
+    "pid_feedforward": {
+      "episodes_csv_sha256": "eefe4ec1a87f07b8055e0f3509405b860f5a7db92807dec45352c139b7a3046b",
+      "p8_columns_csv_sha256": "d5ddc55dfd6423d81a27d37612956e9dae437694c55a4d5e149b33413472ec31",
+      "n_rows": 2800
+    },
+    "ppo": {
+      "episodes_csv_sha256": "c6d5cf05c964ae93d4a7854072af7d65bc7aa8c910ff1f70f167214ff285cf0e",
+      "p8_columns_csv_sha256": "a836275f4e1ade18f62d52f244f72561c4f86990bcbafb064a0e5b478978bf50",
+      "n_rows": 400
+    }
+  },
+  "rows_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/reproduce_p8"
+}

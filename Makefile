@@ -16,7 +16,7 @@ CFG     ?= configs/train/bc.yaml
 SEED    ?= 0
 ARM     ?= bc
 
-.PHONY: lint test format smoke verify-p8 reproduce-p8 throughput collect train-smoke train-bg \
+.PHONY: lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         dagger-bg eval bench report figures gifs all
 
 # --- implemented ------------------------------------------------------------------
@@ -28,13 +28,24 @@ format: ; $(RUFF) format src tests scripts && $(RUFF) check --fix src tests scri
 smoke:  ; $(PYTEST) tests/test_smoke.py
 # Phase 0: P8 commit, frozen-file hashes, PPO seed-0 checkpoint -> results/p8_provenance.json.
 verify-p8: ; $(PY) scripts/verify_p8.py --out results/p8_provenance.json
+# Phase 2 gate: P8's pid_feedforward (2 800) and ppo seed 0 (id SS5+SS6, 400) rows re-flown with
+# render full, 24 workers, chunk 25, one thread -> results/reproduce_p8/. Background job:
+#   mkdir -p artifacts/runs/reproduce_p8 && nohup make reproduce-p8 > artifacts/runs/reproduce_p8/run.log 2>&1 &
+# Pre-flight (foreground, ~1 min): $(PY) scripts/reproduce_p8.py --smoke
+reproduce-p8: ; mkdir -p artifacts/runs/reproduce_p8 && $(PY) scripts/reproduce_p8.py
+# Phase 2: SB3 vs ONNX/ORT CPU on 10 000 train-pool ppo observations -> results/label_parity.json
+label-parity: ; $(PY) scripts/label_parity.py
+# Phase 2 budget -> results/throughput.csv, throughput_projection.csv. Background job:
+#   mkdir -p artifacts/runs/throughput && nohup make throughput > artifacts/runs/throughput/run.log 2>&1 &
+throughput: ; mkdir -p artifacts/runs/throughput && $(PY) scripts/throughput.py
+# Phase 2 determinism contract -> results/determinism/. Background job:
+#   mkdir -p artifacts/runs/determinism && nohup make determinism > artifacts/runs/determinism/run.log 2>&1 &
+determinism: ; mkdir -p artifacts/runs/determinism && $(PY) scripts/determinism.py
 
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.
 # Replace the stub in its own phase.
 
-reproduce-p8: ; @echo "not implemented: phase 2"
-throughput:   ; @echo "not implemented: phase 2"
 collect:      ; @echo "not implemented: phase 3 (TEACHER=$(TEACHER) N=$(N))"
 train-smoke:  ; @echo "not implemented: phase 4 (ARM=$(ARM))"
 train-bg:     ; @echo "not implemented: phase 4 (CFG=$(CFG) SEED=$(SEED))"

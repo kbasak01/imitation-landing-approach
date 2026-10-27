@@ -1,0 +1,122 @@
+{
+  "item": "plan Phase 2 item 3 (teacher label parity)",
+  "timestamp_utc": "2026-10-27T18:55:50+00:00",
+  "criterion": "max |SB3 reference_actions - ORT CPU 1-thread act| <= 1e-06",
+  "passed": true,
+  "label_path": "onnx_cpu permitted (parity met)",
+  "primary_sb3_reference_vs_ort_cpu_single": {
+    "max_abs": 3.5762786865234375e-07,
+    "p99_abs": 1.9371509552001953e-07,
+    "mean_abs": 5.85522308635215e-08,
+    "argmax_row": 5008,
+    "argmax_component": 2,
+    "a_at_argmax": -0.5038567781448364,
+    "b_at_argmax": -0.5038564205169678,
+    "fraction_bit_equal": 0.1115,
+    "n_values": 30000,
+    "argmax_episode": {
+      "ss": "SS5",
+      "index": 26,
+      "step": 52
+    }
+  },
+  "sb3_reference_vs_sb3_act_single": {
+    "max_abs": 4.76837158203125e-07,
+    "p99_abs": 2.086162567138672e-07,
+    "mean_abs": 4.694117063384813e-08,
+    "argmax_row": 2513,
+    "argmax_component": 2,
+    "a_at_argmax": -0.9827896356582642,
+    "b_at_argmax": -0.9827901124954224,
+    "fraction_bit_equal": 0.11873333333333333,
+    "n_values": 30000,
+    "argmax_episode": {
+      "ss": "SS4",
+      "index": 13,
+      "step": 13
+    }
+  },
+  "ort_single_vs_ort_batch": {
+    "max_abs": 0.0,
+    "p99_abs": 0.0,
+    "mean_abs": 0.0,
+    "argmax_row": 0,
+    "argmax_component": 0,
+    "a_at_argmax": -0.2640962600708008,
+    "b_at_argmax": -0.2640962600708008,
+    "fraction_bit_equal": 1.0,
+    "n_values": 30000,
+    "argmax_episode": {
+      "ss": "SS3",
+      "index": 0,
+      "step": 0
+    }
+  },
+  "sb3_act_single_vs_ort_cpu_single": {
+    "max_abs": 4.76837158203125e-07,
+    "p99_abs": 2.384185791015625e-07,
+    "mean_abs": 7.224362270790153e-08,
+    "argmax_row": 2261,
+    "argmax_component": 2,
+    "a_at_argmax": -0.885912299156189,
+    "b_at_argmax": -0.8859118223190308,
+    "fraction_bit_equal": 0.07816666666666666,
+    "n_values": 30000,
+    "argmax_episode": {
+      "ss": "SS3",
+      "index": 12,
+      "step": 8
+    }
+  },
+  "p8_check_ort": {
+    "max_abs_err": 3.5762786865234375e-07,
+    "mean_abs_err": 5.85522308635215e-08,
+    "n_windows": 10000,
+    "tolerance": 0.0001,
+    "passed": true,
+    "output_abs_max": 1.0,
+    "scale": 1.0,
+    "scaled_tolerance": 0.0001,
+    "passed_absolute": true,
+    "seed": 20261023,
+    "provider": "CPUExecutionProvider"
+  },
+  "onnx": {
+    "path": "p8_ppo_seed0_onnx (configs/paths.local.yaml)",
+    "sha256": "06230fd2de23468a169589ac41f1d19da7e8c60c7dc5ea68a1534f0b39281621",
+    "provider": "CPUExecutionProvider",
+    "threads": 1,
+    "onnxruntime": "1.29.0"
+  },
+  "sb3_model_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+  "action_abs_max": 1.0,
+  "host": "DATTA-BASAK",
+  "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "observations": {
+    "n": 10000,
+    "dim": 25,
+    "sha256": "70e9f35a0ee20e21d3f7fa6a2d48baf764b4616267d0e811305724580ac96e24",
+    "sha256_rule": "sha256(str(shape) + C-order little-endian float32 bytes)",
+    "source": "ppo seed 0 rollouts (render off, P8 loop), first n in flight order",
+    "pool": "P8 dev_pool train",
+    "stream": "label_parity",
+    "generator_seed": 20261023,
+    "episodes_flown": 163,
+    "episodes_content_sha256": "db72107da3d992a12eec973e8d3d153210e51c5bd74f77e034338ab9674f6ce0",
+    "sea_states": [
+      "SS3",
+      "SS4",
+      "SS5"
+    ],
+    "file": "artifacts/runs/label_parity/observations.npy"
+  },
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "torch_num_threads": 1,
+    "ort_threads": 1
+  },
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "cpu_count": 36,
+  "wall_s": 52.4
+}

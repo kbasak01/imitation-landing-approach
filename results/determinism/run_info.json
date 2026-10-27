@@ -1,0 +1,232 @@
+{
+  "wall_s": 627.7,
+  "plan": {
+    "n_episodes": null,
+    "cpu_workers": [
+      1,
+      8
+    ],
+    "gpu_workers": 24,
+    "gpu_chunk": 5,
+    "gpu_caps": [
+      1,
+      8,
+      24
+    ],
+    "control_cap": 24
+  },
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "torch_num_threads": 1
+  },
+  "rows_dir": "artifacts/runs/determinism",
+  "runs": {
+    "cpu_w1": {
+      "path": "cpu fp32 single-sample (in-worker act_vision)",
+      "workers": 1,
+      "wall_s": 206.7
+    },
+    "cpu_w8": {
+      "path": "cpu fp32 single-sample (in-worker act_vision)",
+      "workers": 8,
+      "wall_s": 59.2
+    },
+    "gpu_B1": {
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 1,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 932,
+      "sample_batch_size_histogram": {
+        "1": 932
+      },
+      "wall_s": 93.8
+    },
+    "gpu_B8": {
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 8,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 558,
+      "sample_batch_size_histogram": {
+        "1": 315,
+        "2": 180,
+        "3": 35,
+        "4": 8,
+        "5": 2,
+        "6": 4,
+        "7": 3,
+        "8": 11
+      },
+      "wall_s": 65.5
+    },
+    "gpu_B24": {
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 24,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 321,
+      "sample_batch_size_histogram": {
+        "1": 108,
+        "2": 68,
+        "3": 57,
+        "4": 43,
+        "5": 27,
+        "6": 9,
+        "8": 1,
+        "10": 1,
+        "14": 1,
+        "18": 1,
+        "20": 1,
+        "23": 1,
+        "24": 3
+      },
+      "wall_s": 50.1
+    },
+    "gpu_B1_repeat": {
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 1,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 932,
+      "sample_batch_size_histogram": {
+        "1": 932
+      },
+      "wall_s": 97.7
+    },
+    "gpu_B24_torch_default": {
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 24,
+      "numerics": {
+        "numerics": "torch_default",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": true,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 314,
+      "sample_batch_size_histogram": {
+        "1": 109,
+        "2": 71,
+        "3": 51,
+        "4": 32,
+        "5": 26,
+        "6": 13,
+        "7": 2,
+        "8": 1,
+        "10": 1,
+        "12": 1,
+        "15": 1,
+        "18": 1,
+        "19": 1,
+        "24": 4
+      },
+      "wall_s": 54.5
+    }
+  },
+  "host": "DATTA-BASAK",
+  "cpu_count": 36,
+  "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "processor": "x86_64",
+  "python": "3.12.3",
+  "torch": "2.13.0+cu130",
+  "gpu": "NVIDIA RTX A4000",
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "9d29486b45319b2e09c85b31107078d2f99655e3",
+  "ila_dirty_paths": [
+    "M Makefile",
+    " M src/ila/data/episodes.py",
+    " M src/ila/eval/batched.py",
+    " M src/ila/eval/runner.py",
+    " M src/ila/p8_adapter.py",
+    " M src/ila/policies/bc.py",
+    " M src/ila/policies/dp/chunking.py",
+    " M src/ila/policies/dp/policy.py",
+    " M src/ila/policies/dp/unet1d.py",
+    " M src/ila/policies/encoder.py",
+    " M src/ila/policies/registry.py",
+    " M tests/test_p8_adapter.py",
+    "?? results/determinism/",
+    "?? results/label_parity.json",
+    "?? results/reproduce_p8/",
+    "?? results/throughput.csv",
+    "?? results/throughput_projection.csv",
+    "?? results/throughput_run_info.json",
+    "?? scripts/determinism.py",
+    "?? scripts/label_parity.py",
+    "?? scripts/make_splits.py",
+    "?? scripts/reproduce_p8.py",
+    "?? scripts/throughput.py",
+    "?? splits/",
+    "?? src/ila/eval/determinism.py",
+    "?? src/ila/eval/jobs.py",
+    "?? src/ila/eval/label_parity.py",
+    "?? src/ila/eval/reproduce.py",
+    "?? src/ila/eval/throughput.py",
+    "?? src/ila/render/bench.py",
+    "?? tests/runner_support.py",
+    "?? tests/test_data_episodes.py",
+    "?? tests/test_dp_chunking.py",
+    "?? tests/test_eval_batched.py",
+    "?? tests/test_eval_runner.py",
+    "?? tests/test_eval_shared_net.py",
+    "?? tests/test_eval_window.py",
+    "?? tests/test_phase2_jobs.py",
+    "?? tests/test_policies.py"
+  ],
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  }
+}

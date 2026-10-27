@@ -334,9 +334,282 @@ Phase 2 obligations (runner, `ila/eval/runner.py` and `ila/eval/batched.py`):
 - **CI coverage.** The render-invariance tests are marked `slow`, so CI deselects them. They run
   locally, and every gate re-runs the full suite.
 
-### P2-D1 — Reproduction gate result (to fill)
-### P2-D2 — Throughput and the budget it implies (to fill)
-### P2-D3 — Determinism contract (to fill)
+### P2-D1 — Reproduction gate and teacher label path (2026-10-27)
+*Decision.*
+1. **The reproduction gate passes.** With rendering on (`full`: camera, twin, ground recolour,
+   P8 marker hidden), this repo's runner reproduces P8's committed episode rows as text, every
+   column:
+   - `pid_feedforward`: 2 800 of 2 800 listed episodes vs P8 `results/e01/episodes.csv`;
+   - `ppo` seed 0: 400 of 400 on `id` SS5+SS6 vs P8 `results/e07/matrix/episodes.csv.gz`.
+
+   The comparison is P8's own `rld.eval.reproduce.compare_to_reference` (pad `aft`). The gate also
+   requires `n_compared` equal to 2 800 / 400, `n_differ = 0` and `n_missing = 0`. Without those,
+   a short run would pass on `all_identical` alone.
+2. **Teacher labels may use either path; collection uses SB3.** P8's ONNX graph on ORT CPU
+   (1 thread) matches P8's SB3 reference within the plan's 1e-6 max-abs, so the ONNX path is
+   permitted for labels (plan §1.4). Phase 3 nevertheless flies and labels `T_ppo` with the SB3
+   path, the one this gate certified, unless P3-D1 records otherwise. The reason is that a path
+   that passes parity is not trajectory-identical:
+   - only 7.8 % of action values are bit-equal between SB3 `act` and ORT;
+   - P8 measured that one-ulp input changes flip outcomes (P2-D3).
+3. **Runner contract**, as built (`src/ila/eval/runner.py`, `src/ila/eval/batched.py`):
+   - P8's contract: the list is the only episode source, the start is checked on every reset,
+     and rows do not depend on workers or chunk (chunk 25).
+   - P8's columns come verbatim and in order, then the P9 columns of plan §1.7.
+   - The scene is re-attached after every reset. A frame is rendered after the reset and after
+     every `env.step()`, including the terminal one.
+   - Image/obs step-count equality is asserted through `render_with_meta()` on sampled steps.
+   - Students receive only `ObsContract.student_input` + `Frame.rgb`; the obs window comes from
+     `chunking.obs_window_steps`.
+   - Not mirrored from P8: the ship-motion feed (feed specs are refused), and the Phase 7 arm
+     fields (`pad_override`, non-JONSWAP motion, the `lambda` start check, `cfgs_override`). No arm
+     of this project uses them.
+   - P8 private helpers re-implemented (`_check_start`, `_check_privilege`, `_none_to_nan`,
+     `_episode_row`) are each tested equal to P8's on P8's own `tiny_list` fixture
+     (`tests/test_eval_runner.py`).
+
+*Reason.* Non-negotiable 3. If rendering moved a single contact, no row here would be
+comparable with P8's. Prediction from earlier phases: the P1-D1 pre-check (one 200-step
+episode) and the Phase 1 render-invariance tests had found no physics change. This gate is the
+test at the scale of the frozen lists.
+
+*Evidence.*
+- `results/reproduce_p8/comparison.json`:
+  - `passed: true`;
+  - `n_compared = n_identical` = 2 800 / 400, `n_differ = 0`, `n_missing_in_reference = 0`;
+  - `header_identical: true`.
+- `results/reproduce_p8/run_info.json`:
+  - render `full`, `render_cfg_sha256` `53f80265…0380` (= P1-D1);
+  - workers 24, chunk 25, spawn;
+  - `OMP_NUM_THREADS = MKL_NUM_THREADS = 1`, torch threads 1;
+  - P8 `7237b706…`, `ppo` `model.zip` `1a012394…`;
+  - 3 200 episodes in 256.4 s.
+- P8-column row SHA-256: `pid_feedforward` `d5ddc55d…ec31`, `ppo` `a836275f…bf50` (run_info
+  `rows`).
+- The first full run was made on an uncommitted tree (`ila_dirty_paths` in its run_info). It is
+  re-run on the committed Phase 2 tree before Gate 2; the Gate 2 entry carries that run's
+  provenance.
+- `results/label_parity.json`:
+  - 10 000 observations from `ppo` seed 0 flying 163 episodes of P8's **train** pool (SS3–SS5,
+    stream `label_parity`, seed 20261023);
+  - observations SHA-256 `70e9f35a…6e24`, ONNX `06230fd2…`.
+
+  | Comparison (over all action values) | Max-abs | Bit-equal fraction |
+  |---|---|---|
+  | SB3 `reference_actions` vs ORT CPU, single (primary) | **3.58e-7** (≤ 1e-6: pass) | 0.112 |
+  | SB3 batched vs SB3 `act` | 4.77e-7 | 0.119 |
+  | SB3 `act` vs ORT single | 4.77e-7 | 0.078 |
+  | ORT single vs ORT batched | 0 | 1.000 |
+
+  P8's own `check_ort` also passes.
+
+*Consequence.*
+- `make reproduce-p8` stays green from here on. Any later change under `src/ila/render/`,
+  `src/ila/eval/runner.py` or the adapter re-runs it before merging.
+- Phase 3 collection flies `T_ppo` on SB3.
+- **Frozen-list use in Phase 2**, recorded as P1-D2 did: the reproduction gate flew all five
+  frozen lists with the teachers `pid_feedforward` and `ppo` only. Nothing was trained, selected
+  or tuned on them, and P8 had already published those rows.
+
+### P2-D2 — Throughput and the budget it implies (2026-10-27)
+*Decision.* **96 px stays for every arm.** The measured budget does not justify the 64 px
+fallback of plan Phase 2 item 4. GPU inference runs with TF32 off (P2-D3).
+
+*Reason.*
+- The projected wall clock of all non-training work is 12.2 h at the central estimate; the
+  upper bound is in the Evidence.
+- 96 px costs about twice 64 px per frame. That shows only in the teacher and `bc` rates, which
+  are already fast.
+- The rate that dominates the budget is `dp` inference, which is limited by kernel launches and
+  does not depend on frame size.
+
+*Evidence.* All on this machine (i9-10980XE, RTX A4000, WSL2). Sources:
+`results/throughput.csv` (SHA-256 `11898e1e…1879`) and `results/throughput_projection.csv`
+(`59fb8fa3…9191`); run info in `results/throughput_run_info.json`.
+- **Render per frame** (single process, 300 frames, `full` mode, p50):
+
+  | Size | p50 |
+  |---|---|
+  | 64 px | 1.98 ms |
+  | 96 px | 4.09 ms |
+  | 128 px | 7.24 ms |
+
+  `camera` mode is within 0.3 ms of `full` at every size.
+- **Teacher with render, 96 px** (P8 train-pool episodes; spawn excluded):
+
+  | Teacher | 1 worker | 8 workers | 16 workers | 24 workers |
+  |---|---|---|---|---|
+  | `ppo` | 93 steps/s | 519 | 918 | **1 205** |
+  | `pid_feedforward` | 133 | 730 | 1 324 | **1 765** |
+- **GPU inference, dummy networks** (real architectures, random init, P2-D4; one call, p50):
+
+  | Network | B = 1 | B = 8 | B = 24 |
+  |---|---|---|---|
+  | `bc` | 3.85 ms | 5.22 ms | 10.78 ms |
+  | `dp`, K = 10 | 80.6 ms | 80.9 ms | 91.4 ms |
+  | `dp`, K = 100 | 772 ms | 751 ms | 752 ms |
+
+  For comparison, `dp` at K = 10 on CPU (1 thread) takes 170 ms.
+- **End to end, lockstep workers + one CUDA server, 96 px, B = 24** (env-steps/s):
+
+  | Policy | env-steps/s |
+  |---|---|
+  | `bc` | 973 |
+  | `dp` K = 10, Ta = 8 | 172 |
+  | `dp` K = 10, Ta = 1 | 136 |
+  | `dp` K = 100, Ta = 8 | 28.2 |
+  | `dp` K = 100, Ta = 1 | 19.0 |
+- **Projection** (`results/throughput_projection.csv`; training time excluded, HDF5 writes not
+  timed).
+  - Episode lengths come from P8's committed `ppo`, `pid_feedforward` and `gated` rows:
+    `ppo` 61.5 steps on SS3–SS5, `pid_feedforward` 151, `gated` 138.
+  - The upper bound assumes every student episode times out at 361 steps.
+
+  | Work | Central (h) | Upper (h) |
+  |---|---|---|
+  | Demo collection (ppo 2 000, pid 1 000, mix 1 000, DART 3 × 1 000) | 0.11 | — |
+  | DAgger rollouts, 5 seeds × 5 iterations × 200 | 0.09 | 0.52 |
+  | Matrix, core arms, 5 seeds × 2 800 | 2.83 | 16.5 |
+  | Ablations, `Ta`/K sweeps, appearance shift, latency arm | 9.16 | 53.5 |
+  | **Total** | **12.2** | **70.6** |
+
+  The upper total is the sum of the per-row upper bounds, using the central value where a row
+  has no upper bound.
+- **Frozen-list reads.** The episode lengths come from P8's committed `id` rows, SS6 included.
+  These are P8's published teacher rows, read for the budget only; nothing is selected or tuned on
+  them.
+
+*Consequence.*
+- **Inference latency.** `dp` at K = 10 already takes 80.6 ms per call at B = 1 on the GPU,
+  against H5(a)'s 33.3 ms. Batching is nearly free, which points to per-call launch overhead.
+  This is a measurement of the dummy network in eager PyTorch, not of the exported graph. Phase 9
+  measures the exported graph, and CUDA graphs or `torch.compile` are Phase 9 options, which change
+  numerics and so need their own parity.
+- **K = 100 cost.** The K = 25/100 sweep rows are costed at the K = 100 rate.
+- **Re-estimate later.** `/train-job` uses these rates for every estimate. Phase 4 replaces the
+  student length assumption with measured lengths.
+
+### P2-D3 — Determinism contract (2026-10-27)
+*Decision.* The contract has four parts.
+1. **CPU fp32 single-sample path:** rows are bit-identical regardless of worker count, chunking or
+   batch slot. Measured: 150 of 150 `select` rows identical at 1 vs 8 workers. This is the path
+   for every result that claims bit-reproducibility.
+2. **Batched GPU path:**
+   - Run with `torch.backends.cudnn.allow_tf32 = False`, `torch.backends.cuda.matmul.allow_tf32 =
+     False`, `cudnn.benchmark = False` and `float32_matmul_precision = "highest"`, recorded in
+     every run_info (`ila.eval.batched.configure_torch_numerics`).
+   - It is reproducible run to run at a fixed batch cap (B = 1 twice: 150/150 identical).
+   - It is **not** bit-identical across batch caps or with the CPU path, and is never claimed to
+     be.
+   - It is judged by its outcome-flip rate against P8's one-ulp floor: 53 of 800 = 6.6 % of `id`
+     SS6 policy-episodes (P8 `docs/protocol.md` L5314, L5455).
+3. **The flip rate measured here is not informative, and is re-measured before use.**
+   - The dummy `dp` has random weights and crashed in all 150 episodes on every path, so outcome
+     flips had no room to show (0 at every batch cap).
+   - **Binding:** before any GPU-path row enters a Phase 8 table, this study is re-run with a
+     trained `dp` (Phase 6, selected checkpoint) on the same 150 `select` episodes. Its flip rate
+     must be no larger than P8's floor, or the GPU path is not used for that arm.
+4. **Rule for the noise key** (privileged-leak audit, Phase 2, RISK 1):
+
+   > The control step t and the episode seed reach a student only as a noise key and a schedule
+   > index. They may (a) seed the per-request `torch.Generator` via
+   > `noise_seed(run_seed, episode_seed, t)`, (b) feed `chunking` (`is_replan_step`, ensembling
+   > indices), and (c) drive slot bookkeeping. They never enter an `nn.Module` forward, a feature,
+   > a conditioning vector, a normaliser or a training batch. Besides pixels and proprio, the only
+   > integer a network sees is the diffusion index k ∈ [0, num_train_timesteps). DDPM training
+   > noise comes from the data-loading generator (run_seed, epoch, worker_id), never from
+   > `noise_seed(·, ·, t)`.
+
+   The rule is mirrored in the il-conventions skill and `docs/CONVENTIONS.md`, and guarded by
+   tests (signature allowlist, invariance under a fixed noise, and a field allowlist).
+
+*Deviation.* Plan Phase 2 item 5 says "200 `select` episodes". `select` is fixed at 150 by plan
+§1.5 (50 each of SS3–SS5), so the study flies all 150. The user approved this on 2026-10-27.
+
+*Reason.* Plan §0(5). Batched GPU numerics depend on the batch. The defensible claim is a flip
+rate no larger than the one P8 measured for a one-ulp input change. A study whose policy never
+survives long enough to flip cannot support that claim, so it is not presented as if it did.
+
+*Evidence.* `results/determinism/summary.json` (SHA-256 `b00dff4c…b96c`), `diffs.csv`
+(`9c5e571b…29dd`) and `run_info.json` (`f28f0f34…7b97`). Run settings: dummy `dp`
+(`build_dummy("dp", 0)`), K = 10, Ta = 8, render `full`, `splits/select.parquet`
+(`07ecf049…422b`).
+
+| Run vs CPU workers = 1 | Rows whose text differs | Outcome flips | Mean steps |
+|---|---|---|---|
+| CPU, 8 workers | 0/150 | 0 | 45.45 (= reference) |
+| GPU B = 1 | 150/150 | 0 | 46.39 |
+| GPU B = 8 | 150/150 | 0 | 47.53 |
+| GPU B = 24 | 150/150 | 0 | 46.61 |
+| GPU B = 1, repeat | 150/150 | 0 | 46.39 |
+| GPU B = 24, TF32 on (torch default) | 150/150 | 0 | 46.21 |
+
+GPU vs GPU B = 1:
+
+| Run | Rows whose text differs |
+|---|---|
+| B = 1 repeat | 0/150 |
+| B = 8 | 122/150 |
+| B = 24 | 140/150 |
+| B = 24, TF32 on | 150/150 |
+
+Every run's 150 outcomes are `crash`.
+
+Two caveats on the comparator:
+- `select` is SS3–SS5 while P8's floor is measured at `id` SS6, so the floor is a conservative
+  comparator.
+- The `select` outcomes here choose nothing: no checkpoint, σ or setting is selected from them.
+
+*Consequence.*
+- The CPU single-sample path flies every bit-reproducible result.
+- The GPU path may be used for throughput-bound arms only after item 3's re-measurement. Its use
+  is labelled in the run_info.
+- `policy-trainer` found CPU-vs-GPU gaps on one random-init `dp` chunk of up to 2.8e-3 with TF32
+  on, and 5e-6 with TF32 off (not committed; from its CPU/GPU test session). That is why TF32 is
+  off.
+
+### P2-D4 — Work pulled forward from Phases 3, 4 and 6 (2026-10-27)
+*Decision.* Two pieces of later-phase work were done in Phase 2 because Phase 2 items 4 and 5
+need them. The user approved both on 2026-10-27.
+1. **Splits (Phase 3 step 1):** `src/ila/data/episodes.py`, `scripts/make_splits.py`,
+   `splits/select.parquet` and `splits/MANIFEST.csv`.
+   - `select` is 150 episodes of P8's `tune` pool, 50 each of SS3, SS4 and SS5, covering all
+     135 tune realizations. It is dealt by P8's own round-robin rule with generator seed
+     20261023.
+   - `train` draws come from a generator with named streams. Nothing demo-sized is written yet.
+     Whether the demo sets, DART and DAgger share one stream is a P3-D1 decision.
+2. **Student architectures with random init (parts of Phases 4 and 6):**
+   - `ila/policies/encoder.py` (ResNet-18 with GroupNorm 16, spatial softmax with 32 keypoints);
+   - `bc.py`;
+   - `dp/unet1d.py` (FiLM, adapted from diffusion_policy, MIT; `THIRD_PARTY_NOTICES.md`);
+   - `dp/chunking.py`, `dp/policy.py` (DDIM, per-episode noise generator);
+   - `registry.py`.
+
+   There is no training code. Parameters: `bc` 11 330 339, `dp` 29 353 123.
+
+*Reason.* The throughput and determinism studies must measure the networks the project will
+train, and the determinism study must fly `select`.
+
+*Evidence.*
+- `splits/select.parquet` SHA-256 `07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b`
+  (content `e8b93d6f…5827`).
+- `splits/MANIFEST.csv` `cb70cd51…7ed5`; regenerated by `scripts/make_splits.py` byte for byte.
+- Realization-key overlap with all five frozen lists: 0 (`tests/test_data_episodes.py`; the
+  Phase 2 leak audit checked this independently).
+
+*Consequence.*
+- **Gates 3 and 4/6 audit this code, not re-derive it.** Gate 3 re-checks `splits/` and records
+  the `select` SHA in P3-D1 §2. Gates 4 and 6 audit the networks as trained.
+- **Teacher's own view of `tune`.** P8's teacher has seen `tune` realizations in P8's own tuning
+  and validation. `select` episodes are new seeds and select nothing for the teacher, but the
+  teacher's `select` success may read slightly high. To be noted in P3-D1.
+- **Open for P3-D1: DDIM timestep spacing.** `dp.yaml` does not set it, and the code uses
+  diffusers' default, `leading`. Under it, K = 1 runs only timestep 0 and outputs near-pure noise.
+  `trailing` gives [99] for K = 1. Since K = 1 and 2 are in the frozen sweep, the choice is made in
+  P3-D1, before any training.
+- **Module ownership.** The Phase 2 job modules `ila/eval/{reproduce,label_parity,throughput,
+  determinism,jobs}.py` sit in `ila/eval/`, which CLAUDE.md assigns to `eval-auditor`. They were
+  written by `sim-render-engineer`, and `eval-auditor` reviews any change to them from Phase 3 on.
 
 ## Phase 3
 

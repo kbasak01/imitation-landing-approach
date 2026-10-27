@@ -2,7 +2,8 @@
 
 This project is MIT-licensed (see [LICENSE](LICENSE)). It depends on Project 8 as a git submodule,
 which in turn pins two submodules of its own, and on other packages at runtime. No third-party
-source code is copied into this repository as of Phase 0. The per-dependency licence check is in
+source code was copied into this repository in Phase 0; Phase 2 adapts one file from
+diffusion_policy (below). The per-dependency licence check is in
 [`docs/LICENSES.md`](docs/LICENSES.md).
 
 ## Git submodule (`external/`, never modified)
@@ -30,16 +31,45 @@ source code is copied into this repository as of Phase 0. The per-dependency lic
   Jacopo Panerati. Used through P8: the aviary, `DSLPIDControl` and the Crazyflie 2.x model that
   the camera renders.
 
-## Code that may be adapted later (notice slot)
+## Adapted source code
 
 ### diffusion_policy (reference implementation)
 
-- **Upstream:** <https://github.com/real-stanford/diffusion_policy>.
-- **License:** MIT, Copyright (c) 2023 Columbia Artificial Intelligence and Robotics Lab.
-- **Status:** Phase 0 adapts nothing from it. The Phase 6 defaults are read from its
-  `train_diffusion_unet_hybrid_workspace.yaml`. If `ConditionalUnet1D` code is adapted into
-  `src/ila/policies/dp/unet1d.py`, that file will be marked in the source, and this entry will
-  name the upstream commit and reproduce the MIT notice in full.
+- **Upstream:** <https://github.com/real-stanford/diffusion_policy>, commit **(verify)**. The
+  upstream commit the adaptation was taken from has not been recorded yet; it is to be checked
+  and written here, not guessed.
+- **License:** MIT, Copyright (c) 2023 Columbia Artificial Intelligence and Robotics Lab (full
+  text below).
+- **What is adapted:** `src/ila/policies/dp/unet1d.py` is adapted from
+  `diffusion_policy/model/diffusion/conditional_unet1d.py`, `conv1d_components.py` and
+  `positional_embedding.py`. The file carries this notice in its header and lists the changes
+  (type hints and docstrings; global conditioning only; FiLM scale-and-bias fixed on; einops
+  replaced by `transpose`/`unsqueeze`; a horizon divisibility check). The Phase 6 defaults are
+  read from its `train_diffusion_unet_hybrid_workspace.yaml`; nothing else is copied.
+
+```
+MIT License
+
+Copyright (c) 2023 Columbia Artificial Intelligence and Robotics Lab
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Runtime dependencies (not vendored)
 

@@ -1,0 +1,23 @@
+task,episodes,steps_per_episode,steps_per_episode_upper,rate_steps_per_s,rate_source,hours,hours_upper,flag,assumptions
+demo ppo_2000,2000,61.47,,1205.02,"ppo teacher-with-render, 24 workers, 96 px",0.028,,,episode length = P8 e07 ppo s0 mean on id SS3-SS5; HDF5 write not timed
+demo pid_1000,1000,150.95,,1764.55,"pid teacher-with-render, 24 workers, 96 px",0.024,,,length = P8 e01 pid_feedforward mean on id SS3-SS5
+demo mix_1000 (ppo half),500,61.47,,1205.02,"ppo teacher-with-render, 24 workers, 96 px",0.007,,,T_mix per-episode 0.5 ppo
+demo mix_1000 (gated half),500,138.33,,1764.55,"pid teacher-with-render, 24 workers, 96 px",0.011,,,T_mix 0.5 gated: length = e01 gated id SS3-SS5; rate = pid_feedforward's (controller)
+demo DART 3 sigma x 1000,3000,61.47,,1205.02,"ppo teacher-with-render, 24 workers, 96 px",0.043,,,DART noise assumed not to change episode length
+DAgger rollouts 5 seeds x 5 it x 200,5000,61.47,361,972.66,bc e2e lockstep B=24 (dummy net),0.088,0.515,,"student length = teacher's (upper: all timeouts); teacher label (ppo MLP, CPU) assumed negligible; training excluded"
+matrix core bc_state 5 seeds x 2800,14000,61.83,361,1205.02,"ppo teacher-with-render, 24 workers, 96 px",0.2,1.165,,"length = P8 ppo s0 mean over all 2800 (upper: all timeouts); state MLP: cost like the teacher, rendered"
+matrix core bc 5 seeds x 2800,14000,61.83,361,972.66,bc e2e lockstep B=24 (dummy net),0.247,1.443,,length = P8 ppo s0 mean over all 2800 (upper: all timeouts)
+matrix core bc_matched 5 seeds x 2800,14000,61.83,361,972.66,bc e2e lockstep B=24 (dummy net),0.247,1.443,,length = P8 ppo s0 mean over all 2800 (upper: all timeouts)
+matrix core bc_dart 5 seeds x 2800,14000,61.83,361,972.66,bc e2e lockstep B=24 (dummy net),0.247,1.443,,length = P8 ppo s0 mean over all 2800 (upper: all timeouts)
+matrix core bc_dagger 5 seeds x 2800,14000,61.83,361,972.66,bc e2e lockstep B=24 (dummy net),0.247,1.443,,length = P8 ppo s0 mean over all 2800 (upper: all timeouts)
+matrix core dp 5 seeds x 2800,14000,61.83,361,172.32,dp K10 Ta8 e2e lockstep B=24 (dummy net),1.395,8.147,,length = P8 ppo s0 mean over all 2800 (upper: all timeouts)
+matrix core modular 5 seeds x 2800,14000,61.83,361,972.66,bc e2e lockstep B=24 (dummy net),0.247,1.443,,length = P8 ppo s0 mean over all 2800 (upper: all timeouts); estimator assumed to cost like the bc encoder
+matrix ablations bc (6) x 3 seeds x 600,10800,61.79,361,972.66,bc e2e lockstep B=24 (dummy net),0.191,1.113,,id SS4-SS6; length = ppo s0 mean there
+matrix ablations dp (5) x 3 seeds x 600,9000,61.79,361,172.32,dp K10 Ta8 e2e lockstep B=24 (dummy net),0.896,5.237,,id SS4-SS6
+sweep dp_Ta (Ta<8 or ensembling: 6 configs) x 5 seeds x 600,18000,61.79,361,136.39,dp K10 Ta1 e2e lockstep B=24 (dummy net),2.265,13.234,,"Ta in {1,2,4} and every ensembling config costed at the Ta=1 rate (conservative)"
+sweep dp_Ta (Ta>=8 no ensembling: 2 configs) x 5 seeds x 600,6000,61.79,361,172.32,dp K10 Ta8 e2e lockstep B=24 (dummy net),0.598,3.492,,"Ta in {8,12}"
+sweep dp_K (K<=10: 4) x 5 seeds x 200,4000,61.58,361,172.32,dp K10 Ta8 e2e lockstep B=24 (dummy net),0.397,2.328,,id SS5
+sweep dp_K (K 25 and 100: 2) x 5 seeds x 200,2000,61.58,361,28.2,dp K100 Ta8 e2e lockstep B=24 (dummy net),1.213,7.112,,K=25 costed as K=100
+appearance shift 3 arms x 5 variants x 5 seeds x 400,30000,61.99,361,172.32,dp K10 Ta8 e2e lockstep B=24 (dummy net),2.998,17.458,,costed at the dp rate (slowest of bc_dagger/dp/modular)
+latency arm 2 arms x 5 seeds x 600,6000,61.79,361,172.32,dp K10 Ta8 e2e lockstep B=24 (dummy net),0.598,3.492,,costed at the dp rate
+TOTAL (central),,,,,,12.187,,,sum of hours

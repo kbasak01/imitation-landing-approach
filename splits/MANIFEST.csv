@@ -1,0 +1,2 @@
+file,regime,pool,rows,n_cells,cells,n_per_cell,n_realizations,generator_seed,draw,pad,frac_in_training_distribution,p8_commit,file_sha256,content_sha256
+select.parquet,select,tune,150,3,SS3|SS4|SS5,50|50|50,135,20261023,balanced_round_robin,aft,1.0,7237b7065c8af8172b3848ac6e9d3ceb2cf82075,07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b,e8b93d6ff3f0989f395f026e7cc3bb48b95e8c1c11aafc7e386e65e50b8b5827
