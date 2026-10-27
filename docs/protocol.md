@@ -67,6 +67,11 @@ check on the workstation; CI skips it.
 
 ## Phase 1
 
+*Before you start (from Phase 0).* `ila.p8_adapter` is a stub: it exposes `make_env(cfgs, listed)`,
+built exactly as P8's runner builds it (`motion_for` + `make_env`), plus `load_eval_configs`,
+`read_list`, `list_path` and the hash helpers. Phase 1 adds `obs_fields`, `teacher` and `stats`. The
+teacher checkpoint is `ppo/0/final/` (P0-D1).
+
 ### P1-D1 — Plate visuals, camera, background (to fill)
 - What `getVisualShapeData` reports for P8's plate and ground; twin or texture-in-place; why.
 - Camera numbers as committed in `configs/render/camera.yaml`, with its SHA-256.
@@ -112,3 +117,20 @@ Reviewers: none are assigned to Phase 0 by the phase-gate table.
 Failing items and the smallest fix for each: (1) commit the Phase 0 tree on branch `phase-0`;
 (2) create the public GitHub repo, push `phase-0` and get a green CI run. Both need the user's
 approval. No threshold changes.
+
+### Gate 0 passed (2026-10-27)
+
+| Criterion (plan Phase 0 exit gate) | Evidence | Verdict |
+|---|---|---|
+| `make lint` green locally and in CI | Local: ruff and format clean, `mypy --strict` 46 files. CI run 40518656883 / job 122245991307 (run 40520506247, commit `28ff2cc`): same, 46 files | PASS |
+| `make test` / `make smoke` green locally | 5 passed (includes the `checkpoints` provenance test) | PASS |
+| Tests green in CI (CI skips `checkpoints`) | Run 40520506247: 4 passed, 1 deselected | PASS |
+| `python -c "import rld, ila"` | Works locally and in the CI install step | PASS |
+| `results/p8_provenance.json` matches P8's published hashes | Committed; `all_match: true` (P0-D1) | PASS |
+
+Reviewers: none are assigned to Phase 0.
+
+Incident (attempt 1 → 2): the first CI run was green, but its mypy saw 39 files against 46 locally.
+An unanchored `data/` in `.gitignore` had also matched `src/ila/data/` and `configs/data/`, so
+seven skeleton modules and the starter kit's `configs/data/demos.yaml` were not committed. Root
+patterns are now anchored (`28ff2cc`) and the re-run checks all 46 files. No threshold changed.
