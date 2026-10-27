@@ -1,0 +1,23 @@
+# Environments
+.venv*/
+# Generated, never committed (CLAUDE.md Style)
+data/
+artifacts/
+configs/paths.local.yaml
+*.h5
+*.onnx
+*.pt
+*.zip
+wandb/
+runs/
+# Python / tooling caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/

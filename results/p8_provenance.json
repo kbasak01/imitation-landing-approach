@@ -1,0 +1,56 @@
+{
+  "all_match": true,
+  "checks": [
+    {
+      "actual": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+      "expected": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+      "match": true,
+      "name": "p8_commit"
+    },
+    {
+      "actual": "e9fa15cc35312a5c1ecf0c42668a690b5061c090",
+      "expected": "e9fa15cc35312a5c1ecf0c42668a690b5061c090",
+      "match": true,
+      "name": "p8_submodule:third_party/deck-motion-forecast"
+    },
+    {
+      "actual": "7ebad1ecabd28a7000add2d05f888aa2e837c2cc",
+      "expected": "7ebad1ecabd28a7000add2d05f888aa2e837c2cc",
+      "match": true,
+      "name": "p8_submodule:third_party/gym-pybullet-drones"
+    },
+    {
+      "actual": "e6f30e55e478d39061b94e38de33959ca99b16e8cac38a3bd99b34f6543ad4a2",
+      "expected": "e6f30e55e478d39061b94e38de33959ca99b16e8cac38a3bd99b34f6543ad4a2",
+      "match": true,
+      "name": "manifest_sha256"
+    },
+    {
+      "actual": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+      "expected": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+      "match": true,
+      "name": "success_yaml_sha256"
+    },
+    {
+      "actual": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+      "expected": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+      "match": true,
+      "name": "ppo_s0_model_zip_sha256"
+    },
+    {
+      "actual": "9ddb2a992d4263426bc28033f8cd9f7f54daf7011ca67eb81f3099ecf289db6f",
+      "expected": "9ddb2a992d4263426bc28033f8cd9f7f54daf7011ca67eb81f3099ecf289db6f",
+      "match": true,
+      "name": "ppo_s0_vecnormalize_sha256"
+    },
+    {
+      "actual": "06230fd2de23468a169589ac41f1d19da7e8c60c7dc5ea68a1534f0b39281621",
+      "expected": "06230fd2de23468a169589ac41f1d19da7e8c60c7dc5ea68a1534f0b39281621",
+      "match": true,
+      "name": "ppo_s0_onnx_sha256"
+    }
+  ],
+  "ppo_s0_checkpoint": "final",
+  "ppo_s0_checkpoint_json_sha256": "2ea668e37f848fc3f7a50cfb21c64435de80f878bbef01ee165e3a8e5b0e00a0",
+  "published_reference": "rl-land-on-moving-deck/results/latency/run_info.json graphs[ppo, seed 0]"
+}

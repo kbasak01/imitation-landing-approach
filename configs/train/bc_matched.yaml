@@ -1,0 +1,14 @@
+arm: bc_matched                 # the data-matched control for bc_dagger (and the 2x-data reference)
+data: {collection: ppo_2000, first_n: 2000}
+encoder: {trunk: resnet18, pretrained: false, norm: groupnorm, groups: 16, spatial_softmax_keypoints: 32}
+proprio_mlp: [64, 64]
+head: {hidden: [256, 256], out: 3, activation: tanh}
+loss: mse
+optim: {name: adamw, lr: 3.0e-4, weight_decay: 1.0e-4, schedule: cosine, warmup_steps: 500}
+steps: 30000
+batch_size: 256
+precision: bf16
+ema: 0.999
+checkpoint_every: 5000
+selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step]}
+seeds: [0, 1, 2, 3, 4]

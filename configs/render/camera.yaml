@@ -1,0 +1,32 @@
+# Camera and scene for the vision students. Render-only: nothing here may change physics
+# (tests/test_render_invariance.py). Lengths metres MODEL scale, angles degrees.
+camera:
+  mount: body_fixed          # rotates with the drone's attitude
+  look_axis_body: [0.0, 0.0, -1.0]
+  up_axis_body: [1.0, 0.0, 0.0]   # image "up" = drone body +x (forward)
+  offset_body_m: [0.0, 0.0, -0.02]
+  fov_vertical_deg: 90.0
+  near_m: 0.01
+  far_m: 5.0
+  width_px: 96               # Phase 2 may drop to 64 for EVERY arm by a dated decision
+  height_px: 96
+  renderer: ER_TINY_RENDERER
+  shadow: false
+  light_direction: [0.3, -0.2, 1.0]
+marking:                     # original procedural helipad texture (ila.render.texture), not a copied design
+  kind: ring_h_band
+  texture_px: 512
+  ring_radius_m: 0.15        # P8's painted pad radius (configs/deck/pad.yaml)
+  colours: {base: [0.35, 0.37, 0.40], ring: [0.95, 0.85, 0.20], letter: [0.97, 0.97, 0.97], band: [0.90, 0.90, 0.90]}
+  strategy: auto             # auto | in_place | visual_twin  (decided in P1-D1 from getVisualShapeData)
+background:
+  ground_rgba: [0.08, 0.16, 0.24, 1.0]   # uniform, untextured: no inertial reference
+  remove_texture: true
+train_augmentation:
+  random_crop_px: 88         # from 96; centre crop at evaluation
+appearance_shift:            # evaluation-only variants, never trained on
+  light_rot_60: {light_direction: [-0.2, 0.3, 1.0]}
+  bg_hue: {ground_rgba: [0.10, 0.22, 0.14, 1.0]}
+  low_contrast: {marking_contrast_scale: 0.7}
+  mount_tilt_p2: {mount_tilt_deg: 2.0}
+  mount_tilt_m2: {mount_tilt_deg: -2.0}

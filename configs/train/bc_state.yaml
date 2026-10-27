@@ -1,0 +1,12 @@
+arm: bc_state                 # imitation-gap reference: P8's full 25-d obs, no images (privileged by design; never a "vision" row)
+data: {collection: ppo_2000, first_n: 1000, input: teacher_obs}
+model: {hidden: [256, 256], out: 3, activation: tanh}
+loss: mse
+optim: {name: adamw, lr: 3.0e-4, weight_decay: 1.0e-4, schedule: cosine, warmup_steps: 500}
+steps: 30000
+batch_size: 256
+precision: fp32
+ema: 0.999
+checkpoint_every: 5000
+selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step]}
+seeds: [0, 1, 2, 3, 4]

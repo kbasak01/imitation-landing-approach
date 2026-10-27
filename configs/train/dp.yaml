@@ -1,0 +1,18 @@
+arm: dp
+data: {collection: ppo_2000, first_n: 1000}
+encoder: {trunk: resnet18, pretrained: false, norm: groupnorm, groups: 16, spatial_softmax_keypoints: 32}
+proprio_mlp: [64, 64]
+horizons: {n_obs_steps: 2, horizon: 16, n_action_steps: 8}     # To, Tp, Ta; Ta <= Tp - To + 1
+unet: {down_dims: [128, 256, 512], kernel_size: 5, diffusion_step_embed_dim: 128, cond: film}
+noise_scheduler: {train: ddpm, num_train_timesteps: 100, beta_schedule: squaredcos_cap_v2, prediction_type: epsilon, clip_sample: true}
+inference: {sampler: ddim, num_inference_steps: 10, noise: per_episode_generator}
+action_normalisation: identity   # actions already in [-1, 1]; tested
+optim: {name: adamw, lr: 1.0e-4, weight_decay: 1.0e-6, schedule: cosine, warmup_steps: 500}
+steps: 100000
+batch_size: 128
+precision: bf16
+ema: {power: 0.75, max_value: 0.9999}
+checkpoint_every: 10000
+selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step], at: {Ta: 8, K: 10}}
+seeds: [0, 1, 2, 3, 4]
+inference_sweeps: {Ta: [1, 2, 4, 8, 12], K: [1, 2, 5, 10, 25, 100], temporal_ensembling: {m: 0.01}}

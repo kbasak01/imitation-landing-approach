@@ -1,0 +1,23 @@
+# THE OBSERVATION CONTRACT. Selected by P8 field NAME (rld.envs.observation OBS_FIELDS), never by index.
+# Changing this file after P3-D1 is frozen requires a dated deviation in docs/protocol.md.
+#
+# Every P8 field must appear in exactly one of the three lists (tests/test_obs_split.py).
+student_proprio:            # what an end-to-end student receives besides images, in this order
+  - attitude                # 3, rad, world (roll, pitch, yaw)
+  - body_rates              # 3, rad/s, body
+  - velocity                # 3, m/s MODEL scale, drone-yaw frame (own velocity; GNSS/VIO-plausible)
+  - last_action             # 3, normalised, world (removed in the `-last_action` ablation)
+  - in_contact              # 1, {0,1}
+privileged:                 # never an input to an end-to-end student; the `modular` estimator's TARGET
+  - rel_position            # 3, m MODEL scale, drone-yaw
+  - rel_velocity            # 3, m/s MODEL scale, drone-yaw
+  - deck_normal             # 3, unit, drone-yaw
+  - rel_tilt                # 1, rad
+  - height                  # 1, m MODEL scale, along the deck normal
+teacher_only:               # neither student input nor estimator target
+  - time_fraction           # 1, episode clock; added to the student ONLY in the `+clock` ablation
+frames:
+  n_obs_steps: 2            # To: images and proprio at t-1 and t; first step padded by repetition
+ablations:
+  minus_last_action: {remove: [last_action]}
+  plus_clock: {add: [time_fraction]}

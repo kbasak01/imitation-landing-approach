@@ -1,0 +1,6 @@
+arm: bc_dagger
+base: bc.yaml                 # identical encoder/head/optimiser; iteration 0 trains exactly as bc
+dagger: {from: configs/data/demos.yaml#dagger}   # 5 iterations x 200 episodes, beta (0.5, 0.25, 0.125, 0, 0), warm start, 10k steps each
+labelled_episodes_total: 2000 # must equal bc_matched; asserted
+selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step], when: after_final_iteration}
+seeds: [0, 1, 2, 3, 4]
