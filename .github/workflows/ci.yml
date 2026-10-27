@@ -16,6 +16,14 @@ jobs:
       OMP_NUM_THREADS: "1"
       P8: external/rl-land-on-moving-deck
     steps:
+      # P8's pins pull CUDA torch and TensorRT wheels; with the restored pip cache the runner's
+      # ~14 GB free disk ran out (Errno 28, Gate 1 incident). Drop toolchains this job never uses.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          df -h /
       - uses: actions/checkout@v5
         with:
           submodules: recursive

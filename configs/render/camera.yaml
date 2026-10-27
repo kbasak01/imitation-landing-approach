@@ -7,7 +7,7 @@ camera:
   offset_body_m: [0.0, 0.0, -0.02]
   fov_vertical_deg: 90.0
   near_m: 0.01
-  far_m: 5.0
+  far_m: 20.0                # P1-D1: raised from 5 m (approved 2026-10-27); 5 m clipped the ground
   width_px: 96               # Phase 2 may drop to 64 for EVERY arm by a dated decision
   height_px: 96
   renderer: ER_TINY_RENDERER
@@ -18,14 +18,14 @@ marking:                     # original procedural helipad texture (ila.render.t
   texture_px: 512
   ring_radius_m: 0.15        # P8's painted pad radius (configs/deck/pad.yaml)
   colours: {base: [0.35, 0.37, 0.40], ring: [0.95, 0.85, 0.20], letter: [0.97, 0.97, 0.97], band: [0.90, 0.90, 0.90]}
-  strategy: auto             # auto | in_place | visual_twin  (decided in P1-D1 from getVisualShapeData)
+  strategy: visual_twin      # P1-D1: textured GEOM_MESH quad, no collision, mass 0, re-posed to the plate before each render
 background:
   ground_rgba: [0.08, 0.16, 0.24, 1.0]   # uniform, untextured: no inertial reference
   remove_texture: true
 train_augmentation:
   random_crop_px: 88         # from 96; centre crop at evaluation
 appearance_shift:            # evaluation-only variants, never trained on
-  light_rot_60: {light_direction: [-0.2, 0.3, 1.0]}
+  light_rot_60: {light_direction: [0.3232, 0.1598, 1.0]}   # default rotated +60 deg about world z (P1-D1)
   bg_hue: {ground_rgba: [0.10, 0.22, 0.14, 1.0]}
   low_contrast: {marking_contrast_scale: 0.7}
   mount_tilt_p2: {mount_tilt_deg: 2.0}

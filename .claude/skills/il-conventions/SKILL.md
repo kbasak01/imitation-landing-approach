@@ -24,6 +24,10 @@ description: The single source of truth for observation splitting, frames, units
 - Teacher-only: `time_fraction 1`.
 - `StudentInput` = `(images: uint8[To, H, W, 3], proprio: float32[To, 13])`. It has no field for
   privileged data. A student `act(obs)` with a 25-d vector raises.
+- Only `rgb` (`ila.render.camera.Frame`, what `Scene.render()` returns) and the allowlisted proprio
+  may enter a student input, a demo store's student columns or a training batch. `RenderMeta`
+  (view/projection matrices = the drone's world pose, the physics step count = the clock, the
+  segmentation mask = a perfect deck mask) never does, and neither does the store's `t_model_s`.
 
 ## Alignment (the rule every dataset and runner follows)
 At control step t:

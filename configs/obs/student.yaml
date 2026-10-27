@@ -1,10 +1,12 @@
-# THE OBSERVATION CONTRACT. Selected by P8 field NAME (rld.envs.observation OBS_FIELDS), never by index.
+# THE OBSERVATION CONTRACT. Selected by P8 field NAME, never by index. Offsets and sizes come from
+# P8's layout function rld.envs.observation.obs_fields(cfg) under its eval config (25-d), via
+# ila.p8_adapter.obs_fields(); P8 has no OBS_FIELDS constant (P1-D1).
 # Changing this file after P3-D1 is frozen requires a dated deviation in docs/protocol.md.
 #
 # Every P8 field must appear in exactly one of the three lists (tests/test_obs_split.py).
 student_proprio:            # what an end-to-end student receives besides images, in this order
   - attitude                # 3, rad, world (roll, pitch, yaw)
-  - body_rates              # 3, rad/s, body
+  - body_rates              # 3, rad/s, WORLD axes (PyBullet angular velocity, unrotated; P8 labels it "body")
   - velocity                # 3, m/s MODEL scale, drone-yaw frame (own velocity; GNSS/VIO-plausible)
   - last_action             # 3, normalised, world (removed in the `-last_action` ablation)
   - in_contact              # 1, {0,1}
