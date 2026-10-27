@@ -1,15 +1,16 @@
 # Environments
 .venv*/
-# Generated, never committed (CLAUDE.md Style)
-data/
-artifacts/
+# Generated, never committed (CLAUDE.md Style). Anchored to the root: an unanchored `data/`
+# also matched src/ila/data/ and kept its modules out of the Phase 0 commit.
+/data/
+/artifacts/
 configs/paths.local.yaml
 *.h5
 *.onnx
 *.pt
 *.zip
-wandb/
-runs/
+/wandb/
+/runs/
 # Python / tooling caches
 __pycache__/
 *.py[cod]

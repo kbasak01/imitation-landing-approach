@@ -16,10 +16,10 @@ jobs:
       OMP_NUM_THREADS: "1"
       P8: external/rl-land-on-moving-deck
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
