@@ -383,7 +383,7 @@ test at the scale of the frozen lists.
   - workers 24, chunk 25, spawn;
   - `OMP_NUM_THREADS = MKL_NUM_THREADS = 1`, torch threads 1;
   - P8 `7237b706…`, `ppo` `model.zip` `1a012394…`;
-  - 3 200 episodes in 256.4 s.
+  - 3 200 episodes in 254.8 s, `ila_commit` `c88c106`.
 - P8-column row SHA-256: `pid_feedforward` `d5ddc55d…ec31`, `ppo` `a836275f…bf50` (run_info
   `rows`).
 - The first full run (256.4 s) was made on an uncommitted tree (`ila_dirty_paths` in its
@@ -687,3 +687,47 @@ Incident: the first CI run for Phase 1 (40531591466) failed twice in the install
 (no space left) while building `tensorrt_cu13_libs`, before any code ran. A "Free disk space"
 step in `.github/workflows/ci.yml` (`844b227`) raised free disk from 13 GB to 35 GB, and the
 re-run passed. No threshold changed.
+
+### Gate 2 failed, attempt 1 (2026-10-27)
+
+| Criterion (plan Phase 2 exit gate) | Evidence | Verdict |
+|---|---|---|
+| `make lint` / `make test` | ruff and format clean; `mypy --strict` 53 files; 464 passed, including the `slow`, `pybullet`, `checkpoints` and `gpu` tests | PASS |
+| Both reproduction comparisons pass with zero differing rows | `results/reproduce_p8/comparison.json` (`75b34e8b…31fa`): `pid_feedforward` 2 800/2 800 and `ppo` 400/400 identical, differ 0, missing 0; `run_info.json` (`4ea43413…e002`): render `full`, `ila_commit` `c88c106`, no dirty paths | PASS on row identity |
+| …with render **on** | No committed artifact records that frames were rendered. `run_info.json` writes `render: "full"` as a constant, and no frame count is kept. The indirect evidence is consistent with rendering: every row carries `render_cfg_sha256`, and the wall time (254.8 s) matches P2-D2's rendered rates, not physics-only. But it is not an artifact of the run | UNVERIFIED |
+| Label parity met (or SB3 path chosen) | `results/label_parity.json`: max-abs 3.58e-7 ≤ 1e-6 (P2-D1) | PASS |
+| Throughput CSV committed | `results/throughput.csv`, `results/throughput_projection.csv` (P2-D2) | PASS |
+| Budget and determinism decisions recorded | P2-D2, P2-D3 (P2-D4 for pulled-forward work) | PASS |
+| `privileged-leak-auditor` (timing, render invariance) | **FINDINGS**: no LEAK, 1 RISK, 4 NOTEs. Pre-gate RISK 1 (noise-key clock) is closed. Render timing in `fly_chunk` is correct, and both backstops hold (`StaleSceneError`, attach after a step). New RISK: a later change could stop rendering for teachers, and the gate, every test and run_info would stay green | FAIL |
+
+Reviewers: `privileged-leak-auditor`, pre-gate FINDINGS (RISK 1 since closed), then gate review
+FINDINGS (new RISK below).
+
+**Failing items and the smallest fix for each.**
+1. **Render-on is not shown by an artifact; RISK, gate review.**
+   - `fly_chunk` counts the frames rendered and the timed checks per episode, and asserts that
+     frames == steps + 1 whenever render ≠ `off`.
+   - `reproduce.run` adds up those counts in `run_info.json` and takes `render` and the SHA
+     from the arms actually flown.
+   - A spy test (workers = 1) asserts that render calls == steps + 1 in `full` and `camera`
+     mode, 0 in `off`, and pins the timed-step schedule.
+   - Then re-run `make reproduce-p8` and re-review.
+2. **Guard scope (NOTE 2), done now because it is cheap.**
+   - A test asserts that the `nn.Module` subclasses under `ila.policies` equal a reviewed list,
+     so a new network fails until its `forward` joins the signature allowlist.
+   - The fixed-noise invariance test is parametrised over the registry arms.
+
+No threshold changes.
+
+**Corrections recorded here** (entries are not edited):
+- **P1-D2 item 5 is superseded.** Only `eval/runner.py` is exempt from
+  `tests/test_render_access.py`. The `eval/batched.py` exemption was removed in Phase 2 (leak
+  audit NOTE 2), and `batched.py` scans clean.
+- **P2-D3 item 4's guard list** also includes the AST read-site allowlist
+  (`tests/test_step_guard.py`).
+- **Frozen-list use not named in P2-D1.**
+  - `test_ppo_teacher_reproduces_committed_rows` (`tests/test_eval_runner.py`) flies two `id`
+    SS5 episodes with the `ppo` teacher, and compares them with P8's published rows.
+  - Like the gate, it trains, selects and tunes nothing.
+  - It cannot move to the `train` pool, because P8's reference rows exist only on the frozen
+    lists.

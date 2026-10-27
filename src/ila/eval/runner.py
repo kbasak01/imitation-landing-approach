@@ -51,10 +51,12 @@ meta is a local of :func:`_timed_frame` and is never returned, yielded or stored
 Rows
 ----
 :data:`VISION_EPISODE_COLUMNS`: P8's ``EPISODE_COLUMNS`` verbatim and in P8's order, then
-:data:`P9_COLUMNS` (plan §1.7). :func:`p8_rows` strips the P9 columns for
-``compare_to_reference``. Units are P8's: times seconds model scale, lengths metres model
-scale, speeds m/s model scale, angles degrees, actions normalised (x v_max = 1.5 m/s model).
-Model scale lambda = 1/25 (1 model s = 5 full-scale s; 1 model m = 25 full-scale m).
+:data:`P9_COLUMNS` (plan §1.7), then :data:`RENDER_EVIDENCE_COLUMNS` (frames rendered and timed
+checks per episode; with render on, :class:`FrameCountError` unless frames == steps + 1).
+:func:`p8_rows` strips everything after P8's columns for ``compare_to_reference``. Units are P8's:
+times seconds model scale, lengths metres model scale, speeds m/s model scale, angles degrees,
+actions normalised (x v_max = 1.5 m/s model). Model scale lambda = 1/25 (1 model s = 5 full-scale s;
+1 model m = 25 full-scale m).
 """
 
 from __future__ import annotations
@@ -82,10 +84,12 @@ from ila.render.config import RENDER_CONFIG_PATH, RenderConfig, load_render_conf
 __all__ = [
     "DEFAULT_TIMING_EVERY",
     "P9_COLUMNS",
+    "RENDER_EVIDENCE_COLUMNS",
     "RENDER_MODES",
     "THREAD_ENV_VARS",
     "VISION_EPISODE_COLUMNS",
     "Actor",
+    "FrameCountError",
     "MotionFeedRefusedError",
     "RenderMode",
     "RenderTimingError",
@@ -131,8 +135,19 @@ P9_COLUMNS: Final[tuple[str, ...]] = (
     "ckpt_sha256",
 )
 
+#: Render evidence per episode, after the P9 columns (never P8 columns: ``p8_rows`` drops them).
+#: ``frames_rendered`` counts the frames ``fly_chunk`` actually received from the renderer
+#: (``steps + 1`` whenever render is not ``off``, 0 for ``off``); ``timed_checks`` counts the
+#: frames that passed the step-count assertion (step 0, every ``timing_every``-th step, the
+#: terminal step).
+RENDER_EVIDENCE_COLUMNS: Final[tuple[str, ...]] = ("frames_rendered", "timed_checks")
+
 #: Column order of every per-episode table this runner writes.
-VISION_EPISODE_COLUMNS: Final[tuple[str, ...]] = (*p8_adapter.EPISODE_COLUMNS, *P9_COLUMNS)
+VISION_EPISODE_COLUMNS: Final[tuple[str, ...]] = (
+    *p8_adapter.EPISODE_COLUMNS,
+    *P9_COLUMNS,
+    *RENDER_EVIDENCE_COLUMNS,
+)
 
 #: Thread-count variables set to 1 before any worker pool is spawned (P8 run conditions:
 #: ``OMP_NUM_THREADS=1``, and ``MKL_NUM_THREADS=1`` from ``rld.eval.learned.main``).
@@ -144,6 +159,10 @@ DEFAULT_TIMING_EVERY: Final[int] = 30
 
 class RenderTimingError(AssertionError):
     """A frame and its observation do not share one ``stepSimulation`` count."""
+
+
+class FrameCountError(AssertionError):
+    """Render was on, but an episode did not get exactly one frame per reset and per step."""
 
 
 class MotionFeedRefusedError(ValueError):
@@ -561,6 +580,7 @@ class _Renderer:
         self.cfg = cfg
         self._scene: render_scene.Scene | None = None
         self._env: p8_adapter.DeckLandingAviary | None = None
+        self.timed_checks = 0
 
     def attach(self, env: p8_adapter.DeckLandingAviary) -> None:
         """Apply the visual-only edits after a reset (``full``), or note the env."""
@@ -575,7 +595,9 @@ class _Renderer:
         if env is None:
             raise RuntimeError("render before attach")
         if timed:
-            return _timed_frame(env, self._scene, self.cfg, step)
+            frame = _timed_frame(env, self._scene, self.cfg, step)
+            self.timed_checks += 1
+            return frame
         if self._scene is not None:
             return self._scene.render()
         return _camera_frame(env, self.cfg)
@@ -644,8 +666,10 @@ def _refuse_feed(spec: p8_adapter.PolicySpec) -> None:
         )
 
 
-def _tag_row(row: dict[str, Any], tags: RowTags, render_sha: str) -> dict[str, Any]:
-    """Append the P9 columns to a P8 row, in :data:`P9_COLUMNS` order."""
+def _tag_row(
+    row: dict[str, Any], tags: RowTags, render_sha: str, frames: int, timed_checks: int
+) -> dict[str, Any]:
+    """Append the P9 and render-evidence columns to a P8 row, in column order."""
     out = dict(row)
     out.update(
         arm=tags.arm,
@@ -657,6 +681,8 @@ def _tag_row(row: dict[str, Any], tags: RowTags, render_sha: str) -> dict[str, A
         latency_steps=tags.latency_steps,
         render_cfg_sha256=render_sha,
         ckpt_sha256=tags.ckpt_sha256,
+        frames_rendered=frames,
+        timed_checks=timed_checks,
     )
     if tuple(out) != VISION_EPISODE_COLUMNS:
         raise RuntimeError(f"row columns {list(out)} != {list(VISION_EPISODE_COLUMNS)}")
@@ -712,7 +738,9 @@ def fly_chunk(
             obs, info = env.reset(seed=listed.episode_seed)
             check_start(env, info, listed, pad, offset, check_t0=True)
             renderer.attach(env)
+            timed_before = renderer.timed_checks
             frame = renderer.frame(0, timed=True)
+            frames = 0 if frame is None else 1
             context = p8_adapter.PrivilegedContext.from_env(env) if spec.privileged else None
             actor.begin(listed, context)
             actions: list[NDArray[np.float64]] = []
@@ -725,8 +753,17 @@ def fly_chunk(
                 done = bool(terminated or truncated)
                 timed = done or (k + 1) % task.timing_every == 0
                 frame = renderer.frame(k + 1, timed=timed)
+                frames += 0 if frame is None else 1
                 if done:
                     break
+            n_steps = len(actions)
+            expected_frames = 0 if task.render == "off" else n_steps + 1
+            if frames != expected_frames or int(env.record.steps) != n_steps:
+                raise FrameCountError(
+                    f"{listed.regime}/{listed.ss}/{listed.index}: render {task.render!r}, "
+                    f"{frames} frames for {n_steps} steps (env {env.record.steps}); "
+                    f"expected {expected_frames}"
+                )
             # Evaluation ground truth, after the episode, for every method alike.
             contact = env.record.contact_record
             truth = p8_adapter.td_in_quiescent_window(
@@ -736,7 +773,8 @@ def fly_chunk(
                 stride,
             )
             row = episode_row(listed, pad, spec, env, actions, truth)
-            rows.append(_tag_row(row, task.tags, render_sha))
+            n_timed = renderer.timed_checks - timed_before
+            rows.append(_tag_row(row, task.tags, render_sha, frames, n_timed))
     finally:
         env.close()
     return rows

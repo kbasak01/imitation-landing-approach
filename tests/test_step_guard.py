@@ -84,6 +84,47 @@ def test_dp_entry_points_exist() -> None:
     assert {"DiffusionPolicyNet.sample", "DiffusionPolicyNet.predict_noise"} <= names
 
 
+#: Every ``nn.Module`` subclass defined under ``ila.policies``, reviewed. ``entry``: its
+#: ``forward`` is in :func:`_entry_points` (signature allowlisted). ``internal``: reached only
+#: from an entry point's forward, with the argument named here, so it sees nothing the entry
+#: point did not. A new network fails :func:`test_policy_networks_are_reviewed` until it is
+#: added here, and an ``entry`` must also join ``_entry_points``.
+REVIEWED_MODULES: dict[str, str] = {
+    "ila.policies.bc.BCNet": "entry",
+    "ila.policies.encoder.VisionEncoder": "entry",
+    "ila.policies.dp.policy.DiffusionPolicyNet": "entry (sample, predict_noise)",
+    "ila.policies.dp.unet1d.ConditionalUnet1D": "entry",
+    "ila.policies.encoder.SpatialSoftmax": "internal: VisionEncoder.forward (trunk features)",
+    "ila.policies.dp.unet1d.SinusoidalPosEmb": "internal: ConditionalUnet1D.forward (timestep)",
+    "ila.policies.dp.unet1d.ConditionalResidualBlock1D": (
+        "internal: ConditionalUnet1D.forward (sample, FiLM of timestep embedding + global_cond)"
+    ),
+}
+
+
+def _policy_modules() -> set[str]:
+    import importlib
+    import pkgutil
+
+    import ila.policies
+
+    found = set()
+    for info in pkgutil.walk_packages(ila.policies.__path__, "ila.policies."):
+        module = importlib.import_module(info.name)
+        for _, cls in inspect.getmembers(module, inspect.isclass):
+            if issubclass(cls, torch.nn.Module) and cls.__module__ == info.name:
+                found.add(f"{cls.__module__}.{cls.__qualname__}")
+    return found
+
+
+def test_policy_networks_are_reviewed() -> None:
+    assert _policy_modules() == set(REVIEWED_MODULES)
+    entry_classes = {f.__qualname__.split(".")[0] for f in _entry_points()}
+    for name, verdict in REVIEWED_MODULES.items():
+        if verdict.startswith("entry"):
+            assert name.rsplit(".", 1)[1] in entry_classes, name
+
+
 # --------------------------------------------------------------------------- 2. invariance
 
 
@@ -172,6 +213,43 @@ def test_dp_inputs_and_actions_do_not_depend_on_episode_seed_or_step(
     per_replan = len(c11) // 2
     assert per_replan == 1 + K  # one encoder call + K U-Net calls per replan
     assert _same_calls(c11[:per_replan], c11[per_replan:])
+    assert all(np.array_equal(a11[i], a11[TA + i]) for i in range(TA))
+
+
+def _registry_arms() -> list[str]:
+    from ila.policies.registry import REGISTRY
+
+    return sorted(REGISTRY)
+
+
+@pytest.mark.parametrize("arm", _registry_arms())
+def test_registry_arm_invariant_to_episode_seed_and_step(
+    arm: str, fixed_noise: torch.Tensor
+) -> None:
+    """Every registry arm: same window -> same network inputs and actions, any seed, any step."""
+    del fixed_noise
+    from ila.policies.registry import REGISTRY
+
+    torch.set_num_threads(1)
+    kw = {"n_action_steps": TA, "num_inference_steps": K} if REGISTRY[arm].kind == "dp" else {}
+    student = build_dummy(arm, 0, "cpu", **kw)
+    net = student.net
+    hooks = _Hooks(net, *net.children())
+    images, proprio = _window()
+    try:
+        runs = {}
+        for episode_seed in (11, 99_999):
+            hooks.clear()
+            student.reset(episode_seed)
+            actions = [student.act_vision(images, proprio) for _ in range(2 * TA)]
+            runs[episode_seed] = (actions, list(hooks.calls))
+    finally:
+        hooks.remove()
+    (a11, c11), (a99, c99) = runs[11], runs[99_999]
+    assert c11, f"{arm}: no hooked network call"
+    assert all(np.array_equal(x, y) for x, y in zip(a11, a99, strict=True))
+    assert _same_calls(c11, c99)
+    # Steps t and t + Ta on the same window give the same action (dp: the same chunk index).
     assert all(np.array_equal(a11[i], a11[TA + i]) for i in range(TA))
 
 

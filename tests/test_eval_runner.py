@@ -238,6 +238,93 @@ def test_render_cfg_column(tiny_list: list[ListedEpisode], cfgs: EvalConfigs) ->
     assert full[0]["arm"] == "pid_feedforward" and full[0]["latency_steps"] == 0
 
 
+# --------------------------------------------------------------------------- render evidence
+
+
+class _RenderSpy:
+    """Counts every TinyRenderer call and records the step of every timed frame (in-process)."""
+
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import pybullet as pyb
+
+        self.camera_calls = 0
+        self.timed_steps: list[int] = []
+        real_image = pyb.getCameraImage
+        real_timed = runner._timed_frame
+
+        def image(*args: Any, **kwargs: Any) -> Any:
+            self.camera_calls += 1
+            return real_image(*args, **kwargs)
+
+        def timed(env: Any, sc: Any, cfg: Any, step: int) -> Any:
+            self.timed_steps.append(step)
+            return real_timed(env, sc, cfg, step)
+
+        monkeypatch.setattr(pyb, "getCameraImage", image)
+        monkeypatch.setattr(runner, "_timed_frame", timed)
+
+    def timed_by_episode(self) -> list[set[int]]:
+        episodes: list[set[int]] = []
+        for step in self.timed_steps:
+            if step == 0:
+                episodes.append(set())
+            episodes[-1].add(step)
+        return episodes
+
+
+@pytest.mark.parametrize("mode", runner.RENDER_MODES)
+def test_frames_actually_rendered_per_step(
+    mode: str,
+    tiny_list: list[ListedEpisode],
+    cfgs: EvalConfigs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One TinyRenderer frame after the reset and after every step (terminal included)."""
+    spy = _RenderSpy(monkeypatch)
+    spec = p8_adapter.controller_spec("pid_feedforward")
+    episodes = tiny_list[:2]  # static, then frigate: a reset between them
+    rows = runner.run_list_vision(episodes, spec, cfgs, render=mode, workers=1, chunk=2)
+    steps = [int(r["steps"]) for r in rows]
+    if mode == "off":
+        assert spy.camera_calls == 0 and spy.timed_steps == []
+        assert all(r["frames_rendered"] == 0 and r["timed_checks"] == 0 for r in rows)
+        return
+    assert spy.camera_calls == sum(n + 1 for n in steps)
+    assert [r["frames_rendered"] for r in rows] == [n + 1 for n in steps]
+    every = runner.DEFAULT_TIMING_EVERY
+    expected = [{0, n} | set(range(every, n + 1, every)) for n in steps]
+    assert spy.timed_by_episode() == expected
+    assert [r["timed_checks"] for r in rows] == [len(e) for e in expected]
+
+
+def test_negative_control_no_op_render_trips_the_frame_count(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """If rendering were skipped for a teacher (frames dropped anyway), the run must fail."""
+
+    def no_frame(self: Any, step: int, timed: bool) -> None:
+        del self, step, timed
+
+    monkeypatch.setattr(runner._Renderer, "frame", no_frame)
+    spec = p8_adapter.controller_spec("pid_feedforward")
+    with pytest.raises(runner.FrameCountError, match="0 frames"):
+        runner.run_list_vision(tiny_list[:1], spec, cfgs, render="full", workers=1)
+    # With render off, no frames is exactly what is expected.
+    rows = runner.run_list_vision(tiny_list[:1], spec, cfgs, render="off", workers=1)
+    assert rows[0]["frames_rendered"] == 0
+
+
+def test_render_evidence_columns_are_not_p8_columns(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs
+) -> None:
+    assert not set(runner.RENDER_EVIDENCE_COLUMNS) & set(p8_adapter.EPISODE_COLUMNS)
+    assert runner.VISION_EPISODE_COLUMNS[-2:] == runner.RENDER_EVIDENCE_COLUMNS
+    rows = runner.run_list_vision(
+        tiny_list[:1], p8_adapter.controller_spec("pid_feedforward"), cfgs, workers=1
+    )
+    assert tuple(runner.p8_rows(rows)[0]) == p8_adapter.EPISODE_COLUMNS
+
+
 # --------------------------------------------------------------------------- (d) start check
 
 
@@ -290,7 +377,11 @@ def test_timing_every_step(tiny_list: list[ListedEpisode], cfgs: EvalConfigs) ->
     spec = p8_adapter.controller_spec("pid_feedforward")
     every = runner.run_list_vision(tiny_list[:2], spec, cfgs, workers=1, timing_every=1)
     sparse = runner.run_list_vision(tiny_list[:2], spec, cfgs, workers=1)
-    assert runner.vision_rows_csv(every) == runner.vision_rows_csv(sparse)
+    # Checking every frame changes nothing but the count of checks (render evidence).
+    assert _p8_csv(every) == _p8_csv(sparse)
+    assert [r["frames_rendered"] for r in every] == [r["frames_rendered"] for r in sparse]
+    assert all(r["timed_checks"] == r["frames_rendered"] == r["steps"] + 1 for r in every)
+    assert all(r["timed_checks"] < r["frames_rendered"] for r in sparse)
 
 
 # --------------------------------------------------------------------------- (e) obligation 1

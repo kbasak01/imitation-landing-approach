@@ -187,3 +187,35 @@ def test_render_bench_times_frames(mode: str) -> None:
     policy = p8_adapter.controller_spec("pid_feedforward").build(cfgs)
     times = render_frame_times(cfgs, listed, policy, mode=mode, size_px=64, n_frames=5)
     assert times.shape == (5,) and np.all(times > 0)
+
+
+# --------------------------------------------------------------------------- reproduce evidence
+
+
+def _evidence_rows(frames: list[int], steps: list[int], sha: str = "abc") -> list[dict[str, Any]]:
+    return [
+        {"steps": n, "frames_rendered": f, "timed_checks": 2, "render_cfg_sha256": sha}
+        for f, n in zip(frames, steps, strict=True)
+    ]
+
+
+def test_render_evidence_checks() -> None:
+    from ila.eval.runner import RowTags, VisionArm
+
+    spec = p8_adapter.controller_spec("pid_feedforward")
+    full = VisionArm(spec, [], RowTags("pid_feedforward"), "full")
+    good = reproduce.render_evidence(full, _evidence_rows([11, 21], [10, 20]))
+    assert good["frames_rendered"] == 32 and good["steps"] == 30 and good["episodes"] == 2
+    assert all(good["checks"].values())
+    short = reproduce.render_evidence(full, _evidence_rows([11, 20], [10, 20]))
+    assert short["checks"]["frames_equal_steps_plus_episodes"] is False
+    none = reproduce.render_evidence(full, _evidence_rows([0, 0], [10, 20], sha=""))
+    assert none["checks"]["render_cfg_sha256_single_nonempty"] is False
+    off = VisionArm(spec, [], RowTags("pid_feedforward"), "off")
+    assert (
+        reproduce.render_evidence(off, _evidence_rows([11], [10]))["checks"]["render_is_full"]
+        is False
+    )
+    assert (
+        reproduce.render_evidence(full, [])["checks"]["frames_equal_steps_plus_episodes"] is False
+    )

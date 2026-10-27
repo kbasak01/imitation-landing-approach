@@ -41,7 +41,6 @@ from ila.eval.runner import (
     RowTags,
     VisionArm,
     p8_rows,
-    render_cfg_sha256,
     run_arms_vision,
     set_single_thread_env,
     vision_rows_csv,
@@ -51,6 +50,7 @@ __all__ = [
     "PPO_CELLS",
     "ReproArm",
     "arms",
+    "render_evidence",
     "run",
 ]
 
@@ -138,6 +138,43 @@ def arms(smoke_n: int | None = None) -> list[ReproArm]:
     ]
 
 
+def render_evidence(arm: VisionArm, rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Return what the flown rows show about rendering, and whether it is what the gate needs.
+
+    Everything is read from the arm that was flown and from the rows' own render-evidence
+    columns (``frames_rendered``, ``timed_checks``, ``render_cfg_sha256``), never from constants.
+
+    Args:
+        arm: The arm as handed to the runner.
+        rows: Its rows.
+
+    Returns:
+        ``render`` (the arm's mode), the distinct ``render_cfg_sha256`` values of the rows, and
+        ``episodes``, ``steps``, ``frames_rendered``, ``timed_checks`` (sums), the per-episode
+        minimum of timed checks, and the checks ``render_is_full``,
+        ``render_cfg_sha256_single_nonempty`` and ``frames_equal_steps_plus_episodes``.
+    """
+    shas = sorted({str(r["render_cfg_sha256"]) for r in rows})
+    episodes = len(rows)
+    steps = sum(int(r["steps"]) for r in rows)
+    frames = sum(int(r["frames_rendered"]) for r in rows)
+    timed = [int(r["timed_checks"]) for r in rows]
+    return {
+        "render": arm.render,
+        "render_cfg_sha256": shas,
+        "episodes": episodes,
+        "steps": steps,
+        "frames_rendered": frames,
+        "timed_checks": sum(timed),
+        "timed_checks_min_per_episode": min(timed) if timed else 0,
+        "checks": {
+            "render_is_full": arm.render == "full",
+            "render_cfg_sha256_single_nonempty": len(shas) == 1 and shas[0] != "",
+            "frames_equal_steps_plus_episodes": episodes > 0 and frames == steps + episodes,
+        },
+    }
+
+
 def _write_json(path: Path, record: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -223,6 +260,7 @@ def run(
         wall_s = time.perf_counter() - t_start
         comparisons: dict[str, Any] = {}
         row_sha: dict[str, Any] = {}
+        evidence: dict[str, Any] = {}
         start = 0
         passed = True
         for a in gate:
@@ -245,12 +283,14 @@ def run(
             )
             result["reference"] = _rel(result["reference"])  # repo-relative, not host paths
             stats = result["methods"].get(method)
+            evidence[method] = render_evidence(a.arm, mine)
             checks = {
                 "all_identical": bool(result["all_identical"]),
                 "header_identical": bool(result["header_identical"]),
                 "n_compared_is_expected": stats is not None and stats["n_compared"] == a.expected,
                 "n_differ_is_zero": stats is not None and stats["n_differ"] == 0,
                 "n_missing_is_zero": stats is not None and stats["n_missing_in_reference"] == 0,
+                **evidence[method]["checks"],
             }
             ok = all(checks.values())
             passed = passed and ok
@@ -283,8 +323,9 @@ def run(
             "workers": workers,
             "chunk": chunk,
             "start_method": "spawn",
-            "render": "full",
-            "render_cfg_sha256": render_cfg_sha256("full"),
+            "render": {m: e["render"] for m, e in evidence.items()},
+            "render_cfg_sha256": {m: e["render_cfg_sha256"] for m, e in evidence.items()},
+            "render_evidence": evidence,
             "manifest_sha256": p8_adapter.manifest_sha256(),
             "success_yaml_sha256": p8_adapter.success_yaml_sha256(),
             "ppo_model_sha256": gate[1].arm.tags.ckpt_sha256,
