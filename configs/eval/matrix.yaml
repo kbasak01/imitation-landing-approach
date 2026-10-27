@@ -1,0 +1,31 @@
+# Phase 8 evaluation matrix. Lists are P8's frozen lists, read through ila.p8_adapter.
+bootstrap_seed: 20261023
+replicates: {iqm_ci: 2000, paired: 10000}
+always_printed: [teacher, pid_feedforward, pid_track_descend, oracle_gated]   # from P8's committed rows
+lists_all: [static, id, unseen_seastate, unseen_heading, unseen_vessel]
+core_arms:
+  - {arm: bc_state,  seeds: 5, lists: all}
+  - {arm: bc,        seeds: 5, lists: all}
+  - {arm: bc_matched, seeds: 5, lists: all}
+  - {arm: bc_dart,   seeds: 5, lists: all}
+  - {arm: bc_dagger, seeds: 5, lists: all}
+  - {arm: dp,        seeds: 5, lists: all, Ta: 8, K: 10}
+  - {arm: modular,   seeds: 5, lists: all}
+sweeps:
+  dp_Ta: {arm: dp, Ta: [1, 2, 4, 8, 12], ensembling: [false, true], lists: {id: [SS4, SS5, SS6]}}
+  dp_K: {arm: dp, K: [1, 2, 5, 10, 25, 100], lists: {id: [SS5]}}
+appearance_shift: {arms: [bc_dagger, dp, modular], variants: all, lists: {id: [SS5, SS6]}}
+ablations:   # 3 seeds each, id SS4-SS6
+  - {arm: bc, teacher: T_pid}
+  - {arm: dp, teacher: T_pid}
+  - {arm: bc, teacher: T_mix}
+  - {arm: dp, teacher: T_mix}
+  - {arm: bc, n: 100}
+  - {arm: bc, n: 300}
+  - {arm: dp, n: 100}
+  - {arm: dp, n: 300}
+  - {arm: bc, obs: minus_last_action}
+  - {arm: dp, obs: minus_last_action}
+  - {arm: bc, obs: plus_clock}
+latency_arm: {arms: [bc_dagger, dp], rule: "d = ceil(p99_ms / 33.333)", provider: fastest_parity_passing, lists: {id: [SS4, SS5, SS6]}}
+reference: {arm: R1_lerobot_dp, seeds: 3, lists: {id: [SS3, SS4, SS5, SS6]}, tag: reference_external}

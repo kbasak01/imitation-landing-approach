@@ -1,0 +1,86 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(make lint:*)",
+      "Bash(make test:*)",
+      "Bash(make smoke:*)",
+      "Bash(make verify-p8:*)",
+      "Bash(make report:*)",
+      "Bash(make figures:*)",
+      "Bash(make train-smoke:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git submodule status:*)",
+      "Bash(h5ls:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(tail:*)",
+      "Bash(ps:*)",
+      "Bash(nproc:*)",
+      "Write(./src/**)",
+      "Write(./tests/**)",
+      "Write(./configs/**)",
+      "Write(./scripts/**)",
+      "Write(./results/**)",
+      "Write(./docs/**)",
+      "Write(./splits/**)"
+    ],
+    "ask": [
+      "Bash(make collect:*)",
+      "Bash(make train-bg:*)",
+      "Bash(make dagger-bg:*)",
+      "Bash(make eval:*)",
+      "Bash(make bench:*)",
+      "Bash(make reproduce-p8:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(pip install:*)",
+      "Bash(rm:*)",
+      "Bash(kill:*)",
+      "Bash(pkill:*)"
+    ],
+    "deny": [
+      "Write(./external/**)",
+      "Edit(./external/**)",
+      "Write(./artifacts/**)",
+      "Write(./data/**)",
+      "Bash(git -C external:*)",
+      "Read(./.env)"
+    ]
+  },
+  "env": {
+    "PYTHONHASHSEED": "0",
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "OMP_NUM_THREADS": "1"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_paths.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_paths.py\" --lint"
+          }
+        ]
+      }
+    ]
+  }
+}

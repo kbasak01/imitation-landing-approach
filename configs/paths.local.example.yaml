@@ -1,0 +1,8 @@
+# Copy to configs/paths.local.yaml (gitignored) and fill in. Nothing in src/ hard-codes a path.
+p8_root: external/rl-land-on-moving-deck            # the submodule; relative to repo root
+p8_artifacts: /home/<you>/code/rl-land-on-moving-deck/artifacts   # P8's gitignored runs (PPO checkpoints, ONNX graphs)
+p8_ppo_seed0_run: ${p8_artifacts}/runs/ppo/<seed-0 run dir>       # checkpoint + VecNormalize stats; hashed in Phase 0
+p8_ppo_seed0_onnx: ${p8_artifacts}/onnx/ppo_s0.onnx               # P8 Phase 8 graph (VecNormalize folded in); optional
+data_root: /home/<you>/data/ila                       # demo store (HDF5), DAgger aggregates
+artifacts_root: artifacts                             # runs, checkpoints, ONNX, logs
+lerobot_venv: .venv-lerobot

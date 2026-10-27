@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imitation-landing-approach"
+version = "0.1.0"
+description = "Vision-based imitation learning for quadrotor landing on a heaving ship deck (simulation only)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "K. Basak", email = "kbasak@umd.edu" }]
+keywords = ["imitation-learning", "diffusion-policy", "dagger", "quadrotor", "ship-deck-landing", "pybullet"]
+
+# Only this project's ADDITIONS. P8's exact pins (torch 2.13.0, numpy 2.5.2, pybullet 3.2.7,
+# gymnasium 1.3.0, stable-baselines3 2.9.0, onnxruntime-gpu 1.29.0, ...) come from installing
+# P8 itself (`pip install -e "external/rl-land-on-moving-deck[dev]"`, REPO_SETUP.md §2) and are
+# not repeated here, so nothing in this file can re-resolve them. The pins below are what
+# resolved on the reference machine under a constraints file frozen from P8's environment
+# (protocol P0-D1): none of them moves torch, numpy or pybullet. `rld` is not declared: it is
+# the editable P8 install, not a PyPI package.
+dependencies = [
+  "torchvision==0.28.0",   # matches torch 2.13.0 (cu130 wheel, default PyPI index, as P8's torch)
+  "diffusers==0.41.0",     # DDPM/DDIM schedulers only
+  "h5py==3.16.0",          # demo store; lzf built in
+  "einops==0.8.2",         # Diffusion Policy reshapes
+]
+
+[project.optional-dependencies]
+# P8's dev pins (pytest, ruff, mypy, stubs) come from `$P8[dev]`; nothing to add yet.
+dev = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ila = ["py.typed"]
+
+# ---------------------------------------------------------------------------
+# ruff (copied from P8)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RET", "ARG", "PTH", "N", "D"]
+# D203/D213 conflict with the google convention's D211/D212.
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Tests carry module docstrings but not per-function ones, and fixtures shadow args.
+"tests/*" = ["D103", "ARG001"]
+"scripts/*" = ["D103"]
+
+# ---------------------------------------------------------------------------
+# mypy (copied from P8)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+warn_unreachable = true
+warn_no_return = true
+show_error_codes = true
+
+# Packages that ship no type information. The first line is P8's list; the second is this
+# project's additions.
+[[tool.mypy.overrides]]
+module = [
+  "pyarrow.*", "matplotlib.*", "onnx.*", "onnxruntime.*", "scipy.*", "tensorrt.*",
+  "pybullet.*", "gym_pybullet_drones.*", "rliable.*", "imageio.*", "transforms3d.*", "control.*",
+  "h5py.*", "diffusers.*", "torchvision.*", "einops.*",
+]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# pytest (P8's options; markers = P8's relevant ones + this project's)
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# No `-m` filter: `make test` runs everything on the workstation. CI deselects
+# gpu/checkpoints/data/slow explicitly (REPO_SETUP.md §7).
+addopts = "-q --strict-markers --strict-config"
+markers = [
+  "slow: takes more than a few seconds (long simulations, training runs, full episode sweeps)",
+  "gpu: requires a CUDA device",
+  "pybullet: needs a PyBullet physics client (DIRECT mode)",
+  "checkpoints: needs P8's trained PPO checkpoint (gitignored in P8; workstation only)",
+  "data: needs the demo store under data_root",
+]

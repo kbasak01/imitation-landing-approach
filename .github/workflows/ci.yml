@@ -1,0 +1,43 @@
+# CPU CI (REPO_SETUP.md §7). Tests that need a GPU, P8's gitignored checkpoints, the demo store,
+# or a long run are deselected; they run on the workstation.
+name: ci
+
+on:
+  push:
+    branches: [main, "phase-*"]
+  pull_request:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONHASHSEED: "0"
+      OMP_NUM_THREADS: "1"
+      P8: external/rl-land-on-moving-deck
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            external/rl-land-on-moving-deck/pyproject.toml
+      - name: System packages (pybullet builds from sdist on 3.12)
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3.12-dev
+      - name: Install P8 (its exact pins), then this repo
+        run: |
+          python -m pip install -U pip
+          pip install -e $P8/third_party/deck-motion-forecast
+          pip install -e $P8/third_party/gym-pybullet-drones
+          pip install -e "$P8[dev]"
+          pip freeze --exclude-editable > /tmp/p8_constraints.txt
+          pip install -c /tmp/p8_constraints.txt -e ".[dev]"
+          python -c "import rld, ila"
+      - name: Lint
+        run: make lint PY=python RUFF=ruff MYPY=mypy PYTEST=pytest
+      - name: Test (CPU subset)
+        run: pytest -m "not gpu and not checkpoints and not data and not slow"
