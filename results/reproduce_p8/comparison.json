@@ -11,7 +11,10 @@
         "header_identical": true,
         "n_compared_is_expected": true,
         "n_differ_is_zero": true,
-        "n_missing_is_zero": true
+        "n_missing_is_zero": true,
+        "render_is_full": true,
+        "render_cfg_sha256_single_nonempty": true,
+        "frames_equal_steps_plus_episodes": true
       },
       "passed": true,
       "compare_to_reference": {
@@ -40,7 +43,10 @@
         "header_identical": true,
         "n_compared_is_expected": true,
         "n_differ_is_zero": true,
-        "n_missing_is_zero": true
+        "n_missing_is_zero": true,
+        "render_is_full": true,
+        "render_cfg_sha256_single_nonempty": true,
+        "frames_equal_steps_plus_episodes": true
       },
       "passed": true,
       "compare_to_reference": {
