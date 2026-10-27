@@ -617,6 +617,25 @@ train, and the determinism study must fly `select`.
 
 ## Phase 3
 
+*Before you start (from Phase 2).*
+- **Already built** (P2-D4): `splits/select.parquet` (150 episodes, `07ecf049…422b`), the
+  `train` generator with named streams, and the `bc`/`dp` architectures.
+- **P3-D1 must decide:**
+  - whether the demo sets, DART and DAgger share one `train` stream;
+  - DDIM `timestep_spacing` (`leading` gives near-pure noise at K = 1; `trailing` is
+    recommended).
+
+  P3-D1 must also note that P8's teacher has seen the `tune` realizations in P8's own tuning.
+- **Teacher path:** collection flies and labels `T_ppo` on SB3, the gate-certified path. ONNX
+  passes parity but is not trajectory-identical (P2-D1).
+- **Budget:** collection projects to about 0.11 h at 24 workers, 96 px (P2-D2). HDF5 writes are
+  not timed, so measure them in the first collection.
+- **Obligations carried from P1-D2:** move the Phase 1 test fixtures to a `train` realization
+  (`draw_train`); the appearance-shift refusal; the poison test; the exact student-columns test.
+- **GPU path:** P2-D3 item 3 binds before Phase 8. Phase 3 needs only the CPU teacher path.
+- **Re-run the reproduction gate** (`make reproduce-p8`, about 4 min) after any change to
+  `ila/render/`, `ila/eval/runner.py` or the adapter.
+
 ### P3-D1 — FROZEN IMITATION-LEARNING PROTOCOL (draft in Phase 3; frozen only with the user's dated approval)
 
 Sections to fill, in this order (mirrors P8's P3-D1):
@@ -731,3 +750,38 @@ No threshold changes.
   - Like the gate, it trains, selects and tunes nothing.
   - It cannot move to the `train` pool, because P8's reference rows exist only on the frozen
     lists.
+
+### Gate 2 passed (2026-10-27)
+
+| Criterion (plan Phase 2 exit gate) | Evidence | Verdict |
+|---|---|---|
+| `make lint` / `make test` | ruff and format clean; `mypy --strict` 53 files; 473 passed in 181.9 s, all markers (`slow`, `pybullet`, `checkpoints`, `gpu`), at `5d09486` | PASS |
+| Both reproduction comparisons pass with zero differing rows | `results/reproduce_p8/comparison.json` (`89007066…09df1`): `passed: true`; `pid_feedforward` 2 800/2 800 vs P8 `e01`, `ppo` seed 0 400/400 vs P8 `e07`; differ 0, missing 0, headers identical | PASS |
+| …with render **on** | `results/reproduce_p8/run_info.json` (`8764377e…cc65`), taken from the arms flown: render `full` and `render_cfg_sha256` `53f80265…0380` (= P1-D1) for both methods. Frames: `pid_feedforward` 428 781 = 425 981 steps + 2 800 episodes, `ppo` 25 197 = 24 797 + 400. Timed image/obs step-count checks: 18 343 and 1 469. `ila_commit` `e54fa2e`, no dirty paths, 254.4 s. P8-column row SHA-256 `d5ddc55d…ec31` / `a836275f…bf50`, the same as both earlier runs | PASS |
+| Label parity met (or SB3 path chosen) | `results/label_parity.json`: max-abs 3.58e-7 ≤ 1e-6. Phase 3 still flies the teacher on SB3 (P2-D1) | PASS |
+| Throughput CSV committed | `results/throughput.csv` (`11898e1e…1879`) and `results/throughput_projection.csv` (`59fb8fa3…9191`) | PASS |
+| Budget and determinism decisions recorded | P2-D2: 96 px kept, about 12.2 h central / 70.6 h upper outside training. P2-D3: CPU single-sample path bit-identical; GPU path TF32 off, with a binding re-measurement on a trained `dp` before Phase 8. P2-D4: work pulled forward | PASS |
+| `privileged-leak-auditor` (timing, render invariance) | Pre-gate: FINDINGS (noise-key RISK, closed). Attempt 1: FINDINGS (render evidence RISK). Attempt 2: **no LEAK, no RISK**, 2 NOTEs on the record, handled below | PASS |
+
+Reviewers: `privileged-leak-auditor`, three rounds; final round no LEAK and no RISK.
+
+**Supersessions** (entries are not edited):
+- P2-D1's evidence named the `c88c106` re-run's files (`75b34e8b…`, `4ea43413…`, 254.8 s).
+  Those files are superseded by the `e54fa2e` run in the table above, which adds the frame
+  evidence. The rows are unchanged.
+- The full-row `episodes_<method>.csv` under `artifacts/` now has two trailing columns,
+  `frames_rendered` and `timed_checks`, after the P9 columns. Its SHA-256 has therefore changed.
+  The P8-column CSVs that the comparison uses have not.
+
+**Phase 9 obligations** (leak audit, gate review, NOTE B):
+- Assert that the exported graph's input names are a subset of
+  {images, proprio, noise, timestep}.
+- Extend the step-guard read-site scan to any `BatchPolicy` in `ila/deploy`, including
+  aliased reads of `key.step` (e.g. `k = r.key; k.step`, `r.key[2]`). Today the scan covers
+  `eval/batched.py` and `DPStudent` only.
+
+Incidents:
+- Attempt 1 failed on the render-on evidence. The fix is `e54fa2e`.
+- The first full reproduction ran on an uncommitted tree. It was re-run twice on committed
+  trees.
+- No threshold changed.
