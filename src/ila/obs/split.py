@@ -214,6 +214,27 @@ class ObsContract:
         """
         return np.take(self._full(obs), self._proprio_idx, axis=-1)
 
+    def field(self, obs: ArrayLike, name: str) -> NDArray[np.float32]:
+        """Return one named P8 field of observation(s), for checks and audits.
+
+        Not a student path: the field may be privileged. Data code uses it to verify
+        alignment (``last_action[t] == action_exec[t-1]``) and to poison stored columns in
+        tests, without ever indexing an observation by position.
+
+        Args:
+            obs: P8 observation(s), shape ``(..., 25)``.
+            name: A P8 field name (``layout`` key).
+
+        Returns:
+            Float32, shape ``(..., size)`` of the field, a new array.
+
+        Raises:
+            KeyError: If ``name`` is not a P8 field.
+            ValueError: If the last axis is not 25 wide.
+        """
+        offset, size = self.layout[name]
+        return np.take(self._full(obs), np.arange(offset, offset + size, dtype=np.intp), axis=-1)
+
     def student_input(self, images: ArrayLike, obs_window: ArrayLike) -> StudentInput:
         """Build a :class:`StudentInput` from images and the matching full observations.
 

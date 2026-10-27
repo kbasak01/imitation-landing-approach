@@ -11,13 +11,13 @@ import rld.eval.stats as p8_stats
 from rld.envs.observation import obs_fields as p8_obs_fields
 
 from ila import p8_adapter
+from ila.data.episodes import read_split
 
 
-def _env_after_reset(
-    list_name: str = "id", ss: str = "SS6"
-) -> tuple[p8_adapter.DeckLandingAviary, np.ndarray]:
+def _env_after_reset(ss: str = "SS5") -> tuple[p8_adapter.DeckLandingAviary, np.ndarray]:
+    """Reset on a ``train``-pool row of the committed ``demos`` split (P1-D2 obligation 1)."""
     cfgs = p8_adapter.load_eval_configs()
-    listed = next(r for r in p8_adapter.read_list(p8_adapter.list_path(list_name)) if r.ss == ss)
+    listed = next(r for r in read_split("demos_0-1999") if r.ss == ss)
     env = p8_adapter.make_env(cfgs, listed)
     obs, _ = env.reset(seed=listed.episode_seed)
     return env, obs

@@ -3,15 +3,23 @@ generator_seed: 20261023
 pool: train
 stratify_by: [ss]            # SS3, SS4, SS5 in equal shares; headings/speeds dealt round-robin
 select_list: {pool: tune, per_ss: 50, sea_states: [SS3, SS4, SS5]}   # 150 episodes -> splits/select.parquet
+# Every demo collection flies a prefix of ONE train stream (ila.data.episodes): ppo_2000 = global
+# indices 0-1999 (splits/demos_0-1999.parquet); pid_1000, mix_1000 and each DART sigma set =
+# indices 0-999 (splits/demos_0-999.parquet), i.e. the same 1 000 episodes as the `bc` set.
+# DAgger rollouts use their own streams, never this one (see dagger.stream).
+demo_stream: demos
 teachers:
-  T_ppo: {source: p8_ppo, seed: 0, label_path: sb3}     # label_path may become onnx_cpu after Phase 2 parity
+  T_ppo: {source: p8_ppo, seed: 0, label_path: sb3}     # P2-D1: collection flies and labels on SB3
   T_pid: {source: p8_controller, name: pid_feedforward}
   T_mix: {mixture: {T_ppo: 0.5, gated: 0.5}, draw: per_episode, seed: 20261023}
 collections:
   ppo_2000: {teacher: T_ppo, n: 2000}      # first 1000 = `bc`/`dp` set; all 2000 = `bc_matched`
   pid_1000: {teacher: T_pid, n: 1000}
   mix_1000: {teacher: T_mix, n: 1000}
-  dart: {teacher: T_ppo, n: 1000, sigma_grid: [0.05, 0.10, 0.20]}   # normalised action units, on executed action
+  # normalised action units, Gaussian on the EXECUTED action only; label = clean teacher action.
+  # Per-episode noise generator seeded by (seed, episode position, episode seed), not by sigma:
+  # the three sigma sets share their standard-normal draws (common random numbers).
+  dart: {teacher: T_ppo, n: 1000, sigma_grid: [0.05, 0.10, 0.20], seed: 20261023}
 success_filter_for_bc: true   # kept fraction reported; DAgger rollouts are never filtered
 dagger:
   iterations: 5
@@ -19,3 +27,5 @@ dagger:
   beta: [0.5, 0.25, 0.125, 0.0, 0.0]   # prob. of executing the teacher's action per step, iterations 1..5
   warm_start: true
   steps_per_iteration: 10000
+  seeds: [0, 1, 2, 3, 4]
+  stream: "dagger_s{seed}_i{iteration}"   # one train stream per (student seed, iteration), 200 each

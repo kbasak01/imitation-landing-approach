@@ -24,7 +24,9 @@ def test_imports() -> None:
 @pytest.mark.pybullet
 def test_one_env_reset() -> None:
     cfgs = p8_adapter.load_eval_configs()
-    listed = p8_adapter.read_list(p8_adapter.list_path("id"))[0]
+    from ila.data.episodes import read_split
+
+    listed = read_split("demos_0-1999")[0]  # a train-pool row (P1-D2 obligation 1)
     env = p8_adapter.make_env(cfgs, listed)
     try:
         obs, _ = env.reset(seed=listed.episode_seed)

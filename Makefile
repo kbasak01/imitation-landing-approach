@@ -8,10 +8,12 @@ RUFF   ?= $(shell [ -x .venv/bin/ruff ]   && echo .venv/bin/ruff   || echo ruff)
 MYPY   ?= $(shell [ -x .venv/bin/mypy ]   && echo .venv/bin/mypy   || echo mypy)
 PYTEST ?= $(shell [ -x .venv/bin/pytest ] && echo .venv/bin/pytest || echo pytest)
 
-# `make collect TEACHER=ppo N=1000`, `make train-bg CFG=configs/train/bc.yaml SEED=0`,
-# `make train-smoke ARM=bc`.
+# `make collect COLLECTION=ppo_2000` (or `TEACHER=ppo N=2000`), `make train-bg
+# CFG=configs/train/bc.yaml SEED=0`, `make train-smoke ARM=bc`.
 TEACHER ?= ppo
 N       ?= 1000
+COLLECTION ?= $(TEACHER)_$(N)
+WORKERS ?= 24
 CFG     ?= configs/train/bc.yaml
 SEED    ?= 0
 ARM     ?= bc
@@ -41,12 +43,17 @@ throughput: ; mkdir -p artifacts/runs/throughput && $(PY) scripts/throughput.py
 # Phase 2 determinism contract -> results/determinism/. Background job:
 #   mkdir -p artifacts/runs/determinism && nohup make determinism > artifacts/runs/determinism/run.log 2>&1 &
 determinism: ; mkdir -p artifacts/runs/determinism && $(PY) scripts/determinism.py
+# Phase 3 demo collection: COLLECTION in ppo_2000 pid_1000 mix_1000 dart_0.05 dart_0.10 dart_0.20
+# -> <data_root>/demos/<COLLECTION>.h5 (+ .manifest.json); status/log/manifest/episodes.csv in
+# artifacts/runs/collect/<COLLECTION>/. Background job (prepare with /train-job):
+#   mkdir -p artifacts/runs/collect/ppo_2000 && nohup make collect COLLECTION=ppo_2000 > artifacts/runs/collect/ppo_2000/nohup.log 2>&1 &
+# Pilot (foreground): $(PY) scripts/collect.py pid_1000 --limit 8 --data-root <scratch> --run-root <scratch>/runs
+collect: ; mkdir -p artifacts/runs/collect/$(COLLECTION) && $(PY) scripts/collect.py $(COLLECTION) --workers $(WORKERS)
 
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.
 # Replace the stub in its own phase.
 
-collect:      ; @echo "not implemented: phase 3 (TEACHER=$(TEACHER) N=$(N))"
 train-smoke:  ; @echo "not implemented: phase 4 (ARM=$(ARM))"
 train-bg:     ; @echo "not implemented: phase 4 (CFG=$(CFG) SEED=$(SEED))"
 dagger-bg:    ; @echo "not implemented: phase 5"
