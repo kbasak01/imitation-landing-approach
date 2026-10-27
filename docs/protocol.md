@@ -314,6 +314,26 @@ Phase 2 obligations (runner, `ila/eval/runner.py` and `ila/eval/batched.py`):
 
 ## Phase 2
 
+*Before you start (from Phase 1).*
+- **Runner contract.** Call `scene.attach(env)` after every `env.reset()`, including P8's
+  `set_motion` + reset reuse pattern. Then call `Scene.render()` after the reset and after each
+  `env.step()`. Use `render_with_meta()` only inside the timing assertion, and never return,
+  yield or store a `RenderMeta` (P1-D2 item 5).
+- **Adapter gap.** The adapter does not wrap P8's `set_motion` / `pad_offset_for` yet. Reusing one
+  env per chunk the way P8's `run_chunk` does needs them added there.
+- **Pixel convention.** TinyRenderer puts the optical axis at pixel (48, 47) at 96 px. Any pixel
+  label must use `ila.render.camera.project_points` (P1-D1).
+- **Render cost** (single process, i9-10980XE): about 3.5 ms per 96 px frame for the camera, plus
+  about 0.9 ms for the full scene. Physics alone runs 300 steps in 0.71 s. Measure properly in the
+  throughput run.
+- **Texture shimmer.** Nearest-neighbour sampling of the 512 px texture shimmers at start
+  altitude. It is deterministic, but weigh it in the 64 px decision.
+- **Phase 2 obligations from P1-D2:**
+  - a test pinning the runner's public rollout and record types (no `RenderMeta`, no step count);
+  - a test that students receive only what `ObsContract.student_input` builds.
+- **CI coverage.** The render-invariance tests are marked `slow`, so CI deselects them. They run
+  locally, and every gate re-runs the full suite.
+
 ### P2-D1 — Reproduction gate result (to fill)
 ### P2-D2 — Throughput and the budget it implies (to fill)
 ### P2-D3 — Determinism contract (to fill)
@@ -370,3 +390,23 @@ Incident (attempt 1 → 2): the first CI run was green, but its mypy saw 39 file
 An unanchored `data/` in `.gitignore` had also matched `src/ila/data/` and `configs/data/`, so
 seven skeleton modules and the starter kit's `configs/data/demos.yaml` were not committed. Root
 patterns are now anchored (`28ff2cc`) and the re-run checks all 46 files. No threshold changed.
+
+### Gate 1 passed (2026-10-27)
+
+| Criterion (plan Phase 1 exit gate) | Evidence | Verdict |
+|---|---|---|
+| All tests green | Local `make test`: 191 passed, including the `slow`, `pybullet` and `checkpoints` tests (render invariance: off / camera / full scene over 300 airborne steps, a descent to contact, re-attach after reset, and a negative control). `make smoke`: 6 passed. CI run 40533051917 (job 122290788981, commit `844b227`): 183 passed, 8 deselected (`slow`/`checkpoints`) | PASS |
+| `make lint` | ruff and format clean; `mypy --strict` clean on 47 files, locally and in the same CI run | PASS |
+| Leak tests | `tests/test_obs_split.py`: every P8 field classified once, offsets equal P8's `obs_fields()`, `StudentInput` refuses privileged or unnamed proprio, each ablation changes exactly one field, slice scanner (32 must-flag patterns). `tests/test_render_access.py`. Background and no-world-fixed-visual tests in `tests/test_render_scene.py` | PASS |
+| Render-invariance tests | Listed in the first row; per-step state byte-identical across all three render modes | PASS |
+| `privileged-leak-auditor` verdict | Round 1: FINDINGS (2 RISKs, 5 NOTEs). Round 2: FINDINGS (2 RISKs, 3 NOTEs). Round 3: **CLEAN**, no LEAK or RISK. Its three optional tightenings were applied afterwards; they touch tests and P1-D2 only | PASS |
+| P1-D1 recorded | Plate visuals, the twin, P8's static marker hidden, ground recolour, camera numbers with `configs/render/camera.yaml` SHA-256 `53f80265…0380` (matches the committed file), far plane 20 m (deviation approved by the user) | PASS |
+| `docs/CONVENTIONS.md` identical to the il-conventions skill | `tests/test_conventions_mirror.py` | PASS |
+| P8 untouched | Submodule at `7237b706…`; no diff under `external/` | PASS |
+
+Reviewers: `privileged-leak-auditor` CLEAN (third round).
+
+Incident: the first CI run for Phase 1 (40531591466) failed twice in the install step with Errno 28
+(no space left) while building `tensorrt_cu13_libs`, before any code ran. A "Free disk space"
+step in `.github/workflows/ci.yml` (`844b227`) raised free disk from 13 GB to 35 GB, and the
+re-run passed. No threshold changed.
