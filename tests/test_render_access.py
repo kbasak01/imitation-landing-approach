@@ -8,10 +8,11 @@ restricts which packages may even reference them:
 * ``ila/train``, ``ila/policies``, ``ila/deploy``: none of META_NAMES and no ``pybullet``.
 * ``ila/data``: may build ``Scene`` via ``attach`` and call ``.render()`` (pixels only), but none
   of META_NAMES and no ``pybullet`` (all PyBullet access belongs to ``ila/render`` and the adapter).
-* ``ila/eval``: restricted like the others, EXCEPT ``eval/runner.py`` and ``eval/batched.py``
-  (EXEMPT). The runner may call ``render_with_meta`` for its timing assertion
-  (``meta.physics_step_count == 8 t``) only; it never returns, yields or passes on a
-  ``RenderMeta`` (P1-D2). Metrics, reports, hypotheses and arms get nothing.
+* ``ila/eval``: restricted like the others, EXCEPT ``eval/runner.py`` (EXEMPT). The runner may
+  call ``render_with_meta`` for its timing assertion (``meta.physics_step_count == 8 t``) only;
+  it never returns, yields or passes on a ``RenderMeta`` (P1-D2). ``eval/batched.py`` was exempt
+  until the Phase 2 leak audit (NOTE 2) and is scanned since: it has no forbidden reference.
+  Metrics, reports, hypotheses and arms get nothing.
 * ``ila/render``, ``ila/p8_adapter.py`` and ``ila/obs`` are the implementation and are not
   scanned here.
 
@@ -56,7 +57,7 @@ RESTRICTED: dict[str, frozenset[str]] = {
 }
 
 #: Files (relative to src/ila) exempt from RESTRICTED: the runner's timing assertion only.
-EXEMPT: frozenset[str] = frozenset({"eval/runner.py", "eval/batched.py"})
+EXEMPT: frozenset[str] = frozenset({"eval/runner.py"})
 
 
 def _top(module: str) -> str:
@@ -157,7 +158,7 @@ def _offenders(package: str, sources: dict[str, str]) -> list[str]:
     ]
 
 
-def test_eval_exemption_is_only_runner_and_batched() -> None:
+def test_eval_exemption_is_only_runner() -> None:
     planted = "frame, meta = sc.render_with_meta()\nimport pybullet\n"
     sources = {
         "eval/runner.py": planted,
@@ -167,6 +168,7 @@ def test_eval_exemption_is_only_runner_and_batched() -> None:
     }
     offenders = _offenders("eval", sources)
     assert {o.split(":")[0] for o in offenders} == {
+        "src/ila/eval/batched.py",
         "src/ila/eval/metrics.py",
         "src/ila/eval/report.py",
     }

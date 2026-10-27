@@ -1,0 +1,42 @@
+section,name,mode,size_px,device,numerics,workers,batch,K,Ta,n,p50_ms,p99_ms,mean_ms,episodes,steps,wall_s,steps_per_s,spawn_s,steady_steps_per_s,mean_batch,note
+render,tinyrenderer_frame,camera,64,cpu,,1,,,,300,1.9698,2.7956,2.0618,,,,,,,,single process; frame time only
+render,tinyrenderer_frame,full,64,cpu,,1,,,,300,1.9765,3.0523,2.1207,,,,,,,,single process; frame time only
+render,tinyrenderer_frame,camera,96,cpu,,1,,,,300,4.0809,5.7686,4.2687,,,,,,,,single process; frame time only
+render,tinyrenderer_frame,full,96,cpu,,1,,,,300,4.0854,6.3148,4.4277,,,,,,,,single process; frame time only
+render,tinyrenderer_frame,camera,128,cpu,,1,,,,300,6.9388,10.2611,7.3407,,,,,,,,single process; frame time only
+render,tinyrenderer_frame,full,128,cpu,,1,,,,300,7.2446,12.9826,8.0018,,,,,,,,single process; frame time only
+teacher,pid_feedforward,full,96,cpu,,1,,,,,,,,16,2392,18.028,132.69,0.0,132.69,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,pid_feedforward,full,96,cpu,,8,,,,,,,,128,19435,29.32,662.86,2.714,730.48,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,pid_feedforward,full,96,cpu,,16,,,,,,,,256,39106,32.698,1195.98,3.168,1324.28,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,pid_feedforward,full,96,cpu,,24,,,,,,,,384,59127,37.422,1580.02,3.913,1764.55,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,ppo,full,96,cpu,,1,,,,,,,,16,976,10.542,92.59,0.0,92.59,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,ppo,full,96,cpu,,8,,,,,,,,128,7861,17.971,437.44,2.811,518.54,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,ppo,full,96,cpu,,16,,,,,,,,256,15749,20.514,767.72,3.356,917.87,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+teacher,ppo,full,96,cpu,,24,,,,,,,,384,23638,23.397,1010.31,3.781,1205.02,,run_list_vision chunk 4; steps_per_s includes spawn; steady = steps / (wall - separately measured spawn_s)
+micro,dummy_bc,,,cuda,strict,,1,,,30,3.8472,4.1269,3.8359,,,,,,,,one act_batch call; TF32 off
+micro,dummy_bc,,,cuda,strict,,8,,,30,5.2218,5.992,5.2577,,,,,,,,one act_batch call; TF32 off
+micro,dummy_bc,,,cuda,strict,,24,,,30,10.7814,11.6902,10.9042,,,,,,,,one act_batch call; TF32 off
+micro,dummy_dp,,,cuda,strict,,1,10,,30,80.5532,89.9572,81.1157,,,,,,,,one sample_batch call (one chunk per sample); TF32 off
+micro,dummy_dp,,,cuda,strict,,8,10,,30,80.9178,88.202,81.59,,,,,,,,one sample_batch call (one chunk per sample); TF32 off
+micro,dummy_dp,,,cuda,strict,,24,10,,30,91.4307,98.5945,91.7956,,,,,,,,one sample_batch call (one chunk per sample); TF32 off
+micro,dummy_dp,,,cuda,strict,,1,100,,5,772.1643,793.2017,774.6116,,,,,,,,one sample_batch call (one chunk per sample); TF32 off
+micro,dummy_dp,,,cuda,strict,,8,100,,5,750.6526,753.9797,747.0682,,,,,,,,one sample_batch call (one chunk per sample); TF32 off
+micro,dummy_dp,,,cuda,strict,,24,100,,5,751.6369,759.4738,752.9658,,,,,,,,one sample_batch call (one chunk per sample); TF32 off
+micro,dummy_bc,,,cpu,strict,,1,,,30,31.1435,35.1354,31.5759,,,,,,,,one act_batch call; torch threads 1
+micro,dummy_dp,,,cpu,strict,,1,10,,5,169.8758,170.7335,169.8263,,,,,,,,one sample_batch call (one chunk per sample); torch threads 1
+micro,dummy_dp,,,cpu,strict,,1,100,,5,1420.0022,1426.279,1418.2003,,,,,,,,one sample_batch call (one chunk per sample); torch threads 1
+e2e,dummy_bc,full,96,cuda,strict,1,1,,,1440,4.5065,18.0518,5.5986,4,1440,21.575,66.74,3.718,80.64,1.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 360.0 steps (random-init net)
+e2e,dummy_bc,full,96,cuda,strict,8,8,,,1440,7.0063,9.2222,7.1343,32,11520,27.307,421.87,4.348,501.77,8.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 360.0 steps (random-init net)
+e2e,dummy_bc,full,96,cuda,strict,24,24,,,1440,10.7414,12.556,11.0177,96,34560,41.775,827.28,6.244,972.66,24.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 360.0 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,1,1,10,1,164,79.8581,96.2712,81.3353,4,164,18.931,8.66,3.962,10.96,1.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 41.0 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,8,8,10,1,200,81.2065,132.8974,83.5134,32,1227,25.689,47.76,4.143,56.95,6.13,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 38.3 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,24,24,10,1,188,91.1941,138.8455,94.6068,96,3589,32.07,111.91,5.756,136.39,19.09,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 37.4 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,1,1,10,8,138,0.0148,94.3285,12.7758,4,138,6.668,20.7,3.679,46.17,1.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 34.5 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,8,8,10,8,241,0.0599,94.098,40.8236,32,1349,19.02,70.93,4.376,92.12,5.6,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 42.2 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,24,24,10,8,266,79.6566,96.66,52.9661,96,3981,28.931,137.6,5.829,172.32,14.97,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 41.5 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,1,1,100,1,218,754.4476,797.6621,757.3462,4,218,171.589,1.27,3.77,1.3,1.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 54.5 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,8,8,100,1,402,759.0015,832.2417,763.3157,32,2510,319.416,7.86,4.113,7.96,6.24,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 78.4 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,24,24,100,1,455,779.2314,893.2293,787.0428,96,7085,378.198,18.73,5.879,19.03,15.57,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 73.8 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,1,1,100,8,189,0.012,774.2089,101.2015,4,189,24.294,7.78,3.565,9.12,1.0,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 47.2 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,8,8,100,8,306,0.0572,847.1062,376.2373,32,1891,125.128,15.11,4.178,15.63,6.18,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 59.1 steps (random-init net)
+e2e,dummy_dp,full,96,cuda,strict,24,24,100,8,410,742.5725,793.723,468.8377,96,5749,209.711,27.41,5.87,28.2,14.02,lockstep workers=B; p50/p99 = server act_batch call; steady = steps / (first call start .. last call end); mean episode 59.9 steps (random-init net)

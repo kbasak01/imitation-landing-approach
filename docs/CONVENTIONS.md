@@ -60,6 +60,14 @@ executing (DP) or the previous action is held (BC). `d = ceil(p99_ms / 33.333)`.
 - Diffusion initial noise and per-step noise: `torch.Generator` seeded by
   `hash64(run_seed, episode_seed, t)`; never a global RNG. Graph exports take noise as an input.
 - Data loading: worker seeds from `(run_seed, epoch, worker_id)`.
+- **The clock and the episode seed never enter a network.** The control step t and the episode
+  seed reach a student only as a noise key and a schedule index. They may (a) seed the per-request
+  `torch.Generator` via `noise_seed(run_seed, episode_seed, t)`, (b) feed `chunking`
+  (`is_replan_step`, ensembling indices), and (c) drive slot bookkeeping. They never enter an
+  `nn.Module` forward, a feature, a conditioning vector, a normaliser or a training batch. Besides
+  pixels and proprio, the only integer a network sees is the diffusion index
+  k ∈ [0, num_train_timesteps). DDPM training noise comes from the data-loading generator
+  (run_seed, epoch, worker_id), never from `noise_seed(·, ·, t)`.
 
 ## Demo store keys (HDF5, one group per episode)
 `images uint8[T,96,96,3]`, `proprio f32[T,13]`, `priv f32[T,11]`, `teacher_obs f32[T,25]`,

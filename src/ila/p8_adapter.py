@@ -15,6 +15,20 @@ Names taken from P8's source (pinned commit, P0-D1), not from memory:
 * statistics: every name in ``rld.eval.stats.__all__``, held by reference in :data:`stats`.
 * teachers: ``rld.rl.train.build_policy`` (PPO) and ``rld.eval.runner.controller_spec``
   (registry controllers), exactly as P8's evaluation builds them.
+* the runner contract (Phase 2): ``rld.eval.runner``'s public constants, ``PolicySpec``,
+  ``controller_spec``, ``callable_spec``, ``episode_rows_csv``, ``feed_skip_reason``,
+  ``split_runnable`` and ``EpisodeListMismatchError``; ``rld.eval.envs.motion_for`` /
+  ``pad_offset_for``; ``rld.control.base.PrivilegedContext``; ``rld.eval.truth``'s
+  ``td_in_quiescent_window`` / ``touchdown_rule``; ``rld.envs.landing_env.ACTION_DIM``;
+  ``rld.eval.reproduce.compare_to_reference``; ``rld.eval.storage.read_text``;
+  ``rld.deck.splits.dev_pool``; for the splits (Phase 3), ``rld.eval.episodes``'s
+  ``EpisodeDraw``, ``resolve_draws``, ``label_entropy``, ``cell_order``, ``canonical_csv``,
+  ``content_sha256`` and ``DEFAULT_PAD``; for teacher label parity, ``rld.deploy.parity``'s
+  ``reference_actions``, ``open_session``, ``check_ort``, ``PARITY_TOLERANCE`` and
+  ``rld.deploy.onnx_policy``'s ``cpu_session`` / ``attach_onnx``. ``realization_key`` is dmf's
+  (``dmf.data.splits``), the very object P8's runner imports. All are held by reference
+  (``tests/test_p8_adapter.py`` asserts ``is``-identity). :func:`set_motion` is the one
+  helper added here, a transcription of the ``set_motion`` call in P8's ``run_chunk``.
 """
 
 from __future__ import annotations
@@ -30,33 +44,93 @@ from typing import Any, Final
 
 import pybullet as pyb
 import yaml
+from dmf.data.splits import realization_key
 from rld.config import REPO_ROOT as P8_ROOT
-from rld.envs.landing_env import DeckLandingAviary
+from rld.control.base import PrivilegedContext
+from rld.deck.splits import dev_pool
+from rld.deploy.onnx_policy import attach_onnx, cpu_session
+from rld.deploy.parity import PARITY_TOLERANCE, check_ort, open_session, reference_actions
+from rld.envs.landing_env import ACTION_DIM, DeckLandingAviary
 from rld.envs.observation import OBS_DTYPE, ObsField
 from rld.envs.observation import obs_fields as _p8_obs_fields
 from rld.envs.platform import PAD_MARKER_HEIGHT_M, PAD_MARKER_RGBA, PLATE_RGBA
 from rld.eval import stats as _p8_stats
-from rld.eval.envs import EvalConfigs, load_eval_configs, motion_for
+from rld.eval import storage as _p8_storage
+from rld.eval.envs import EvalConfigs, MotionKind, load_eval_configs, motion_for, pad_offset_for
 from rld.eval.envs import make_env as _p8_make_env
-from rld.eval.episodes import ListedEpisode, list_names, read_list
-from rld.eval.runner import EvalPolicy, controller_spec
+from rld.eval.episodes import (
+    DEFAULT_PAD,
+    EpisodeDraw,
+    ListedEpisode,
+    canonical_csv,
+    cell_order,
+    content_sha256,
+    label_entropy,
+    list_names,
+    read_list,
+    resolve_draws,
+)
+from rld.eval.reproduce import compare_to_reference
+from rld.eval.runner import (
+    DEFAULT_CHUNK,
+    DEFAULT_WORKERS,
+    EPISODE_COLUMNS,
+    LIST_ROW_COLUMNS,
+    RECORD_COLUMNS,
+    EpisodeListMismatchError,
+    EvalPolicy,
+    PolicySpec,
+    callable_spec,
+    controller_spec,
+    episode_rows_csv,
+    feed_skip_reason,
+    split_runnable,
+)
+from rld.eval.truth import td_in_quiescent_window, touchdown_rule
 from rld.rl.train import build_policy
 
 __all__ = [
+    "ACTION_DIM",
+    "DEFAULT_CHUNK",
+    "DEFAULT_PAD",
+    "DEFAULT_WORKERS",
+    "EPISODE_COLUMNS",
+    "LIST_ROW_COLUMNS",
     "OBS_DTYPE",
     "P8_ROOT",
+    "PARITY_TOLERANCE",
     "PAD_MARKER_HEIGHT_M",
     "PAD_MARKER_RGBA",
     "PLATE_RGBA",
+    "RECORD_COLUMNS",
     "REPO_ROOT",
     "TEACHERS",
     "DeckLandingAviary",
+    "EpisodeDraw",
+    "EpisodeListMismatchError",
     "EvalConfigs",
     "EvalPolicy",
     "ListedEpisode",
+    "MotionKind",
     "ObsField",
     "P8Stats",
+    "PolicySpec",
+    "PrivilegedContext",
     "SceneHandles",
+    "attach_onnx",
+    "callable_spec",
+    "canonical_csv",
+    "check_ort",
+    "cell_order",
+    "compare_to_reference",
+    "content_sha256",
+    "controller_spec",
+    "cpu_session",
+    "dev_pool",
+    "episode_rows_csv",
+    "feed_skip_reason",
+    "label_entropy",
+    "list_names",
     "list_path",
     "list_paths",
     "load_eval_configs",
@@ -64,18 +138,33 @@ __all__ = [
     "make_env",
     "manifest_path",
     "manifest_sha256",
+    "motion_for",
     "obs_fields",
+    "open_session",
     "p8_commit",
     "p8_submodule_commits",
+    "pad_offset_for",
     "physics_step_count",
     "read_list",
+    "read_text",
+    "realization_key",
+    "reference_actions",
+    "resolve_draws",
     "scene_handles",
+    "set_motion",
     "sha256_file",
+    "split_runnable",
     "stats",
     "success_yaml_path",
     "success_yaml_sha256",
+    "td_in_quiescent_window",
     "teacher",
+    "touchdown_rule",
 ]
+
+#: P8's ``rld.eval.storage.read_text``: the uncompressed text of a logical CSV, reading its
+#: ``.csv.gz`` sibling when present (P8 P7-D1a §12). Held by reference.
+read_text: Final = _p8_storage.read_text
 
 #: This repository's root, resolved from this file so nothing depends on the working directory.
 REPO_ROOT: Path = Path(__file__).resolve().parents[2]
@@ -180,6 +269,51 @@ def make_env(cfgs: EvalConfigs, listed: ListedEpisode) -> DeckLandingAviary:
         episode_seed=listed.episode_seed,
     )
     return _p8_make_env(cfgs, motion, listed.vessel, listed.pad, listed.episode_seed)
+
+
+def set_motion(
+    env: DeckLandingAviary,
+    cfgs: EvalConfigs,
+    listed: ListedEpisode,
+    pad: str | None = None,
+    *,
+    kind: MotionKind = "jonswap",
+) -> tuple[str, tuple[float, float, float]]:
+    """Re-point a reused environment at one listed episode, exactly as P8's ``run_chunk`` does.
+
+    A transcription of the per-episode ``env.set_motion(motion_for(...), pad, offset)`` call in
+    ``rld.eval.runner.run_chunk`` (pinned commit): the motion source of the listed realization
+    (``motion_for`` with the listed ``episode_seed``), the effective pad and that pad's standing
+    lever arm (``pad_offset_for``). The new source takes effect at the next ``env.reset()``.
+
+    Args:
+        env: A P8 environment (built by :func:`make_env`), between episodes.
+        cfgs: P8's committed configs.
+        listed: The listed episode about to be flown.
+        pad: The effective pad, or ``None`` for the listed pad (the frozen aft pad).
+        kind: P8's deck-motion model; ``"jonswap"`` (the frozen lists as committed).
+
+    Returns:
+        ``(pad, pad_offset_m)``: the effective pad and its lever arm from the ship's CG,
+        metres model scale (lambda = 1/25), which P8's start check compares with the env's.
+    """
+    effective = listed.pad if pad is None else pad
+    offset = pad_offset_for(cfgs, listed.vessel, effective)
+    env.set_motion(
+        motion_for(
+            cfgs,
+            listed.vessel,
+            listed.ss,
+            listed.heading_deg,
+            listed.speed_kn,
+            listed.realization_seed,
+            kind=kind,
+            episode_seed=listed.episode_seed,
+        ),
+        effective,
+        offset,
+    )
+    return effective, offset
 
 
 def list_paths() -> dict[str, Path]:

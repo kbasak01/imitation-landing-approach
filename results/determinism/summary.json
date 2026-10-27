@@ -1,0 +1,307 @@
+{
+  "item": "plan Phase 2 item 5 (determinism contract)",
+  "smoke": false,
+  "policy": {
+    "arm": "dp",
+    "build": "ila.policies.registry.build_dummy('dp', 0)",
+    "init": "random (seed 0)",
+    "K": 10,
+    "Ta": 8,
+    "run_seed": 0
+  },
+  "episodes": {
+    "list": "splits/select.parquet",
+    "n": 150,
+    "file_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+    "content_sha256": "e8b93d6ff3f0989f395f026e7cc3bb48b95e8c1c11aafc7e386e65e50b8b5827",
+    "sea_states": [
+      "SS3",
+      "SS4",
+      "SS5"
+    ]
+  },
+  "reference_run": "cpu_w1",
+  "cpu_single_sample_bit_identical_across_workers": true,
+  "outcomes": {
+    "cpu_w1": {
+      "crash": 150
+    },
+    "cpu_w8": {
+      "crash": 150
+    },
+    "gpu_B1": {
+      "crash": 150
+    },
+    "gpu_B8": {
+      "crash": 150
+    },
+    "gpu_B24": {
+      "crash": 150
+    },
+    "gpu_B1_repeat": {
+      "crash": 150
+    },
+    "gpu_B24_torch_default": {
+      "crash": 150
+    }
+  },
+  "mean_steps": {
+    "cpu_w1": 45.446666666666665,
+    "cpu_w8": 45.446666666666665,
+    "gpu_B1": 46.39333333333333,
+    "gpu_B8": 47.53333333333333,
+    "gpu_B24": 46.61333333333334,
+    "gpu_B1_repeat": 46.39333333333333,
+    "gpu_B24_torch_default": 46.20666666666666
+  },
+  "comparisons_vs_reference": {
+    "cpu_w8": {
+      "n_rows": 150,
+      "n_text_differ": 0,
+      "n_text_identical": 150,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": true,
+      "path": "cpu fp32 single-sample (in-worker act_vision)",
+      "workers": 8,
+      "wall_s": 59.2
+    },
+    "gpu_B1": {
+      "n_rows": 150,
+      "n_text_differ": 150,
+      "n_text_identical": 0,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false,
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 1,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 932,
+      "sample_batch_size_histogram": {
+        "1": 932
+      },
+      "wall_s": 93.8
+    },
+    "gpu_B8": {
+      "n_rows": 150,
+      "n_text_differ": 150,
+      "n_text_identical": 0,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false,
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 8,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 558,
+      "sample_batch_size_histogram": {
+        "1": 315,
+        "2": 180,
+        "3": 35,
+        "4": 8,
+        "5": 2,
+        "6": 4,
+        "7": 3,
+        "8": 11
+      },
+      "wall_s": 65.5
+    },
+    "gpu_B24": {
+      "n_rows": 150,
+      "n_text_differ": 150,
+      "n_text_identical": 0,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false,
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 24,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 321,
+      "sample_batch_size_histogram": {
+        "1": 108,
+        "2": 68,
+        "3": 57,
+        "4": 43,
+        "5": 27,
+        "6": 9,
+        "8": 1,
+        "10": 1,
+        "14": 1,
+        "18": 1,
+        "20": 1,
+        "23": 1,
+        "24": 3
+      },
+      "wall_s": 50.1
+    },
+    "gpu_B1_repeat": {
+      "n_rows": 150,
+      "n_text_differ": 150,
+      "n_text_identical": 0,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false,
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 1,
+      "numerics": {
+        "numerics": "strict",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": false,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 932,
+      "sample_batch_size_histogram": {
+        "1": 932
+      },
+      "wall_s": 97.7
+    },
+    "gpu_B24_torch_default": {
+      "n_rows": 150,
+      "n_text_differ": 150,
+      "n_text_identical": 0,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false,
+      "path": "lockstep workers + CUDA server, shared net (SharedDPPolicy)",
+      "workers": 24,
+      "chunk": 5,
+      "batch_cap": 24,
+      "numerics": {
+        "numerics": "torch_default",
+        "device": "cuda",
+        "device_name": "NVIDIA RTX A4000",
+        "torch": "2.13.0+cu130",
+        "cudnn_allow_tf32": true,
+        "matmul_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "float32_matmul_precision": "highest",
+        "torch_num_threads": 1
+      },
+      "sample_batch_calls": 314,
+      "sample_batch_size_histogram": {
+        "1": 109,
+        "2": 71,
+        "3": 51,
+        "4": 32,
+        "5": 26,
+        "6": 13,
+        "7": 2,
+        "8": 1,
+        "10": 1,
+        "12": 1,
+        "15": 1,
+        "18": 1,
+        "19": 1,
+        "24": 4
+      },
+      "wall_s": 54.5
+    }
+  },
+  "gpu_comparisons_vs_gpu_B1": {
+    "gpu_B8": {
+      "n_rows": 150,
+      "n_text_differ": 122,
+      "n_text_identical": 28,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false
+    },
+    "gpu_B24": {
+      "n_rows": 150,
+      "n_text_differ": 140,
+      "n_text_identical": 10,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false
+    },
+    "gpu_B1_repeat": {
+      "n_rows": 150,
+      "n_text_differ": 0,
+      "n_text_identical": 150,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": true
+    },
+    "gpu_B24_torch_default": {
+      "n_rows": 150,
+      "n_text_differ": 150,
+      "n_text_identical": 0,
+      "n_outcome_flips": 0,
+      "flip_rate": 0.0,
+      "flips_by_class": {},
+      "bit_identical": false
+    }
+  },
+  "p8_one_ulp_floor": {
+    "flipped": 53,
+    "of": 800,
+    "rate": 0.06625,
+    "cell": "id SS6 (4 policies x 200 episodes)",
+    "definition": "outcome class flips under at least one of 20 one-ulp input perturbations",
+    "source": "external/rl-land-on-moving-deck/docs/protocol.md L5314, L5455"
+  },
+  "p8_column_rows_sha256": {
+    "cpu_w1": "7709c08e1a77ac6cd77698071259c55beaa009c6dc076b3b20ef83fa2aaef53b",
+    "cpu_w8": "7709c08e1a77ac6cd77698071259c55beaa009c6dc076b3b20ef83fa2aaef53b",
+    "gpu_B1": "527dfa28e228c0bc754b6bffa258c05fe78bda6e6d7ce9f399ee8cd3d2ebe6ee",
+    "gpu_B8": "ebd4cf100345a94e491a192007ef939fb22ced849426d3ddd33045a42e41d9e2",
+    "gpu_B24": "4664455dcba36d9277cf786b95e95ae0e76f86d452020dd118875dda2d13bd5e",
+    "gpu_B1_repeat": "527dfa28e228c0bc754b6bffa258c05fe78bda6e6d7ce9f399ee8cd3d2ebe6ee",
+    "gpu_B24_torch_default": "9a36b4de1c36bb5326f1f446c1b45c52fb56c902246869ff5e14c6842d7e5c60"
+  },
+  "caveats": [
+    "select is SS3-SS5; P8's floor is measured at id SS6, so it is a conservative comparator",
+    "the network is random-init: its episodes end early (mostly crash), so outcome flips have little room to show; the row-text and numeric differences are the informative measures until a trained dp exists"
+  ]
+}

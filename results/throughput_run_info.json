@@ -1,0 +1,139 @@
+{
+  "item": "plan Phase 2 item 4 (throughput)",
+  "smoke": false,
+  "plan": {
+    "sizes": [
+      64,
+      96,
+      128
+    ],
+    "render_frames": 300,
+    "worker_counts": [
+      1,
+      8,
+      16,
+      24
+    ],
+    "episodes_per_worker": 16,
+    "teacher_chunk": 4,
+    "micro_batches": [
+      1,
+      8,
+      24
+    ],
+    "micro_reps": 30,
+    "micro_reps_slow": 5,
+    "dp_grid": [
+      [
+        10,
+        1
+      ],
+      [
+        10,
+        8
+      ],
+      [
+        100,
+        1
+      ],
+      [
+        100,
+        8
+      ]
+    ],
+    "e2e_batches": [
+      1,
+      8,
+      24
+    ],
+    "e2e_episodes_per_slot": 4,
+    "cpu_micro": true
+  },
+  "wall_s": 1718.5,
+  "episodes": {
+    "pool": "P8 dev_pool train",
+    "stream": "throughput",
+    "generator_seed": 20261023,
+    "n": 384,
+    "content_sha256": "4022cc10a86c18148977fb2688c5878daf7506969707b3a826c0f69ba08c0107"
+  },
+  "episode_lengths_from_p8_rows": {
+    "ppo_train_like": 61.46666666666667,
+    "ppo_all": 61.825714285714284,
+    "ppo_id_ss4_ss6": 61.79333333333334,
+    "ppo_id_ss5": 61.575,
+    "ppo_id_ss5_ss6": 61.9925,
+    "pid_train_like": 150.94666666666666,
+    "gated_train_like": 138.33333333333334
+  },
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "torch_num_threads": 1
+  },
+  "server_numerics": {
+    "numerics": "strict",
+    "device": "cuda",
+    "device_name": "NVIDIA RTX A4000",
+    "torch": "2.13.0+cu130",
+    "cudnn_allow_tf32": false,
+    "matmul_allow_tf32": false,
+    "cudnn_benchmark": false,
+    "float32_matmul_precision": "highest",
+    "torch_num_threads": 1
+  },
+  "throughput_csv_sha256": "11898e1e35506ed2d489a8be4dfdaa5bc27061f8556bc57fc2f5a08465771879",
+  "out_dir": "results",
+  "host": "DATTA-BASAK",
+  "cpu_count": 36,
+  "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "processor": "x86_64",
+  "python": "3.12.3",
+  "torch": "2.13.0+cu130",
+  "gpu": "NVIDIA RTX A4000",
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "9d29486b45319b2e09c85b31107078d2f99655e3",
+  "ila_dirty_paths": [
+    "M Makefile",
+    " M src/ila/data/episodes.py",
+    " M src/ila/eval/batched.py",
+    " M src/ila/eval/runner.py",
+    " M src/ila/p8_adapter.py",
+    " M src/ila/policies/bc.py",
+    " M src/ila/policies/dp/chunking.py",
+    " M src/ila/policies/dp/policy.py",
+    " M src/ila/policies/dp/unet1d.py",
+    " M src/ila/policies/encoder.py",
+    " M src/ila/policies/registry.py",
+    " M tests/test_p8_adapter.py",
+    "?? results/label_parity.json",
+    "?? results/reproduce_p8/",
+    "?? results/throughput.csv",
+    "?? results/throughput_projection.csv",
+    "?? scripts/determinism.py",
+    "?? scripts/label_parity.py",
+    "?? scripts/make_splits.py",
+    "?? scripts/reproduce_p8.py",
+    "?? scripts/throughput.py",
+    "?? splits/",
+    "?? src/ila/eval/determinism.py",
+    "?? src/ila/eval/jobs.py",
+    "?? src/ila/eval/label_parity.py",
+    "?? src/ila/eval/reproduce.py",
+    "?? src/ila/eval/throughput.py",
+    "?? src/ila/render/bench.py",
+    "?? tests/runner_support.py",
+    "?? tests/test_data_episodes.py",
+    "?? tests/test_dp_chunking.py",
+    "?? tests/test_eval_batched.py",
+    "?? tests/test_eval_runner.py",
+    "?? tests/test_eval_shared_net.py",
+    "?? tests/test_eval_window.py",
+    "?? tests/test_phase2_jobs.py",
+    "?? tests/test_policies.py"
+  ],
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  }
+}

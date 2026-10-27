@@ -144,3 +144,124 @@ def test_physics_step_count() -> None:
         assert p8_adapter.physics_step_count(env) == 16
     finally:
         env.close()
+
+
+# ------------------------------------------------------------ runner contract (Phase 2)
+
+
+def _p8_runner_objects() -> dict[str, object]:
+    """Every Phase 2 re-export, keyed by adapter name, as P8 defines it (pinned commit)."""
+    import dmf.data.splits
+    import rld.control.base
+    import rld.deck.splits
+    import rld.deploy.onnx_policy
+    import rld.deploy.parity
+    import rld.envs.landing_env
+    import rld.eval.envs
+    import rld.eval.episodes
+    import rld.eval.reproduce
+    import rld.eval.runner
+    import rld.eval.storage
+    import rld.eval.truth
+
+    runner = rld.eval.runner
+    return {
+        "EPISODE_COLUMNS": runner.EPISODE_COLUMNS,
+        "LIST_ROW_COLUMNS": runner.LIST_ROW_COLUMNS,
+        "RECORD_COLUMNS": runner.RECORD_COLUMNS,
+        "DEFAULT_CHUNK": runner.DEFAULT_CHUNK,
+        "DEFAULT_WORKERS": runner.DEFAULT_WORKERS,
+        "PolicySpec": runner.PolicySpec,
+        "controller_spec": runner.controller_spec,
+        "callable_spec": runner.callable_spec,
+        "episode_rows_csv": runner.episode_rows_csv,
+        "feed_skip_reason": runner.feed_skip_reason,
+        "split_runnable": runner.split_runnable,
+        "EpisodeListMismatchError": runner.EpisodeListMismatchError,
+        "EvalPolicy": runner.EvalPolicy,
+        "motion_for": rld.eval.envs.motion_for,
+        "pad_offset_for": rld.eval.envs.pad_offset_for,
+        "PrivilegedContext": rld.control.base.PrivilegedContext,
+        "td_in_quiescent_window": rld.eval.truth.td_in_quiescent_window,
+        "touchdown_rule": rld.eval.truth.touchdown_rule,
+        "ACTION_DIM": rld.envs.landing_env.ACTION_DIM,
+        "compare_to_reference": rld.eval.reproduce.compare_to_reference,
+        "read_text": rld.eval.storage.read_text,
+        "dev_pool": rld.deck.splits.dev_pool,
+        "EpisodeDraw": rld.eval.episodes.EpisodeDraw,
+        "resolve_draws": rld.eval.episodes.resolve_draws,
+        "label_entropy": rld.eval.episodes.label_entropy,
+        "cell_order": rld.eval.episodes.cell_order,
+        "canonical_csv": rld.eval.episodes.canonical_csv,
+        "content_sha256": rld.eval.episodes.content_sha256,
+        "DEFAULT_PAD": rld.eval.episodes.DEFAULT_PAD,
+        "reference_actions": rld.deploy.parity.reference_actions,
+        "open_session": rld.deploy.parity.open_session,
+        "check_ort": rld.deploy.parity.check_ort,
+        "PARITY_TOLERANCE": rld.deploy.parity.PARITY_TOLERANCE,
+        "cpu_session": rld.deploy.onnx_policy.cpu_session,
+        "attach_onnx": rld.deploy.onnx_policy.attach_onnx,
+        # P8's runner imports dmf's function; the adapter re-exports that same object.
+        "realization_key": dmf.data.splits.realization_key,
+    }
+
+
+@pytest.mark.parametrize("name", sorted(_p8_runner_objects()))
+def test_runner_reexport_is_identity(name: str) -> None:
+    assert getattr(p8_adapter, name) is _p8_runner_objects()[name]
+    assert name in p8_adapter.__all__
+
+
+def test_realization_key_is_the_one_p8_runner_uses() -> None:
+    import rld.eval.runner
+
+    assert p8_adapter.realization_key is rld.eval.runner.realization_key
+
+
+def test_resolve_draws_signature_is_p8s() -> None:
+    import inspect as _inspect
+
+    params = _inspect.signature(p8_adapter.resolve_draws).parameters
+    assert list(params)[:2] == ["draws", "cfgs"]
+    assert {"workers", "chunk"} <= set(params)
+    assert params["workers"].kind is _inspect.Parameter.KEYWORD_ONLY
+    assert p8_adapter.DEFAULT_PAD == "aft"
+
+
+def test_runner_constants_are_p8_values() -> None:
+    # Values as read in P8's source (rld/eval/runner.py, rld/envs/landing_env.py).
+    assert p8_adapter.DEFAULT_CHUNK == 25
+    assert p8_adapter.DEFAULT_WORKERS == 24
+    assert p8_adapter.ACTION_DIM == 3
+    assert len(p8_adapter.EPISODE_COLUMNS) == 13 + 3 + 23 + 6
+    assert p8_adapter.EPISODE_COLUMNS[: len(p8_adapter.LIST_ROW_COLUMNS)] == (
+        p8_adapter.LIST_ROW_COLUMNS
+    )
+
+
+@pytest.mark.pybullet
+def test_set_motion_matches_p8_run_chunk() -> None:
+    """``set_motion`` re-points a reused env the way P8's ``run_chunk`` does (hull switch)."""
+    cfgs = p8_adapter.load_eval_configs()
+    first = p8_adapter.read_list(p8_adapter.list_path("static"))[0]
+    moving = p8_adapter.read_list(p8_adapter.list_path("unseen_vessel"))[0]
+    assert moving.vessel != first.vessel
+    env = p8_adapter.make_env(cfgs, first)
+    try:
+        for listed in (first, moving, first):
+            pad, offset = p8_adapter.set_motion(env, cfgs, listed)
+            assert pad == listed.pad
+            assert offset == p8_adapter.pad_offset_for(cfgs, listed.vessel, listed.pad)
+            assert env.pad == pad and tuple(env.pad_offset_m) == offset
+            _, info = env.reset(seed=listed.episode_seed)
+            key = p8_adapter.realization_key(
+                listed.ss,
+                listed.heading_deg,
+                listed.speed_kn,
+                listed.vessel,
+                listed.realization_seed,
+            )
+            assert info["realization_key"] == key
+            assert float(env.record.t0_model_s) == listed.t0_model_s
+    finally:
+        env.close()
