@@ -386,9 +386,13 @@ test at the scale of the frozen lists.
   - 3 200 episodes in 256.4 s.
 - P8-column row SHA-256: `pid_feedforward` `d5ddc55d…ec31`, `ppo` `a836275f…bf50` (run_info
   `rows`).
-- The first full run was made on an uncommitted tree (`ila_dirty_paths` in its run_info). It is
-  re-run on the committed Phase 2 tree before Gate 2; the Gate 2 entry carries that run's
-  provenance.
+- The first full run (256.4 s) was made on an uncommitted tree (`ila_dirty_paths` in its
+  run_info). It was re-run on the committed Phase 2 tree `c88c106`, which had no dirty paths,
+  in 254.8 s. The re-run gave the same result and the identical P8-column row SHA-256s. The
+  committed `results/reproduce_p8/` files are the re-run's:
+  - `comparison.json` `75b34e8b…31fa`;
+  - `run_info.json` `4ea43413…e002`;
+  - repo-relative paths.
 - `results/label_parity.json`:
   - 10 000 observations from `ppo` seed 0 flying 163 episodes of P8's **train** pool (SS3–SS5,
     stream `label_parity`, seed 20261023);

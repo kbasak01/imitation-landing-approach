@@ -15,7 +15,7 @@
       },
       "passed": true,
       "compare_to_reference": {
-        "reference": "/home/kbasak/projects_02/imitation-landing-approach/external/rl-land-on-moving-deck/results/e01/episodes.csv",
+        "reference": "external/rl-land-on-moving-deck/results/e01/episodes.csv",
         "reference_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
         "pad": "aft",
         "applicable": true,
@@ -44,7 +44,7 @@
       },
       "passed": true,
       "compare_to_reference": {
-        "reference": "/home/kbasak/projects_02/imitation-landing-approach/external/rl-land-on-moving-deck/results/e07/matrix/episodes.csv",
+        "reference": "external/rl-land-on-moving-deck/results/e07/matrix/episodes.csv",
         "reference_sha256": "6d14b05af2dc195ed281fc3d5f454d923c6227b17d6cbfcf93697cab6ff11152",
         "pad": "aft",
         "applicable": true,

@@ -1,36 +1,11 @@
 {
-  "started_utc": "2026-10-27T18:34:24+00:00",
-  "finished_utc": "2026-10-27T18:38:44+00:00",
-  "wall_s": 256.4,
+  "started_utc": "2026-10-27T20:34:53+00:00",
+  "finished_utc": "2026-10-27T20:39:12+00:00",
+  "wall_s": 254.8,
   "episodes_flown": 3200,
   "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
-  "ila_commit": "9d29486b45319b2e09c85b31107078d2f99655e3",
-  "ila_dirty_paths": [
-    "M Makefile",
-    " M src/ila/data/episodes.py",
-    " M src/ila/eval/batched.py",
-    " M src/ila/eval/runner.py",
-    " M src/ila/p8_adapter.py",
-    " M src/ila/policies/bc.py",
-    " M src/ila/policies/dp/chunking.py",
-    " M src/ila/policies/dp/policy.py",
-    " M src/ila/policies/dp/unet1d.py",
-    " M src/ila/policies/encoder.py",
-    " M src/ila/policies/registry.py",
-    " M tests/test_p8_adapter.py",
-    "?? scripts/make_splits.py",
-    "?? scripts/reproduce_p8.py",
-    "?? splits/",
-    "?? src/ila/eval/reproduce.py",
-    "?? tests/runner_support.py",
-    "?? tests/test_data_episodes.py",
-    "?? tests/test_dp_chunking.py",
-    "?? tests/test_eval_batched.py",
-    "?? tests/test_eval_runner.py",
-    "?? tests/test_eval_shared_net.py",
-    "?? tests/test_eval_window.py",
-    "?? tests/test_policies.py"
-  ],
+  "ila_commit": "c88c10606634b7d6bc0ea132b1ba5d9295671677",
+  "ila_dirty_paths": [],
   "host": "DATTA-BASAK",
   "cpu_count": 36,
   "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -60,5 +35,5 @@
       "n_rows": 400
     }
   },
-  "rows_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/reproduce_p8"
+  "rows_dir": "artifacts/runs/reproduce_p8"
 }
