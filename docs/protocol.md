@@ -1463,3 +1463,28 @@ margin absorbs it. A later overrun is reported, never fixed with a second cut.
 - Measured GPU-hours per run go in each run's manifest and in the Gate 4 table.
 - Student episode lengths (P3-D1 §5, last line) are measured from the `select` flights of the
   selected checkpoints, and re-project P2-D2's evaluation budget at Gate 4.
+
+### P4-D3 — DART σ* = 0.10, the only tuning (2026-10-28)
+*Decision.* σ* = **0.10**. `bc_dart` seeds 0–4 train on `dart_0.10`, seed 0 re-trained
+(P3-D1 §4).
+
+*Evidence.* Tuning log: three trials, `bc_dart` seed 0, 30 k steps each, at `32c8cf9`. The
+selected checkpoint of each trial (EMA weights, CPU fp32 single-sample path) was flown on the 150
+`select` episodes. Files: `results/phase4/dart_tune/selection_sigma_{0.05,0.10,0.20}.json` and
+`sigma_star.json` (SHA-256 `516b21c1…31799826`).
+
+| σ | Selected step | `select` success | Losses | p95 closing speed (m/s, model) |
+|---|---|---|---|---|
+| 0.05 | 25 000 | 149/150 | 1 bounce | 0.372 |
+| **0.10** | **30 000** | **150/150** | none | **0.322** |
+| 0.20 | 15 000 | 149/150 | 1 hard landing | 0.377 |
+
+*Caveat, stated with every DART result.*
+- σ* was decided by one `select` episode. All three trials sit at the `select` ceiling, and
+  a 150/150 vs 149/150 difference is well inside the Wilson intervals.
+- The choice is by rule, not evidence that 0.10 is better. It is final; no trial is added.
+- σ* = 0.10 is not 0.20, so P3-D1 §2's clear-colour statement for 0.20 does not apply.
+  `dart_0.10` has 24 frames with a far-plane residual (max fraction 0.148).
+
+*Consequence.* No other tuning is permitted (P3-D1 §4). The trial runs are tuning runs, never
+core seeds.
