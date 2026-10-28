@@ -1425,3 +1425,41 @@ Item 3 also blocks a plan reading that would break P3-D1 §2.
   still weighted the random init by 0.999^4000 ≈ 1.8 %, and actions came out about 3 % short. At
   30 k steps that weight is about 1e-13. Only the smoke step counts changed; no frozen
   hyper-parameter did.
+
+### P4-D2 — Training budget: projection 91.6 GPU-h, no cut (2026-10-28)
+*Decision.* **No step cut** (P3-D1 §5). The projection over every planned training run is
+**91.6 GPU-hours**, under the 120 h limit, so the cut factor is 1.0. Under P3-D1 §5, no later cut
+is allowed.
+
+*Evidence.* Timing runs at `661ed76` (clean tree), RTX A4000, 2 000 steps each, using the full
+configs' schedules. Tagged `timing`; never selected; no `select` number existed when this entry
+was written.
+
+| Run | Loop rate | Wall clock (2 k steps) | Per-run overhead |
+|---|---|---|---|
+| `dp` s0 (batch 128, bf16) | 12.79 steps/s | 168 s | 11.4 s |
+| `bc` s0 (batch 256, bf16) | 10.66 steps/s | 198 s | 10.9 s |
+| `bc_state` s0 (batch 256, fp32) | 347.7 steps/s | 11 s | 4.8 s |
+
+Projection: `results/phase4/budget_projection.csv` (SHA-256 `d5a4d1e0…4cec8980`).
+
+| Group | GPU-h |
+|---|---|
+| Phase 4: `bc_state` 0.13, `bc` 3.92, `bc_matched` iterations 1–5 6.53, DART σ trials 2.35, `bc_dart` 3.92 | 16.9 |
+| `bc_dagger` iterations 1–5 (rollouts on the CPU, not counted) | 6.5 |
+| `dp` 5 seeds × 100 k steps | 10.9 |
+| `modular` (costed as the `bc` encoder) | 3.9 |
+| Ablations: 6 `bc` × 3 seeds (14.1), 5 `dp` × 3 seeds (32.6) | 46.8 |
+| `R1_lerobot_dp` (its Phase 6 config isn't written yet; costed as `dp` at 100 k steps) | 6.5 |
+| Timing runs already spent | 0.1 |
+| **Total** | **91.6** |
+
+*Assumptions.* Selection, DAgger rollouts and evaluation run on the CPU and are not training GPU
+time. `R1` and `modular` are costed by proxy, as above. If either proxy is far off, the 28 h
+margin absorbs it. A later overrun is reported, never fixed with a second cut.
+
+*Consequence.*
+- Every arm trains at its frozen step count.
+- Measured GPU-hours per run go in each run's manifest and in the Gate 4 table.
+- Student episode lengths (P3-D1 §5, last line) are measured from the `select` flights of the
+  selected checkpoints, and re-project P2-D2's evaluation budget at Gate 4.
