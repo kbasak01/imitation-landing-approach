@@ -48,7 +48,8 @@ determinism: ; mkdir -p artifacts/runs/determinism && $(PY) scripts/determinism.
 # artifacts/runs/collect/<COLLECTION>/. Background job (prepare with /train-job):
 #   mkdir -p artifacts/runs/collect/ppo_2000 && nohup make collect COLLECTION=ppo_2000 > artifacts/runs/collect/ppo_2000/nohup.log 2>&1 &
 # Pilot (foreground): $(PY) scripts/collect.py pid_1000 --limit 8 --data-root <scratch> --run-root <scratch>/runs
-collect: ; mkdir -p artifacts/runs/collect/$(COLLECTION) && $(PY) scripts/collect.py $(COLLECTION) --workers $(WORKERS)
+# The store is never overwritten unless OVERWRITE=1 (passes --overwrite).
+collect: ; mkdir -p artifacts/runs/collect/$(COLLECTION) && $(PY) scripts/collect.py $(COLLECTION) --workers $(WORKERS) $(if $(OVERWRITE),--overwrite,)
 
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.

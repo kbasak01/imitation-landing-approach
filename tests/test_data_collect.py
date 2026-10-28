@@ -33,6 +33,7 @@ from ila.data.dart import DartNoise
 from ila.data.store import DemoStore
 from ila.eval import runner
 from ila.obs.split import ObsContract
+from ila.render.camera import Frame
 from ila.render.config import APPEARANCE_SHIFTS, load_render_config
 
 LIMITS = {"ppo_2000": 3, "pid_1000": 2, "mix_1000": 3, "dart_0.20": 2}
@@ -300,3 +301,97 @@ def test_recorder_refuses_context_and_skips(collections: dict[str, collect.Colle
             {"pid_feedforward": p8_adapter.teacher("pid_feedforward")},
             {(row.ss, int(row.index), int(row.episode_seed)): (0, "gated")},
         )
+
+
+def test_wasserstein_and_touchdown_stats() -> None:
+    from scipy.stats import wasserstein_distance
+
+    rng = np.random.default_rng(0)
+    a, b = rng.normal(2.0, 0.3, 37), rng.normal(2.4, 0.5, 51)
+    assert audit.wasserstein_1(a, b) == pytest.approx(wasserstein_distance(a, b), rel=1e-12)
+    assert audit.wasserstein_1(a, a) == 0.0
+    s = audit.touchdown_stats([1.0, 2.0, float("nan"), 3.0])
+    assert (s["n"], s["n_touchdown"], s["n_without_touchdown"], s["p50_s"]) == (4, 3, 1, 2.0)
+
+
+@pytest.mark.pybullet
+def test_replay_and_attr_audits(stores: dict[str, Path]) -> None:
+    """Open-loop replay of stored action_exec is byte-exact for every store, DART included."""
+    for name, path in stores.items():
+        result = audit.replay_audit(path, n_states=8)
+        assert result["passed"], (name, result)
+        assert result["frames_identical"] == result["teacher_obs_identical"] == result["n_states"]
+        assert not result["episodes_diverging"], (name, result["episodes_diverging"])
+        attrs = audit.attr_audit(path)
+        assert attrs["passed"] and not any(attrs["violations"].values()), attrs
+
+
+@pytest.mark.pybullet
+def test_dart_recording_replays_open_loop_byte_identically(stores: dict[str, Path]) -> None:
+    """Every step of every DART episode replays exactly from the stored action_exec."""
+    with DemoStore(stores["dart_0.20"]) as s:
+        total = sum(s.meta(e).steps for e in s.episodes())
+        for e in s.episodes():
+            a = s.executed_actions(e)
+            assert np.array_equal(a.astype(np.float64), collect.executable(a))
+    result = audit.replay_audit(stores["dart_0.20"], n_states=total)
+    assert result["n_states"] == total and result["passed"], result
+
+
+class _FakeTeacher:
+    def __init__(self, action: np.ndarray) -> None:
+        self.action = action
+
+    def reset(self, seed: int, context: Any = None) -> None:
+        del seed, context
+
+    def act(self, obs: Any) -> np.ndarray:
+        del obs
+        return self.action
+
+
+def _recorder(collection: collect.Collection, action: np.ndarray) -> collect.DemoRecorder:
+    row = ep.read_split("demos_0-999")[0]
+    (policy,) = collection.policies
+    rec = collect.DemoRecorder(
+        collection,
+        {policy: _FakeTeacher(action)},  # type: ignore[dict-item]
+        {(row.ss, int(row.index), int(row.episode_seed)): (0, policy)},
+    )
+    rec.begin(row, None)
+    return rec
+
+
+def test_teacher_path_executes_the_teachers_own_value(
+    collections: dict[str, collect.Collection],
+) -> None:
+    """Non-DART: the recorder returns exactly what P8's TeacherActor returns (unchanged)."""
+    action = np.array([0.1234567, -0.7654321, 0.5], dtype=np.float32)
+    frame = Frame(np.zeros((96, 96, 3), np.uint8))
+    rec = _recorder(collections["ppo_2000"], action)
+    out = rec.act(0, np.zeros(25, np.float32), frame)
+    p8_path = runner.TeacherActor(_FakeTeacher(action)).act(  # type: ignore[arg-type]
+        0, np.zeros(25, np.float32), None
+    )
+    assert out.dtype == p8_path.dtype == np.float64 and np.array_equal(out, p8_path)
+    bad = _recorder(collections["ppo_2000"], np.array([0.1, 0.2, 0.3], dtype=np.float64))
+    with pytest.raises(ValueError, match="float32"):
+        bad.act(0, np.zeros(25, np.float32), frame)
+
+
+def test_dart_executes_float32_rounded_action(
+    collections: dict[str, collect.Collection],
+) -> None:
+    c = collections["dart_0.20"]
+    action = np.array([0.1234567, -0.7654321, 0.5], dtype=np.float32)
+    frame = Frame(np.zeros((96, 96, 3), np.uint8))
+    rec = _recorder(c, action)
+    row = ep.read_split("demos_0-999")[0]
+    noise = DartNoise(0.20, c.dart_seed, 0, row.episode_seed)
+    for t in range(5):
+        out = rec.act(t, np.zeros(25, np.float32), frame)
+        raw = noise.executed(action.astype(np.float64))
+        assert np.array_equal(out, raw.astype(np.float32).astype(np.float64))
+        assert np.array_equal(out.astype(np.float32).astype(np.float64), out)
+    assert np.array_equal(rec._buf.executed[-1].astype(np.float64), out)  # type: ignore[union-attr]
+    assert np.all(np.abs(collect.executable(np.array([3.0, -3.0, 0.1]))) <= 1.0)

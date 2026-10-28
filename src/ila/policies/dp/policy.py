@@ -11,7 +11,8 @@ v_max = 1.5 m/s model scale and applies its norm cap. One control step = 1/30 s 
 Sampling: diffusers' ``DDIMScheduler`` with the training schedule's betas
 (``squaredcos_cap_v2``, 100 train steps, epsilon prediction, ``clip_sample``), eta = 0, ``K``
 inference steps chosen at inference time (``1 <= K <= 100``). The final sample is clipped to
-``[-1, 1]``.
+``[-1, 1]``. Timestep spacing comes from the config (P3-D1: ``trailing``, so every ``K``
+starts at ``k = 99``; see :class:`DPConfig`).
 
 Randomness: with eta = 0 the only randomness is the initial noise ``x_K ~ N(0, I)``. It is an
 explicit input of :meth:`DiffusionPolicyNet.sample` (so a graph export can take it as an input),
@@ -57,6 +58,9 @@ _SEED_STRUCT: Final[struct.Struct] = struct.Struct("<qqq")
 
 #: diffusers' DDIM scheduler (diffusers is only partially typed, so it is held as ``Any``).
 _DDIM: Any = _DiffusersDDIM
+
+#: DDIM timestep spacings diffusers implements; the config chooses one (P3-D1: ``trailing``).
+_TIMESTEP_SPACINGS: Final[tuple[str, ...]] = ("trailing", "leading", "linspace")
 
 
 def noise_seed(run_seed: int, episode_seed: int, step: int) -> int:
@@ -122,9 +126,15 @@ class DPConfig:
         prediction_type: ``"epsilon"``.
         clip_sample: Clip the predicted ``x_0`` to ``[-1, 1]`` inside each DDIM step.
         num_inference_steps: Default ``K`` (10); an inference-time choice.
-        timestep_spacing: diffusers DDIM spacing. Not set by the config; ``"leading"`` is
-            diffusers' default and the reference's behaviour (see the module notes in the
-            hand-off: with it, ``K = 1`` denoises only at ``k = 0``).
+        timestep_spacing: diffusers DDIM spacing, ``inference.timestep_spacing`` in
+            ``configs/train/dp.yaml`` (the authority; P3-D1). ``"trailing"`` (the default here
+            and in the config) starts every sampler at ``k = 99``: ``K = 1`` -> ``[99]``,
+            ``K = 2`` -> ``[99, 49]``, ``K = 10`` -> ``[99, 89, ..., 9]``. diffusers' own
+            default, ``"leading"``, gives ``[90, 80, ..., 0]`` at ``K = 10`` and ``[0]`` at
+            ``K = 1``, which returns near-pure noise. Note: with ``squaredcos_cap_v2`` over 100
+            steps, ``alpha_bar_99 = 2.43e-7`` (beta_99 is capped at 0.999), so the first
+            ``x_0`` estimate divides by ``sqrt(alpha_bar_99) = 4.93e-4``: a last-ulp change in
+            epsilon-hat moves an unclipped ``x_0`` element about 2029 times as much.
     """
 
     n_obs_steps: int = 2
@@ -137,14 +147,15 @@ class DPConfig:
     prediction_type: str = "epsilon"
     clip_sample: bool = True
     num_inference_steps: int = 10
-    timestep_spacing: str = "leading"
+    timestep_spacing: str = "trailing"
 
     def __post_init__(self) -> None:
         """Validate.
 
         Raises:
             ValueError: On an inadmissible ``(To, Tp, Ta)``, ``K`` out of range, a horizon
-                the U-Net cannot halve, or an unsupported prediction type.
+                the U-Net cannot halve, an unsupported prediction type or an unknown
+                timestep spacing.
         """
         chunking.ChunkSpec(self.n_obs_steps, self.horizon, self.n_action_steps)
         if self.horizon % self.unet.downsample_factor:
@@ -153,6 +164,11 @@ class DPConfig:
             )
         if self.prediction_type != "epsilon":
             raise ValueError(f"only epsilon prediction is implemented: {self.prediction_type}")
+        if self.timestep_spacing not in _TIMESTEP_SPACINGS:
+            raise ValueError(
+                f"timestep_spacing must be one of {_TIMESTEP_SPACINGS}, "
+                f"got {self.timestep_spacing!r}"
+            )
         _check_k(self.num_inference_steps, self.num_train_timesteps)
 
     @classmethod
@@ -185,7 +201,7 @@ class DPConfig:
             prediction_type=str(ns["prediction_type"]),
             clip_sample=bool(ns["clip_sample"]),
             num_inference_steps=int(inf["num_inference_steps"]),
-            timestep_spacing=str(inf.get("timestep_spacing", "leading")),
+            timestep_spacing=str(inf.get("timestep_spacing", "trailing")),
         )
 
     @property

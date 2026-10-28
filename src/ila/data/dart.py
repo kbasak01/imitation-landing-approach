@@ -3,8 +3,10 @@
 During a DART collection the teacher flies, and at every control step the action sent to
 ``env.step`` is ``clip(teacher(obs) + sigma * z, -1, 1)`` with ``z ~ N(0, I_3)``; the stored
 ``label`` is the clean ``teacher(obs)``. The noise is never put on the label
-(il-conventions). Units: normalised action units (x v_max = 1.5 m/s model scale, lambda =
-1/25), so sigma = 0.10 is 0.15 m/s model scale per axis before the env's norm cap.
+(il-conventions). The collector rounds the executed action to float32 before ``env.step``
+(``ila.data.collect.executable``), so the stored ``action_exec`` is exactly what ran.
+Units: normalised action units (x v_max = 1.5 m/s model scale, lambda = 1/25), so
+sigma = 0.10 is 0.15 m/s model scale per axis before the env's norm cap.
 
 Per-episode generator. ``z`` comes from ``numpy.random.default_rng(SeedSequence([seed,
 H("dart"), demo_index, episode_seed]))`` and is drawn once per control step, in order. It does

@@ -5,7 +5,7 @@ proprio_mlp: [64, 64]
 horizons: {n_obs_steps: 2, horizon: 16, n_action_steps: 8}     # To, Tp, Ta; Ta <= Tp - To + 1
 unet: {down_dims: [128, 256, 512], kernel_size: 5, diffusion_step_embed_dim: 128, cond: film}
 noise_scheduler: {train: ddpm, num_train_timesteps: 100, beta_schedule: squaredcos_cap_v2, prediction_type: epsilon, clip_sample: true}
-inference: {sampler: ddim, num_inference_steps: 10, noise: per_episode_generator}
+inference: {sampler: ddim, num_inference_steps: 10, timestep_spacing: trailing, noise: per_episode_generator}   # P3-D1: trailing, so K = 1 runs timestep 99
 action_normalisation: identity   # actions already in [-1, 1]; tested
 optim: {name: adamw, lr: 1.0e-4, weight_decay: 1.0e-6, schedule: cosine, warmup_steps: 500}
 steps: 100000

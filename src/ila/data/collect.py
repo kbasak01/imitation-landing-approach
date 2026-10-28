@@ -7,7 +7,8 @@ frames == steps + 1 count. The runner calls a :class:`DemoRecorder` as its actor
 step t the recorder gets ``obs[t]`` (P8's 25-d observation) and ``Frame`` t (pixels only),
 asks the episode's teacher for ``teacher.act(obs[t])`` (the label), and returns the executed
 action: the teacher's action itself (P8's ``TeacherActor`` path, so trajectories equal P8's),
-or ``clip(label + sigma z)`` under DART (:mod:`ila.data.dart`). It stores ``image[t]``,
+or ``clip(label + sigma z)`` rounded to float32 under DART (:mod:`ila.data.dart`,
+:func:`executable`), so the stored ``action_exec`` is bit-exactly what ran. It stores ``image[t]``,
 ``teacher_obs[t]``, ``label[t]``, ``action_exec[t] = clip(executed, -1, 1)`` (what the env
 executes and what ``last_action`` in ``obs[t+1]`` reports) and ``t_model_s[t] = t0 + t/30``.
 
@@ -69,9 +70,11 @@ __all__ = [
     "Collection",
     "CollectTask",
     "DemoRecorder",
+    "check_float32_action",
     "check_render_config",
     "collect_chunk",
     "collection_policies",
+    "executable",
     "load_collections",
     "provenance",
     "run_collection",
@@ -87,6 +90,40 @@ TEACHER_POLICIES: Final[Mapping[str, tuple[str, ...]]] = {
 #: Episodes per worker task (one env and one set of teachers per task). Rows and stored bytes
 #: do not depend on it; smaller than the runner's 25 to bound the frames held per result.
 DEFAULT_COLLECT_CHUNK: Final[int] = 10
+
+
+def executable(action: NDArray[Any]) -> NDArray[np.float64]:
+    """Return the action ``env.step`` must execute when it is not a teacher's own output.
+
+    ``clip(action, -1, 1)`` rounded to float32 and returned as float64, so the stored float32
+    ``action_exec`` is bit-exactly what was executed and open-loop replay of a store
+    reproduces it (the env clips again; a no-op). Every non-teacher executed action -- DART's
+    ``clip(label + sigma z)`` now, and DAgger's beta-mixture of teacher and student actions in
+    Phase 5 -- must pass through here before ``env.step``.
+
+    Args:
+        action: ``(3,)`` normalised action, any float dtype.
+
+    Returns:
+        ``(3,)`` float64 whose values are float32-representable, in ``[-1, 1]``.
+    """
+    clipped = np.clip(np.asarray(action, dtype=np.float64), -1.0, 1.0)
+    return clipped.astype(np.float32).astype(np.float64)
+
+
+def check_float32_action(action: NDArray[np.float64]) -> NDArray[np.float64]:
+    """Assert a teacher's action is float32-representable and return it unchanged.
+
+    Every P8 teacher returns float32 (``ppo``, ``pid_feedforward``, ``gated``), so the teacher
+    path executes the teacher's own value, as P8 does, and its float32 ``action_exec`` is still
+    exact. This guards that assumption instead of re-casting.
+
+    Raises:
+        ValueError: If any component would change under a float32 round trip.
+    """
+    if not np.array_equal(action.astype(np.float32).astype(np.float64), action):
+        raise ValueError(f"teacher action {action!r} is not float32-representable")
+    return action
 
 
 class AppearanceShiftRefusedError(ValueError):
@@ -346,8 +383,10 @@ class DemoRecorder:
             raise ValueError("collection needs frames: render mode must be 'full'")
         if step != len(buf.obs):
             raise RuntimeError(f"step {step} after {len(buf.obs)} recorded steps")
-        clean = np.asarray(teacher.act(obs), dtype=np.float64)
-        executed = clean if self._noise is None else self._noise.executed(clean)
+        clean = check_float32_action(np.asarray(teacher.act(obs), dtype=np.float64))
+        # Teacher path: the teacher's own action, unchanged (P8's TeacherActor path). DART:
+        # the noised action, clipped and rounded to float32 BEFORE env.step.
+        executed = clean if self._noise is None else executable(self._noise.executed(clean))
         buf.images.append(np.array(frame.rgb, dtype=np.uint8, copy=True))
         buf.obs.append(np.array(obs, dtype=np.float32, copy=True))
         buf.label.append(clean.astype(np.float32))
