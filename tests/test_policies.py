@@ -9,6 +9,7 @@ tests are marked ``gpu``.
 from __future__ import annotations
 
 import functools
+import math
 import pickle
 from typing import Any
 
@@ -49,6 +50,34 @@ def _window(seed: int = 0, b: int | None = None) -> tuple[np.ndarray, np.ndarray
     return img, prop
 
 
+#: Network-level agreement across batch sizes and devices (fp32 last ulps; measured <= 2.3e-6
+#: on the CPU at 1-16 threads for the dummy ``dp``).
+EPS_ATOL = 1e-5
+
+
+def _first_step_eps(
+    student: DPStudent, img: np.ndarray, prop: np.ndarray, seeds: list[tuple[int, int, int]]
+) -> np.ndarray:
+    """Return epsilon-hat at the sampler's first timestep: the network output, no DDIM step."""
+    net = student.net
+    k0 = int(net.ddim(student.num_inference_steps).timesteps[0])
+    noise = initial_noise(seeds, net.cfg.horizon, net.cfg.action_dim).to(student.device)
+    with torch.inference_mode():
+        cond = net.encoder(
+            torch.from_numpy(img).to(student.device), torch.from_numpy(prop).to(student.device)
+        )
+        k = torch.full((len(seeds),), k0, dtype=torch.long, device=student.device)
+        eps: np.ndarray = net.predict_noise(noise, k, cond).cpu().numpy()
+    return eps
+
+
+def _x0_gain(student: DPStudent) -> float:
+    """``sqrt((1 - abar_k0) / abar_k0)``: d x0_hat / d eps_hat at the first DDIM timestep."""
+    sched = student.net.ddim(student.num_inference_steps)
+    abar = float(sched.alphas_cumprod[int(sched.timesteps[0])])
+    return math.sqrt((1.0 - abar) / abar)
+
+
 @pytest.fixture(scope="module")
 def bc() -> BCStudent:
     s = registry.build_dummy("bc", 0)
@@ -76,9 +105,20 @@ def test_configs_as_read() -> None:
     assert (dp_cfg.n_obs_steps, dp_cfg.horizon, dp_cfg.n_action_steps) == (2, 16, 8)
     assert dp_cfg.unet == UNetConfig(down_dims=(128, 256, 512), kernel_size=5)
     assert dp_cfg.num_inference_steps == 10 and dp_cfg.num_train_timesteps == 100
+    assert dp_cfg.timestep_spacing == "trailing"  # P3-D1; the config is the authority
     # The policy's To must equal the observation contract's.
     assert dp_cfg.n_obs_steps == load_contract().n_obs_steps
     assert registry.encoder_config(registry.load_train_config("bc")) == enc
+
+
+def test_dp_timestep_spacing_default_and_validation() -> None:
+    # Without the key, a config gets P3-D1's trailing spacing, not diffusers' leading.
+    cfg = registry.load_train_config("dp")
+    inf = {k: v for k, v in cfg["inference"].items() if k != "timestep_spacing"}
+    assert DPConfig.from_mapping({**cfg, "inference": inf}).timestep_spacing == "trailing"
+    assert DPConfig().timestep_spacing == "trailing"
+    with pytest.raises(ValueError, match="timestep_spacing"):
+        DPConfig(timestep_spacing="trailling")
 
 
 def test_repo_root_matches_adapter() -> None:
@@ -267,16 +307,43 @@ def test_sample_slot_independent_of_batch(dp: DPStudent) -> None:
     seeds = [(0, 100 + i, 8 * i) for i in range(8)]
     full = dp.sample_batch(img, prop, seeds)
     assert full.shape == (8, 16, 3) and np.all(np.abs(full) <= 1.0)
+
+    # 1. At a fixed batch size a slot's chunk is bit-identical wherever it sits and whatever the
+    #    other slots hold (inputs and noise keys). A slot-mixing bug (noise drawn per batch, a
+    #    wrong generator index, cross-slot normalisation) fails here at O(1).
     perm = [5, 2, 7, 0, 3, 6, 1, 4]
     shuffled = dp.sample_batch(img[perm], prop[perm], [seeds[i] for i in perm])
+    np.testing.assert_array_equal(shuffled, full[perm])
+    other_img, other_prop = _window(seed=9, b=8)
+    other_img[3], other_prop[3] = img[3], prop[3]
+    other_seeds = [(5, 7 + i, i) for i in range(8)]
+    other_seeds[3] = seeds[3]
+    np.testing.assert_array_equal(dp.sample_batch(other_img, other_prop, other_seeds)[3], full[3])
+
+    # 2. The CPU single-sample path is bit-identical when repeated (P2-D3 item 1).
     single = np.stack(
         [dp.sample_batch(img[i : i + 1], prop[i : i + 1], [seeds[i]])[0] for i in range(8)]
     )
-    # Same noise per slot; CPU kernels may differ by batch size in the last ulps only.
-    np.testing.assert_allclose(shuffled, full[perm], rtol=0, atol=1e-5)
-    np.testing.assert_allclose(single, full, rtol=0, atol=1e-5)
-    # Bit-identical when the same single-sample call is repeated (the CPU contract).
     np.testing.assert_array_equal(dp.sample_batch(img[:1], prop[:1], [seeds[0]]), single[:1])
+
+    # 3. Across batch sizes the same noise goes in and the network output agrees to the last
+    #    ulps (CPU kernels differ by batch size) ...
+    eps_single = np.concatenate(
+        [_first_step_eps(dp, img[i : i + 1], prop[i : i + 1], [seeds[i]]) for i in range(8)]
+    )
+    np.testing.assert_allclose(eps_single, _first_step_eps(dp, img, prop, seeds), atol=EPS_ATOL)
+    # ... but the chunk does not, by a bounded amount. DDIM with trailing spacing (P3-D1)
+    # starts at k = 99, where squaredcos_cap_v2 over 100 steps has abar_99 = 2.43e-7 (beta_99
+    # capped at 0.999). x0_hat = (x - sqrt(1 - abar) eps_hat) / sqrt(abar), so an eps_hat
+    # difference reaches an x0_hat element times sqrt((1 - abar) / abar) = 2029. clip_sample
+    # clips x0_hat to [-1, 1]; only elements with |x - sqrt(1 - abar) eps_hat| < 4.9e-4 escape
+    # the clip (random init: about 1 in 400 to 3000). Later steps neither compound nor shrink
+    # the x0_hat gap. Measured here (1 thread): eps_hat gap 1.25e-6 -> chunk gap 3.74e-4,
+    # 7 of 384 elements above 1e-5, all in slot 5, the slot with the one unclipped element.
+    # (With leading spacing the first step is k = 90, gain 7.1, chunk gap 2.9e-6.)
+    gain = _x0_gain(dp)
+    assert 2000.0 < gain < 2100.0  # pins the mechanism to the configured schedule
+    np.testing.assert_allclose(single, full, rtol=0, atol=gain * EPS_ATOL)
 
 
 # ----------------------------------------------------------------------------- chunk execution
@@ -334,8 +401,11 @@ def test_dp_act_before_reset_raises() -> None:
 
 
 def test_ddim_timesteps_and_k(dp: DPStudent) -> None:
-    sched = dp.net.ddim(10)
-    assert sched.timesteps.tolist() == [90, 80, 70, 60, 50, 40, 30, 20, 10, 0]
+    # P3-D1: trailing spacing, so every K starts at k = 99 (leading gives [0] at K = 1).
+    assert dp.net.cfg.timestep_spacing == "trailing"
+    assert dp.net.ddim(10).timesteps.tolist() == [99, 89, 79, 69, 59, 49, 39, 29, 19, 9]
+    assert dp.net.ddim(1).timesteps.tolist() == [99]
+    assert dp.net.ddim(2).timesteps.tolist() == [99, 49]
     assert dp.net.ddim(100).timesteps.tolist() == list(range(99, -1, -1))
     img, prop = _window(b=1)
     for k in (1, 2, 5):
@@ -421,13 +491,25 @@ def test_gpu_matches_cpu(arm: str) -> None:
     assert all(torch.equal(sc[k], sg[k]) for k in sc)  # same init on any device
     img, prop = _window(seed=4, b=4)
     # cuDNN's default TF32 convolutions move a random-init DP chunk by up to ~3e-3 over 10
-    # DDIM steps (measured); with fp32 convolutions CPU and GPU agree to ~5e-6. The flag is
-    # the determinism contract's to set (P2-D3), so the policy leaves it alone.
+    # DDIM steps (measured with leading spacing); with fp32 convolutions the network outputs
+    # agree to ~2e-6. The flag is the determinism contract's to set (P2-D3), so the policy
+    # leaves it alone.
     with torch.backends.cudnn.flags(enabled=True, allow_tf32=False):
         if isinstance(cpu, DPStudent) and isinstance(gpu, DPStudent):
             seeds = [(0, i, 0) for i in range(4)]
             np.testing.assert_allclose(
-                gpu.sample_batch(img, prop, seeds), cpu.sample_batch(img, prop, seeds), atol=1e-4
+                _first_step_eps(gpu, img, prop, seeds),
+                _first_step_eps(cpu, img, prop, seeds),
+                atol=EPS_ATOL,
+            )
+            # The chunk gap is that times up to sqrt((1 - abar_99) / abar_99) = 2029 on any
+            # x0_hat element the k = 99 clip does not catch (see
+            # test_sample_slot_independent_of_batch). These 4 slots: 9.8e-6; over 64 slots,
+            # 7.7e-4 in one slot.
+            np.testing.assert_allclose(
+                gpu.sample_batch(img, prop, seeds),
+                cpu.sample_batch(img, prop, seeds),
+                atol=_x0_gain(cpu) * EPS_ATOL,
             )
         elif isinstance(cpu, BCStudent) and isinstance(gpu, BCStudent):
             np.testing.assert_allclose(
@@ -442,7 +524,15 @@ def test_gpu_slot_noise_independent_of_batch() -> None:
     assert isinstance(gpu, DPStudent)
     img, prop = _window(seed=5, b=24)
     seeds = [(0, 1000 + i, 0) for i in range(24)]
+    perm = [int(i) for i in np.random.default_rng(0).permutation(24)]
     with torch.backends.cudnn.flags(enabled=True, allow_tf32=False):
         full = gpu.sample_batch(img, prop, seeds)
+        shuffled = gpu.sample_batch(img[perm], prop[perm], [seeds[i] for i in perm])
         one = gpu.sample_batch(img[10:11], prop[10:11], seeds[10:11])
-    np.testing.assert_allclose(one[0], full[10], atol=1e-4)
+        eps_one = _first_step_eps(gpu, img[10:11], prop[10:11], seeds[10:11])
+        eps_full = _first_step_eps(gpu, img, prop, seeds)
+    # Fixed batch size: bit-identical under a slot permutation (measured).
+    np.testing.assert_array_equal(shuffled, full[perm])
+    # Across batch sizes: network output to the last ulps, chunk within the k = 99 gain.
+    np.testing.assert_allclose(eps_one[0], eps_full[10], atol=EPS_ATOL)
+    np.testing.assert_allclose(one[0], full[10], atol=_x0_gain(gpu) * EPS_ATOL)

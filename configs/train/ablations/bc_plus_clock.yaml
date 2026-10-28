@@ -1,0 +1,5 @@
+# Ablation (P3-D1 §3): identical to its base config except the keys below; 3 seeds; flown on id SS4-SS6. Same selection rule.
+arm: bc_plus_clock
+base: ../bc.yaml
+obs_variant: plus_clock          # time_fraction added; labelled `+clock`; also gives H4's P' (P3-D1 §6)
+seeds: [0, 1, 2]

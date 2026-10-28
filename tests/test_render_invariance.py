@@ -17,7 +17,14 @@ import numpy as np
 import pytest
 
 from ila.render import scene
-from render_support import airborne_actions, descent_actions, first_difference, fly, listed, new_env
+from render_support import (
+    airborne_actions,
+    descent_actions,
+    first_difference,
+    fly,
+    new_env,
+    train_listed,
+)
 
 pytestmark = pytest.mark.pybullet
 
@@ -46,7 +53,7 @@ def _assert_identical(runs):  # type: ignore[no-untyped-def]
 
 @pytest.mark.slow
 def test_airborne_300_steps_identical() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     runs = _three_runs(row, airborne_actions(300))
     for mode in MODES:
         assert runs[mode]["steps"] == 300, (mode, runs[mode]["info"])
@@ -57,7 +64,7 @@ def test_airborne_300_steps_identical() -> None:
 
 @pytest.mark.slow
 def test_descent_to_contact_identical() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5", 1)  # row 0 strikes the plate edge before in_contact; row 1 at 49
     runs = _three_runs(row, descent_actions(150))
     assert runs["off"]["first_contact"] is not None, "the scripted descent never touched the deck"
     for mode in MODES:
@@ -69,7 +76,7 @@ def test_descent_to_contact_identical() -> None:
 @pytest.mark.slow
 def test_reused_env_reattach_identical() -> None:
     """P8's runner reuses one env across episodes: a second reset must re-attach cleanly."""
-    row = listed("id", "SS5")
+    row = train_listed("SS5", 1)
     actions = descent_actions(120)
     results = {}
     for mode in ("off", "full"):
@@ -84,7 +91,7 @@ def test_reused_env_reattach_identical() -> None:
 
 
 def test_stale_scene_raises_after_reset() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     env = new_env(row)
     try:
         env.reset(seed=row.episode_seed)
@@ -107,7 +114,7 @@ def test_negative_control_collision_twin_is_detected() -> None:
 
     from ila import p8_adapter
 
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     actions = descent_actions(150)
     env = new_env(row)
     try:

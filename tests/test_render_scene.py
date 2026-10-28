@@ -14,7 +14,7 @@ from ila import p8_adapter
 from ila.obs.split import load_contract
 from ila.render import camera, scene
 from ila.render.config import load_render_config
-from render_support import airborne_actions, descent_actions, fly, listed, new_env
+from render_support import airborne_actions, descent_actions, fly, listed, new_env, train_listed
 
 RENDER_SRC = Path(ila.__file__).resolve().parent / "render"
 
@@ -37,7 +37,7 @@ def test_render_never_steps_or_changes_dynamics() -> None:
 
 @pytest.mark.pybullet
 def test_attach_bodies() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     env = new_env(row)
     try:
         env.reset(seed=row.episode_seed)
@@ -124,7 +124,7 @@ def test_background_test_has_power_on_p8_checkerboard() -> None:
 @pytest.mark.pybullet
 @pytest.mark.slow
 def test_no_world_fixed_visual_on_moving_deck() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     env = new_env(row)
     seen: set[int] = set()
     twin_frames = 0
@@ -183,7 +183,7 @@ def test_frame_and_obs_share_physics_step_count(monkeypatch: pytest.MonkeyPatch)
         return real_step(*args, **kwargs)
 
     monkeypatch.setattr(pyb, "stepSimulation", counting_step)
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     env = new_env(row)
     attitude = load_contract().layout["attitude"]
     cfg = load_render_config().camera
@@ -239,7 +239,7 @@ def test_student_facing_frame_is_pixels_only() -> None:
 
 @pytest.mark.pybullet
 def test_scene_render_returns_pixels_only() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     env = new_env(row)
     try:
         env.reset(seed=row.episode_seed)
@@ -257,7 +257,7 @@ def test_scene_render_returns_pixels_only() -> None:
 @pytest.mark.pybullet
 @pytest.mark.slow
 def test_same_episode_renders_byte_identical() -> None:
-    row = listed("id", "SS5")
+    row = train_listed("SS5", 1)
     actions = descent_actions(80)
     runs = []
     for _ in range(2):
@@ -280,7 +280,7 @@ def test_same_episode_renders_byte_identical() -> None:
 
 @pytest.mark.pybullet
 def test_segmentation_flag_does_not_change_rgb() -> None:
-    row = listed("id", "SS6")
+    row = train_listed("SS5")
     env = new_env(row)
     try:
         env.reset(seed=row.episode_seed)

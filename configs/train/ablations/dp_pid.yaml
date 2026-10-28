@@ -1,0 +1,5 @@
+# Ablation (P3-D1 §3): identical to its base config except the keys below; 3 seeds; flown on id SS4-SS6. Same selection rule.
+arm: dp_pid
+base: ../dp.yaml
+data: {collection: pid_1000, first_n: 1000}
+seeds: [0, 1, 2]

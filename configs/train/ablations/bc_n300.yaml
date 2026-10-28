@@ -1,0 +1,5 @@
+# Ablation (P3-D1 §3): identical to its base config except the keys below; 3 seeds; flown on id SS4-SS6. Same selection rule.
+arm: bc_n300
+base: ../bc.yaml
+data: {collection: ppo_2000, first_n: 300}
+seeds: [0, 1, 2]

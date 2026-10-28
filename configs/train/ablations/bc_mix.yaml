@@ -1,0 +1,5 @@
+# Ablation (P3-D1 §3): identical to its base config except the keys below; 3 seeds; flown on id SS4-SS6. Same selection rule.
+arm: bc_mix
+base: ../bc.yaml
+data: {collection: mix_1000, first_n: 1000}   # T_mix, balanced per SS; success filter -> 500 ppo : 478 gated episodes
+seeds: [0, 1, 2]

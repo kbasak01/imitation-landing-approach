@@ -1,9 +1,11 @@
 arm: modular
 data: {collection: ppo_2000, first_n: 1000}
+success_filter: true    # P3-D1 §2: only `success` episodes; kept fraction reported
 encoder: {trunk: resnet18, pretrained: false, norm: groupnorm, groups: 16, spatial_softmax_keypoints: 32}
 proprio_mlp: [64, 64]
+augment: {crop: {size: 88, train: random, eval: center}}   # 96 -> 88 px; P3-D1 §3
 estimator_head: {hidden: [256, 256], out_fields: [rel_position, rel_velocity, deck_normal, rel_tilt, height]}  # 11-d, normalised by train-set statistics of `priv`
-loss: huber
+loss: {name: huber, delta: 1.0}   # on targets normalised by train-set mean/std of `priv`
 teacher: {source: p8_ppo, seed: 0, frozen: true, passthrough_to_teacher: [time_fraction]}   # clock goes to the teacher only
 optim: {name: adamw, lr: 3.0e-4, weight_decay: 1.0e-4, schedule: cosine, warmup_steps: 500}
 steps: 30000

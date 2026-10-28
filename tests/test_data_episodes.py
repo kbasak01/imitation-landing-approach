@@ -341,3 +341,155 @@ def test_guard_refuses_wrong_pool_and_held_out(
             ep.check_rows(api, [bad, *select[1:]], "tune")
     with pytest.raises(ValueError, match="repeated"):
         ep.check_rows(api, [*select, select[0]], "tune")
+
+
+# --------------------------------------------------------------------------- demo stream design
+
+DEMO_FILES = ("demos_0-999", "demos_0-1999")
+
+
+@pytest.fixture(scope="module")
+def design() -> ep.StreamDesign:
+    return ep.load_stream_design()
+
+
+@pytest.fixture(scope="module")
+def demos() -> dict[str, list[p8_adapter.ListedEpisode]]:
+    return {name: ep.read_split(name) for name in DEMO_FILES}
+
+
+def test_stream_design(design: ep.StreamDesign) -> None:
+    assert design.demo_stream == "demos"
+    assert dict(design.collection_sizes) == {
+        "ppo_2000": 2000,
+        "pid_1000": 1000,
+        "mix_1000": 1000,
+        "dart": 1000,
+    }
+    assert [d.name for d in ep.demo_lists(design)] == list(DEMO_FILES)
+    assert design.dagger_indices(1) == range(1000, 1200)
+    assert design.dagger_indices(5) == range(1800, 2000)
+    assert design.dagger_split == "demos_0-1999"
+    for bad in (0, 6):
+        with pytest.raises(ValueError):
+            design.dagger_indices(bad)
+
+
+def test_demo_files_match_manifest_and_draw(
+    api: ep.P8EpisodeApi,
+    cfg: ep.SplitsConfig,
+    demos: dict[str, list[p8_adapter.ListedEpisode]],
+) -> None:
+    long, short = demos["demos_0-1999"], demos["demos_0-999"]
+    assert (len(short), len(long)) == (1000, 2000)
+    assert short == long[:1000]  # bc's 1 000 are a prefix of bc_matched's 2 000
+    draws = ep.draw_train(api, cfg, 2000, stream="demos")
+    assert [(r.ss, r.index, r.episode_seed, r.realization_seed) for r in long] == [
+        (d.ss, d.index, d.episode_seed, d.realization_seed) for d in draws
+    ]
+    assert {r.regime for r in long} == {"demos"}
+    for name in DEMO_FILES:
+        (row,) = [r for r in ep.read_manifest(MANIFEST) if r["file"] == f"{name}.parquet"]
+        assert (row["pool"], row["generator_seed"], row["draw"]) == (
+            "train",
+            "20261023",
+            ep.DEMO_DRAW_RULE,
+        )
+        assert pq.read_schema(ep.SPLITS_DIR / f"{name}.parquet").equals(
+            pq.read_schema(p8_adapter.list_path("id")), check_metadata=True
+        )
+
+
+def test_demo_files_train_only(
+    api: ep.P8EpisodeApi,
+    demos: dict[str, list[p8_adapter.ListedEpisode]],
+    pools: tuple[frozenset[ep.RealizationKey], ...],
+    frozen: dict[str, frozenset[ep.RealizationKey]],
+) -> None:
+    train, tune = pools
+    rows = demos["demos_0-1999"]
+    keys = {r.key for r in rows}
+    assert keys <= train and not keys & tune
+    for name, frozen_set in frozen.items():
+        assert not keys & frozen_set, name
+    assert not {r.ss for r in rows} & {"SS6"}
+    assert all(r.heading_deg != 90.0 for r in rows)
+    assert len({(r.key, r.episode_seed) for r in rows}) == 2000
+    ep.check_rows(api, rows, "train")
+
+
+def test_read_split_refuses_tampered_file(tmp_path: Path) -> None:
+    for name in ("select", "demos_0-999"):
+        (tmp_path / f"{name}.parquet").write_bytes((ep.SPLITS_DIR / f"{name}.parquet").read_bytes())
+    (tmp_path / ep.MANIFEST_NAME).write_text(MANIFEST.read_text(encoding="utf-8"))
+    ep.read_split("demos_0-999", tmp_path)
+    rows = p8_adapter.read_list(tmp_path / "demos_0-999.parquet")
+    ep.write_split("demos_0-999", rows[1:], tmp_path / "other", pool="train",
+                   generator_seed=20261023, draw=ep.DEMO_DRAW_RULE)  # fmt: skip
+    (tmp_path / "demos_0-999.parquet").write_bytes(
+        (tmp_path / "other" / "demos_0-999.parquet").read_bytes()
+    )
+    with pytest.raises(ValueError, match="SHA-256"):
+        ep.read_split("demos_0-999", tmp_path)
+    with pytest.raises(ValueError, match="manifest rows"):
+        ep.read_split("train_0-29", tmp_path)
+
+
+def test_dagger_slices_tile_the_second_thousand(
+    design: ep.StreamDesign, demos: dict[str, list[p8_adapter.ListedEpisode]]
+) -> None:
+    """DAgger iterations 1-5 fly demos 1000-1999 exactly (every seed), disjoint from 0-999."""
+    long = demos[design.dagger_split]
+    slices = [design.dagger_indices(i) for i in range(1, design.dagger_iterations + 1)]
+    flat = [j for r in slices for j in r]
+    assert flat == list(range(1000, 2000))  # tile exactly, in order, no gap or overlap
+    assert all(len(r) == design.dagger_per_iteration == 200 for r in slices)
+    dagger_rows = [long[j] for j in flat]
+    assert dagger_rows == long[1000:2000]
+    first = {(r.key, r.episode_seed) for r in demos["demos_0-999"]}
+    assert not {(r.key, r.episode_seed) for r in dagger_rows} & first
+    assert not set(flat) & set(range(1000))
+    # bc_dagger's starting conditions (bc 1 000 + 5 x 200) are bc_matched's 2 000.
+    assert demos["demos_0-999"] + dagger_rows == long
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("  first_index: 1000\n", "  first_index: 800\n"),  # overlaps the bc 1 000
+        ("  episodes_per_iteration: 200\n", "  episodes_per_iteration: 150\n"),  # gap
+        ("  stream: demos\n", "  stream: dagger\n"),  # not the demo stream
+    ],
+)
+def test_stream_design_refuses_bad_dagger_slices(tmp_path: Path, old: str, new: str) -> None:
+    text = ep.DEFAULT_CONFIG.read_text(encoding="utf-8")
+    assert text.count(old) == 1
+    path = tmp_path / "demos.yaml"
+    path.write_text(text.replace(old, new), encoding="utf-8")
+    with pytest.raises(ValueError):
+        ep.load_stream_design(path)
+
+
+@pytest.mark.pybullet
+@pytest.mark.slow
+def test_demo_files_regenerate_byte_identical(cfg: ep.SplitsConfig, tmp_path: Path) -> None:
+    """``make_splits``' demo path (2 000 real resets) reproduces both files and manifest rows."""
+    api8 = ep.make_api(
+        dev_pool=dev_pool,
+        realization_key=dmf_realization_key,
+        episode_draw=p8_episodes.EpisodeDraw,
+        resolve_draws=p8_episodes.resolve_draws,
+        cfgs=p8_adapter.load_eval_configs(),
+        workers=8,
+    )
+    design = ep.load_stream_design()
+    for name, rows in ep.demo_rows(api8, cfg, ep.demo_lists(design)).items():
+        ep.write_split(name, rows, tmp_path, pool="train", generator_seed=cfg.generator_seed,
+                       draw=ep.DEMO_DRAW_RULE)  # fmt: skip
+        assert (tmp_path / f"{name}.parquet").read_bytes() == (
+            ep.SPLITS_DIR / f"{name}.parquet"
+        ).read_bytes()
+    fresh = {r["file"]: r for r in ep.read_manifest(tmp_path / ep.MANIFEST_NAME)}
+    committed = {r["file"]: r for r in ep.read_manifest(MANIFEST)}
+    for name in DEMO_FILES:
+        assert fresh[f"{name}.parquet"] == committed[f"{name}.parquet"]

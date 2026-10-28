@@ -1,6 +1,17 @@
 arm: bc_dagger
 base: bc.yaml                 # identical encoder/head/optimiser; iteration 0 trains exactly as bc
 dagger: {from: configs/data/demos.yaml#dagger}   # 5 iterations x 200 episodes, beta (0.5, 0.25, 0.125, 0, 0), warm start, 10k steps each
+success_filter: {demos: true, rollouts: false}   # P3-D1 §2: DAgger rollouts are never filtered
+iteration_0: reuse_bc_seed_run   # the `bc` run of the same seed; its last-step EMA (not its select-selected checkpoint)
+loop:                         # P3-D1 §3 (skeptic B2); bc_matched.yaml follows the same schedule
+  episodes: {stream: demos, first_index: 1000, per_iteration: 200}   # iteration i: demos 1000+200(i-1) .. 1000+200i-1
+  rollout_weights: ema_last_step_of_previous_iteration   # iteration 1 flies bc seed s's final EMA; no list is read to choose it
+  warm_start: {weights: true, ema: true, optimizer_state: false}
+  schedule_per_iteration: {name: cosine, warmup_steps: 500, steps: 10000}
+  sampling: uniform_over_aggregate_frames
+  beta_coin: per_episode_generator(run_seed, iteration, episode_seed)
+  executed_action: float32_before_step    # ila.data.collect.executable (P3-D1 §8)
+  inference_path: cpu_fp32_single_sample
 labelled_episodes_total: 2000 # must equal bc_matched; asserted
-selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step], when: after_final_iteration}
+selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step], when: after_final_iteration, candidates: final_iteration_checkpoints, weights: ema}
 seeds: [0, 1, 2, 3, 4]

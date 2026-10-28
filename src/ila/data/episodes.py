@@ -40,6 +40,19 @@ stream, ``"train"`` by default). Labels enter through SHA-256, never ``hash()``.
   others, and the first ``k`` episodes of a longer list are exactly the ``k``-episode list
   (so ``bc``'s 1 000 are a prefix of ``bc_matched``'s 2 000).
 
+Streams (:class:`StreamDesign`, ``configs/data/demos.yaml``)
+-----------------------------------------------------------
+* ``demos``: every demo collection. ``ppo_2000`` flies global indices 0-1999
+  (``splits/demos_0-1999.parquet``); ``pid_1000``, ``mix_1000`` and each DART sigma set fly
+  0-999 (``splits/demos_0-999.parquet``), the same episodes as ``bc``'s 1 000, so teacher,
+  mixture and noise comparisons are paired by episode.
+* DAgger (P3-D1 decision, 2026-10-27): iteration ``i`` (1-5) of **every** student seed flies
+  ``demos`` global indices ``1000 + 200 (i - 1) .. 1000 + 200 i - 1``, i.e. rows 1000-1999 of
+  ``demos_0-1999.parquet`` (:meth:`StreamDesign.dagger_indices`). ``bc_dagger`` (the ``bc``
+  1 000 + five iterations of 200) and ``bc_matched`` (``ppo_2000``) therefore share the same
+  2 000 starting conditions; only who flies the second 1 000 differs.
+* ``label_parity``: the Phase 2 label-parity rollouts (no stored data).
+
 Hashes and manifest (P8 ``results/episodes/MANIFEST.csv`` style)
 -----------------------------------------------------------------
 ``splits/MANIFEST.csv`` records per file the SHA-256 of the parquet **bytes** and a
@@ -66,6 +79,7 @@ import io
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass, fields
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Final, Protocol
 
 import numpy as np
@@ -79,6 +93,7 @@ from ila.p8_adapter import REPO_ROOT, ListedEpisode
 __all__ = [
     "ADAPTER_NAMES_NEEDED",
     "DEFAULT_CONFIG",
+    "DEMO_DRAW_RULE",
     "FORBIDDEN_HEADINGS_DEG",
     "FORBIDDEN_SEA_STATES",
     "LIST_COLUMNS",
@@ -90,17 +105,21 @@ __all__ = [
     "SPLITS_DIR",
     "TRAIN_DRAW_RULE",
     "TRAIN_STREAM",
+    "DemoList",
     "Draw",
     "P8EpisodeApi",
     "RealizationKey",
     "RealizationSpecLike",
     "SplitManifestRow",
     "SplitsConfig",
+    "StreamDesign",
     "canonical_csv",
     "cell_order",
     "check_rows",
     "content_sha256",
     "deal_cell",
+    "demo_lists",
+    "demo_rows",
     "draw_select",
     "draw_train",
     "episode_rng",
@@ -108,11 +127,13 @@ __all__ = [
     "frozen_keys",
     "label_entropy",
     "load_splits_config",
+    "load_stream_design",
     "make_api",
     "manifest_row",
     "p8_episode_api",
     "pool_keys",
     "read_manifest",
+    "read_split",
     "row_key",
     "select_rows",
     "train_name",
@@ -151,6 +172,9 @@ FORBIDDEN_HEADINGS_DEG: Final[tuple[float, ...]] = (90.0,)
 #: Draw rules recorded in the manifest. ``balanced_round_robin`` is P8's ``DRAW_RULE``.
 SELECT_DRAW_RULE: Final[str] = "balanced_round_robin"
 TRAIN_DRAW_RULE: Final[str] = "balanced_round_robin+ss_interleaved"
+
+#: Draw rule of the demo lists: the train rule (a demo list is a train-stream prefix).
+DEMO_DRAW_RULE: Final[str] = TRAIN_DRAW_RULE
 
 #: Column order of every list file: P8's ``ListedEpisode`` field order (P8's ``LIST_COLUMNS``).
 LIST_COLUMNS: Final[tuple[str, ...]] = tuple(f.name for f in fields(ListedEpisode))
@@ -666,6 +690,179 @@ def train_rows(
 def train_name(n: int, *, start: int = 0, stream: str = TRAIN_STREAM) -> str:
     """Return a train list's file stem, e.g. ``train_0-1999`` or ``dagger1_0-199``."""
     return f"{stream}_{start}-{start + n - 1}"
+
+
+# --------------------------------------------------------------------------- stream design
+
+
+@dataclass(frozen=True)
+class StreamDesign:
+    """Which ``train`` episodes each kind of data flies (``configs/data/demos.yaml``).
+
+    Every demo collection flies a prefix of the one demo stream: ``ppo_2000`` its global
+    indices 0-1999, ``pid_1000``, ``mix_1000`` and each DART set indices 0-999 (the ``bc``
+    1 000). DAgger iteration ``i`` (1-based) flies the same slice of that stream for every
+    student seed: :meth:`dagger_indices` ``(i)``, which tile ``dagger_first_index ..
+    dagger_first_index + iterations * per_iteration - 1`` (1000-1999).
+
+    Attributes:
+        demo_stream: The demo stream's label (``"demos"``).
+        collection_sizes: Collection key in the YAML -> episodes (the ``dart`` key once for
+            all of its sigma values).
+        dagger_first_index: Global demo-stream index of DAgger iteration 1's first episode.
+        dagger_iterations: DAgger iterations (numbered 1 .. ``dagger_iterations``).
+        dagger_per_iteration: Rollout episodes per iteration.
+    """
+
+    demo_stream: str
+    collection_sizes: Mapping[str, int]
+    dagger_first_index: int
+    dagger_iterations: int
+    dagger_per_iteration: int
+
+    def dagger_indices(self, iteration: int) -> range:
+        """Return the demo-stream global indices DAgger iteration ``iteration`` flies.
+
+        The same for every student seed.
+
+        Raises:
+            ValueError: If the iteration is outside ``1 .. dagger_iterations``.
+        """
+        if not 1 <= iteration <= self.dagger_iterations:
+            raise ValueError(f"no DAgger iteration {iteration}")
+        first = self.dagger_first_index + self.dagger_per_iteration * (iteration - 1)
+        return range(first, first + self.dagger_per_iteration)
+
+    @property
+    def dagger_split(self) -> str:
+        """The demo split file stem whose rows the DAgger iterations fly."""
+        end = self.dagger_first_index + self.dagger_iterations * self.dagger_per_iteration
+        return train_name(end, stream=self.demo_stream)
+
+
+@dataclass(frozen=True)
+class DemoList:
+    """One demo split file: global indices ``start .. start + n - 1`` of one stream.
+
+    Attributes:
+        stream: Stream label.
+        start: First global index.
+        n: Episodes.
+    """
+
+    stream: str
+    start: int
+    n: int
+
+    @property
+    def name(self) -> str:
+        """The file stem, e.g. ``demos_0-1999``."""
+        return train_name(self.n, start=self.start, stream=self.stream)
+
+
+def load_stream_design(path: Path = DEFAULT_CONFIG) -> StreamDesign:
+    """Load and validate the stream design of the demo-data config.
+
+    Args:
+        path: ``configs/data/demos.yaml``.
+
+    Returns:
+        The :class:`StreamDesign`.
+
+    Raises:
+        ValueError: If the demo stream label is reserved, a size is not positive, or the
+            DAgger slices are not exactly the part of the largest demo list beyond every
+            smaller collection (1000-1999 here).
+    """
+    raw: Mapping[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
+    dagger = raw["dagger"]
+    design = StreamDesign(
+        demo_stream=str(raw["demo_stream"]),
+        collection_sizes=MappingProxyType(
+            {str(k): int(v["n"]) for k, v in raw["collections"].items()}
+        ),
+        dagger_first_index=int(dagger["first_index"]),
+        dagger_iterations=int(dagger["iterations"]),
+        dagger_per_iteration=int(dagger["episodes_per_iteration"]),
+    )
+    if str(dagger["stream"]) != design.demo_stream:
+        raise ValueError(f"DAgger must fly the demo stream, got {dagger['stream']!r}")
+    if design.demo_stream in (SELECT_NAME, TRAIN_STREAM):
+        raise ValueError(f"reserved stream label used: {design.demo_stream!r}")
+    sizes = sorted(set(design.collection_sizes.values()))
+    if sizes[0] < 1 or design.dagger_per_iteration < 1 or design.dagger_iterations < 1:
+        raise ValueError("collection and DAgger sizes must be positive")
+    end = design.dagger_first_index + design.dagger_iterations * design.dagger_per_iteration
+    if (design.dagger_first_index, end) != (sizes[-2] if len(sizes) > 1 else 0, sizes[-1]):
+        raise ValueError(
+            f"DAgger slices {design.dagger_first_index}-{end - 1} must tile the largest demo "
+            f"list beyond the next largest ({sizes})"
+        )
+    return design
+
+
+def demo_lists(design: StreamDesign) -> tuple[DemoList, ...]:
+    """Return the demo split files the collections need: one prefix per distinct size.
+
+    Args:
+        design: The stream design.
+
+    Returns:
+        ``DemoList(demo_stream, 0, n)`` for each distinct collection size, ascending.
+    """
+    sizes = sorted(set(design.collection_sizes.values()))
+    return tuple(DemoList(design.demo_stream, 0, n) for n in sizes)
+
+
+def demo_rows(
+    api: P8EpisodeApi, cfg: SplitsConfig, lists: Sequence[DemoList]
+) -> dict[str, list[ListedEpisode]]:
+    """Draw, resolve and check every demo list, resolving each stream only once.
+
+    A row depends only on its draw (one reset each), so the longest list of a stream is
+    resolved and the others are its slices (tested equal to resolving them directly).
+
+    Args:
+        api: The P8 episode API.
+        cfg: The split settings.
+        lists: The demo lists.
+
+    Returns:
+        List name -> checked rows, in global-index order.
+    """
+    out: dict[str, list[ListedEpisode]] = {}
+    for stream in dict.fromkeys(d.stream for d in lists):
+        mine = [d for d in lists if d.stream == stream]
+        end = max(d.start + d.n for d in mine)
+        rows = train_rows(api, cfg, end, stream=stream)
+        for d in mine:
+            out[d.name] = rows[d.start : d.start + d.n]
+    return out
+
+
+def read_split(name: str, splits_dir: Path = SPLITS_DIR) -> list[ListedEpisode]:
+    """Read one committed split file after checking it against ``MANIFEST.csv``.
+
+    Args:
+        name: File stem, e.g. ``demos_0-999`` or ``select``.
+        splits_dir: The splits directory.
+
+    Returns:
+        The rows, in file order.
+
+    Raises:
+        ValueError: If the file has no manifest row, or its bytes or content differ from it.
+    """
+    path = splits_dir / f"{name}.parquet"
+    records = [r for r in read_manifest(splits_dir / MANIFEST_NAME) if r["file"] == path.name]
+    if len(records) != 1:
+        raise ValueError(f"{path.name}: {len(records)} manifest rows, expected 1")
+    if file_sha256(path) != records[0]["file_sha256"]:
+        raise ValueError(f"{path.name}: file SHA-256 differs from MANIFEST.csv")
+    rows = p8_adapter.read_list(path)
+    if content_sha256(rows) != records[0]["content_sha256"]:
+        raise ValueError(f"{path.name}: content SHA-256 differs from MANIFEST.csv")
+    return rows
 
 
 # --------------------------------------------------------------------------- files
