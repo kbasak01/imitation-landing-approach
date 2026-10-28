@@ -20,7 +20,13 @@ drawn by :func:`initial_noise` on the CPU from one ``torch.Generator`` **per slo
 :func:`noise_seed` ``(run_seed, episode_seed, step)``. A slot's noise therefore depends only on
 its own seed tuple, never on its batch position, the batch size, the device or a global RNG.
 
-Chunk indices come only from :mod:`ila.policies.dp.chunking`. No training code lives here.
+Training (Phase 4 timing run; full DP training is Phase 6): :func:`ddpm_loss` is the
+epsilon-prediction DDPM objective on diffusers' ``DDPMScheduler`` with the same betas
+(``squaredcos_cap_v2``, 100 steps). Its noise ``epsilon`` and diffusion indices ``k`` are explicit
+inputs drawn by the caller from the data-loading generator (run_seed, epoch, worker_id), never
+from :func:`noise_seed` (P2-D3 item 4).
+
+Chunk indices come only from :mod:`ila.policies.dp.chunking`.
 """
 
 from __future__ import annotations
@@ -35,6 +41,7 @@ from typing import Any, Final
 import numpy as np
 import torch
 from diffusers import DDIMScheduler as _DiffusersDDIM
+from diffusers import DDPMScheduler as _DiffusersDDPM
 from numpy.typing import NDArray
 from torch import nn
 
@@ -47,6 +54,7 @@ __all__ = [
     "DPStudent",
     "DiffusionPolicyNet",
     "SeedTuple",
+    "ddpm_loss",
     "initial_noise",
     "noise_seed",
 ]
@@ -58,6 +66,9 @@ _SEED_STRUCT: Final[struct.Struct] = struct.Struct("<qqq")
 
 #: diffusers' DDIM scheduler (diffusers is only partially typed, so it is held as ``Any``).
 _DDIM: Any = _DiffusersDDIM
+
+#: diffusers' DDPM scheduler (training: ``add_noise``), held as ``Any`` for the same reason.
+_DDPM: Any = _DiffusersDDPM
 
 #: DDIM timestep spacings diffusers implements; the config chooses one (P3-D1: ``trailing``).
 _TIMESTEP_SPACINGS: Final[tuple[str, ...]] = ("trailing", "leading", "linspace")
@@ -237,6 +248,7 @@ class DiffusionPolicyNet(nn.Module):
         self.encoder = VisionEncoder(encoder_cfg)
         self.unet = ConditionalUnet1D(cfg.action_dim, encoder_cfg.feature_dim, cfg.unet)
         self._ddim: dict[int, Any] = {}
+        self._ddpm: Any = None
 
     def ddim(self, num_inference_steps: int) -> Any:
         """Return a DDIM scheduler with ``set_timesteps(K)`` applied (cached per ``K``).
@@ -262,6 +274,22 @@ class DiffusionPolicyNet(nn.Module):
             sched.set_timesteps(k)
             self._ddim[k] = sched
         return self._ddim[k]
+
+    def ddpm(self) -> Any:
+        """Return the training DDPM scheduler (betas identical to :meth:`ddim`'s; cached).
+
+        Returns:
+            diffusers ``DDPMScheduler`` with ``num_train_timesteps``, ``beta_schedule``,
+            ``clip_sample`` and ``prediction_type`` from the config.
+        """
+        if self._ddpm is None:
+            self._ddpm = _DDPM(
+                num_train_timesteps=self.cfg.num_train_timesteps,
+                beta_schedule=self.cfg.beta_schedule,
+                clip_sample=self.cfg.clip_sample,
+                prediction_type=self.cfg.prediction_type,
+            )
+        return self._ddpm
 
     def predict_noise(
         self, sample: torch.Tensor, timestep: torch.Tensor, cond: torch.Tensor
@@ -306,6 +334,55 @@ class DiffusionPolicyNet(nn.Module):
             eps = self.predict_noise(x, kk, cond)
             x = sched.step(eps, int(k), x, eta=0.0).prev_sample
         return x.clamp(-1.0, 1.0)
+
+
+def ddpm_loss(
+    net: DiffusionPolicyNet,
+    images: torch.Tensor,
+    proprio: torch.Tensor,
+    target: torch.Tensor,
+    noise: torch.Tensor,
+    timestep: torch.Tensor,
+    crop_generator: torch.Generator | None = None,
+) -> torch.Tensor:
+    """Return the per-sample epsilon-prediction DDPM loss (Chi et al.; P3-D1 §3).
+
+    ``x_k = add_noise(target, noise, k)``; loss = mean over ``(Tp, A)`` of
+    ``(eps_hat(x_k, k, cond) - noise)^2``, computed in fp32 whatever the autocast dtype.
+
+    Args:
+        net: The policy network (training or eval mode; the encoder's crop follows it).
+        images: ``uint8[B, To, 96, 96, 3]``.
+        proprio: ``float32[B, To, D]``.
+        target: ``float32[B, Tp, A]`` clean label chunk, chunk index ``j`` = step ``t-To+1+j``
+            (normalised actions, identity normalisation).
+        noise: ``float32[B, Tp, A]`` standard-normal epsilon from the data-loading generator.
+        timestep: ``int64[B]`` diffusion indices ``k`` in ``[0, num_train_timesteps)`` from
+            the same generator. The only integer the network sees.
+        crop_generator: Training-mode crop generator (see ``VisionEncoder``).
+
+    Returns:
+        ``float32[B]`` per-sample loss (the caller averages; buckets by ``k`` for diagnostics).
+
+    Raises:
+        ValueError: On mismatched shapes or ``k`` out of range.
+    """
+    cfg = net.cfg
+    b = images.shape[0]
+    shape = (b, cfg.horizon, cfg.action_dim)
+    if tuple(target.shape) != shape or tuple(noise.shape) != shape:
+        raise ValueError(f"target/noise must be {shape}, got {target.shape}, {noise.shape}")
+    if tuple(timestep.shape) != (b,):
+        raise ValueError(f"timestep must be [{b}], got {tuple(timestep.shape)}")
+    if int(timestep.min()) < 0 or int(timestep.max()) >= cfg.num_train_timesteps:
+        raise ValueError(f"timestep outside [0, {cfg.num_train_timesteps})")
+    target32 = target.to(torch.float32)
+    noise32 = noise.to(device=target32.device, dtype=torch.float32)
+    noisy = net.ddpm().add_noise(target32, noise32, timestep)
+    cond = net.encoder(images, proprio, crop_generator)
+    eps = net.predict_noise(noisy, timestep, cond)
+    per: torch.Tensor = ((eps.to(torch.float32) - noise32) ** 2).mean(dim=(1, 2))
+    return per
 
 
 class DPStudent(VisionStudentBase):

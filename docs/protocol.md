@@ -1367,3 +1367,61 @@ Notes:
   of 150 `select` flips first (P3-D1 §3).
 - **Stores:** `${data_root}/demos/{ppo_2000,pid_1000,mix_1000,dart_0.05,dart_0.10,dart_0.20}.h5`.
   `old_float64/` is not part of the dataset.
+
+### P4-D1 — Training implementation choices P3-D1 leaves open (2026-10-28)
+*Decision.* The settings below are not fixed by any frozen config or by P3-D1. They are
+implementation choices within the frozen protocol, not deviations. They are recorded here before
+any training run, and every run manifest repeats them.
+1. **Proprio standardisation (vision arms).** The encoder's `proprio_mean`/`proprio_std` are
+   fitted once per run, at train start, from the allowlisted proprio of that run's own training
+   frames. They are stored in the checkpoint and restored on resume. `bc_matched` inherits the
+   values of the `bc` run it starts from.
+2. **Optimiser details.** AdamW betas (0.9, 0.999) and eps 1e-8 (torch defaults). No gradient
+   clipping; the gradient norm is logged only.
+3. **Held-out loss.**
+   - It is computed on `ppo_2000` stream indices 1950–1999. These are 50 `train`-pool episodes,
+     all `success`, read through the same student path.
+   - Plan Phase 4 item 4's "held-out `tune` demos" is **not** followed. `tune` feeds `select`
+     only (P3-D1 §2), so no `tune` episode may enter training code.
+   - These episodes are disjoint from the training episodes 0–999 by episode, but not by
+     realization: all 50 share wave realizations with training episodes. So held-out loss
+     measures generalisation within a realization.
+   - It is logged only. No selection, stopping or threshold reads it.
+   - `bc_matched` trains on these episodes from iteration 5 on. The overlap is logged, and its
+     held-out loss is contaminated from then on.
+4. **`bc_matched` warm start** (P3-D1 §3, "copies the weights and the EMA"):
+   - iteration 1 takes the same-seed `bc` run's step-30 000 raw weights as weights and its EMA as
+     EMA;
+   - each iteration resets AdamW and runs cosine with 500 warm-up steps over 10 k steps.
+5. **`dp` EMA.** It follows the `diffusion_policy` reference `EMAModel`: the first two updates
+   are copies, then decay 1 − (1 + n − 2)^−0.75, capped at 0.9999. The BC family uses a constant
+   0.999 from init, without bias correction.
+6. **Timing runs** (P3-D1 §5):
+   - they use the full config's learning-rate schedule, so they time the first 2 k steps of a real
+     run;
+   - they skip held-out loss and checkpoints, are tagged `timing`, and are refused by selection.
+7. **Run guards.** Training, tuning and timing runs refuse a dirty tree, and refuse a config whose
+   SHA-256 differs from P3-D1's.
+8. **GPU training is not bit-reproducible run to run** (cuDNN, bf16). Resume bit-identity is
+   tested on the CPU path only. An infrastructure resume (P3-D1 §4) restores RNG state, but the
+   continued GPU run is not claimed to be identical to an uninterrupted one.
+9. **`bc_state` data path.** `ila/train/state_dataset.py` reads `teacher_obs` through one
+   `AUDIT_ALLOWLIST` entry (`privileged_observations`). `privileged-leak-auditor` approved it on
+   2026-10-28, on the condition that a name scan confines `StateFrames` and `state_dataset` to
+   `train/{state_dataset,loop,smoke}.py`.
+
+*Reason.* Each item is something a reviewer would otherwise have to reverse-engineer from code.
+Item 3 also blocks a plan reading that would break P3-D1 §2.
+
+*Evidence.* `privileged-leak-auditor`, Phase 4 pre-run review, 2026-10-28: no LEAK, 1 RISK (the
+`StateFrames` name scan, fixed in code before the first run), 6 NOTEs.
+- The six stores have 0 realization-key or episode-seed overlap with `select` and with the five
+  frozen lists.
+- Every store holds SS3–SS5 only, at 45°, 135° and 180°.
+
+*Consequence.*
+- `training-run-diagnostician` reads held-out loss as within-realization.
+- Smoke runs use 8 000 (`bc`) and 10 000 (`bc_state`) steps. At 4 000 steps, the un-corrected EMA
+  still weighted the random init by 0.999^4000 ≈ 1.8 %, and actions came out about 3 % short. At
+  30 k steps that weight is about 1e-13. Only the smoke step counts changed; no frozen
+  hyper-parameter did.

@@ -35,10 +35,14 @@ Name, an import, a literal-string ``getattr``/``attrgetter``/...). ``ila/data`` 
 its audits) and ``ila/obs`` are where they live and are not scanned for them.
 
 The only way in is a committed entry in ``AUDIT_ALLOWLIST`` (file relative to ``src/ila`` ->
-the names that one file may reference), reviewed by ``privileged-leak-auditor``. It is empty
-today. Expected later entries, each only by such a reviewed entry: ``bc_state``'s dataset may
-read ``teacher_obs`` (``privileged_observations``), and the ``modular`` arm's estimator-target
-code may read ``estimator_targets``. No end-to-end vision student's dataset ever gets one.
+the names that one file may reference), reviewed by ``privileged-leak-auditor``. Phase 4 adds
+one, ``train/state_dataset.py`` -> ``privileged_observations`` (``bc_state``'s dataset, P8's
+25-d observation by design; approved by ``privileged-leak-auditor`` 2026-10-28, conditional on
+the ``StateFrames`` name scan: only ``train/state_dataset.py``, ``train/loop.py`` and
+``train/smoke.py`` may name ``StateFrames`` or ``state_dataset``). Expected later: the
+``modular`` arm's estimator-target code may read ``estimator_targets``. No end-to-end vision
+student's dataset ever gets one (``ila/train/dataset.py`` has none, and
+``test_vision_dataset_has_no_audit_entry`` keeps it so).
 """
 
 from __future__ import annotations
@@ -91,10 +95,18 @@ AUDIT_NAMES = frozenset(
 AUDIT_RESTRICTED: tuple[str, ...] = ("train", "policies", "deploy", "eval")
 
 #: Reviewed exceptions: file (relative to src/ila) -> AUDIT_NAMES that file may reference. Each
-#: entry needs a privileged-leak-auditor review recorded in docs/protocol.md. Empty today.
-#: Expected later: bc_state's dataset -> {"privileged_observations"}; the modular arm's
-#: estimator-target code -> {"estimator_targets"}.
-AUDIT_ALLOWLIST: dict[str, frozenset[str]] = {}
+#: entry needs a privileged-leak-auditor review recorded in docs/protocol.md.
+#: Expected later: the modular arm's estimator-target code -> {"estimator_targets"}.
+AUDIT_ALLOWLIST: dict[str, frozenset[str]] = {
+    # bc_state's dataset (Phase 4): P8's full 25-d teacher_obs, privileged by design (P3-D1 §3,
+    # declared exception 3); feeds only ila.policies.state_mlp.StateMLP. Approved by
+    # privileged-leak-auditor 2026-10-28 (Phase 4), conditional on the StateFrames name scan
+    # (test_state_dataset_is_used_only_where_reviewed).
+    "train/state_dataset.py": frozenset({"privileged_observations"}),
+}
+
+#: Vision-student dataset files that may never get an AUDIT_ALLOWLIST entry.
+VISION_DATASET_FILES: frozenset[str] = frozenset({"train/dataset.py", "train/sampling.py"})
 
 #: Call names whose literal-string argument names an attribute (aliased access).
 _ATTR_BY_STRING_SECOND_ARG = frozenset({"getattr", "hasattr", "setattr", "delattr"})
@@ -301,6 +313,96 @@ def test_restricted_packages_do_not_reference_store_audit_accessors(package: str
     assert files, f"src/ila/{package} has no modules to scan"
     sources = {p.relative_to(SRC).as_posix(): p.read_text(encoding="utf-8") for p in files}
     assert _audit_offenders(sources) == []
+
+
+def test_vision_dataset_has_no_audit_entry() -> None:
+    assert not VISION_DATASET_FILES & set(AUDIT_ALLOWLIST)
+    for rel in VISION_DATASET_FILES:
+        assert (SRC / rel).is_file(), rel
+
+
+#: P8 frozen-list accessors (``ila.p8_adapter``). Training and selection read ``splits/`` only.
+FROZEN_LIST_NAMES = frozenset(
+    {"read_list", "list_path", "list_paths", "list_names", "manifest_path"}
+)
+
+
+#: The Phase 4 training scripts (argparse wrappers over ``ila/train``).
+TRAIN_SCRIPTS: tuple[str, ...] = ("train.py", "train_smoke.py", "select.py", "budget.py")
+
+
+def test_training_code_reads_no_frozen_list() -> None:
+    """``ila/train`` and its scripts never read a P8 frozen list (P3-D1 §4)."""
+    scripts = SRC.parents[1] / "scripts"
+    files = [*sorted((SRC / "train").rglob("*.py")), *(scripts / n for n in TRAIN_SCRIPTS)]
+    assert all(p.is_file() for p in files)
+    found = [
+        f"{p.name}:{line}:{name}"
+        for p in files
+        for line, name in _references(p.read_text(encoding="utf-8"), FROZEN_LIST_NAMES)
+    ]
+    assert found == []
+    assert _references("rows = p8_adapter.read_list(path)", FROZEN_LIST_NAMES) != []
+
+
+#: ``bc_state``'s privileged dataset, by class and module name (leak audit Phase 4, R1).
+STATE_DATASET_NAMES = frozenset({"StateFrames", "state_dataset"})
+
+#: The only files (relative to src/ila) that may name it: the module, the loop, the smoke.
+STATE_DATASET_USERS = frozenset({"train/state_dataset.py", "train/loop.py", "train/smoke.py"})
+
+
+def _dynamic_imports(source: str, forbidden: frozenset[str]) -> list[tuple[int, str]]:
+    """``import_module("a.b.c")`` / ``__import__(...)``: every dotted component, not just ``a``."""
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Call) and node.args:
+            func = node.func
+            fname = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+            first = node.args[0]
+            if fname in {"import_module", "__import__"} and isinstance(first, ast.Constant):
+                parts = str(first.value).split(".")
+                found += [(node.lineno, n) for n in parts if n in forbidden]
+    return found
+
+
+def _state_dataset_offenders(sources: dict[str, str]) -> list[str]:
+    return [
+        f"src/ila/{rel}:{line}:{name}"
+        for rel, text in sorted(sources.items())
+        if rel not in STATE_DATASET_USERS
+        for line, name in sorted(
+            set(_references(text, STATE_DATASET_NAMES))
+            | set(_dynamic_imports(text, STATE_DATASET_NAMES))
+        )
+    ]
+
+
+def test_state_dataset_is_used_only_where_reviewed() -> None:
+    sources = {
+        p.relative_to(SRC).as_posix(): p.read_text(encoding="utf-8")
+        for package in AUDIT_RESTRICTED
+        for p in sorted((SRC / package).rglob("*.py"))
+    }
+    assert set(sources) >= STATE_DATASET_USERS
+    assert _state_dataset_offenders(sources) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "from ila.train.state_dataset import StateFrames",
+        "from ila.train import state_dataset",
+        "import ila.train.state_dataset as sd",
+        "frames = sd.StateFrames(store, names)",
+        'cls = getattr(module, "StateFrames")',
+        'm = importlib.import_module("ila.train.state_dataset")',
+    ],
+)
+def test_state_dataset_scan_flags_planted_use(line: str) -> None:
+    for rel in ("train/dataset.py", "policies/bc.py", "eval/runner.py", "deploy/export.py"):
+        assert _state_dataset_offenders({rel: line}) != [], (rel, line)
+    assert _state_dataset_offenders({"train/loop.py": line}) == []
 
 
 def test_audit_names_exist_where_they_live() -> None:
