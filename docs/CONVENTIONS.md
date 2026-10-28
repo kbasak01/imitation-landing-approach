@@ -68,6 +68,12 @@ executing (DP) or the previous action is held (BC). `d = ceil(p99_ms / 33.333)`.
   pixels and proprio, the only integer a network sees is the diffusion index
   k ∈ [0, num_train_timesteps). DDPM training noise comes from the data-loading generator
   (run_seed, epoch, worker_id), never from `noise_seed(·, ·, t)`.
+- **Three declared exceptions** (P3-D1 §3), each labelled wherever it is reported: (1) the `+clock`
+  ablation adds `time_fraction` to the student's proprio; (2) `modular` passes the true
+  `time_fraction` to the frozen teacher MLP only, through a `ModularInput` built in
+  `ila/obs/split.py`, never to the estimator; (3) `bc_state` reads P8's full 25-d observation,
+  `time_fraction` included (privileged by design, never a vision row). No other path carries the
+  clock into a network.
 
 ## Demo store keys (HDF5, one group per episode)
 `images uint8[T,96,96,3]`, `proprio f32[T,13]`, `priv f32[T,11]`, `teacher_obs f32[T,25]`,

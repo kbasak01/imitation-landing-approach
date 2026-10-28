@@ -214,12 +214,14 @@ class ObsContract:
         """
         return np.take(self._full(obs), self._proprio_idx, axis=-1)
 
-    def field(self, obs: ArrayLike, name: str) -> NDArray[np.float32]:
+    def audit_field(self, obs: ArrayLike, name: str) -> NDArray[np.float32]:
         """Return one named P8 field of observation(s), for checks and audits.
 
         Not a student path: the field may be privileged. Data code uses it to verify
         alignment (``last_action[t] == action_exec[t-1]``) and to poison stored columns in
-        tests, without ever indexing an observation by position.
+        tests, without ever indexing an observation by position. Forbidden in ``ila/train``,
+        ``ila/policies``, ``ila/deploy`` and ``ila/eval`` except by a reviewed allowlist entry
+        (``tests/test_render_access.py``).
 
         Args:
             obs: P8 observation(s), shape ``(..., 25)``.

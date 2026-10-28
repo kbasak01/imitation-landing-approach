@@ -1,7 +1,9 @@
 arm: bc_dart
 data: {collection: dart, sigma: selected_on_select, first_n: 1000}   # sigma from {0.05,0.10,0.20}, 3 trials, logged
+success_filter: false   # P3-D1 §2: DART failures come from the injected noise; labels are clean
 encoder: {trunk: resnet18, pretrained: false, norm: groupnorm, groups: 16, spatial_softmax_keypoints: 32}
 proprio_mlp: [64, 64]
+augment: {crop: {size: 88, train: random, eval: center}}   # 96 -> 88 px; P3-D1 §3
 head: {hidden: [256, 256], out: 3, activation: tanh}
 loss: mse
 optim: {name: adamw, lr: 3.0e-4, weight_decay: 1.0e-4, schedule: cosine, warmup_steps: 500}

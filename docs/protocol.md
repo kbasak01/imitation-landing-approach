@@ -636,22 +636,558 @@ train, and the determinism study must fly `select`.
 - **Re-run the reproduction gate** (`make reproduce-p8`, about 4 min) after any change to
   `ila/render/`, `ila/eval/runner.py` or the adapter.
 
-### P3-D1 — FROZEN IMITATION-LEARNING PROTOCOL (draft in Phase 3; frozen only with the user's dated approval)
+### P3-D1 — FROZEN IMITATION-LEARNING PROTOCOL (DRAFT, revision 3, 2026-10-27)
 
-Sections to fill, in this order (mirrors P8's P3-D1):
-1. Inherited: success YAML SHA-256, MANIFEST SHA-256, outcome classes, metrics, statistics (by
-   reference to P8 P3-D1 §1–§4), bootstrap seed 20261023.
-2. Pools and episodes: `train`/`select` manifests + SHA-256; demo counts per teacher.
-3. Arms: every arm of plan §1.6 with every hyper-parameter, seeds, and its evaluation lists.
-4. Selection rule and the only tuning (DART σ, 3 trials).
-5. Training budget and the single-cut rule.
-6. Hypotheses H1–H5: cell, statistic, magnitude, supported / not supported / inconclusive rules,
-   restated against the measured teacher ceilings if needed (say why).
-7. Latency-arm rule.
-8. Deviations and incidents before freeze.
+**Status: DRAFT, not frozen.**
+- It is frozen only by the user's dated approval, recorded on this line.
+- Once frozen, nothing below changes without a dated deviation entry.
+- The SHA-256 of this block (from this heading to the line before the next `###`, UTF-8) is
+  recorded in the Gate 3 entry.
+- **Revisions 2 and 3** fold in the pre-gate reviews and their re-reviews:
+  - `privileged-leak-auditor`: FINDINGS, no LEAK, 3 RISKs, 6 NOTEs;
+  - `results-skeptic`: 5 BLOCKING, 10 SHOULD-FIX, notes.
 
-The SHA-256 of this block (heading to the line before the next `###`, UTF-8) is recorded in the
-Gate 3 entry.
+  §8 lists each disposition.
+
+Everything here is **simulation only**: PyBullet physics, PyBullet TinyRenderer frames. Lengths and
+times are model scale (λ = 1/25); full scale is ×25 for lengths and ×5 for times. One control step
+is 33.3 ms model (167 ms full).
+
+**1. Inherited from P8 (by reference, unchanged), and the statistics.**
+- **Success criteria:** `configs/env/success.yaml`, SHA-256
+  `c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118`.
+- **Frozen lists:** MANIFEST SHA-256
+  `e6f30e55e478d39061b94e38de33959ca99b16e8cac38a3bd99b34f6543ad4a2`. 2 800 episodes: `id`
+  SS3–SS6, `unseen_seastate` SS6, `unseen_heading` SS3–SS6, `unseen_vessel` SS3–SS6 and `static`,
+  200 per cell, aft pad.
+- **Outcomes and metrics:** outcome classes in the order `crash → off_pad → hard_landing → bounce →
+  success → timeout`; P8's metrics. Both as in P8 P3-D1 §1 and §3.
+- **P8 commit and teacher:** `7237b7065c8af8172b3848ac6e9d3ceb2cf82075`. Teacher `ppo/0/final/`:
+  `model.zip` `1a012394…`, `vecnormalize.pkl` `9ddb2a99…` (P0-D1). Every teacher-relative
+  statement is conditional on teacher seed 0.
+- **Rendering:** `configs/render/camera.yaml` `53f80265…0380`, 96 px (P1-D1, P2-D2).
+- **Observation contract:** `configs/obs/student.yaml`
+  `2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4`.
+- **Evaluation matrix:** `configs/eval/matrix.yaml`
+  `4d8a78fdfc59ddfb5cc51add8bba121af8da43ee0e35787ffd0e2611d7e1e96a`.
+- **Statistics.** Bootstrap seed **20261023**, always passed explicitly (P8's default 20260926 is
+  never relied on).
+  - Per cell and seed: Wilson 95 %.
+  - Across seeds: IQM with stratified-bootstrap 95 % CI, 2 000 replicates.
+  - Closing speed: relative p95, over touched-down episodes only, never imputed.
+  - **Success contrasts** (H1 and its secondaries): P8 `paired_bootstrap`.
+    - Mean over seeds × episodes. Seeds are resampled per arm; one set of episode indices is
+      shared.
+    - 10 000 replicates. The point estimate is `PairedContrast.diff`.
+    - `paired_iqm_difference` is printed beside it as "post hoc, not scored" (P8 P7-D1a item 3).
+  - **Same-checkpoint contrasts** (H3: `Ta = 1` vs `Ta = 8`; H5(b): latency vs synchronous): the
+    same statistic, but each replicate resamples seed indices **jointly** for both sides, because
+    both sides are the same trained runs.
+  - **H2:** W₁ is the exact 1-D empirical W₁ between an arm's pooled touched-down
+    `time_to_touchdown_s` (all its seeds × episodes in the cell) and the reference's touched-down
+    values.
+    - Each replicate draws `bc`-mix and `dp`-mix seeds independently, then one set of 200 episode
+      indices shared by both arms and the reference.
+    - A replicate with an empty pool is NaN and excluded, and the count is reported.
+    - The point estimate is computed on the unresampled pools.
+  - **H4:** each replicate draws `bc_state`'s seeds once (used in both P and I) and `bc`'s seeds
+    independently. The teacher's single row set is held fixed. One set of episode indices is
+    shared, and S = mean success.
+  - **Three statistics are not P8's.** The joint-seed contrast, H2's W₁ bootstrap and H4's
+    three-arm bootstrap are written in `ila.eval`. Each gets a unit test on a synthetic case of
+    known value before Phase 8. These are the only exceptions to "P8 functions only".
+  - "Separates" means the 95 % CI excludes 0. Magnitude thresholds are judged on the point
+    estimate. There is no multiplicity correction, and the README says so.
+  - **SS6 flip floor.** Every SS6 contrast prints P8's one-ulp flip floor beside it, described as
+    "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw
+    median 1.9 %), measured on P8's MLPs, not on these students".
+- **Determinism:** P2-D3, with item 3's acceptance rule tightened in §3 (inference path).
+
+**2. Pools, episodes and demonstrations.**
+- **Pools** (P8 P3-D2):
+  - `train` = 729 frigate realizations (SS3–SS5; headings 45°, 135°, 180°; 0/6/12 kn; seed
+    ordinals 0–26);
+  - `tune` = 135 (ordinals 27–31).
+  - Disjoint by realization key from every frozen list and from each other. No SS6 and no 90° in
+    any training, tuning or selection.
+  - Tests in `tests/test_data_episodes.py`: `test_train_is_train_only`,
+    `test_train_disjoint_from_frozen`, `test_train_no_ss6_no_beam`, `test_demo_files_train_only`,
+    `test_select_is_tune_only`, `test_select_disjoint_from_frozen`.
+- **`select`:** `splits/select.parquet`, SHA-256 `07ecf049…422b`. 150 `tune` episodes, 50 each of
+  SS3, SS4 and SS5. Checkpoint selection, the DART σ search, the inference-path acceptance test
+  and Phase 9 closed-loop parity use only this list.
+  - *Caveat.* P8's teacher saw the `tune` realizations in P8's own tuning and validation. The
+    episode seeds here are new and nothing is selected for the teacher, but the teacher's
+    `select` success may read slightly high.
+- **Streams.** Every demonstration set draws from one `train` stream, `demos` (generator seed
+  20261023):
+  - `ppo_2000` is indices 0–1999;
+  - `pid_1000`, `mix_1000` and the three DART sets are indices 0–999 of the **same** stream.
+  - So every 1 000-episode arm flies the same 1 000 starting conditions, and the teacher and noise
+    ablations are paired.
+  - **DAgger** (user decision, 2026-10-27): iteration i ∈ 1…5 flies `demos` indices
+    1000 + 200(i − 1) … 1000 + 200i − 1, the same for every DAgger seed. These are the starting
+    conditions of `bc_matched`'s second 1 000 (`tests/test_data_episodes.py`).
+- **`T_mix` assignment** (user decision, 2026-10-27): balanced per sea state.
+  - Within each sea-state cell, a permutation seeded by (20261023, `"T_mix"`, the cell's ordered
+    episode keys) gives exactly half the episodes to `T_ppo` and half to `gated`. In an odd cell
+    the extra episode alternates, `ppo` first.
+  - On `demos_0-999`: SS3 167/167, SS4 167/166, SS5 166/167, so 500/500 in total.
+  - The function is `ila.data.mix.assign_rows`.
+- **DART noise:**
+  - The executed action is `float32(clip(label + σ z))`, z ~ N(0, I). It is rounded to float32
+    **before** `env.step` (§8), so `action_exec` is exactly what ran. The label is the clean
+    teacher action.
+  - z comes from a per-episode generator seeded by (20261023, episode position, episode seed),
+    **not** by σ. The three σ sets therefore share their standard-normal draws (common random
+    numbers).
+- **β attribute:** teacher demonstrations store β = 1.0.
+- **Demo sets.**
+  - Summary: `results/demos_summary.json`, SHA-256
+    `c56fa83350fe1900704b1ef885a1b558c6114a0cae4ee03a1f42483bf58713b7`. It is committed with this
+    entry.
+  - Split files:
+    - `splits/demos_0-999.parquet` `0012f80b3d67e5c0c239cce58186ad6655de72aeb17b4b0de21600f20b6a4307`;
+    - `splits/demos_0-1999.parquet` `20940abcce53298c3ca26e4fb92103226116aac1a0f55b730b74381c0b5805ef`;
+    - `splits/MANIFEST.csv` `2be435abb17148f9644a92fa303d0b2cb333b08a89288b9de26f7b58fd8902dc`;
+    - `configs/data/demos.yaml` `1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11`.
+  - Stores live under `${data_root}/demos/` (gitignored). Success rates carry Wilson 95 % intervals.
+
+  | Set | Teacher | Episodes / frames | Store SHA-256 | ila commit | Success: all [Wilson]; SS3 / SS4 / SS5 % | Losses | Training filter |
+  |---|---|---|---|---|---|---|---|
+  | `ppo_2000` | `T_ppo` (SB3, P2-D1) | 2 000 / 122 925 | `35b70cbd…7cfd` | `fc5388a` | 99.95 [99.7, 100]; 100 / 100 / 99.8 | 1 bounce | success (kept 0.9995) |
+  | `pid_1000` | `T_pid` | 1 000 / 152 061 | `429d3791…bb33` | `fc5388a` | 99.8 [99.3, 99.9]; 100 / 99.7 / 99.7 | 1 bounce, 1 hard landing | success (0.998) |
+  | `mix_1000` | `T_mix`: 500 `ppo` + 500 `gated` | 1 000 / 102 176 | `8afdbee7…8717` | `c941246` | 97.8 [96.7, 98.5]; 100 / 98.8 / 94.6. `ppo` 500/500; `gated` 478/500 (100 / 97.6 / 89.2) | 20 timeouts, 2 bounces, all `gated` | success (0.978) |
+  | `dart_0.05` | `T_ppo` + σ 0.05 | 1 000 / 61 746 | `5e37da24…f500` | `d198f08` | 99.5 [98.8, 99.8]; 99.7 / 99.4 / 99.4 | 4 bounces, 1 hard landing | none |
+  | `dart_0.10` | `T_ppo` + σ 0.10 | 1 000 / 60 907 | `7c0a1210…6902` | `d198f08` | 75.1 [72.3, 77.7]; 72.8 / 75.4 / 77.2 | 242 bounces, 5 hard landings, 2 off pad | none |
+  | `dart_0.20` | `T_ppo` + σ 0.20 | 1 000 / 58 536 | `0be2520c…8039` | `d198f08` | 15.4 [13.3, 17.8]; 13.2 / 13.8 / 19.2 | 437 bounces, 226 off pad, 140 hard landings, 43 crashes | none |
+
+  - Mean episode length: `ppo` 61.5 steps (2.05 s model), `pid` 152.1, `mix` 102.2.
+  - **Clear-colour frames** (P1-D1 far-plane residual), as max fraction / frames above 0:
+    - `ppo_2000` and `mix_1000`: one pixel in 2 frames each;
+    - `pid_1000` and `dart_0.05`: none;
+    - `dart_0.10`: 0.148 / 24;
+    - `dart_0.20`: 0.240 / 792, about 1.4 % of its frames.
+
+    They occur almost only at the tumbling attitudes of failing DART episodes. Where that boundary
+    falls depends on world altitude, so if σ* = 0.20 is chosen, this is stated with the result.
+- **Training filter.** The configs carry it as `success_filter`. BC-family, `dp` and `modular`
+  training read only the `success` episodes of the clean teacher sets, and report the kept
+  fraction.
+  - **DART sets are not filtered.** Their failures come from the injected noise, not from the
+    teacher, and every label is the clean teacher action. That is the same reasoning as for DAgger
+    rollouts.
+    - Filtering would tie the kept data to σ: 995 / 751 / 154 kept.
+    - The σ search would then be partly a search over data size.
+  - **DAgger rollouts are never filtered** (`bc_dagger.yaml`: `success_filter: {demos: true,
+    rollouts: false}`).
+  - "First N" means the first N episodes by stream index, **before** filtering. A set's
+    labelled-episode count is N attempted episodes.
+- **Data audits** (`results/demos_summary.json`; seed 20261023; `ila.data.audit`), all six stores:
+  - **Attribute violations: 0.** The check covers, from stored attributes alone: outside `train`,
+    in `tune`, in any frozen list, SS6, 90°, a repeated (key, episode seed), and an episode not
+    equal to its split row.
+  - **Open-loop replay** of the stored `action_exec` (binding): 20 of 20 sampled frames and
+    observations byte-identical, and no episode diverging.
+  - **Closed-loop re-fly:** 20 of 20 frames identical.
+  - **Re-labelling:** 1 000 of 1 000 sampled steps re-labelled identically (max-abs 0.0); stateful
+    teachers re-flown in order.
+  - **Bookkeeping:** runner rows and manifest SHA-256s match the stores.
+  - The summary regenerates byte-identically.
+  - `privileged-leak-auditor` re-checked 40 episodes per store independently:
+    - `proprio` equals the allowlisted fields of `teacher_obs` by name;
+    - no proprio column equals a privileged or clock column;
+    - `last_action[t] = action_exec[t−1]`;
+    - the `T_mix` teacher matches `assign_rows` on 1000 of 1000 episodes.
+
+**3. Arms.** Configs are frozen by SHA-256. Changing a config file after the freeze is a deviation.
+
+| Arm | Config (SHA-256) | Input | Data | Seeds | Evaluation lists |
+|---|---|---|---|---:|---|
+| `bc_state` | `bc_state.yaml` `36b65a7d…eb0f` | P8 25-d obs, `time_fraction` included (privileged by design; never a vision row) | `ppo_2000` first 1 000 | 5 | all 2 800 |
+| `bc` | `bc.yaml` `3d3386bb…1299` | 2 frames + 13-d proprio | `ppo_2000` first 1 000 | 5 | all |
+| `bc_matched` | `bc_matched.yaml` `f956e182…8de5` | same | `ppo_2000` all 2 000, on `bc_dagger`'s schedule | 5 | all |
+| `bc_dart` | `bc_dart.yaml` `5dff64bf…0c02` | same | `dart_σ*`, all 1 000 | 5 | all |
+| `bc_dagger` | `bc_dagger.yaml` `dbc7c0d2…9da7` | same | 1 000 demos + 5 × 200 on-policy = 2 000 | 5 | all |
+| `dp` | `dp.yaml` `c8f90c35…6913` | same | `ppo_2000` first 1 000 | 5 | all, at `Ta = 8`, K = 10 |
+| `modular` | `modular.yaml` `84153e6d…eadc` | same; `time_fraction` to the frozen teacher only | `ppo_2000` first 1 000 | 5 | all |
+| `R1_lerobot_dp` (reference, not gating) | Phase 6 config, hashed at its creation | same | same 1 000 | 3 | `id` SS3–SS6, tag `reference_external`. Same selection rule |
+
+- **Shared encoder** (every vision arm):
+  - ResNet-18 with `weights=None`, GroupNorm with 16 groups, 32-keypoint spatial softmax, 64-d per
+    frame;
+  - `To = 2`;
+  - proprio through a 2×64 MLP;
+  - crop 96 → 88: random at training, centre at evaluation (`augment.crop`).
+- **BC head:**
+  - 2×256 MLP, tanh, MSE on normalised actions;
+  - AdamW, lr 3e-4, wd 1e-4, cosine with 500 warm-up steps;
+  - 30 k steps, batch 256, bf16, EMA 0.999, checkpoint every 5 k.
+- **`bc_state`:** the same head on the 25-d obs, standardised by the per-dimension mean and std of
+  its own training frames. It trains in fp32; the vision arms train in bf16. That precision
+  confound is stated with H4.
+- **`bc_dagger` and `bc_matched` share one schedule** (skeptic B2).
+  - **Iteration 0.** It is the `bc` run of the same seed: 30 k steps on demos 0–999, its last-step
+    EMA, *not* its `select`-selected checkpoint. So iteration 0 is identical across `bc`,
+    `bc_matched` and `bc_dagger`.
+  - **Iterations 1–5:** each trains 10 k warm-started steps on the aggregate, 80 k steps in total
+    for both arms.
+    - `bc_dagger` flies demos 1000 + 200(i − 1) … with β = (0.5, 0.25, 0.125, 0, 0) per step.
+      Every visited state is labelled by the SB3 teacher.
+    - `bc_matched` adds the teacher's own demos at the same indices.
+  - **Loop settings, pinned** (`bc_dagger.yaml` `loop`; `bc_matched.yaml` repeats the keys that
+    apply without rollouts):
+    - rollouts of iteration i fly the EMA weights at the last step of iteration i − 1, and no list
+      is read to choose them;
+    - warm start copies the weights and the EMA, and resets the AdamW state;
+    - each iteration runs cosine with 500 warm-up steps over 10 k steps;
+    - frames are sampled uniformly from the aggregate;
+    - the β coin comes from a per-episode generator seeded by (run_seed, iteration, episode seed);
+    - the executed action goes through `ila.data.collect.executable` (float32 before `env.step`);
+    - rollouts fly the CPU fp32 single-sample path.
+  - **Selection candidates:** iteration 5's checkpoints only (5 k and 10 k), EMA weights.
+  - Labelled episodes total 2 000 in both arms (asserted). Labelled **frames** are reported beside
+    H1, because DAgger rollouts can run to 361 steps against about 61.5 for demos.
+- **`dp`:**
+  - Horizons: `To = 2`, `Tp = 16`, `Ta = 8`.
+  - ConditionalUnet1D with FiLM, `down_dims` [128, 256, 512], kernel 5, step embedding 128.
+  - DDPM training: 100 steps, `squaredcos_cap_v2`, ε-prediction, `clip_sample`.
+  - DDIM inference, K = 10, **`timestep_spacing: trailing`** (§8).
+  - Identity action normalisation.
+  - AdamW, lr 1e-4, wd 1e-6, cosine with 500 warm-up steps. 100 k steps, batch 128, bf16.
+  - EMA power 0.75, max 0.9999. Checkpoint every 10 k.
+  - Per-episode noise generator under P2-D3 item 4.
+- **`dp` inference sweeps** (the same checkpoints; nothing is re-selected):
+  - `Ta ∈ {1, 2, 4, 8, 12}`, without and with ACT temporal ensembling (m = 0.01; i = 0 is the
+    oldest prediction), on `id` SS4–SS6;
+  - K ∈ {1, 2, 5, 10, 25, 100} on `id` SS5.
+  - K = 1 and 2 are ill-conditioned for any network under ε-prediction at ᾱ₉₉ = 2.43e-7 (§8).
+    Those cells are read as schedule-limited.
+- **`modular`:**
+  - The estimator regresses the 11-d `priv` block, normalised by `train`-set mean and std, with a
+    Huber loss (δ = 1.0).
+  - The frozen `T_ppo` MLP receives the proprio fields, the estimated privileged fields and the
+    true `time_fraction`, in P8's field order.
+  - **Clock path (leak RISK 2, binding on Phase 7):**
+    - `time_fraction` reaches the teacher only through a `ModularInput(student_input,
+      time_fraction: float32[To])` built in `ila/obs/split.py`;
+    - a test sets the 11 privileged fields of the env observation to NaN and requires the
+      `modular` action to be bit-identical;
+    - a test asserts that the estimator's `forward` has no clock argument.
+- **Ablations** (3 seeds each, the same selection rule, flown on `id` SS4–SS6; tags never mixed
+  into core tables). They are frozen by `configs/train/ablations/*.yaml`, each a base config plus
+  the stated overrides, with steps unchanged from the base:
+
+  | Ablation | Config SHA-256 |
+  |---|---|
+  | `bc_mix`, `dp_mix` (`T_mix`) | `14f9efab…f42c`, `9a94d0ae…29f9` |
+  | `bc_pid`, `dp_pid` (`T_pid`) | `7a0f9104…3804`, `3638e62c…feb8` |
+  | `bc_n100`, `bc_n300` | `b6003291…37c4`, `ed345e7f…a84b` |
+  | `dp_n100`, `dp_n300` | `b620251a…ccc4`, `bab82411…ac26` |
+  | `bc_minus_last_action`, `dp_minus_last_action` | `a59757dd…c414`, `3f5609cd…9e40` |
+  | `bc_plus_clock` | `505f3bef…9caa` |
+
+  **Ablation inputs** (leak re-audit RISK). The `+clock` and `−last_action` datasets get their
+  proprio only through `DemoStore.student_inputs(name, variant)`, which builds the variant's
+  columns by field name inside `ila/data`. No vision-student dataset ever gets a
+  `privileged_observations` allowlist entry. The poison test is parametrised by variant; only
+  `plus_clock` leaves `time_fraction` unpoisoned.
+
+  N = 100 at 30 k steps is about 1 250 epochs. That is kept on purpose, with one step rule for
+  every N. The `select`-based rule over the 5 k checkpoints guards against overfitting.
+- **Appearance shift** (evaluation only): `bc_dagger`, `dp` and `modular` on `id` SS5–SS6, every
+  variant. No frame of any variant is written to a store: the writer refuses every variant and any
+  camera SHA-256 other than P1-D1's (`tests/test_data_collect.py`).
+- **Always printed** beside every student, from P8's committed rows:
+  - the teacher (`ppo` s0, e07);
+  - `pid_feedforward`;
+  - `pid_track_descend`;
+  - `oracle_gated` (a commit-timing oracle, not a bound).
+- **Inference path** (skeptic S5; tightens P2-D3 item 3).
+  - Selection, the σ* search and every DAgger rollout fly the CPU fp32 single-sample path.
+  - Both sides of every scored contrast fly the same path.
+  - **GPU acceptance.** The batched GPU path is accepted for an arm only if its outcome flips
+    against the CPU path on the 150 `select` episodes are **≤ 3** (2 %). P8's single-draw median
+    is 1.9 %; the 6.6 % figure is an any-of-20 envelope, not a single-draw rate.
+  - The test runs on the arm's selected checkpoint for seed 0 only, and its verdict applies to
+    all five seeds. The same holds for Phase 9 parity. This is stated with the results.
+  - **If the GPU path is refused**, the arm flies on CPU. P2-D2 costs `dp` at 170 ms per call at
+    K = 10, and the Phase 8 budget is re-projected.
+
+**4. Selection, tuning and failed runs.**
+- **Selection rule.** For each run, among its candidate checkpoints (every saved checkpoint, EMA
+  weights, unless the arm restricts the set as in §3):
+  - pick the highest closed-loop success on `select`;
+  - break ties by the lower pooled p95 closing speed on `select` (touched-down episodes);
+  - then by the lowest step.
+  - `dp` is selected at `Ta = 8`, K = 10. `R1` uses the same rule.
+  - Students may well sit near 150/150 on `select`. If so, selection is mostly decided by the
+    closing-speed tie-break, and the README says so.
+- **Frozen lists** (leak NOTE 3). No student is flown on a frozen list, and no student outcome on
+  one is read, before every run of every arm is selected.
+  - Reading frozen-list keys for disjointness guards is allowed.
+  - Reading P8's committed teacher and baseline rows is allowed.
+- **The only tuning: DART σ.**
+  - One `bc_dart` seed (seed 0) per σ ∈ {0.05, 0.10, 0.20}: three trials, logged as tuning, not
+    core seeds.
+  - σ* = the highest `select` success of the selected checkpoint, with the same tie-breaks; if
+    still tied, the smaller σ.
+  - `bc_dart` seeds 0–4 are then trained at σ*, seed 0 included (re-trained).
+- **Nothing else is tuned:** no learning rate, no architecture, no `Ta` or K for the core row.
+  Sweep results are reported, never used for selection.
+- **Failed runs** (skeptic B3). No seed is dropped, replaced or re-drawn.
+  - **Interruption:** an infrastructure interruption resumes from the last checkpoint with
+    identical RNG state, and the resume is logged.
+  - **Divergence:** a run whose loss goes non-finite is selected by the rule among its finite
+    checkpoints. With none, it scores 0 success in every cell.
+  - **Bug:** a run found to have a bug is never excluded alone. The bug is fixed, and every seed of
+    that arm, and of any arm sharing the code path, is retrained before any retrained `select`
+    number is read.
+  - The plan's "or the run is excluded" (Phases 4 and 7) is read under this rule.
+
+**5. Training budget** (skeptic S6).
+- **Timing run.** Before the first Phase 4 run, a timed `dp` seed-0 run of 2 k steps (wall clock
+  only, no `select` evaluation) and a timed `bc` run of 2 k steps are made.
+- **Projection.** It covers every planned run: core arms, DART trials, DAgger, ablations and R1.
+  If it exceeds **120 h** of GPU time:
+  - training steps are cut **once**, by one factor for every family, before any evaluation number
+    (`select` included) is read;
+  - the factor is the smallest that brings the projection to ≤ 120 h;
+  - checkpoint cadence and warm-up scale with it.
+- The cut, its factor and the projection go in a dated entry. No later cut is allowed.
+- Phase 4 replaces P2-D2's student episode-length assumption with measured lengths.
+
+**6. Hypotheses.**
+- **Scoring phases.** H1–H4 are scored in Phase 8, H5(a) and H5(b) in Phase 9. Each is scored as
+  **supported**, **not supported** or **inconclusive**, with the point estimate and its 95 % CI.
+- **Two-sided reading.** A contrast whose CI lies wholly on the other side of 0 is reported as an
+  effect in the opposite direction, and scored "not supported". This does not apply to H5(b): a CI
+  wholly above 0 is non-inferior and reported as such.
+- **SS6.** Every SS6 contrast carries the flip floor (§1).
+
+*Ceilings, measured before any student exists.*
+- **From P8's committed rows** (frozen lists, read-only):
+  - `T_ppo` s0: 100 % at `id` SS3–SS5 and `static`; 98.5 % (197/200: 3 hard landings) at `id`
+    SS6; 91.0 % at `unseen_heading` SS6; 97.5 % at `unseen_seastate`;
+  - `gated`: 100 / 98.5 / 89.5 / 63.0 % at `id` SS3–SS6;
+  - `pid_feedforward`: 100 / 100 / 99.0 / 90.5 %.
+- **On `train`** (`results/demos_summary.json`):
+  - `T_ppo` 100 / 100 / 99.8 % (SS3 / SS4 / SS5);
+  - `T_pid` 100 / 99.7 / 99.7 %;
+  - `T_mix` 100 / 98.8 / 94.6 %, of which `gated` alone is 100 / 97.6 / 89.2 %.
+- **No magnitude is restated.** Every scored contrast is between two students, or a student and its
+  teacher, at a cell whose ceiling is 98.5–100 %, so each predicted gap is arithmetically possible.
+  Unlike P8's H1, no hypothesis compares against a baseline already at the ceiling.
+- **The null the ceiling can still produce** (skeptic S1) still gets a verdict from the rule, but
+  is printed as "not supported (ceiling-limited: the largest attainable gain is below +5 points)",
+  with the SS6 secondary beside it. That applies when the reference arm's point estimate in the
+  scored cell exceeds 100 % − magnitude:
+  - `bc_matched` or `bc` above 95 % at `id` SS5, or at `id` SS6 for the SS6 secondaries;
+  - `dp` at `Ta = 8` above 95 % at `id` SS6.
+
+- **H1 — compounding error.** Cell `id` SS5. Statistic: success(`bc_dagger`) −
+  success(`bc_matched`), P8 `paired_bootstrap`. That function treats seeds as unpaired, which is
+  conservative here, because both arms share iteration 0.
+  - *Supported:* point estimate ≥ **+5 points** and the CI excludes 0.
+  - *Inconclusive:* the CI excludes 0 and the estimate is positive but below 5.
+  - *Not supported:* every other case.
+  - *Secondary, same rule:* the same contrast at `id` SS6.
+  - *DART secondary* (user decision, 2026-10-27; corrects plan §1.8): success(`bc_dart`) −
+    success(`bc`) at `id` SS5 and SS6, same rule. Both are at N = 1 000 labelled episodes on the
+    same 1 000 starting conditions. `bc_dart` − `bc_matched` (1 000 vs 2 000) is reported
+    descriptively, unscored.
+  - *Matching.* `bc_dagger` and `bc_matched` share iteration 0, the loop, the step count, the
+    candidate set and the 2 000 starting conditions. They differ only in who chose the actions on
+    the second 1 000.
+- **H2 — multimodality.** Cell `id` SS4, arms `bc_mix` and `dp_mix`. **Scored on 3 seeds per arm**,
+  the ablation count.
+  - *Statistic.* D = W₁(`bc_mix`, ref) − W₁(`dp_mix`, ref) over touched-down `time_to_touchdown_s`
+    (§1). The fraction of episodes without a touchdown is reported beside it.
+  - *Reference.* It is built from P8's committed rows.
+    `ila.data.mix.assign_rows(20261023, id SS4 rows)` gives 100 episodes to `ppo` and 100 to
+    `gated`; each takes P8's committed row (`ppo` s0 from e07, `gated` from e01). Nothing is flown
+    on the frozen list for it.
+  - *Supported:* D ≥ **0.033 s** (one control step) and the CI excludes 0.
+  - *Inconclusive:* the CI excludes 0 and 0 < D < 0.033 s.
+  - *Not supported:* every other case.
+  - *Precondition, met before training.* The two modes differ clearly on `train`. `mix_1000`
+    touchdown time, p10 / p50 / p90:
+    - `ppo`-assigned: 1.44 / 1.54 / 1.63 s (500 touched down);
+    - `gated`-assigned: 2.84 / 3.37 / 5.80 s (480 touched down, 20 timeouts);
+    - W₁ between them **2.41 s** (model; 12.1 s full).
+  - *Stated with the result:*
+    - The training mixture is 500 : 478 episodes after filtering, but about 1 : 2 by frames
+      (`gated` episodes are longer).
+    - All 22 filtered episodes are `gated`, mostly its longest waits.
+    - `last_action` in the proprio can reveal the mode after the first step.
+    - W₁'s bias grows as touchdowns get fewer, which works against an arm that times out.
+  - *Plan §1.8's secondary* (the success drop `T_ppo`-trained → `T_mix`-trained is larger for `bc`
+    than for `dp`) is reported at `id` SS4, unscored (§8).
+- **H3 — chunk length vs deck bandwidth.** The same `dp` checkpoints. Cell `id` SS6. Statistic:
+  success(`Ta = 1`) − success(`Ta = 8`), same-checkpoint contrast (§1).
+  - Supported / inconclusive / not supported as in H1, with the magnitude **+5 points**.
+  - It is reported as a curve over `Ta ∈ {1, 2, 4, 8, 12}` at SS4–SS6, with temporal ensembling
+    beside it, unscored.
+  - *Biases toward a null, stated with the result:*
+    - checkpoints were selected at `Ta = 8`;
+    - `Ta = 1` without ensembling can switch modes between replans.
+
+    So a null cannot separate "chunking is harmless" from "replanning causes mode switching".
+- **H4 — where the shortfall comes from.** Cell `id` SS6.
+  - *Gaps:* perception gap P = S(`bc_state`) − S(`bc`); imitation gap I = S(teacher) −
+    S(`bc_state`); D = P − I.
+  - *Bootstrap:* §1.
+  - *Supported:* D > 0 and the CI excludes 0.
+  - *Not supported:* every other case. A CI wholly below 0 is reported as "imitation gap larger".
+  - *Stated with the result:*
+    - P includes the effect of withholding `time_fraction`, which `bc_state` sees and `bc` does
+      not. P′ = S(`bc_state`) − S(`bc_plus_clock`) (3 seeds, `id` SS6) is reported beside it,
+      unscored.
+    - P also includes `bc_state`'s fp32 against `bc`'s bf16.
+    - H4 is conditional on teacher seed 0.
+  - *`modular` vs the best end-to-end vision student* at `id` SS6: reported two-sided with its CI,
+    unscored, with no predicted direction. "Best" = the highest mean `select` success of the
+    selected checkpoints among `bc`, `bc_matched`, `bc_dart`, `bc_dagger` and `dp`. Ties go to the
+    lower pooled `select` p95 closing speed, then to that order.
+- **H5 — deployment: inference latency on this machine** (RTX A4000, i9-10980XE, WSL2), model scale.
+  33.3 ms is one 30 Hz control step. No embedded target is measured.
+  - **(a)** The exported `dp` (K = 10) runs one full replanning call (image stack + proprio →
+    chunk) at batch 1 with **p99 < 33.3 ms** on at least one provider that passes parity.
+    - The method is P8's latency harness: ≥ 200 warm-up calls, ≥ 2 000 timed, synchronised
+      brackets.
+    - **Parity, frozen here** (skeptic B5):
+      - *exported model:* seed 0's selected checkpoint;
+      - *reference:* torch fp32 CPU, B = 1, the same initial noise;
+      - *open-loop:* 1 000 `select` inputs, per-step ε̂ max-abs ≤ 1e-4. The final-chunk max-abs is
+        reported, not judged, because of the ×2 029 first-step gain;
+      - *closed-loop:* the 150 `select` episodes (never a frozen list), outcome flips against the
+        CPU single-sample path ≤ 3. This test is binding.
+    - **Scored providers:** ORT CPU fp32, ORT CUDA fp32, torch-eager CUDA fp32 and ORT TensorRT
+      fp16. fp16 passes only under the same tests. Any other variant (CUDA graphs,
+      `torch.compile`) is reported, unscored.
+    - **If no provider passes**, H5(a) is "not supported", and §7's d uses the p99 of the torch CPU
+      fp32 single-sample path.
+    - P2-D2 measured a dummy `dp` in eager PyTorch at 80.6 ms p50 on the GPU.
+  - **(b)** The latency-arm `dp` (§7) at `id` SS5 minus synchronous `dp` at `id` SS5,
+    same-checkpoint contrast (§1).
+    - *Supported* (non-inferior): CI lower bound ≥ **−3 points**.
+    - *Not supported:* otherwise.
+
+**7. Latency-arm rule** (skeptic B4).
+- **Delay.** d = ⌈p99 / 33.333 ms⌉ control steps. p99 is the batch-1 full-call latency of the
+  fastest parity-passing provider (§6 H5(a)), with the CPU fallback stated there.
+  - It is computed once per arm (`bc_dagger`, `dp`), and the same d is used for every seed.
+  - **`bc_dagger` parity:** open-loop action max-abs ≤ 1e-4 on the same 1 000 `select` inputs,
+    and closed-loop ≤ 3 flips on the 150 `select` episodes. The same providers and the same
+    fallback apply.
+- **One inference worker; requests never overlap.** A request is issued with observation t only
+  when none is in flight. Its result is available at step t + d.
+  - **BC:** the returned action is held from t + d until the next result arrives. The next request
+    is issued at t + d.
+  - **`dp`:** a request is issued when the executing chunk has d steps left (immediately if fewer).
+    If the executing chunk runs out before the next result arrives, its last action is held.
+    The returned chunk executes from index (To − 1) + d, aligned in time, for Ta steps. If
+    (To − 1) + d + Ta > Tp, the last chunk action is held. At `To = 2`, `Tp = 16`, `Ta = 8`, that
+    holding starts at d > 7.
+  - **Start of an episode:** the first action is held at zero until the first result arrives.
+  - **d = 0:** the arm equals the synchronous arm row for row. This is tested.
+- **Flown** on `id` SS4–SS6, `dp` at `Ta = 8`, K = 10, tag `latency_arm`. H5(b) is scored at SS5
+  only.
+
+**8. Deviations, decisions and incidents before freeze.**
+- **User decisions, 2026-10-27:**
+  - `T_mix` balanced per sea state (`demos.yaml` had said `per_episode`). `mix_1000` was collected
+    only after the change, at `c941246`; no coin-drawn store was ever made.
+  - DAgger flies `demos` 1000–1999 instead of fresh streams.
+  - The H1 DART secondary is `bc_dart` − `bc`, which corrects plan §1.8.
+    - CLAUDE.md non-negotiable 5 names `bc_matched` as DART's comparator.
+    - For DART at N = 1 000, the equal-count arm is `bc`, and that reading is the one adopted.
+- **`dp.yaml` gains `timestep_spacing: trailing`** (the P2-D4 open item). Its cost was measured
+  before training by `policy-trainer` (CPU and GPU, dummy `dp`, TF32 off):
+  - ᾱ₉₉ = 2.43e-7, because β₉₉ is capped at 0.999.
+  - The first step's gain from ε̂ to x̂₀ is √((1 − ᾱ)/ᾱ) = **2 029**, against 7.15 for `leading`'s
+    first step (k = 90).
+  - ε̂ differences of about 1e-6 become chunk gaps of up to 2.6e-4 (CPU B = 1 vs 64) and 7.7e-4
+    (GPU vs CPU). Under `leading` they were 5e-6 and 1.5e-5.
+  - A one-ulp change in the initial noise moves the chunk by up to 5.9e-4.
+  - A trained network is predicted to show 1e-3 to 1e-2.
+  - At a fixed batch size, a slot is bit-identical under permutation and under changes to the
+    other slots, and the CPU single-sample path is bit-identical.
+  - P2-D3 item 2's numbers and the dummy determinism study were measured under `leading`. This
+    entry supersedes them for `trailing`.
+  - `trailing` is kept because `leading` starts K = 10 at k = 90, which is not pure noise. K = 1 and
+    2 are read as schedule-limited under either spacing (§3).
+  - **Code:** `DPConfig.timestep_spacing` defaults to `trailing`, unknown values raise, and the
+    slot-independence tests check:
+    - bit-identity at a fixed batch size;
+    - ε̂ within 1e-5 across batch sizes;
+    - the chunk within gain × 1e-5.
+- **P2-D3 item 3 is tightened**, from "≤ P8's 6.6 % floor" to ≤ 3 of 150 `select` flips (§3).
+  P2-D3 also called `select` (SS3–SS5) against P8's SS6 figure "a conservative comparator". That
+  was backwards: P8 saw no flips on SS3–SS5.
+- **Plan Phase 9, item 2** judged closed-loop parity on 50 `id` SS5 episodes. That is a frozen-list
+  read inside a choice that sets d for a scored cell. It is replaced by the 150 `select` episodes
+  (§6 H5(a)).
+- **Plan §1.8's H2 secondary** (directional) becomes unscored. The reasons: its arms are 3-seed
+  ablations, and `T_ppo`-trained and `T_mix`-trained arms differ in data as well as in teacher.
+- **`configs/eval/matrix.yaml`** now names the ablation arms by their config names, and gives the
+  latency arm its CPU fallback (re-review).
+- **Plan §1.8 "H5" scored in Phase 8** becomes Phase 9 for H5(b), because d exists only after
+  Phase 9.
+- **Budget timing:** a timed 2 k-step `dp` run comes before Phase 4, instead of the first full `dp`
+  seed in Phase 6 (§5).
+- **Conventions:** the il-conventions rule "the clock never enters a network" now names its three
+  declared exceptions (`+clock`, `modular`'s teacher passthrough, `bc_state`). It is mirrored in
+  `docs/CONVENTIONS.md` (leak NOTE 1).
+- **Leak RISK 1 closed in code.**
+  - `ObsContract.field` is renamed `audit_field`.
+  - `tests/test_render_access.py` forbids `audit_field`, `privileged_observations`, `model_times`,
+    `audit_arrays` and `estimator_targets` in `ila/train`, `ila/policies`, `ila/deploy` and
+    `ila/eval`. It has an empty, reviewed per-file allowlist (a future `bc_state` dataset and the
+    `modular` target code may each be added only after a leak review).
+  - The poison test also scrambles the numeric episode attributes.
+  - A test requires every class in `ila.train.dataset` (except `bc_state`'s) to be registered in
+    `STUDENT_DATASET_CLASSES`. It is xfail until Phase 4 creates the module.
+  - `tests/test_data_store.py`'s docstring fixes the windowed contract Phase 4 must meet.
+- **DART stores re-collected (incident, before any training).**
+  - The first DART sets (`fc5388a`) executed the float64 `clip(label + σz)` but stored it as
+    float32 `action_exec`. Open-loop replay of the stored actions diverged from step 1–7, and one
+    of 60 replayed episodes ended in a different class.
+  - Collection now rounds to float32 before `env.step` (`d198f08`), and the three sets were
+    re-collected. Open-loop replay is now binding for every store.
+  - The old stores are kept outside the dataset in `${data_root}/demos/old_float64/`.
+  - Teacher-only sets were unaffected: the teachers return float32. A re-fly gave 40 of 40
+    episodes byte-identical per store.
+- **Collection commits.**
+  - `ppo_2000` and `pid_1000` were collected at `fc5388a`, `mix_1000` at `c941246`, and the DART
+    sets at `d198f08`, all on clean trees.
+  - The `demos.yaml` changes between them (`T_mix` draw, DAgger block) do not touch the earlier
+    sets.
+- **Frozen-list reads and teacher flights in tests**, for the record. Each is a key read, a P8 row
+  read, or a scripted, zero-action or teacher-only flight; nothing is trained, selected or scored
+  on them.
+  - Phase 1 fixtures moved to `train` SS5 rows (P1-D2 obligation 1). Four stay on frozen lists,
+    because `train` has no static deck and no other vessel:
+    - `test_render_geometry` (`static`);
+    - `test_render_scene` (`static`);
+    - `test_p8_adapter::test_set_motion_matches_p8_run_chunk` (`static` and `unseen_vessel`);
+    - the `test_phase2_jobs` render bench (`static`).
+  - `tests/test_data_mix.py` reads the `id` SS4 keys.
+  - `tests/test_data_episodes.py` reads frozen lists for its P8-equivalence and guard tests.
+  - `tests/test_eval_runner.py::test_ppo_teacher_reproduces_committed_rows` flies two `id` SS5
+    episodes with the teacher (Gate 2).
+- **Not adopted, for the record:**
+  - Re-flying `gated` on `id` SS4 to check the e01 rows used in H2's reference. P8 published them,
+    and Phase 2 reproduced P8's runner bit for bit on `pid_feedforward` and `ppo`. If a reviewer
+    asks before Phase 8, it is 200 teacher episodes.
+  - Building H2's reference from all 397 touched-down rows at 50/50 weights. The user-approved
+    `assign_rows` construction is kept.
+- **Obligations for Phase 4** (P1-D2 items 3, 4 and 6):
+  - the dataset reads only through `DemoStore.student_inputs` and `labels`, and uses `meta()` only
+    for the success filter;
+  - it registers in `STUDENT_DATASET_CLASSES`;
+  - it meets the windowed contract in `tests/test_data_store.py`;
+  - a timed 2 k-step `dp` and `bc` run comes first (§5).
 
 ### Gate 0 failed, attempt 1 (2026-10-27)
 

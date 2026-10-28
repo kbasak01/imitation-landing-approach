@@ -3,19 +3,48 @@
 P1-D2 obligations covered here:
 
 * (3) poison test: the privileged fields and ``time_fraction`` of every stored ``teacher_obs``
-  (selected by name), the whole ``priv`` block and ``t_model_s`` are set to NaN in the file; every
-  student batch built from the poisoned store must be finite.
-* (4)/(6) exact student columns: the student read path returns exactly ``images`` and
-  ``proprio``, reads no other dataset, and an extra dataset under any name makes the store
-  refuse the episode.
+  (selected by name), the whole ``priv`` block and ``t_model_s`` are set to NaN in the file, and
+  the episode attributes a dataset could index by (``t0_model_s``, ``steps``, ``ss``,
+  ``heading_deg``, ``speed_kn``, ``outcome``) are scrambled; every student batch built from the
+  poisoned store must be finite and identical to the batch from the clean store.
+* (4)/(6) exact student columns: the student read path returns exactly ``images`` and the
+  variant's ``proprio``. ``default`` reads only ``images`` and ``proprio``; the two ablation
+  variants read ``images`` and ``teacher_obs`` and select their fields by name inside
+  ``ila/data``. An extra dataset under any name makes the store refuse the episode.
 
-``STUDENT_BATCHERS`` is the list every student dataset/batch builder must join (Phase 4's
-dataset class included); both obligations are parametrised over it.
+``STUDENT_BATCHERS`` is the list every student dataset/batch builder must join; both obligations
+are parametrised over it. Every class defined in ``ila.train.dataset`` (Phase 4) must be registered
+in ``STUDENT_DATASET_CLASSES``, except the one named in ``BC_STATE_DATASET_CLASS`` (``bc_state``
+takes P8's 25-d observation by design and is covered by its own allowlist entry in
+``tests/test_render_access.py``). ``test_every_train_dataset_class_is_registered`` enforces this;
+it is an expected failure (xfail, strict=False, reason "Phase 4 must register ...") until the
+module defines a class, and a hard failure from then on.
+
+The windowed contract Phase 4's dataset must satisfy (each registered adapter returns, for one
+episode, its samples stacked along a leading axis):
+
+* sample keys are exactly ``{"images", "proprio", "target"}`` -- nothing else, under any name;
+* for a sample anchored at step ``t`` with ``To`` observation steps, the window steps are
+  ``ila.policies.dp.chunking.obs_window_steps(t, To)`` (``t-To+1 .. t``, indices < 0 repeat 0);
+  ``images[i]`` is the store's ``images[window[i]]`` (uint8, pixels from the store only, crop
+  applied afterwards), and ``proprio[i]`` equals ``ObsContract.proprio(teacher_obs[window[i]])``
+  of the variant's contract -- i.e. the stored ``proprio`` row for the default contract;
+* a dataset gets variant proprio (``minus_last_action``: 10 columns, ``plus_clock``: 14) ONLY
+  through ``DemoStore.student_inputs(name, variant)``, which builds it inside ``ila/data`` by
+  field name and returns images + that proprio. No vision-student dataset ever gets a
+  ``privileged_observations`` (or any other store-audit) allowlist entry in
+  ``tests/test_render_access.py``; only ``bc_state``'s dataset may, after leak-auditor review;
+* ``target`` is the store's ``label`` at the chunk indices of il-conventions (``label[t]`` for
+  BC; ``label[t-To+1 .. t-To+Tp]`` with edge repetition for Diffusion Policy);
+* episode lengths and window indices come from the arrays themselves, never from ``meta()``;
+  ``meta()`` may only select episodes (the success filter), outside the per-episode batcher.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import importlib
+import inspect
 import json
 from collections.abc import Callable
 from pathlib import Path
@@ -126,16 +155,66 @@ def store_path(tmp_path: Path) -> Path:
 
 # --------------------------------------------------------------------------- student batchers
 
-#: Every way a student batch is built from a store. Phase 4's dataset class joins this list.
-Batcher = Callable[[st.DemoStore, str], dict[str, np.ndarray]]
+#: Every way a student batch is built from a store: ``(store, episode, variant) -> batch``.
+#: Phase 4's dataset classes join this list (``STUDENT_DATASET_CLASSES``).
+Batcher = Callable[[st.DemoStore, str, str], dict[str, np.ndarray]]
+
+#: Every observation-contract variant (default and the two labelled ablations).
+VARIANTS = ("default", "minus_last_action", "plus_clock")
 
 
-def _store_path_batch(store: st.DemoStore, name: str) -> dict[str, np.ndarray]:
-    inputs = store.student_inputs(name)
+def _store_path_batch(store: st.DemoStore, name: str, variant: str) -> dict[str, np.ndarray]:
+    inputs = store.student_inputs(name, variant)
     return {"images": inputs.images, "proprio": inputs.proprio, "target": store.labels(name)}
 
 
-STUDENT_BATCHERS: list[Batcher] = [_store_path_batch]
+def _expected_proprio(obs: np.ndarray, variant: str) -> np.ndarray:
+    """The variant's proprio built field by field from P8 names (independent of the store)."""
+    fields = load_contract(variant=variant).student_proprio
+    return np.concatenate([CONTRACT.audit_field(obs, f) for f in fields], axis=-1)
+
+
+#: Phase 4: every dataset/batch class of ``ila.train.dataset`` -> an adapter ``Batcher`` building
+#: one episode's samples with it (windowed contract in the module docstring). Empty in Phase 3.
+STUDENT_DATASET_CLASSES: dict[str, Batcher] = {}
+
+#: Phase 4: the name of the ``bc_state`` dataset class (privileged 25-d input by design), the
+#: only class of ``ila.train.dataset`` exempt from ``STUDENT_DATASET_CLASSES``.
+BC_STATE_DATASET_CLASS: str | None = None
+
+STUDENT_BATCHERS: list[Batcher] = [_store_path_batch, *STUDENT_DATASET_CLASSES.values()]
+
+
+def _train_dataset_classes() -> set[str]:
+    """Names of the classes defined in ``ila.train.dataset`` (empty if absent or a stub)."""
+    try:
+        module = importlib.import_module("ila.train.dataset")
+    except ImportError:
+        return set()
+    return {
+        name
+        for name, obj in inspect.getmembers(module, inspect.isclass)
+        if obj.__module__ == module.__name__
+    }
+
+
+_TRAIN_DATASET_CLASSES = _train_dataset_classes()
+
+
+@pytest.mark.xfail(
+    not _TRAIN_DATASET_CLASSES,
+    reason=(
+        "Phase 4 must register every dataset/batch class of ila.train.dataset in "
+        "STUDENT_DATASET_CLASSES (tests/test_data_store.py); the module defines none yet"
+    ),
+    strict=False,
+)
+def test_every_train_dataset_class_is_registered() -> None:
+    assert _TRAIN_DATASET_CLASSES, "ila.train.dataset defines no dataset class yet"
+    expected = _TRAIN_DATASET_CLASSES - {BC_STATE_DATASET_CLASS}
+    assert set(STUDENT_DATASET_CLASSES) == expected
+    if BC_STATE_DATASET_CLASS is not None:
+        assert BC_STATE_DATASET_CLASS in _TRAIN_DATASET_CLASSES
 
 
 # --------------------------------------------------------------------------- schema
@@ -210,7 +289,7 @@ def test_proprio_and_priv_are_by_name() -> None:
     for i, name in enumerate(("attitude", "body_rates", "velocity", "last_action", "in_contact")):
         np.testing.assert_array_equal(
             r.arrays["proprio"][:, i * 3 : i * 3 + CONTRACT.layout[name][1]],
-            CONTRACT.field(r.arrays["teacher_obs"], name),
+            CONTRACT.audit_field(r.arrays["teacher_obs"], name),
         )
 
 
@@ -266,8 +345,16 @@ def test_student_episode_fields_are_exactly_images_and_proprio() -> None:
     assert st.STUDENT_INPUT_KEYS == ("images", "proprio")
 
 
-def test_student_path_reads_only_images_and_proprio(
-    store_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("variant", "datasets"),
+    [
+        ("default", {"images", "proprio"}),
+        ("minus_last_action", {"images", "teacher_obs"}),
+        ("plus_clock", {"images", "teacher_obs"}),
+    ],
+)
+def test_student_path_reads_only_what_it_needs(
+    store_path: Path, monkeypatch: pytest.MonkeyPatch, variant: str, datasets: set[str]
 ) -> None:
     read: list[str] = []
     original = st.DemoStore._group
@@ -283,29 +370,69 @@ def test_student_path_reads_only_images_and_proprio(
     monkeypatch.setattr(st.DemoStore, "_group", lambda self, n: Spy(original(self, n)))
     with st.DemoStore(store_path) as s:
         for name in s.episodes():
-            s.student_inputs(name)
-    assert set(read) == {"images", "proprio"}
+            out = s.student_inputs(name, variant)
+            assert [f.name for f in dataclasses.fields(out)] == ["images", "proprio"]
+    assert set(read) == datasets
 
 
-@pytest.mark.parametrize("batcher", STUDENT_BATCHERS)
-def test_exact_student_columns(store_path: Path, batcher: Batcher) -> None:
-    """Every student batch carries pixels, the 13 allowlisted proprio columns and the label."""
+def test_variant_contracts_are_default_plus_minus_one_field() -> None:
+    default = CONTRACT.student_proprio
+    minus = st.variant_contract("minus_last_action")
+    plus = st.variant_contract("plus_clock")
+    assert minus.student_proprio == tuple(f for f in default if f != "last_action")
+    assert plus.student_proprio == (*default, CLOCK_FIELD)
+    assert (minus.proprio_dim, CONTRACT.proprio_dim, plus.proprio_dim) == (10, 13, 14)
+    assert st.variant_contract("default").student_proprio == default
+    with pytest.raises(ValueError):
+        st.variant_contract("plus_rel_position")
+
+
+@pytest.mark.parametrize("variant", VARIANTS)
+def test_variant_proprio_columns(store_path: Path, variant: str) -> None:
     with st.DemoStore(store_path) as s:
         for name in s.episodes():
-            batch = batcher(s, name)
+            obs = s.privileged_observations(name)
+            default = s.student_inputs(name).proprio
+            stored = s.audit_arrays(name)["proprio"]
+            assert default.tobytes() == stored.tobytes()  # default = stored, byte for byte
+            p = s.student_inputs(name, variant).proprio
+            np.testing.assert_array_equal(p, _expected_proprio(obs, variant))
+            if variant == "plus_clock":
+                assert p.shape[1] == default.shape[1] + 1
+                assert p[:, :-1].tobytes() == default.tobytes()
+                assert p[:, -1:].tobytes() == CONTRACT.audit_field(obs, CLOCK_FIELD).tobytes()
+            elif variant == "minus_last_action":
+                assert p.shape[1] == default.shape[1] - 3 == 10  # last_action is 3 wide
+                assert p.tobytes() == _expected_proprio(obs, "minus_last_action").tobytes()
+            else:
+                assert p.tobytes() == stored.tobytes()
+
+
+@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("batcher", STUDENT_BATCHERS)
+def test_exact_student_columns(store_path: Path, batcher: Batcher, variant: str) -> None:
+    """Every student batch carries pixels, the variant's proprio columns and the label."""
+    width = load_contract(variant=variant).proprio_dim
+    with st.DemoStore(store_path) as s:
+        for name in s.episodes():
+            batch = batcher(s, name, variant)
             assert set(batch) == {"images", "proprio", "target"}
             arrays = s.audit_arrays(name)
             t_len = arrays["label"].shape[0]
             assert batch["images"].shape == (t_len, 96, 96, 3)
-            assert batch["proprio"].shape == (t_len, CONTRACT.proprio_dim)
+            assert batch["images"].dtype == np.uint8
+            assert batch["proprio"].shape == (t_len, width)
             np.testing.assert_array_equal(batch["images"], arrays["images"])
-            np.testing.assert_array_equal(batch["proprio"], CONTRACT.proprio(arrays["teacher_obs"]))
+            np.testing.assert_array_equal(
+                batch["proprio"], _expected_proprio(arrays["teacher_obs"], variant)
+            )
             np.testing.assert_array_equal(batch["target"], arrays["label"])
 
 
+@pytest.mark.parametrize("variant", VARIANTS)
 @pytest.mark.parametrize("batcher", STUDENT_BATCHERS)
 def test_extra_column_under_any_name_is_refused(
-    store_path: Path, tmp_path: Path, batcher: Batcher
+    store_path: Path, tmp_path: Path, batcher: Batcher, variant: str
 ) -> None:
     for extra in ("innocent", "proprio_extra", "rel_position"):
         path = tmp_path / f"{extra}.h5"
@@ -313,16 +440,38 @@ def test_extra_column_under_any_name_is_refused(
         with h5py.File(path, "r+") as f:
             f["ep_00001"].create_dataset(extra, data=f["ep_00001"]["priv"][()])
         with st.DemoStore(path) as s:
-            batcher(s, "ep_00000")
+            batcher(s, "ep_00000", variant)
             with pytest.raises(st.StoreSchemaError, match="datasets"):
-                batcher(s, "ep_00001")
+                batcher(s, "ep_00001", variant)
 
 
+#: Episode attributes a dataset could be tempted to index or condition by, and the scrambled
+#: values written over them in the poison test.
+SCRAMBLED_ATTRS: dict[str, Any] = {
+    "t0_model_s": -12345.5,
+    "steps": 9999,
+    "ss": "SS9",
+    "heading_deg": 999.0,
+    "speed_kn": -1.0,
+    "outcome": "crash",
+}
+
+
+@pytest.mark.parametrize("variant", VARIANTS)
 @pytest.mark.parametrize("batcher", STUDENT_BATCHERS)
-def test_poisoned_store_gives_finite_student_batches(store_path: Path, batcher: Batcher) -> None:
-    """P1-D2 obligation 3: NaN every privileged field and the clock; student batches stay finite."""
-    poison = sorted(NEVER_STUDENT | {CLOCK_FIELD})
-    assert set(CONTRACT.privileged) | {CLOCK_FIELD} == set(poison)
+def test_poisoned_store_gives_finite_student_batches(
+    store_path: Path, batcher: Batcher, variant: str
+) -> None:
+    """P1-D2 obligation 3: poisoned store -> finite student batches, identical to clean ones.
+
+    NaN the five privileged fields always and ``time_fraction`` for every variant except
+    ``plus_clock`` (where it is the labelled input); NaN ``priv`` and ``t_model_s``; scramble
+    the episode attributes.
+    """
+    poison = sorted(NEVER_STUDENT | (set() if variant == "plus_clock" else {CLOCK_FIELD}))
+    assert set(CONTRACT.privileged) <= set(poison)
+    with st.DemoStore(store_path) as s:
+        clean = {name: batcher(s, name, variant) for name in s.episodes()}
     with h5py.File(store_path, "r+") as f:
         for name in f:
             g = f[name]
@@ -332,14 +481,22 @@ def test_poisoned_store_gives_finite_student_batches(store_path: Path, batcher: 
             g["teacher_obs"][...] = obs
             g["priv"][...] = np.nan
             g["t_model_s"][...] = np.nan
+            for key, value in SCRAMBLED_ATTRS.items():
+                assert key in g.attrs
+                g.attrs[key] = value
     with st.DemoStore(store_path) as s:
         for name in s.episodes():
             obs = s.privileged_observations(name)
-            assert all(np.isnan(CONTRACT.field(obs, f)).all() for f in poison)
-            batch = batcher(s, name)
+            assert all(np.isnan(CONTRACT.audit_field(obs, f)).all() for f in poison)
+            m = s.meta(name)
+            assert {k: getattr(m, k) for k in SCRAMBLED_ATTRS} == SCRAMBLED_ATTRS
+            batch = batcher(s, name, variant)
+            assert set(batch) == set(clean[name])
             for key, value in batch.items():
                 if value.dtype.kind == "f":
                     assert np.isfinite(value).all(), key
+                assert value.dtype == clean[name][key].dtype
+                assert value.tobytes() == clean[name][key].tobytes(), key
 
 
 def test_clear_fraction() -> None:

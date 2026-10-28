@@ -42,7 +42,7 @@ import h5py
 import numpy as np
 from numpy.typing import NDArray
 
-from ila.obs.split import ObsContract, load_contract
+from ila.obs.split import CLOCK_FIELD, NEVER_STUDENT, VARIANTS, ObsContract, load_contract
 
 __all__ = [
     "ACTION_DIM",
@@ -59,12 +59,14 @@ __all__ = [
     "EpisodeRecord",
     "StoreSchemaError",
     "StudentEpisode",
+    "VARIANT_DELTA",
     "clear_fraction",
     "contract_field_attrs",
     "episode_group",
     "schema",
     "total_frames",
     "validate",
+    "variant_contract",
 ]
 
 #: Store format tag, a file attribute.
@@ -140,6 +142,46 @@ def schema(contract: ObsContract | None = None) -> dict[str, tuple[np.dtype[Any]
         "label": (np.dtype(np.float32), (ACTION_DIM,)),
         "t_model_s": (np.dtype(np.float64), ()),
     }
+
+
+#: Each ablation variant differs from the default student proprio by exactly one named field:
+#: ``(how, field)``. ``plus_clock`` appends the clock; ``minus_last_action`` drops last_action.
+VARIANT_DELTA: Final[Mapping[str, tuple[str, str]]] = {
+    "minus_last_action": ("remove", "last_action"),
+    "plus_clock": ("add", CLOCK_FIELD),
+}
+
+
+def variant_contract(variant: str) -> ObsContract:
+    """Return a variant's contract after checking it is the default +- exactly one field.
+
+    Args:
+        variant: An ``ila.obs.split.VARIANTS`` name.
+
+    Returns:
+        The variant's :class:`ObsContract`.
+
+    Raises:
+        ValueError: On an unknown variant.
+        StoreSchemaError: If the variant's student fields are not the default fields with
+            exactly :data:`VARIANT_DELTA`'s field removed/appended, or name a privileged field.
+    """
+    if variant not in VARIANTS:
+        raise ValueError(f"unknown contract variant {variant!r}; expected {VARIANTS}")
+    contract = load_contract(variant=variant)
+    default = load_contract().student_proprio
+    if variant == "default":
+        expected = default
+    else:
+        how, name = VARIANT_DELTA[variant]
+        expected = (*default, name) if how == "add" else tuple(f for f in default if f != name)
+        if expected == default:
+            raise StoreSchemaError(f"{variant}: {name!r} not removable from {default}")
+    if contract.student_proprio != expected or NEVER_STUDENT & set(contract.student_proprio):
+        raise StoreSchemaError(
+            f"{variant}: student fields {contract.student_proprio} != expected {expected}"
+        )
+    return contract
 
 
 def clear_fraction(rgb: NDArray[np.uint8]) -> float:
@@ -365,7 +407,7 @@ def validate(
     proprio, priv, _ = c.split(obs)
     if not (np.array_equal(arrays["proprio"], proprio) and np.array_equal(arrays["priv"], priv)):
         raise StoreSchemaError("proprio/priv are not the by-name selection of teacher_obs")
-    last = c.field(obs, "last_action")
+    last = c.audit_field(obs, "last_action")
     executed = arrays["action_exec"]
     if np.any(last[0] != 0.0) or not np.array_equal(last[1:], executed[:-1]):
         raise StoreSchemaError("last_action[t] != action_exec[t-1] (or last_action[0] != 0)")
@@ -544,20 +586,36 @@ class DemoStore:
         """Return one episode's attributes (for filtering and reports; never a model input)."""
         return EpisodeMeta.from_attrs({k: _plain(v) for k, v in self._group(name).attrs.items()})
 
-    def student_inputs(self, name: str) -> StudentEpisode:
-        """THE student read path: ``images`` and ``proprio`` of one episode, nothing else.
+    def student_inputs(self, name: str, variant: str = "default") -> StudentEpisode:
+        """THE student read path: ``images`` and the variant's ``proprio``, nothing else.
 
-        Reads exactly the datasets in :data:`STUDENT_INPUT_KEYS`.
+        ``default`` reads exactly the datasets in :data:`STUDENT_INPUT_KEYS` and returns the
+        stored ``proprio`` unchanged. An ablation variant (``minus_last_action``,
+        ``plus_clock``) builds its proprio here, inside ``ila/data``, from ``teacher_obs`` by
+        field name through the variant's ``ObsContract`` (:func:`variant_contract`: exactly the
+        default fields minus ``last_action`` / plus ``time_fraction``); ``teacher_obs`` itself
+        never leaves this method. This is the only way a dataset gets variant proprio.
 
         Args:
             name: Episode group name.
+            variant: An ``ila.obs.split.VARIANTS`` name.
 
         Returns:
-            The :class:`StudentEpisode`.
+            The :class:`StudentEpisode`: ``images`` uint8 ``(T, 96, 96, 3)``, ``proprio``
+            float32 ``(T, D)`` with ``D`` 13 (default), 10 (``minus_last_action``) or 14
+            (``plus_clock``).
+
+        Raises:
+            ValueError: On an unknown variant.
+            StoreSchemaError: If the variant's contract is not default +- one named field.
         """
+        contract = variant_contract(variant)
         group = self._group(name)
         images = np.asarray(group["images"][()], dtype=np.uint8)
-        proprio = np.asarray(group["proprio"][()], dtype=np.float32)
+        if variant == "default":
+            proprio = np.asarray(group["proprio"][()], dtype=np.float32)
+        else:
+            proprio = contract.proprio(np.asarray(group["teacher_obs"][()], dtype=np.float32))
         return StudentEpisode(images=images, proprio=proprio)
 
     def labels(self, name: str) -> NDArray[np.float32]:

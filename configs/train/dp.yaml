@@ -1,7 +1,9 @@
 arm: dp
 data: {collection: ppo_2000, first_n: 1000}
+success_filter: true    # P3-D1 §2: only `success` episodes; kept fraction reported
 encoder: {trunk: resnet18, pretrained: false, norm: groupnorm, groups: 16, spatial_softmax_keypoints: 32}
 proprio_mlp: [64, 64]
+augment: {crop: {size: 88, train: random, eval: center}}   # 96 -> 88 px; P3-D1 §3
 horizons: {n_obs_steps: 2, horizon: 16, n_action_steps: 8}     # To, Tp, Ta; Ta <= Tp - To + 1
 unet: {down_dims: [128, 256, 512], kernel_size: 5, diffusion_step_embed_dim: 128, cond: film}
 noise_scheduler: {train: ddpm, num_train_timesteps: 100, beta_schedule: squaredcos_cap_v2, prediction_type: epsilon, clip_sample: true}
