@@ -636,11 +636,11 @@ train, and the determinism study must fly `select`.
 - **Re-run the reproduction gate** (`make reproduce-p8`, about 4 min) after any change to
   `ila/render/`, `ila/eval/runner.py` or the adapter.
 
-### P3-D1 — FROZEN IMITATION-LEARNING PROTOCOL (DRAFT, revision 3, 2026-10-27)
+### P3-D1 — FROZEN IMITATION-LEARNING PROTOCOL (2026-10-27)
 
-**Status: DRAFT, not frozen.**
-- It is frozen only by the user's dated approval, recorded on this line.
-- Once frozen, nothing below changes without a dated deviation entry.
+**Status: FROZEN 2026-10-27, revision 3, approved by the user on 2026-10-27.**
+- Nothing below changes without a dated deviation entry. That applies from the freeze, before any
+  student is trained.
 - The SHA-256 of this block (from this heading to the line before the next `###`, UTF-8) is
   recorded in the Gate 3 entry.
 - **Revisions 2 and 3** fold in the pre-gate reviews and their re-reviews:
