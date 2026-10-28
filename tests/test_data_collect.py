@@ -149,6 +149,7 @@ def test_appearance_shift_refused(
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_every_episode_validates_and_is_kept(stores: dict[str, Path]) -> None:
     for name, path in stores.items():
         with DemoStore(path) as s:
@@ -166,6 +167,7 @@ def test_every_episode_validates_and_is_kept(stores: dict[str, Path]) -> None:
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_labels_equal_teacher_in_order(stores: dict[str, Path]) -> None:
     for path in stores.values():
         result = audit.relabel_audit(path, n_steps=10_000)
@@ -173,6 +175,7 @@ def test_labels_equal_teacher_in_order(stores: dict[str, Path]) -> None:
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_split_audit(stores: dict[str, Path]) -> None:
     for path in stores.values():
         assert audit.split_audit(path)["passed"]
@@ -201,6 +204,7 @@ class _Replay:
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_open_loop_replay_reproduces_obs_and_frames(stores: dict[str, Path]) -> None:
     """``action_exec[t]`` produced ``obs[t+1]``/``image[t+1]`` (ppo: float32 actions, exact)."""
     rows = ep.read_split("demos_0-1999")
@@ -229,6 +233,7 @@ def test_open_loop_replay_reproduces_obs_and_frames(stores: dict[str, Path]) -> 
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_dart_executes_noised_label(
     stores: dict[str, Path], collections: dict[str, collect.Collection]
 ) -> None:
@@ -245,6 +250,7 @@ def test_dart_executes_noised_label(
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_mix_follows_assignment_and_pairs_with_ppo(
     stores: dict[str, Path], collections: dict[str, collect.Collection]
 ) -> None:
@@ -260,6 +266,7 @@ def test_mix_follows_assignment_and_pairs_with_ppo(
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_bytes_independent_of_workers(
     stores: dict[str, Path], collections: dict[str, collect.Collection], tmp_path: Path
 ) -> None:
@@ -277,6 +284,7 @@ def test_bytes_independent_of_workers(
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_refly_audit(stores: dict[str, Path]) -> None:
     result = audit.refly_audit(stores["pid_1000"], n_states=5)
     assert result["passed"], result
@@ -315,6 +323,7 @@ def test_wasserstein_and_touchdown_stats() -> None:
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_replay_and_attr_audits(stores: dict[str, Path]) -> None:
     """Open-loop replay of stored action_exec is byte-exact for every store, DART included."""
     for name, path in stores.items():
@@ -327,6 +336,7 @@ def test_replay_and_attr_audits(stores: dict[str, Path]) -> None:
 
 
 @pytest.mark.pybullet
+@pytest.mark.checkpoints  # the `stores` fixture flies P8's PPO teacher (workstation only)
 def test_dart_recording_replays_open_loop_byte_identically(stores: dict[str, Path]) -> None:
     """Every step of every DART episode replays exactly from the stored action_exec."""
     with DemoStore(stores["dart_0.20"]) as s:
