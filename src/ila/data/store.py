@@ -183,7 +183,7 @@ class EpisodeMeta:
         t0_model_s: Start offset into the realization, s model scale.
         teacher: Collection teacher ID (``T_ppo``, ``T_pid``, ``T_mix``).
         episode_teacher: The P8 policy flown and labelling this episode (``ppo``,
-            ``pid_feedforward``, ``gated``); for ``T_mix`` the coin flip's result.
+            ``pid_feedforward``, ``gated``); for ``T_mix`` the balanced assignment's choice.
         beta: Probability per step that the teacher's (possibly noised) action is executed;
             1.0 for teacher demos (DAgger sets it per iteration).
         dart_sigma: DART noise std on the executed action, normalised units; 0.0 for none.

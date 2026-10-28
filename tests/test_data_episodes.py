@@ -367,12 +367,12 @@ def test_stream_design(design: ep.StreamDesign) -> None:
         "dart": 1000,
     }
     assert [d.name for d in ep.demo_lists(design)] == list(DEMO_FILES)
-    assert design.dagger_stream(0, 1) == "dagger_s0_i1"
-    assert len(set(design.dagger_streams())) == 25
-    with pytest.raises(ValueError):
-        design.dagger_stream(5, 1)
-    with pytest.raises(ValueError):
-        design.dagger_stream(0, 6)
+    assert design.dagger_indices(1) == range(1000, 1200)
+    assert design.dagger_indices(5) == range(1800, 2000)
+    assert design.dagger_split == "demos_0-1999"
+    for bad in (0, 6):
+        with pytest.raises(ValueError):
+            design.dagger_indices(bad)
 
 
 def test_demo_files_match_manifest_and_draw(
@@ -435,33 +435,39 @@ def test_read_split_refuses_tampered_file(tmp_path: Path) -> None:
         ep.read_split("train_0-29", tmp_path)
 
 
-def test_dagger_streams_disjoint_from_demos(
-    api: ep.P8EpisodeApi,
-    cfg: ep.SplitsConfig,
-    design: ep.StreamDesign,
-    pools: tuple[frozenset[ep.RealizationKey], ...],
-    frozen: dict[str, frozenset[ep.RealizationKey]],
+def test_dagger_slices_tile_the_second_thousand(
+    design: ep.StreamDesign, demos: dict[str, list[p8_adapter.ListedEpisode]]
 ) -> None:
-    """DAgger draws (seeds 0-4 x iterations 1-5, 200 each) share no episode with ``demos``."""
-    demo_eps = {
-        (ep.row_key(api, d), d.episode_seed) for d in ep.draw_train(api, cfg, 2000, stream="demos")
-    }
-    seen: set[tuple[ep.RealizationKey, int]] = set()
-    train, tune = pools
-    for seed in design.dagger_seeds:
-        for it in range(1, design.dagger_iterations + 1):
-            draws = ep.draw_train(
-                api, cfg, design.dagger_per_iteration, stream=design.dagger_stream(seed, it)
-            )
-            eps = {(ep.row_key(api, d), d.episode_seed) for d in draws}
-            assert len(eps) == design.dagger_per_iteration
-            assert not eps & demo_eps, (seed, it)
-            assert not eps & seen, (seed, it)
-            seen |= eps
-            keys = {k for k, _ in eps}
-            assert keys <= train and not keys & tune
-            assert not any(keys & f for f in frozen.values())
-    assert len(seen) == 25 * 200
+    """DAgger iterations 1-5 fly demos 1000-1999 exactly (every seed), disjoint from 0-999."""
+    long = demos[design.dagger_split]
+    slices = [design.dagger_indices(i) for i in range(1, design.dagger_iterations + 1)]
+    flat = [j for r in slices for j in r]
+    assert flat == list(range(1000, 2000))  # tile exactly, in order, no gap or overlap
+    assert all(len(r) == design.dagger_per_iteration == 200 for r in slices)
+    dagger_rows = [long[j] for j in flat]
+    assert dagger_rows == long[1000:2000]
+    first = {(r.key, r.episode_seed) for r in demos["demos_0-999"]}
+    assert not {(r.key, r.episode_seed) for r in dagger_rows} & first
+    assert not set(flat) & set(range(1000))
+    # bc_dagger's starting conditions (bc 1 000 + 5 x 200) are bc_matched's 2 000.
+    assert demos["demos_0-999"] + dagger_rows == long
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("  first_index: 1000\n", "  first_index: 800\n"),  # overlaps the bc 1 000
+        ("  episodes_per_iteration: 200\n", "  episodes_per_iteration: 150\n"),  # gap
+        ("  stream: demos\n", "  stream: dagger\n"),  # not the demo stream
+    ],
+)
+def test_stream_design_refuses_bad_dagger_slices(tmp_path: Path, old: str, new: str) -> None:
+    text = ep.DEFAULT_CONFIG.read_text(encoding="utf-8")
+    assert text.count(old) == 1
+    path = tmp_path / "demos.yaml"
+    path.write_text(text.replace(old, new), encoding="utf-8")
+    with pytest.raises(ValueError):
+        ep.load_stream_design(path)
 
 
 @pytest.mark.pybullet

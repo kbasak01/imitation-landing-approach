@@ -12,8 +12,9 @@ or ``clip(label + sigma z)`` under DART (:mod:`ila.data.dart`). It stores ``imag
 executes and what ``last_action`` in ``obs[t+1]`` reports) and ``t_model_s[t] = t0 + t/30``.
 
 Teachers (plan §1.4). ``T_ppo``: P8 ``ppo`` seed 0 on SB3 with frozen ``VecNormalize`` (P2-D1).
-``T_pid``: P8 ``pid_feedforward``. ``T_mix``: per episode, a seeded coin flip between ``ppo``
-and P8 ``gated`` (:func:`mix_teacher`); the label is that episode's teacher's action. Every
+``T_pid``: P8 ``pid_feedforward``. ``T_mix``: per episode ``ppo`` or P8 ``gated``, exactly half
+each within every sea state of the collection's episodes (:mod:`ila.data.mix`,
+:func:`collection_policies`); the label is that episode's teacher's action. Every
 teacher is ``reset`` at the start of every episode and called exactly once per step, in order,
 along the trajectory actually flown, never on an isolated state.
 
@@ -47,6 +48,7 @@ from numpy.typing import NDArray
 
 from ila import p8_adapter
 from ila.data import episodes as data_episodes
+from ila.data import mix
 from ila.data.dart import DartNoise
 from ila.data.store import (
     CTRL_HZ,
@@ -62,7 +64,6 @@ from ila.render.camera import Frame
 from ila.render.config import RenderConfig, load_render_config
 
 __all__ = [
-    "MIX_LABEL",
     "TEACHER_POLICIES",
     "AppearanceShiftRefusedError",
     "Collection",
@@ -70,8 +71,8 @@ __all__ = [
     "DemoRecorder",
     "check_render_config",
     "collect_chunk",
+    "collection_policies",
     "load_collections",
-    "mix_teacher",
     "provenance",
     "run_collection",
 ]
@@ -82,9 +83,6 @@ TEACHER_POLICIES: Final[Mapping[str, tuple[str, ...]]] = {
     "T_pid": ("pid_feedforward",),
     "T_mix": ("ppo", "gated"),
 }
-
-#: The label mixed into every ``T_mix`` coin's entropy.
-MIX_LABEL: Final[str] = "T_mix"
 
 #: Episodes per worker task (one env and one set of teachers per task). Rows and stored bytes
 #: do not depend on it; smaller than the runner's 25 to bound the frames held per result.
@@ -125,8 +123,7 @@ class Collection:
         generator_seed: The draw seed (20261023).
         dart_sigma: DART noise std (normalised units), or ``None``.
         dart_seed: DART generator seed (used only with ``dart_sigma``).
-        mix_seed: ``T_mix`` coin seed (used only for ``T_mix``).
-        mix_p_ppo: ``T_mix``'s probability of ``ppo`` (0.5).
+        mix_seed: ``T_mix`` assignment seed (used only for ``T_mix``; :mod:`ila.data.mix`).
     """
 
     name: str
@@ -138,7 +135,6 @@ class Collection:
     dart_sigma: float | None = None
     dart_seed: int = 0
     mix_seed: int = 0
-    mix_p_ppo: float = 0.5
 
     @property
     def policies(self) -> tuple[str, ...]:
@@ -156,8 +152,8 @@ def load_collections(path: Path = data_episodes.DEFAULT_CONFIG) -> dict[str, Col
         Name -> :class:`Collection`, in YAML order.
 
     Raises:
-        ValueError: On an unknown teacher, a non-0.5/0.5 ``T_mix`` mixture of other
-            policies, or a T_ppo label path other than SB3.
+        ValueError: On an unknown teacher, a ``T_mix`` other than ppo/gated 0.5/0.5 drawn
+            ``balanced_per_ss``, or a T_ppo label path other than SB3.
     """
     raw: Mapping[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
     design = data_episodes.load_stream_design(path)
@@ -166,13 +162,14 @@ def load_collections(path: Path = data_episodes.DEFAULT_CONFIG) -> dict[str, Col
     if teachers["T_ppo"]["label_path"] != "sb3":
         raise ValueError("P2-D1: T_ppo is flown and labelled on SB3")
     mixture = dict(teachers["T_mix"]["mixture"])
-    if set(mixture) != {"T_ppo", "gated"}:
-        raise ValueError(f"T_mix mixture must be T_ppo/gated, got {mixture}")
+    if mixture != {"T_ppo": 0.5, "gated": 0.5}:
+        raise ValueError(f"T_mix mixture must be T_ppo/gated 0.5/0.5, got {mixture}")
+    if teachers["T_mix"]["draw"] != "balanced_per_ss":
+        raise ValueError(f"T_mix draw must be balanced_per_ss, got {teachers['T_mix']['draw']}")
     common: dict[str, Any] = {
         "stream": design.demo_stream,
         "generator_seed": seed,
         "mix_seed": int(teachers["T_mix"]["seed"]),
-        "mix_p_ppo": float(mixture["T_ppo"]),
     }
     out: dict[str, Collection] = {}
     for key, spec in raw["collections"].items():
@@ -193,37 +190,32 @@ def load_collections(path: Path = data_episodes.DEFAULT_CONFIG) -> dict[str, Col
     return out
 
 
-def mix_teacher(collection: Collection, demo_index: int, episode_seed: int) -> str:
-    """Return the P8 policy one ``T_mix`` episode flies (``"ppo"`` or ``"gated"``).
+def collection_policies(
+    collection: Collection, rows: Sequence[p8_adapter.ListedEpisode]
+) -> list[str]:
+    """Return the P8 policy flown on each of a collection's episodes.
 
-    One uniform draw from ``default_rng(SeedSequence([mix_seed, H("T_mix"), demo_index,
-    episode_seed]))``; ``ppo`` if it is below ``mix_p_ppo``. A pure function of the episode,
-    so a re-flown episode gets the same teacher.
+    Always computed over the collection's **full** episode list, ``rows[:collection.n]``, so a
+    ``--limit`` pilot or an audit re-flight gets the same teacher per episode as the full run.
 
     Args:
-        collection: A ``T_mix`` collection.
-        demo_index: The episode's global index in the demo stream.
-        episode_seed: The env's episode seed.
+        collection: The collection.
+        rows: Its split's rows (at least ``collection.n``), in global-index order.
 
     Returns:
-        The policy name.
+        ``collection.n`` policy names, by global index. ``T_mix``:
+        :func:`ila.data.mix.assign_rows` with the mixture seed, cells = sea states (exactly
+        half ``ppo`` / half ``gated`` per sea state).
+
+    Raises:
+        ValueError: If ``rows`` is shorter than the collection.
     """
-    entropy = [
-        int(collection.mix_seed),
-        data_episodes.label_entropy(MIX_LABEL),
-        int(demo_index),
-        int(episode_seed),
-    ]
-    u = float(np.random.default_rng(np.random.SeedSequence(entropy)).random())
-    return "ppo" if u < collection.mix_p_ppo else "gated"
-
-
-def episode_policy(collection: Collection, demo_index: int, episode_seed: int) -> str:
-    """Return the P8 policy flown on one episode of a collection."""
+    if len(rows) < collection.n:
+        raise ValueError(f"{collection.name}: {len(rows)} rows < n = {collection.n}")
     if collection.teacher == "T_mix":
-        return mix_teacher(collection, demo_index, episode_seed)
+        return mix.assign_rows(collection.mix_seed, rows[: collection.n])
     (only,) = collection.policies
-    return only
+    return [only] * collection.n
 
 
 # --------------------------------------------------------------------------- provenance
@@ -291,19 +283,22 @@ class DemoRecorder:
         self,
         collection: Collection,
         teachers: Mapping[str, p8_adapter.EvalPolicy],
-        demo_index: Mapping[tuple[str, int, int], int],
+        demo_index: Mapping[tuple[str, int, int], tuple[int, str]],
     ) -> None:
         """Hold the teachers and the episode -> global index map.
 
         Args:
             collection: The collection.
             teachers: Built P8 policies, keyed by name; must cover ``collection.policies``.
-            demo_index: ``(ss, cell index, episode seed)`` -> global demo index.
+            demo_index: ``(ss, cell index, episode seed)`` -> ``(global demo index, P8
+                policy)`` (:func:`collection_policies`).
         """
         if missing := set(collection.policies) - set(teachers):
             raise ValueError(f"{collection.name}: teachers {sorted(missing)} not built")
         self.collection = collection
         self.teachers = dict(teachers)
+        if bad := {p for _, p in demo_index.values()} - set(collection.policies):
+            raise ValueError(f"{collection.name}: policies {sorted(bad)} not in the collection")
         self._index = dict(demo_index)
         self._buf: _Buffer | None = None
         self._teacher: p8_adapter.EvalPolicy | None = None
@@ -326,8 +321,7 @@ class DemoRecorder:
         if context is not None:
             raise ValueError("demo teachers are non-privileged; no context")
         self._close_episode()
-        j = self._index[(listed.ss, int(listed.index), int(listed.episode_seed))]
-        policy = episode_policy(self.collection, j, listed.episode_seed)
+        j, policy = self._index[(listed.ss, int(listed.index), int(listed.episode_seed))]
         self._teacher = self.teachers[policy]
         self._teacher.reset(listed.episode_seed, None)
         sigma = self.collection.dart_sigma
@@ -456,14 +450,15 @@ class CollectTask:
 
     Attributes:
         collection: The collection.
-        episodes: ``(global demo index, listed episode)`` pairs, in stream order.
+        episodes: ``(global demo index, listed episode, P8 policy)`` triples, in stream
+            order (policy from :func:`collection_policies`).
         cfgs: P8's configs.
         prov: :func:`provenance`.
         appearance_shift: Must be ``None`` (refused otherwise).
     """
 
     collection: Collection
-    episodes: tuple[tuple[int, p8_adapter.ListedEpisode], ...]
+    episodes: tuple[tuple[int, p8_adapter.ListedEpisode, str], ...]
     cfgs: p8_adapter.EvalConfigs
     prov: Mapping[str, Any]
     appearance_shift: str | None = None
@@ -492,10 +487,10 @@ def collect_chunk(task: CollectTask) -> tuple[list[EpisodeRecord], list[dict[str
     check_render_config(load_render_config(appearance_shift=task.appearance_shift))
     collection, cfgs = task.collection, task.cfgs
     teachers = {name: p8_adapter.teacher(name, 0, cfgs) for name in collection.policies}
-    index = {(e.ss, int(e.index), int(e.episode_seed)): j for j, e in task.episodes}
+    index = {(e.ss, int(e.index), int(e.episode_seed)): (j, p) for j, e, p in task.episodes}
     recorder = DemoRecorder(collection, teachers, index)
     vtask = runner.VisionTask(
-        episodes=[e for _, e in task.episodes],
+        episodes=[e for _, e, _ in task.episodes],
         spec=_spec(collection),
         cfgs=cfgs,
         tags=runner.RowTags(arm=f"demo:{collection.name}", teacher=collection.teacher),
@@ -626,7 +621,8 @@ def run_collection(
     n = collection.n if limit is None else int(limit)
     if not 1 <= n <= collection.n:
         raise ValueError(f"limit must be in [1, {collection.n}], got {limit}")
-    indexed = tuple(enumerate(rows[:n]))
+    policies = collection_policies(collection, rows)
+    indexed = tuple((j, rows[j], policies[j]) for j in range(n))
     cfgs = p8_adapter.load_eval_configs()
     prov = provenance()
     tasks = [
@@ -703,7 +699,7 @@ def run_collection(
         "dart_sigma": collection.dart_sigma,
         "dart_seed": collection.dart_seed if collection.dart_sigma is not None else None,
         "mix_seed": collection.mix_seed if collection.teacher == "T_mix" else None,
-        "mix_p_ppo": collection.mix_p_ppo if collection.teacher == "T_mix" else None,
+        "mix_draw": "balanced_per_ss" if collection.teacher == "T_mix" else None,
         "beta": 1.0,
         "stream": collection.stream,
         "generator_seed": collection.generator_seed,

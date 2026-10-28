@@ -46,9 +46,11 @@ Streams (:class:`StreamDesign`, ``configs/data/demos.yaml``)
   (``splits/demos_0-1999.parquet``); ``pid_1000``, ``mix_1000`` and each DART sigma set fly
   0-999 (``splits/demos_0-999.parquet``), the same episodes as ``bc``'s 1 000, so teacher,
   mixture and noise comparisons are paired by episode.
-* ``dagger_s{seed}_i{iteration}``: DAgger rollouts of student seed ``seed`` in iteration
-  ``iteration`` (1-5), 200 each, drawn in Phase 5. Distinct labels give independent episode
-  seeds; no ``(realization key, episode seed)`` is shared with ``demos`` (tested).
+* DAgger (P3-D1 decision, 2026-10-27): iteration ``i`` (1-5) of **every** student seed flies
+  ``demos`` global indices ``1000 + 200 (i - 1) .. 1000 + 200 i - 1``, i.e. rows 1000-1999 of
+  ``demos_0-1999.parquet`` (:meth:`StreamDesign.dagger_indices`). ``bc_dagger`` (the ``bc``
+  1 000 + five iterations of 200) and ``bc_matched`` (``ppo_2000``) therefore share the same
+  2 000 starting conditions; only who flies the second 1 000 differs.
 * ``label_parity``: the Phase 2 label-parity rollouts (no stored data).
 
 Hashes and manifest (P8 ``results/episodes/MANIFEST.csv`` style)
@@ -695,48 +697,47 @@ def train_name(n: int, *, start: int = 0, stream: str = TRAIN_STREAM) -> str:
 
 @dataclass(frozen=True)
 class StreamDesign:
-    """Which ``train`` stream each kind of data comes from (``configs/data/demos.yaml``).
+    """Which ``train`` episodes each kind of data flies (``configs/data/demos.yaml``).
 
     Every demo collection flies a prefix of the one demo stream: ``ppo_2000`` its global
     indices 0-1999, ``pid_1000``, ``mix_1000`` and each DART set indices 0-999 (the ``bc``
-    1 000). DAgger iteration ``i`` of student seed ``s`` draws its rollout episodes from its
-    own stream :meth:`dagger_stream` ``(s, i)``, never from the demo stream.
+    1 000). DAgger iteration ``i`` (1-based) flies the same slice of that stream for every
+    student seed: :meth:`dagger_indices` ``(i)``, which tile ``dagger_first_index ..
+    dagger_first_index + iterations * per_iteration - 1`` (1000-1999).
 
     Attributes:
         demo_stream: The demo stream's label (``"demos"``).
         collection_sizes: Collection key in the YAML -> episodes (the ``dart`` key once for
             all of its sigma values).
-        dagger_pattern: ``str.format`` pattern of a DAgger stream label, fields ``seed`` and
-            ``iteration``.
-        dagger_seeds: Student training seeds that run DAgger.
+        dagger_first_index: Global demo-stream index of DAgger iteration 1's first episode.
         dagger_iterations: DAgger iterations (numbered 1 .. ``dagger_iterations``).
         dagger_per_iteration: Rollout episodes per iteration.
     """
 
     demo_stream: str
     collection_sizes: Mapping[str, int]
-    dagger_pattern: str
-    dagger_seeds: tuple[int, ...]
+    dagger_first_index: int
     dagger_iterations: int
     dagger_per_iteration: int
 
-    def dagger_stream(self, seed: int, iteration: int) -> str:
-        """Return the stream label of DAgger iteration ``iteration`` (1-based) of ``seed``.
+    def dagger_indices(self, iteration: int) -> range:
+        """Return the demo-stream global indices DAgger iteration ``iteration`` flies.
+
+        The same for every student seed.
 
         Raises:
-            ValueError: If the seed or iteration is outside the design.
+            ValueError: If the iteration is outside ``1 .. dagger_iterations``.
         """
-        if seed not in self.dagger_seeds or not 1 <= iteration <= self.dagger_iterations:
-            raise ValueError(f"no DAgger stream for seed {seed}, iteration {iteration}")
-        return self.dagger_pattern.format(seed=seed, iteration=iteration)
+        if not 1 <= iteration <= self.dagger_iterations:
+            raise ValueError(f"no DAgger iteration {iteration}")
+        first = self.dagger_first_index + self.dagger_per_iteration * (iteration - 1)
+        return range(first, first + self.dagger_per_iteration)
 
-    def dagger_streams(self) -> tuple[str, ...]:
-        """Return every DAgger stream label, seed-major."""
-        return tuple(
-            self.dagger_stream(s, i)
-            for s in self.dagger_seeds
-            for i in range(1, self.dagger_iterations + 1)
-        )
+    @property
+    def dagger_split(self) -> str:
+        """The demo split file stem whose rows the DAgger iterations fly."""
+        end = self.dagger_first_index + self.dagger_iterations * self.dagger_per_iteration
+        return train_name(end, stream=self.demo_stream)
 
 
 @dataclass(frozen=True)
@@ -769,8 +770,9 @@ def load_stream_design(path: Path = DEFAULT_CONFIG) -> StreamDesign:
         The :class:`StreamDesign`.
 
     Raises:
-        ValueError: If a stream label is reserved, repeated, or a DAgger label collides with
-            the demo stream; or a size is not positive.
+        ValueError: If the demo stream label is reserved, a size is not positive, or the
+            DAgger slices are not exactly the part of the largest demo list beyond every
+            smaller collection (1000-1999 here).
     """
     raw: Mapping[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
     dagger = raw["dagger"]
@@ -779,18 +781,23 @@ def load_stream_design(path: Path = DEFAULT_CONFIG) -> StreamDesign:
         collection_sizes=MappingProxyType(
             {str(k): int(v["n"]) for k, v in raw["collections"].items()}
         ),
-        dagger_pattern=str(dagger["stream"]),
-        dagger_seeds=tuple(int(s) for s in dagger["seeds"]),
+        dagger_first_index=int(dagger["first_index"]),
         dagger_iterations=int(dagger["iterations"]),
         dagger_per_iteration=int(dagger["episodes_per_iteration"]),
     )
-    labels = [design.demo_stream, *design.dagger_streams()]
-    if len(set(labels)) != len(labels):
-        raise ValueError(f"stream labels repeat: {labels}")
-    if reserved := sorted({SELECT_NAME, TRAIN_STREAM} & set(labels)):
-        raise ValueError(f"reserved stream labels used: {reserved}")
-    if min(design.collection_sizes.values()) < 1 or design.dagger_per_iteration < 1:
+    if str(dagger["stream"]) != design.demo_stream:
+        raise ValueError(f"DAgger must fly the demo stream, got {dagger['stream']!r}")
+    if design.demo_stream in (SELECT_NAME, TRAIN_STREAM):
+        raise ValueError(f"reserved stream label used: {design.demo_stream!r}")
+    sizes = sorted(set(design.collection_sizes.values()))
+    if sizes[0] < 1 or design.dagger_per_iteration < 1 or design.dagger_iterations < 1:
         raise ValueError("collection and DAgger sizes must be positive")
+    end = design.dagger_first_index + design.dagger_iterations * design.dagger_per_iteration
+    if (design.dagger_first_index, end) != (sizes[-2] if len(sizes) > 1 else 0, sizes[-1]):
+        raise ValueError(
+            f"DAgger slices {design.dagger_first_index}-{end - 1} must tile the largest demo "
+            f"list beyond the next largest ({sizes})"
+        )
     return design
 
 

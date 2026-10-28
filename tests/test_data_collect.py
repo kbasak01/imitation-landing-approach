@@ -9,8 +9,8 @@ temporary data root and checked:
   observation and frame byte for byte (``image[t]``/``obs[t]`` are the state before
   ``action_exec[t]``, and ``action_exec[t]`` is what produced ``obs[t+1]``);
 * DART: the label is the clean teacher action, ``action_exec = clip(label + sigma z)`` with the
-  episode's own noise; ``T_mix``: the coin decides the teacher, and ``ppo`` episodes equal the
-  ``ppo_2000`` episodes at the same index;
+  episode's own noise; ``T_mix``: the balanced per-SS assignment decides the teacher, and
+  ``ppo`` episodes equal the ``ppo_2000`` episodes at the same index;
 * the file bytes do not depend on workers or chunking;
 * an appearance-shift render is refused before anything flies (P1-D2 obligation 2).
 """
@@ -28,6 +28,7 @@ import pytest
 from ila import p8_adapter
 from ila.data import audit, collect
 from ila.data import episodes as ep
+from ila.data import mix as mix_module
 from ila.data.dart import DartNoise
 from ila.data.store import DemoStore
 from ila.eval import runner
@@ -89,16 +90,17 @@ def test_collections(collections: dict[str, collect.Collection]) -> None:
     assert all(v.generator_seed == 20261023 and v.stream == "demos" for v in c.values())
 
 
-def test_mix_coin_is_seeded_and_balanced(collections: dict[str, collect.Collection]) -> None:
+def test_mix_policies_balanced_per_ss(collections: dict[str, collect.Collection]) -> None:
     mix = collections["mix_1000"]
     rows = ep.read_split(mix.split)
-    draws = [collect.mix_teacher(mix, j, r.episode_seed) for j, r in enumerate(rows)]
-    assert draws == [collect.mix_teacher(mix, j, r.episode_seed) for j, r in enumerate(rows)]
-    counts = Counter(draws)
-    assert set(counts) == {"ppo", "gated"}
-    assert 440 <= counts["ppo"] <= 560  # Binomial(1000, 0.5): +-3.8 sd
-    per_ss = Counter((r.ss, d) for r, d in zip(rows, draws, strict=True))
-    assert all(per_ss[(ss, "gated")] > 100 for ss in ("SS3", "SS4", "SS5"))
+    policies = collect.collection_policies(mix, rows)
+    assert policies == mix_module.assign_rows(20261023, rows)
+    assert Counter(policies) == {"ppo": 500, "gated": 500}
+    for name in ("ppo_2000", "pid_1000", "dart_0.10"):
+        c = collections[name]
+        assert set(collect.collection_policies(c, ep.read_split(c.split))) == set(c.policies)
+    with pytest.raises(ValueError):
+        collect.collection_policies(mix, rows[:999])
 
 
 def test_dart_noise_is_per_episode_and_shared_across_sigma() -> None:
@@ -134,7 +136,7 @@ def test_appearance_shift_refused(
         )
     row = ep.read_split("demos_0-999")[0]
     task = collect.CollectTask(
-        collections["ppo_2000"], ((0, row),), p8_adapter.load_eval_configs(), {}, shift
+        collections["ppo_2000"], ((0, row, "ppo"),), p8_adapter.load_eval_configs(), {}, shift
     )
     with pytest.raises(collect.AppearanceShiftRefusedError):
         collect.collect_chunk(task)
@@ -242,14 +244,15 @@ def test_dart_executes_noised_label(
 
 
 @pytest.mark.pybullet
-def test_mix_follows_coin_and_pairs_with_ppo(
+def test_mix_follows_assignment_and_pairs_with_ppo(
     stores: dict[str, Path], collections: dict[str, collect.Collection]
 ) -> None:
     mix = collections["mix_1000"]
+    policies = collect.collection_policies(mix, ep.read_split(mix.split))
     with DemoStore(stores["mix_1000"]) as s, DemoStore(stores["ppo_2000"]) as p:
         for e in s.episodes():
             m = s.meta(e)
-            assert m.episode_teacher == collect.mix_teacher(mix, m.demo_index, m.episode_seed)
+            assert m.episode_teacher == policies[m.demo_index]
             if m.episode_teacher == "ppo":
                 a, b = s.audit_arrays(e), p.audit_arrays(e)
                 assert all(a[k].tobytes() == b[k].tobytes() for k in a)
@@ -283,7 +286,7 @@ def test_recorder_refuses_context_and_skips(collections: dict[str, collect.Colle
     rec = collect.DemoRecorder(
         collections["pid_1000"],
         {"pid_feedforward": p8_adapter.teacher("pid_feedforward")},
-        {(row.ss, int(row.index), int(row.episode_seed)): 0},
+        {(row.ss, int(row.index), int(row.episode_seed)): (0, "pid_feedforward")},
     )
     with pytest.raises(ValueError, match="context"):
         rec.begin(row, object())  # type: ignore[arg-type]
@@ -291,3 +294,9 @@ def test_recorder_refuses_context_and_skips(collections: dict[str, collect.Colle
         rec.act(0, np.zeros(25, np.float32), None)
     with pytest.raises(ValueError, match="not built"):
         collect.DemoRecorder(dataclasses.replace(collections["mix_1000"]), {}, {})
+    with pytest.raises(ValueError, match="not in the collection"):
+        collect.DemoRecorder(
+            collections["pid_1000"],
+            {"pid_feedforward": p8_adapter.teacher("pid_feedforward")},
+            {(row.ss, int(row.index), int(row.episode_seed)): (0, "gated")},
+        )

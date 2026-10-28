@@ -1,8 +1,8 @@
 """Demo-store audits run before a dataset is called done (plan Phase 3 item 3).
 
 * :func:`refly_audit`: pick random stored ``(episode, step)`` pairs, re-fly each episode from
-  its listed reset through the same runner path and recorder (same teacher, same coin, same
-  DART noise), and require every stored array, the sampled frames included, to be
+  its listed reset through the same runner path and recorder (same teacher, same T_mix
+  assignment, same DART noise), and require every stored array, the sampled frames included, to be
   byte-identical to the re-flown ones. ``ila/data`` may not touch PyBullet state (P1-D2
   item 5), so a "saved state" is re-created by re-simulation, not restored; P8's physics is
   deterministic on this path (Phase 2 gate), so any difference is a store or alignment bug.
@@ -83,12 +83,19 @@ def refly_audit(path: Path, n_states: int = 20, seed: int = 20261023) -> dict[st
         stored = {e: store.audit_arrays(e) for e in names}
     cfgs = p8_adapter.load_eval_configs()
     prov = collect.provenance()
-    episodes = tuple((metas[e].demo_index, rows[metas[e].demo_index]) for e in names)
+    policies = collect.collection_policies(collection, rows)
+    episodes = tuple(
+        (metas[e].demo_index, rows[metas[e].demo_index], policies[metas[e].demo_index])
+        for e in names
+    )
     records, _ = collect.collect_chunk(collect.CollectTask(collection, episodes, cfgs, prov))
     fresh = {f"ep_{r.meta.demo_index:05d}": r for r in records}
     mismatches: list[str] = []
     for e in names:
         rec = fresh[e]
+        if rec.meta.episode_teacher != metas[e].episode_teacher:
+            mismatches.append(f"{e}: teacher {rec.meta.episode_teacher} != stored")
+            continue
         if rec.meta.outcome != metas[e].outcome or rec.meta.steps != metas[e].steps:
             mismatches.append(f"{e}: outcome/steps {rec.meta.outcome}/{rec.meta.steps}")
             continue
