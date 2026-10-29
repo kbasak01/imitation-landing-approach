@@ -1688,3 +1688,61 @@ There is no cut and none is possible (P4-D2). Per-run values are in
 - No teacher row on `select` is committed, so "at the `select` ceiling" is relative to 150/150,
   not to the teacher.
 - `bc_matched`'s lowest-step tie-break uses run-local steps, which preserves the order.
+
+### Gate 4 passed (2026-10-29)
+
+| Criterion (plan Phase 4 exit gate; P3-D1 §4, §5; P4-D5) | Evidence | Verdict |
+|---|---|---|
+| `make lint` / `make test` | ruff and format clean; `mypy --strict` 60 files; **643 passed** in 264.5 s, all markers, at `b4ae711` | PASS |
+| Smoke: overfit 8 episodes to MSE < 1e-4, land ≥ 7/8 | `results/phase4/smoke_bc.json`: MSE 8.9e-7, 8/8. `smoke_bc_state.json`: MSE 5.7e-7, 8/8. Replay 4/4 identical against a fresh teacher rollout. Code at `63750c1` | PASS |
+| Every run present with a manifest (config SHA, data SHA, checkpoint SHA, wall clock) | 23 runs in `results/phase4/runs/**/manifest.json`. Config and data SHA-256 match P3-D1, every tree was clean, and there were no resumes. Every checkpoint SHA-256 was recomputed by the diagnostician and by `results-skeptic` | PASS |
+| Diagnostician TRUSTWORTHY on each, or excluded with a reason | 17 TRUSTWORTHY and 6 CAVEAT (`bc_matched` s0–s4, `bc_dart` s0). Each CAVEAT is classified "not a bug" and carries binding disclosures. They meet the criterion under the user-approved reading in P4-D5 item 1 (2026-10-29). No run is excluded. Evidence: `results/phase4/diagnostics/` | PASS (under P4-D5 item 1) |
+| Selection on `select` only | `select.parquet` `07ecf049…422b`, CPU fp32 single-sample path, EMA weights. `results-skeptic` recomputed all 118 candidates and found no student row on a frozen list | PASS |
+| Only tuning = DART σ, 3 trials, logged | P4-D3, σ\* = 0.10. `bc_dart` s0 = the trial, a deviation approved by the user (P4-D5 item 2) | PASS |
+| Budget rule before any `select` number; GPU-hours per run in the budget entry | P4-D2 (no cut) was committed at 11:03 on 2026-10-28. The first `select` row was written at 13:37. Per-run GPU-hours are in `results/phase4/runs_summary.csv`; Phase 4 totals 17.50 GPU-h (P4-D4, as corrected in P4-D5) | PASS |
+
+Reviewers:
+- `privileged-leak-auditor` (pre-run): no LEAK, 1 RISK, which was fixed before the first run (P4-D1).
+- `training-run-diagnostician`: all 23 runs (P4-D4, P4-D5).
+- `results-skeptic` round 1: no BLOCKING; 2 gate-procedural items, 4 SHOULD-FIX, 7 NOTEs.
+- `results-skeptic` round 2: no BLOCKING. All four of its CAVEAT conditions met, and every round-1 item closed, with the two wording fixes below.
+
+**Corrections recorded here** (entries are not edited):
+- P4-D5 says "over the 23 selected checkpoints: 10 tunnelled". The committed figure is **9**:
+  `bc` s0, s3 and s4 (1 each), the σ = 0.05 trial (1), and `bc_matched` s1 (2), s3 (2) and s4 (1).
+  This is the sum of `n_tunnelled` in `runs_summary.csv`. The disagreement count of 1 is correct.
+- P4-D5 says "`bc_dart`'s open-loop MSE on clean teacher states is 31–62 % above `bc`'s". The
+  committed ratio is **+131–162 %** (2.3–2.6×; `summary.json`,
+  `openloop_mse_comparisons_vs_bc_final_ema`). On DART states the same ratio is about −95 %.
+- In P4-D5's teacher-reference table, `bc_dart` on held-out states is **0.125–0.153**. The 0.16
+  is its upper value on DART states.
+- `bc` relative to the teacher is **about 4–12× per axis**, not "4–10×".
+- The 15.8 mm penetration of `bc_matched` s1's dive is read from the uncommitted select row
+  (`artifacts/runs/bc_matched/s1/select/s5_step010000_rows.csv`, `max_penetration_m` −0.01576).
+  No committed file holds it.
+
+Incidents:
+- `bc_dart` s0 reproduced the σ = 0.10 trial bit for bit (P4-D4 correction 1, P4-D5 item 2).
+- No threshold was relaxed.
+- The reproduction gate was not re-run. Phase 4 changed nothing under `ila/render/`,
+  `ila/eval/runner.py` or the adapter.
+
+## Phase 5
+
+*Before you start (from Phase 4).*
+- **Shared code path.** `bc_dagger` reuses `bc_matched`'s iteration driver in `ila/train/loop.py`:
+  warm start, normaliser inheritance, stage data. A bug found there is a P3-D1 §4 bug for both
+  arms (P4-D5 item 1).
+- **Iteration 0.** It is `bc/s<n>/checkpoints/s0_step030000.pt`; the `bc_matched` manifests record
+  its SHA-256. Rollouts fly the EMA at the last step of the previous iteration, on the CPU fp32
+  single-sample path.
+- **Determinism.** GPU training was observed bit-identical at a fixed seed and code (P4-D4
+  correction 1). A DAgger re-run with unchanged code will reproduce, not resample.
+- **Copycat.** `bc`'s ∂a/∂last_action is 0.70–0.91 against the teacher's 0.07–0.18 (P4-D5). Report
+  it per DAgger iteration beside teacher agreement on the student's own states. DAgger rollouts
+  break the `last_action[t] = label[t−1]` identity that demos have.
+- **Report** `n_tunnelled` and `n_detectors_disagree` with every `select` result.
+- **Budget.** `bc_dagger` is projected at 6.5 GPU-h plus CPU rollouts (P4-D2). `bc_matched` ran
+  6.4 % over its projection.
+- **Watch items for Phase 8.** `bc_matched` s1's tunnelled 1.234 m/s off-pad dive. `bc`'s
+  slow-landing tail (max 237 steps on `select`).
