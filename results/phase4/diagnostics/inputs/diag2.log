@@ -1,0 +1,14 @@
+pybullet build time: Sep 21 2026 16:29:47
+bc_state heldout frames 1526 train frames 2486 7s
+  bc_state s0 done 8s
+  bc_state s1 done 8s
+  bc_state s2 done 8s
+  bc_state s3 done 8s
+  bc_state s4 done 8s
+bc heldout frames 1526 train frames 2486 8s
+  bc s0 done 61s
+  bc s1 done 98s
+  bc s2 done 151s
+  bc s3 done 203s
+  bc s4 done 238s
+wrote /tmp/claude-1000/-home-kbasak-projects-02-imitation-landing-approach/fe7dd47a-dc95-4581-b4a2-20a0afbc331d/scratchpad/diag2.json

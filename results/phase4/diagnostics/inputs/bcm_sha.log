@@ -1,0 +1,65 @@
+0 init bc/s0/checkpoints/s0_step030000.pt manifest_rec True bc_manifest_rec True
+0 s1_step005000.pt full 5000 OK
+0 s1_step010000.pt full 10000 OK
+0 s2_step005000.pt full 15000 OK
+0 s2_step010000.pt full 20000 OK
+0 s3_step005000.pt full 25000 OK
+0 s3_step010000.pt full 30000 OK
+0 s4_step005000.pt full 35000 OK
+0 s4_step010000.pt full 40000 OK
+0 s5_step005000.pt full 45000 OK
+0 s5_step010000.pt full 50000 OK
+0 ema_last.pt ema_last 50000 OK
+0 unlisted files []
+1 init bc/s1/checkpoints/s0_step030000.pt manifest_rec True bc_manifest_rec True
+1 s1_step005000.pt full 5000 OK
+1 s1_step010000.pt full 10000 OK
+1 s2_step005000.pt full 15000 OK
+1 s2_step010000.pt full 20000 OK
+1 s3_step005000.pt full 25000 OK
+1 s3_step010000.pt full 30000 OK
+1 s4_step005000.pt full 35000 OK
+1 s4_step010000.pt full 40000 OK
+1 s5_step005000.pt full 45000 OK
+1 s5_step010000.pt full 50000 OK
+1 ema_last.pt ema_last 50000 OK
+1 unlisted files []
+2 init bc/s2/checkpoints/s0_step030000.pt manifest_rec True bc_manifest_rec True
+2 s1_step005000.pt full 5000 OK
+2 s1_step010000.pt full 10000 OK
+2 s2_step005000.pt full 15000 OK
+2 s2_step010000.pt full 20000 OK
+2 s3_step005000.pt full 25000 OK
+2 s3_step010000.pt full 30000 OK
+2 s4_step005000.pt full 35000 OK
+2 s4_step010000.pt full 40000 OK
+2 s5_step005000.pt full 45000 OK
+2 s5_step010000.pt full 50000 OK
+2 ema_last.pt ema_last 50000 OK
+2 unlisted files []
+3 init bc/s3/checkpoints/s0_step030000.pt manifest_rec True bc_manifest_rec True
+3 s1_step005000.pt full 5000 OK
+3 s1_step010000.pt full 10000 OK
+3 s2_step005000.pt full 15000 OK
+3 s2_step010000.pt full 20000 OK
+3 s3_step005000.pt full 25000 OK
+3 s3_step010000.pt full 30000 OK
+3 s4_step005000.pt full 35000 OK
+3 s4_step010000.pt full 40000 OK
+3 s5_step005000.pt full 45000 OK
+3 s5_step010000.pt full 50000 OK
+3 ema_last.pt ema_last 50000 OK
+3 unlisted files []
+4 init bc/s4/checkpoints/s0_step030000.pt manifest_rec True bc_manifest_rec True
+4 s1_step005000.pt full 5000 OK
+4 s1_step010000.pt full 10000 OK
+4 s2_step005000.pt full 15000 OK
+4 s2_step010000.pt full 20000 OK
+4 s3_step005000.pt full 25000 OK
+4 s3_step010000.pt full 30000 OK
+4 s4_step005000.pt full 35000 OK
+4 s4_step010000.pt full 40000 OK
+4 s5_step005000.pt full 45000 OK
+4 s5_step010000.pt full 50000 OK
+4 ema_last.pt ema_last 50000 OK
+4 unlisted files []

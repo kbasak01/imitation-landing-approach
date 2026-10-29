@@ -1,0 +1,24 @@
+label,family,runs,steps_per_run,warmup,checkpoint_every,steps_per_s,overhead_s_per_run,gpu_hours,rate_source,note
+timing bc (2k),bc,1,2000,500,0,10.6622,10.9154,0.0551,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)","P3-D1 §5, already spent"
+timing dp (2k),dp,1,2000,500,0,12.7892,11.3812,0.0466,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)","P3-D1 §5, already spent"
+bc_state,state,5,30000,500,5000,347.7388,4.8187,0.1265,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_state_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+bc,bc,5,30000,500,5000,10.6622,10.9154,3.9230,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+bc_matched (iterations 1-5),bc,5,50000,500,5000,10.6622,10.9154,6.5283,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",iteration 0 = the bc run (not re-trained)
+bc_dart sigma trials,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)","seed 0 at each sigma, tuning (P3-D1 §4)"
+bc_dart,bc,5,30000,500,5000,10.6622,10.9154,3.9230,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)","sigma*, seed 0 re-trained"
+bc_dagger (iterations 1-5),bc,5,50000,500,5000,10.6622,10.9154,6.5283,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)","bc_matched's schedule (P3-D1 §3); rollouts on the CPU, not counted"
+dp,dp,5,100000,500,10000,12.7892,11.3812,10.8757,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+modular,bc,5,30000,500,5000,10.6622,10.9154,3.9230,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",estimator costed as the bc encoder
+ablation bc_mix,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation bc_pid,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation bc_n100,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation bc_n300,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation bc_minus_last_action,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation bc_plus_clock,bc,3,30000,500,5000,10.6622,10.9154,2.3538,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation dp_mix,dp,3,100000,500,10000,12.7892,11.3812,6.5254,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation dp_pid,dp,3,100000,500,10000,12.7892,11.3812,6.5254,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation dp_n100,dp,3,100000,500,10000,12.7892,11.3812,6.5254,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation dp_n300,dp,3,100000,500,10000,12.7892,11.3812,6.5254,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+ablation dp_minus_last_action,dp,3,100000,500,10000,12.7892,11.3812,6.5254,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",
+R1_lerobot_dp,dp,3,100000,500,10000,12.7892,11.3812,6.5254,"/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp_timing/s0/manifest.json (2000 steps, NVIDIA RTX A4000)",Phase 6 config not written: costed as dp at dp's steps (assumption)
+TOTAL,,,,,,,,91.5588,,

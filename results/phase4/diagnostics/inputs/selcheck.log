@@ -1,0 +1,102 @@
+== bc s0: selected 10000 recomputed 10000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 142/150 p95=0.415 mean_steps=97.2 jerk=0.2328 effort=0.2049 fails={'hard_landing': 3, 'timeout': 5}
+    10000 146/150 p95=0.469 mean_steps=65.2 jerk=0.2163 effort=0.2414 fails={'hard_landing': 3, 'off_pad': 1}  <-- selected
+    15000 144/150 p95=0.469 mean_steps=63.7 jerk=0.2147 effort=0.2415 fails={'hard_landing': 5, 'off_pad': 1}
+    20000 143/150 p95=0.445 mean_steps=62.7 jerk=0.2127 effort=0.2449 fails={'hard_landing': 5, 'off_pad': 2}
+    25000 145/150 p95=0.437 mean_steps=63.9 jerk=0.2172 effort=0.2409 fails={'hard_landing': 2, 'bounce': 1, 'off_pad': 2}
+    30000 145/150 p95=0.429 mean_steps=64.6 jerk=0.2170 effort=0.2397 fails={'hard_landing': 1, 'bounce': 1, 'off_pad': 3}
+   selected by SS: {'SS3': '50/50', 'SS4': '49/50', 'SS5': '47/50'} fails: [{'ss': 'SS4', 'index': 12, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.5071550161873648, 'lateral_offset_m': 0.0670265380523907, 'steps': 53}, {'ss': 'SS5', 'index': 11, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.6317800977350638, 'lateral_offset_m': 0.0235932078341267, 'steps': 90}, {'ss': 'SS5', 'index': 24, 'outcome': 'off_pad', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.3133282130892503, 'lateral_offset_m': 0.1446978282309063, 'steps': 42}, {'ss': 'SS5', 'index': 37, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.6391538044339286, 'lateral_offset_m': 0.0735448776032124, 'steps': 44}]
+== bc s1: selected 30000 recomputed 30000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 142/150 p95=0.447 mean_steps=65.9 jerk=0.2165 effort=0.2341 fails={'hard_landing': 5, 'bounce': 2, 'off_pad': 1}
+    10000 141/150 p95=0.501 mean_steps=67.4 jerk=0.2159 effort=0.2410 fails={'hard_landing': 8, 'bounce': 1}
+    15000 142/150 p95=0.452 mean_steps=65.2 jerk=0.2145 effort=0.2477 fails={'hard_landing': 3, 'bounce': 2, 'off_pad': 3}
+    20000 141/150 p95=0.450 mean_steps=66.4 jerk=0.2171 effort=0.2407 fails={'hard_landing': 6, 'bounce': 2, 'off_pad': 1}
+    25000 145/150 p95=0.430 mean_steps=63.3 jerk=0.2154 effort=0.2430 fails={'hard_landing': 2, 'bounce': 1, 'off_pad': 2}
+    30000 146/150 p95=0.397 mean_steps=62.4 jerk=0.2160 effort=0.2467 fails={'hard_landing': 1, 'bounce': 2, 'off_pad': 1}  <-- selected
+   selected by SS: {'SS3': '50/50', 'SS4': '49/50', 'SS5': '47/50'} fails: [{'ss': 'SS4', 'index': 34, 'outcome': 'bounce', 'termination_reason': 'release', 'closing_speed_normal_m_s': 0.1879424172785722, 'lateral_offset_m': 0.0220386745237239, 'steps': 48}, {'ss': 'SS5', 'index': 11, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.5800010440326735, 'lateral_offset_m': 0.0164509623682861, 'steps': 94}, {'ss': 'SS5', 'index': 24, 'outcome': 'off_pad', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.3014809973173753, 'lateral_offset_m': 0.1341311871840397, 'steps': 43}, {'ss': 'SS5', 'index': 49, 'outcome': 'bounce', 'termination_reason': 'release', 'closing_speed_normal_m_s': 0.2458155954729932, 'lateral_offset_m': 0.0290232587531139, 'steps': 65}]
+== bc s2: selected 25000 recomputed 25000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 143/150 p95=0.475 mean_steps=69.7 jerk=0.2214 effort=0.2218 fails={'hard_landing': 6, 'off_pad': 1}
+    10000 140/150 p95=0.444 mean_steps=64.3 jerk=0.2178 effort=0.2420 fails={'hard_landing': 6, 'bounce': 3, 'off_pad': 1}
+    15000 147/150 p95=0.457 mean_steps=65.2 jerk=0.2150 effort=0.2415 fails={'hard_landing': 3}
+    20000 147/150 p95=0.452 mean_steps=64.5 jerk=0.2159 effort=0.2424 fails={'hard_landing': 2, 'off_pad': 1}
+    25000 147/150 p95=0.405 mean_steps=65.6 jerk=0.2180 effort=0.2402 fails={'hard_landing': 1, 'off_pad': 2}  <-- selected
+    30000 145/150 p95=0.437 mean_steps=65.9 jerk=0.2200 effort=0.2354 fails={'hard_landing': 4, 'off_pad': 1}
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '47/50'} fails: [{'ss': 'SS5', 'index': 11, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.6316778633237963, 'lateral_offset_m': 0.0316615390139206, 'steps': 92}, {'ss': 'SS5', 'index': 24, 'outcome': 'off_pad', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.2122905274308507, 'lateral_offset_m': 0.1416659305056773, 'steps': 45}, {'ss': 'SS5', 'index': 37, 'outcome': 'off_pad', 'termination_reason': 'release', 'closing_speed_normal_m_s': 0.1730275745003989, 'lateral_offset_m': 0.1064528872215375, 'steps': 34}]
+== bc s3: selected 25000 recomputed 25000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 144/150 p95=0.465 mean_steps=66.4 jerk=0.2168 effort=0.2273 fails={'hard_landing': 5, 'bounce': 1}
+    10000 145/150 p95=0.445 mean_steps=68.6 jerk=0.2166 effort=0.2402 fails={'hard_landing': 4, 'bounce': 1}
+    15000 142/150 p95=0.468 mean_steps=64.8 jerk=0.2165 effort=0.2424 fails={'hard_landing': 7, 'bounce': 1}
+    20000 144/150 p95=0.422 mean_steps=66.0 jerk=0.2176 effort=0.2416 fails={'hard_landing': 2, 'bounce': 1, 'off_pad': 3}
+    25000 145/150 p95=0.435 mean_steps=64.8 jerk=0.2166 effort=0.2406 fails={'hard_landing': 1, 'bounce': 2, 'off_pad': 2}  <-- selected
+    30000 145/150 p95=0.456 mean_steps=64.1 jerk=0.2160 effort=0.2420 fails={'hard_landing': 4, 'off_pad': 1}
+   selected by SS: {'SS3': '50/50', 'SS4': '48/50', 'SS5': '47/50'} fails: [{'ss': 'SS4', 'index': 8, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.5037649671996218, 'lateral_offset_m': 0.059888727806244, 'steps': 50}, {'ss': 'SS4', 'index': 34, 'outcome': 'bounce', 'termination_reason': 'release', 'closing_speed_normal_m_s': 0.2553839585996622, 'lateral_offset_m': 0.0154165986414318, 'steps': 50}, {'ss': 'SS5', 'index': 24, 'outcome': 'off_pad', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.5736161318886535, 'lateral_offset_m': 0.1515753735633168, 'steps': 41}, {'ss': 'SS5', 'index': 38, 'outcome': 'off_pad', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.4674986752337742, 'lateral_offset_m': 0.1236461412470775, 'steps': 41}, {'ss': 'SS5', 'index': 49, 'outcome': 'bounce', 'termination_reason': 'release', 'closing_speed_normal_m_s': 0.2411047401132893, 'lateral_offset_m': 0.0068164343651153, 'steps': 64}]
+== bc s4: selected 30000 recomputed 30000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 145/150 p95=0.476 mean_steps=71.4 jerk=0.2191 effort=0.2252 fails={'hard_landing': 3, 'off_pad': 1, 'timeout': 1}
+    10000 145/150 p95=0.459 mean_steps=65.6 jerk=0.2126 effort=0.2460 fails={'hard_landing': 3, 'bounce': 1, 'off_pad': 1}
+    15000 146/150 p95=0.455 mean_steps=65.1 jerk=0.2153 effort=0.2437 fails={'hard_landing': 3, 'off_pad': 1}
+    20000 147/150 p95=0.423 mean_steps=69.1 jerk=0.2201 effort=0.2365 fails={'hard_landing': 1, 'bounce': 1, 'off_pad': 1}
+    25000 140/150 p95=0.469 mean_steps=63.9 jerk=0.2151 effort=0.2440 fails={'hard_landing': 7, 'off_pad': 3}
+    30000 149/150 p95=0.417 mean_steps=68.6 jerk=0.2195 effort=0.2332 fails={'hard_landing': 1}  <-- selected
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '49/50'} fails: [{'ss': 'SS5', 'index': 24, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.5088047440883329, 'lateral_offset_m': 0.0229644969871871, 'steps': 76}]
+== bc_state s0: selected 15000 recomputed 15000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 149/150 p95=0.289 mean_steps=61.9 jerk=0.2095 effort=0.2356 fails={'bounce': 1}
+    10000 148/150 p95=0.271 mean_steps=61.5 jerk=0.2119 effort=0.2421 fails={'hard_landing': 1, 'bounce': 1}
+    15000 150/150 p95=0.270 mean_steps=61.5 jerk=0.2125 effort=0.2419 fails={}  <-- selected
+    20000 149/150 p95=0.270 mean_steps=61.4 jerk=0.2140 effort=0.2416 fails={'bounce': 1}
+    25000 150/150 p95=0.273 mean_steps=61.5 jerk=0.2140 effort=0.2420 fails={}
+    30000 148/150 p95=0.272 mean_steps=61.5 jerk=0.2130 effort=0.2421 fails={'hard_landing': 1, 'bounce': 1}
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '50/50'} fails: []
+== bc_state s1: selected 20000 recomputed 20000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 148/150 p95=0.273 mean_steps=62.1 jerk=0.2100 effort=0.2344 fails={'hard_landing': 2}
+    10000 148/150 p95=0.269 mean_steps=61.6 jerk=0.2142 effort=0.2420 fails={'hard_landing': 2}
+    15000 149/150 p95=0.270 mean_steps=61.6 jerk=0.2137 effort=0.2423 fails={'hard_landing': 1}
+    20000 150/150 p95=0.273 mean_steps=61.5 jerk=0.2137 effort=0.2429 fails={}  <-- selected
+    25000 149/150 p95=0.271 mean_steps=61.4 jerk=0.2145 effort=0.2437 fails={'off_pad': 1}
+    30000 149/150 p95=0.268 mean_steps=61.6 jerk=0.2135 effort=0.2426 fails={'hard_landing': 1}
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '50/50'} fails: []
+== bc_state s2: selected 15000 recomputed 15000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 149/150 p95=0.278 mean_steps=62.1 jerk=0.2095 effort=0.2371 fails={'hard_landing': 1}
+    10000 149/150 p95=0.276 mean_steps=61.6 jerk=0.2133 effort=0.2432 fails={'hard_landing': 1}
+    15000 149/150 p95=0.270 mean_steps=61.5 jerk=0.2141 effort=0.2438 fails={'hard_landing': 1}  <-- selected
+    20000 148/150 p95=0.268 mean_steps=61.4 jerk=0.2143 effort=0.2432 fails={'hard_landing': 1, 'bounce': 1}
+    25000 149/150 p95=0.271 mean_steps=61.5 jerk=0.2148 effort=0.2433 fails={'hard_landing': 1}
+    30000 149/150 p95=0.270 mean_steps=61.5 jerk=0.2139 effort=0.2434 fails={'hard_landing': 1}
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '49/50'} fails: [{'ss': 'SS5', 'index': 16, 'outcome': 'hard_landing', 'termination_reason': 'dwell_complete', 'closing_speed_normal_m_s': 0.2058479280814777, 'lateral_offset_m': 0.0082088411628885, 'steps': 64}]
+== bc_state s3: selected 25000 recomputed 25000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 149/150 p95=0.282 mean_steps=62.4 jerk=0.2105 effort=0.2350 fails={'bounce': 1}
+    10000 149/150 p95=0.275 mean_steps=61.5 jerk=0.2121 effort=0.2420 fails={'hard_landing': 1}
+    15000 150/150 p95=0.274 mean_steps=61.5 jerk=0.2127 effort=0.2414 fails={}
+    20000 150/150 p95=0.270 mean_steps=61.5 jerk=0.2148 effort=0.2421 fails={}
+    25000 150/150 p95=0.269 mean_steps=61.6 jerk=0.2148 effort=0.2421 fails={}  <-- selected
+    30000 150/150 p95=0.271 mean_steps=61.5 jerk=0.2145 effort=0.2422 fails={}
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '50/50'} fails: []
+== bc_state s4: selected 30000 recomputed 30000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 149/150 p95=0.281 mean_steps=62.2 jerk=0.2123 effort=0.2362 fails={'hard_landing': 1}
+    10000 149/150 p95=0.275 mean_steps=61.5 jerk=0.2140 effort=0.2409 fails={'bounce': 1}
+    15000 149/150 p95=0.274 mean_steps=61.5 jerk=0.2137 effort=0.2421 fails={'hard_landing': 1}
+    20000 149/150 p95=0.271 mean_steps=61.5 jerk=0.2139 effort=0.2419 fails={'bounce': 1}
+    25000 149/150 p95=0.274 mean_steps=61.4 jerk=0.2145 effort=0.2429 fails={'hard_landing': 1}
+    30000 150/150 p95=0.270 mean_steps=61.5 jerk=0.2141 effort=0.2425 fails={}  <-- selected
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '50/50'} fails: []
+== bc_dart_tune/sigma_0.10 s0: selected 30000 recomputed 30000 OK; weights=ema path=cpu_fp32_single_sample list_sha=07ecf049 render=full problems=none
+     5000 148/150 p95=0.398 mean_steps=61.3 jerk=0.2084 effort=0.2405 fails={'hard_landing': 2}
+    10000 149/150 p95=0.359 mean_steps=61.5 jerk=0.2128 effort=0.2422 fails={'hard_landing': 1}
+    15000 149/150 p95=0.342 mean_steps=61.7 jerk=0.2139 effort=0.2430 fails={'hard_landing': 1}
+    20000 149/150 p95=0.346 mean_steps=61.8 jerk=0.2142 effort=0.2427 fails={'hard_landing': 1}
+    25000 149/150 p95=0.337 mean_steps=61.7 jerk=0.2132 effort=0.2434 fails={'hard_landing': 1}
+    30000 150/150 p95=0.322 mean_steps=61.6 jerk=0.2138 effort=0.2441 fails={}  <-- selected
+   selected by SS: {'SS3': '50/50', 'SS4': '50/50', 'SS5': '50/50'} fails: []
+
+bc: selected success [146, 146, 147, 145, 149] steps [10000, 30000, 25000, 25000, 30000] p95 [0.469, 0.397, 0.405, 0.435, 0.417]
+   all-candidate success per seed: [[142, 146, 144, 143, 145, 145], [142, 141, 142, 141, 145, 146], [143, 140, 147, 147, 147, 145], [144, 145, 142, 144, 145, 145], [145, 145, 146, 147, 140, 149]]; mean over all ckpts 144.27; final-ckpt [145, 146, 145, 145, 149]
+   failing episodes shared across seeds: {200394416: 3, 1821327225: 5, 1005633730: 2, 1127793918: 2, 810148175: 2} total distinct 8
+   pooled selected outcomes: {'success': 733, 'hard_landing': 7, 'off_pad': 6, 'bounce': 4} by SS: {'SS3': '250/250', 'SS4': '246/250', 'SS5': '237/250'}
+   pooled steps mean 65.3 td_t mean 1.663 closing mean 0.272 lat offset mean 0.0229 jerk 0.2173 effort 0.2404
+
+bc_state: selected success [150, 150, 149, 150, 150] steps [15000, 20000, 15000, 25000, 30000] p95 [0.27, 0.273, 0.27, 0.269, 0.27]
+   all-candidate success per seed: [[149, 148, 150, 149, 150, 148], [148, 148, 149, 150, 149, 149], [149, 149, 149, 148, 149, 149], [149, 149, 150, 150, 150, 150], [149, 149, 149, 149, 149, 150]]; mean over all ckpts 149.10; final-ckpt [148, 149, 149, 150, 150]
+   failing episodes shared across seeds: {} total distinct 1
+   pooled selected outcomes: {'success': 749, 'hard_landing': 1} by SS: {'SS3': '250/250', 'SS4': '250/250', 'SS5': '249/250'}
+   pooled steps mean 61.5 td_t mean 1.535 closing mean 0.245 lat offset mean 0.0141 jerk 0.2138 effort 0.2427
+
+bc-fail episodes 8 bc_state-fail episodes 1 overlap 0

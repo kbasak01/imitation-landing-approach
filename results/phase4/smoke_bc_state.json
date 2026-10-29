@@ -1,0 +1,170 @@
+{
+  "arm": "bc_state",
+  "checkpoint": {
+    "file": "artifacts/runs/smoke/bc_state/ema_last.pt",
+    "sha256": "04ad912a4ac7b222b4008a6b5f99e9b8b7d7ced7f0a46496c3bab9fffd64c2f7"
+  },
+  "closed_loop": {
+    "mean_steps": 61.875,
+    "n": 8,
+    "n_touchdown": 8,
+    "outcome_order": [
+      "crash",
+      "off_pad",
+      "hard_landing",
+      "bounce",
+      "success",
+      "timeout"
+    ],
+    "outcomes": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 0,
+      "off_pad": 0,
+      "success": 8,
+      "timeout": 0
+    },
+    "p95_closing_speed_m_s": 0.345491307802331,
+    "passed": true,
+    "per_episode": [
+      {
+        "closing_speed_normal_m_s": 0.3064313695666155,
+        "demo_index": 0,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 68
+      },
+      {
+        "closing_speed_normal_m_s": 0.23985742308982544,
+        "demo_index": 1,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 64
+      },
+      {
+        "closing_speed_normal_m_s": 0.32864146146823103,
+        "demo_index": 2,
+        "outcome": "success",
+        "ss": "SS5",
+        "steps": 64
+      },
+      {
+        "closing_speed_normal_m_s": 0.2102852976774894,
+        "demo_index": 3,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 61
+      },
+      {
+        "closing_speed_normal_m_s": 0.35456430198223104,
+        "demo_index": 4,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 57
+      },
+      {
+        "closing_speed_normal_m_s": 0.24809592385770882,
+        "demo_index": 5,
+        "outcome": "success",
+        "ss": "SS5",
+        "steps": 61
+      },
+      {
+        "closing_speed_normal_m_s": 0.30318873238572763,
+        "demo_index": 6,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 59
+      },
+      {
+        "closing_speed_normal_m_s": 0.3141160506377075,
+        "demo_index": 7,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 61
+      }
+    ],
+    "required_success": 7,
+    "success": 8,
+    "wall_s": 5.845826003002003,
+    "workers": 8
+  },
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f",
+        "matches": true,
+        "path": "configs/train/bc_state.yaml",
+        "sha256": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f"
+      }
+    ]
+  },
+  "episodes": {
+    "attempted": 8,
+    "first_kept": 0,
+    "kept": 8,
+    "kept_fraction": 1.0,
+    "last_kept": 7,
+    "outcomes": {
+      "success": 8
+    },
+    "start": 0,
+    "store": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+    "success_filter": true
+  },
+  "frozen_hyperparameters_unchanged": true,
+  "git": {
+    "ila_commit": "63750c171845cce3e55076e1160505bb8a69f78f",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "mse": {
+    "frames": 500,
+    "passed": true,
+    "path": "cpu fp32 eval mode (centre crop)",
+    "per_episode": [
+      2.469515420606171e-07,
+      1.953286285596952e-06,
+      2.5453189567313244e-08,
+      9.395288603666771e-07,
+      7.704606367401782e-08,
+      2.893606773694395e-08,
+      2.1833960651156985e-07,
+      1.0010949366365267e-06
+    ],
+    "threshold": 0.0001,
+    "value": 5.695457923170511e-07,
+    "weights": "ema"
+  },
+  "overrides": {
+    "first_n": 8,
+    "purpose": "smoke",
+    "steps": 10000
+  },
+  "passed": true,
+  "replay": {
+    "episode": "ep_00000",
+    "images_identical": 4,
+    "labels_identical": 4,
+    "max_abs_label_diff": 0.0,
+    "passed": true,
+    "proprio_identical": 4,
+    "steps": 4,
+    "teacher": "ppo"
+  },
+  "train": {
+    "batch_size": 256,
+    "device": "cuda",
+    "gpu": "NVIDIA RTX A4000",
+    "gpu_mem_max_bytes": 69740544,
+    "loop_s": 26.543760818996816,
+    "precision": "fp32",
+    "state": "done",
+    "steps": 10000,
+    "steps_per_s": 376.7363663419996,
+    "wall_s": 34.40709730600065
+  },
+  "what": "overfit the first 8 ppo_2000 train episodes, then fly them closed loop (CPU fp32 single-sample path, EMA weights from ema_last.pt)"
+}

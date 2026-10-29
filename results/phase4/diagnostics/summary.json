@@ -1,0 +1,1310 @@
+{
+ "generated_by": "phase4_consolidate.py",
+ "teacher_J_last_action": {
+  "heldout_ppo_1950_1999_every2/sample512": {
+   "n": 512,
+   "J": [
+    [
+     0.0737,
+     -0.0298,
+     0.0533
+    ],
+    [
+     0.0095,
+     0.0969,
+     -0.031
+    ],
+    [
+     -0.0092,
+     -0.001,
+     0.1756
+    ]
+   ],
+   "diag": [
+    0.0737,
+    0.0969,
+    0.1756
+   ],
+   "trace_over_3": 0.1154,
+   "mean_abs_J": [
+    [
+     0.0756,
+     0.0381,
+     0.0813
+    ],
+    [
+     0.0326,
+     0.0969,
+     0.0855
+    ],
+    [
+     0.0289,
+     0.0169,
+     0.1918
+    ]
+   ],
+   "max_abs(act - stored label)": 0.0,
+   "frac_components_at_clip": 0.0026
+  },
+  "heldout_ppo_1950_1999_every2/all_frames": {
+   "n": 1526,
+   "J": [
+    [
+     0.0741,
+     -0.0277,
+     0.0572
+    ],
+    [
+     0.0071,
+     0.0952,
+     -0.0269
+    ],
+    [
+     -0.0114,
+     -0.0015,
+     0.1696
+    ]
+   ],
+   "diag": [
+    0.0741,
+    0.0952,
+    0.1696
+   ],
+   "trace_over_3": 0.113,
+   "mean_abs_J": [
+    [
+     0.0764,
+     0.0371,
+     0.0826
+    ],
+    [
+     0.0322,
+     0.0954,
+     0.082
+    ],
+    [
+     0.0297,
+     0.0176,
+     0.1885
+    ]
+   ],
+   "max_abs(act - stored label)": 0.0,
+   "frac_components_at_clip": 0.0015
+  },
+  "dart_0.10_0_999_every25/sample512": {
+   "n": 512,
+   "J": [
+    [
+     0.0657,
+     -0.0227,
+     0.0727
+    ],
+    [
+     0.0075,
+     0.0897,
+     -0.0316
+    ],
+    [
+     -0.0126,
+     0.0051,
+     0.1611
+    ]
+   ],
+   "diag": [
+    0.0657,
+    0.0897,
+    0.1611
+   ],
+   "trace_over_3": 0.1055,
+   "mean_abs_J": [
+    [
+     0.0688,
+     0.0371,
+     0.0926
+    ],
+    [
+     0.03,
+     0.0898,
+     0.0882
+    ],
+    [
+     0.027,
+     0.0189,
+     0.1872
+    ]
+   ],
+   "max_abs(act - stored label)": 0.0,
+   "frac_components_at_clip": 0.0007
+  },
+  "dart_0.10_0_999_every25/all_frames": {
+   "n": 2415,
+   "J": [
+    [
+     0.068,
+     -0.0229,
+     0.0703
+    ],
+    [
+     0.005,
+     0.0881,
+     -0.0287
+    ],
+    [
+     -0.0133,
+     0.002,
+     0.1608
+    ]
+   ],
+   "diag": [
+    0.068,
+    0.0881,
+    0.1608
+   ],
+   "trace_over_3": 0.1056,
+   "mean_abs_J": [
+    [
+     0.0711,
+     0.0362,
+     0.0907
+    ],
+    [
+     0.0292,
+     0.0882,
+     0.0858
+    ],
+    [
+     0.0288,
+     0.0188,
+     0.187
+    ]
+   ],
+   "max_abs(act - stored label)": 0.0,
+   "frac_components_at_clip": 0.0003
+  }
+ },
+ "teacher_J_method": "central finite difference, eps=0.05 raw units on teacher_obs[21:24] (last_action), through ila.p8_adapter.teacher('ppo',0).act (frozen VecNormalize, training=False, clip to [-1,1]); J[i,j] = mean over states of d a_i / d last_action_j",
+ "arms": {
+  "bc": {
+   "runs": [
+    "bc/s0",
+    "bc/s1",
+    "bc/s2",
+    "bc/s3",
+    "bc/s4"
+   ],
+   "verdicts": {
+    "bc/s0": "TRUSTWORTHY",
+    "bc/s1": "TRUSTWORTHY",
+    "bc/s2": "TRUSTWORTHY",
+    "bc/s3": "TRUSTWORTHY",
+    "bc/s4": "TRUSTWORTHY"
+   },
+   "gpu_hours_sum": 3.954897864098336,
+   "selected_success": [
+    146,
+    146,
+    147,
+    145,
+    149
+   ],
+   "selected_steps": [
+    10000,
+    30000,
+    25000,
+    25000,
+    30000
+   ],
+   "selected_p95": [
+    0.46899168926920953,
+    0.3974653648159441,
+    0.405262480884232,
+    0.4348743541552241,
+    0.41741245816120764
+   ],
+   "candidate_success_all": [
+    [
+     142,
+     146,
+     144,
+     143,
+     145,
+     145
+    ],
+    [
+     142,
+     141,
+     142,
+     141,
+     145,
+     146
+    ],
+    [
+     143,
+     140,
+     147,
+     147,
+     147,
+     145
+    ],
+    [
+     144,
+     145,
+     142,
+     144,
+     145,
+     145
+    ],
+    [
+     145,
+     145,
+     146,
+     147,
+     140,
+     149
+    ]
+   ],
+   "candidate_success_range": [
+    140,
+    149
+   ],
+   "winners_curse_selected_minus_mean_candidates_per_run": [
+    1.8333333333333428,
+    3.166666666666657,
+    2.166666666666657,
+    0.8333333333333428,
+    3.666666666666657
+   ],
+   "winners_curse_selected_minus_mean_candidates_arm_mean": 2.3333333333333313,
+   "winners_curse_selected_minus_final_arm_mean": 0.6,
+   "pooled_selected_outcomes": {
+    "success": 733,
+    "hard_landing": 7,
+    "off_pad": 6,
+    "bounce": 4
+   },
+   "pooled_selected_mean_steps": 65.29066666666667,
+   "pooled_selected_max_steps": 237,
+   "pooled_selected_mean_steps_rel_teacher_61.47": 0.062154980749417055,
+   "pooled_closing_speed_q50_q95_max": [
+    0.27050756284067834,
+    0.4293791292395387,
+    0.6391538044339286
+   ],
+   "pooled_touchdown_time_sd_s": 0.6165949436473462
+  },
+  "bc_state": {
+   "runs": [
+    "bc_state/s0",
+    "bc_state/s1",
+    "bc_state/s2",
+    "bc_state/s3",
+    "bc_state/s4"
+   ],
+   "verdicts": {
+    "bc_state/s0": "TRUSTWORTHY",
+    "bc_state/s1": "TRUSTWORTHY",
+    "bc_state/s2": "TRUSTWORTHY",
+    "bc_state/s3": "TRUSTWORTHY",
+    "bc_state/s4": "TRUSTWORTHY"
+   },
+   "gpu_hours_sum": 0.21145209459889075,
+   "selected_success": [
+    150,
+    150,
+    149,
+    150,
+    150
+   ],
+   "selected_steps": [
+    15000,
+    20000,
+    15000,
+    25000,
+    30000
+   ],
+   "selected_p95": [
+    0.2704668460522741,
+    0.2729338361311143,
+    0.26996262183064507,
+    0.26937459230200017,
+    0.270168326285791
+   ],
+   "candidate_success_all": [
+    [
+     149,
+     148,
+     150,
+     149,
+     150,
+     148
+    ],
+    [
+     148,
+     148,
+     149,
+     150,
+     149,
+     149
+    ],
+    [
+     149,
+     149,
+     149,
+     148,
+     149,
+     149
+    ],
+    [
+     149,
+     149,
+     150,
+     150,
+     150,
+     150
+    ],
+    [
+     149,
+     149,
+     149,
+     149,
+     149,
+     150
+    ]
+   ],
+   "candidate_success_range": [
+    148,
+    150
+   ],
+   "winners_curse_selected_minus_mean_candidates_per_run": [
+    1.0,
+    1.1666666666666572,
+    0.1666666666666572,
+    0.3333333333333428,
+    0.8333333333333428
+   ],
+   "winners_curse_selected_minus_mean_candidates_arm_mean": 0.7,
+   "winners_curse_selected_minus_final_arm_mean": 0.6,
+   "pooled_selected_outcomes": {
+    "success": 749,
+    "hard_landing": 1
+   },
+   "pooled_selected_mean_steps": 61.52133333333333,
+   "pooled_selected_max_steps": 73,
+   "pooled_selected_mean_steps_rel_teacher_61.47": 0.0008350957106446621,
+   "pooled_closing_speed_q50_q95_max": [
+    0.24524891141398736,
+    0.27088478609181993,
+    0.3006530069307221
+   ],
+   "pooled_touchdown_time_sd_s": 0.0795251277209274
+  },
+  "bc_matched": {
+   "runs": [
+    "bc_matched/s0",
+    "bc_matched/s1",
+    "bc_matched/s2",
+    "bc_matched/s3",
+    "bc_matched/s4"
+   ],
+   "verdicts": {
+    "bc_matched/s0": "CAVEAT",
+    "bc_matched/s1": "CAVEAT",
+    "bc_matched/s2": "CAVEAT",
+    "bc_matched/s3": "CAVEAT",
+    "bc_matched/s4": "CAVEAT"
+   },
+   "gpu_hours_sum": 6.944744621121661,
+   "selected_success": [
+    148,
+    145,
+    147,
+    147,
+    146
+   ],
+   "selected_steps": [
+    50000,
+    50000,
+    50000,
+    45000,
+    45000
+   ],
+   "selected_p95": [
+    0.4223242703413011,
+    0.4320821089580639,
+    0.39715337812629564,
+    0.4461828972919239,
+    0.4154159175216692
+   ],
+   "candidate_success_all": [
+    [
+     144,
+     148
+    ],
+    [
+     144,
+     145
+    ],
+    [
+     146,
+     147
+    ],
+    [
+     147,
+     143
+    ],
+    [
+     146,
+     144
+    ]
+   ],
+   "candidate_success_range": [
+    143,
+    148
+   ],
+   "winners_curse_selected_minus_mean_candidates_per_run": [
+    2.0,
+    0.5,
+    0.5,
+    2.0,
+    1.0
+   ],
+   "winners_curse_selected_minus_mean_candidates_arm_mean": 1.2,
+   "winners_curse_selected_minus_final_arm_mean": 1.2,
+   "pooled_selected_outcomes": {
+    "success": 733,
+    "bounce": 6,
+    "hard_landing": 6,
+    "off_pad": 5
+   },
+   "pooled_selected_mean_steps": 62.7,
+   "pooled_selected_max_steps": 164,
+   "pooled_selected_mean_steps_rel_teacher_61.47": 0.02000976085895556,
+   "pooled_closing_speed_q50_q95_max": [
+    0.26989878762694897,
+    0.42331386355543665,
+    1.2340832204523604
+   ],
+   "pooled_touchdown_time_sd_s": 0.3933504334458823
+  },
+  "bc_dart": {
+   "runs": [
+    "bc_dart/s0",
+    "bc_dart/s1",
+    "bc_dart/s2",
+    "bc_dart/s3",
+    "bc_dart/s4"
+   ],
+   "verdicts": {
+    "bc_dart/s0": "CAVEAT",
+    "bc_dart/s1": "TRUSTWORTHY",
+    "bc_dart/s2": "TRUSTWORTHY",
+    "bc_dart/s3": "TRUSTWORTHY",
+    "bc_dart/s4": "TRUSTWORTHY"
+   },
+   "gpu_hours_sum": 4.017513691197778,
+   "selected_success": [
+    150,
+    149,
+    150,
+    150,
+    150
+   ],
+   "selected_steps": [
+    30000,
+    20000,
+    30000,
+    15000,
+    20000
+   ],
+   "selected_p95": [
+    0.3222315238060807,
+    0.34945337446430463,
+    0.3401834428062239,
+    0.32905418052893776,
+    0.33680028211067714
+   ],
+   "candidate_success_all": [
+    [
+     148,
+     149,
+     149,
+     149,
+     149,
+     150
+    ],
+    [
+     147,
+     149,
+     149,
+     149,
+     148,
+     148
+    ],
+    [
+     147,
+     150,
+     148,
+     148,
+     150,
+     150
+    ],
+    [
+     147,
+     148,
+     150,
+     150,
+     149,
+     149
+    ],
+    [
+     147,
+     149,
+     149,
+     150,
+     148,
+     149
+    ]
+   ],
+   "candidate_success_range": [
+    147,
+    150
+   ],
+   "winners_curse_selected_minus_mean_candidates_per_run": [
+    1.0,
+    0.6666666666666572,
+    1.1666666666666572,
+    1.1666666666666572,
+    1.3333333333333428
+   ],
+   "winners_curse_selected_minus_mean_candidates_arm_mean": 1.0666666666666629,
+   "winners_curse_selected_minus_final_arm_mean": 0.6,
+   "pooled_selected_outcomes": {
+    "success": 749,
+    "bounce": 1
+   },
+   "pooled_selected_mean_steps": 61.629333333333335,
+   "pooled_selected_max_steps": 78,
+   "pooled_selected_mean_steps_rel_teacher_61.47": 0.002592050322650641,
+   "pooled_closing_speed_q50_q95_max": [
+    0.23778303692020025,
+    0.3359346691077541,
+    0.4262329208867768
+   ],
+   "pooled_touchdown_time_sd_s": 0.1179950907576732
+  },
+  "bc_dart_tune": {
+   "runs": [
+    "bc_dart_tune/sigma_0.05/s0",
+    "bc_dart_tune/sigma_0.10/s0",
+    "bc_dart_tune/sigma_0.20/s0"
+   ],
+   "verdicts": {
+    "bc_dart_tune/sigma_0.05/s0": "TRUSTWORTHY",
+    "bc_dart_tune/sigma_0.10/s0": "TRUSTWORTHY",
+    "bc_dart_tune/sigma_0.20/s0": "TRUSTWORTHY"
+   },
+   "gpu_hours_sum": 2.3698946962074965,
+   "selected_success": [
+    149,
+    150,
+    149
+   ],
+   "selected_steps": [
+    25000,
+    30000,
+    15000
+   ],
+   "selected_p95": [
+    0.37242168927230646,
+    0.3222315238060807,
+    0.3768711866010043
+   ],
+   "candidate_success_all": [
+    [
+     144,
+     148,
+     149,
+     148,
+     149,
+     148
+    ],
+    [
+     148,
+     149,
+     149,
+     149,
+     149,
+     150
+    ],
+    [
+     147,
+     147,
+     149,
+     148,
+     147,
+     147
+    ]
+   ],
+   "candidate_success_range": [
+    144,
+    150
+   ],
+   "winners_curse_selected_minus_mean_candidates_per_run": [
+    1.3333333333333428,
+    1.0,
+    1.5
+   ],
+   "winners_curse_selected_minus_mean_candidates_arm_mean": 1.277777777777781,
+   "winners_curse_selected_minus_final_arm_mean": 1.0,
+   "pooled_selected_outcomes": {
+    "success": 448,
+    "bounce": 1,
+    "hard_landing": 1
+   },
+   "pooled_selected_mean_steps": 61.7,
+   "pooled_selected_max_steps": 83,
+   "pooled_selected_mean_steps_rel_teacher_61.47": 0.0037416625996422592,
+   "pooled_closing_speed_q50_q95_max": [
+    0.24953621748488275,
+    0.36418494427919185,
+    0.489867102749576
+   ],
+   "pooled_touchdown_time_sd_s": 0.1418996294059228
+  }
+ },
+ "p4d4_checks": [
+  {
+   "figure": "bc candidates 140-149/150",
+   "p4d4": "140-149",
+   "reproduced": [
+    140,
+    149
+   ],
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "bc winner's curse about +2 episodes",
+   "p4d4": "+2",
+   "reproduced": 2.33,
+   "agrees": true,
+   "note": "defined as mean over seeds of (selected success - mean success of the 6 candidates); vs final checkpoint: +0.6"
+  },
+  {
+   "figure": "bc dA/dlast_action diagonal 0.75-0.91",
+   "p4d4": "0.75-0.91",
+   "reproduced": [
+    0.701,
+    0.91
+   ],
+   "agrees": false,
+   "note": "final EMA, heldout states; s3 z-axis is 0.701. On dart states: [0.741, 0.845]"
+  },
+  {
+   "figure": "bc_state candidates 148-150",
+   "p4d4": "148-150",
+   "reproduced": [
+    148,
+    150
+   ],
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "bc_matched it4-end held-out loss about 20% below bc",
+   "p4d4": "-20%",
+   "reproduced": [
+    -0.2,
+    -0.191,
+    -0.189,
+    -0.188,
+    -0.181
+   ],
+   "agrees": true,
+   "note": "training-log held-out EMA loss at end of iteration 4 vs bc step 30000, same seed"
+  },
+  {
+   "figure": "bc s0 last_action reliance 0.57 -> 0.81 (5k -> 30k)",
+   "p4d4": "0.57->0.81",
+   "reproduced": [
+    0.57,
+    0.811
+   ],
+   "agrees": true,
+   "note": "metric is trace/3 (mean diagonal), heldout states, EMA"
+  },
+  {
+   "figure": "bc_matched candidates differ by 1-4 select episodes",
+   "p4d4": "1-4",
+   "reproduced": [
+    4,
+    1,
+    1,
+    4,
+    2
+   ],
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "bc_matched last_action reliance 0.78-0.82 -> 0.86-0.91",
+   "p4d4": "0.78-0.82 -> 0.86-0.91",
+   "reproduced": {
+    "it0": [
+     0.7767,
+     0.8233
+    ],
+    "it5_end": [
+     0.8577,
+     0.9107
+    ],
+    "selected": [
+     0.8443,
+     0.9107
+    ]
+   },
+   "agrees": true,
+   "note": "trace/3, heldout states; it0 = bc final EMA"
+  },
+  {
+   "figure": "bc_matched DART-state open-loop MSE 10-15% worse than bc",
+   "p4d4": "+10..15%",
+   "reproduced": {
+    "it5_end": [
+     0.145,
+     0.103,
+     0.155,
+     0.149,
+     0.129
+    ],
+    "selected": [
+     0.145,
+     0.103,
+     0.155,
+     0.123,
+     0.107
+    ]
+   },
+   "agrees": false,
+   "note": "max is 15.5% (s2, it5_end = selected)"
+  },
+  {
+   "figure": "bc_matched about 20% better on clean states (open loop)",
+   "p4d4": "-20%",
+   "reproduced": [
+    -0.198,
+    -0.213,
+    -0.223,
+    -0.203,
+    -0.168
+   ],
+   "agrees": true,
+   "note": "uncontaminated point = end of iteration 4; iteration 5 trains on these episodes (it5 vs bc: [-0.78, -0.81, -0.79, -0.78, -0.78])"
+  },
+  {
+   "figure": "bc_matched s1 off pad SS4 #35 at 1.234 m/s, about 2x fastest bc",
+   "p4d4": "1.234, ~2x",
+   "reproduced": [
+    1.234,
+    1.93
+   ],
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "bc_matched candidates = cumulative 75k/80k",
+   "p4d4": "45k/50k run-local",
+   "reproduced": [
+    [
+     45000,
+     50000
+    ],
+    [
+     45000,
+     50000
+    ],
+    [
+     45000,
+     50000
+    ],
+    [
+     45000,
+     50000
+    ],
+    [
+     45000,
+     50000
+    ]
+   ],
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "bc_dart seeds 1-4 select 149/150/150/150",
+   "p4d4": "149,150,150,150",
+   "reproduced": [
+    149,
+    150,
+    150,
+    150
+   ],
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "duplicate s0 0.807 GPU-h",
+   "p4d4": "0.807",
+   "reproduced": 0.8071,
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "lengths bc 65.3 (max 237), bc_state 61.5, bc_matched 62.7, bc_dart 61.6",
+   "p4d4": "65.3/237, 61.5, 62.7, 61.6",
+   "reproduced": {
+    "bc": [
+     65.29,
+     237
+    ],
+    "bc_state": [
+     61.52,
+     73
+    ],
+    "bc_matched": [
+     62.7,
+     164
+    ],
+    "bc_dart": [
+     61.63,
+     78
+    ]
+   },
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "BC-family lengths within 6% of the teacher's 61.5",
+   "p4d4": "<=6%",
+   "reproduced": {
+    "bc": 6.22,
+    "bc_state": 0.08,
+    "bc_matched": 2.0,
+    "bc_dart": 0.26
+   },
+   "agrees": false,
+   "note": "bc is +6.2% vs 61.47 (+6.2% vs 61.5 too)"
+  },
+  {
+   "figure": "Phase 4 measured 17.50 GPU-h vs 16.9 projected (+3.5%)",
+   "p4d4": "17.50, 16.9, +3.5%",
+   "reproduced": [
+    17.498,
+    16.8546,
+    3.82
+   ],
+   "agrees": false,
+   "note": "exact projection is 16.8546; overrun 3.82%"
+  },
+  {
+   "figure": "budget sigma trials 2.37",
+   "p4d4": 2.37,
+   "reproduced": 2.3699,
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "budget bc 3.96",
+   "p4d4": 3.96,
+   "reproduced": 3.9549,
+   "agrees": false,
+   "note": ""
+  },
+  {
+   "figure": "budget bc_state 0.21",
+   "p4d4": 0.21,
+   "reproduced": 0.2114,
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "budget bc_matched 6.95",
+   "p4d4": 6.95,
+   "reproduced": 6.9447,
+   "agrees": false,
+   "note": ""
+  },
+  {
+   "figure": "budget bc_dart 4.02",
+   "p4d4": 4.02,
+   "reproduced": 4.0176,
+   "agrees": true,
+   "note": ""
+  },
+  {
+   "figure": "correction 1 bit-identity",
+   "p4d4": "identical at all six checkpoints",
+   "reproduced": "see dart_sha_ident.log / dart_sel.log / dart_curves.log",
+   "agrees": true,
+   "note": ""
+  }
+ ],
+ "J_last_action_diag_ranges": {
+  "teacher_heldout_sample512": [
+   0.0737,
+   0.0969,
+   0.1756
+  ],
+  "teacher_dart_sample512": [
+   0.0657,
+   0.0897,
+   0.1611
+  ],
+  "bc_final_ema_heldout": [
+   0.701,
+   0.91
+  ],
+  "bc_final_ema_dart": [
+   0.741,
+   0.845
+  ],
+  "bc_state_final_ema_heldout": [
+   0.0886,
+   0.2876
+  ],
+  "bc_state_final_ema_dart": [
+   0.0841,
+   0.2999
+  ],
+  "bc_state_selected_ema_heldout": [
+   0.0891,
+   0.3007
+  ],
+  "bc_matched_it5_end_heldout": [
+   0.78,
+   0.959
+  ],
+  "bc_dart_selected_ema_heldout": [
+   0.125,
+   0.153
+  ],
+  "bc_dart_selected_ema_dart": [
+   0.128,
+   0.159
+  ],
+  "sigma_0.10_trial_final_ema_train_and_heldout": [
+   0.129,
+   0.149
+  ],
+  "note": "same 512-state index sets (default_rng(0)) for every model; eps 0.05 central difference on raw last_action; diag = d a_i / d last_action_i averaged over states"
+ },
+ "heldout_loss_comparisons_trainlog_ema": {
+  "s0": {
+   "bc_end": 0.0002737787981638631,
+   "bc_matched_it4_end": 0.00021912443890425843,
+   "bc_matched_it4_rel_bc": -0.1996296266407479,
+   "bc_matched_it5_end_CONTAMINATED": 6.115777938220368e-05,
+   "bc_dart_end": 0.0006938524355459362,
+   "bc_dart_rel_bc": 1.5343541581720626,
+   "bc_state_end": 6.618667168823099e-05
+  },
+  "s1": {
+   "bc_end": 0.00028610445075135554,
+   "bc_matched_it4_end": 0.000231518345833275,
+   "bc_matched_it4_rel_bc": -0.1907908275272503,
+   "bc_matched_it5_end_CONTAMINATED": 5.8047406458092635e-05,
+   "bc_dart_end": 0.0006683497287730462,
+   "bc_dart_rel_bc": 1.336034014912575,
+   "bc_state_end": 5.755044575693115e-05
+  },
+  "s2": {
+   "bc_end": 0.0002700269864920381,
+   "bc_matched_it4_end": 0.00021888627352300763,
+   "bc_matched_it4_rel_bc": -0.18939111839674727,
+   "bc_matched_it5_end_CONTAMINATED": 6.122444768619804e-05,
+   "bc_dart_end": 0.0006581677452386055,
+   "bc_dart_rel_bc": 1.4374146961715324,
+   "bc_state_end": 6.38028331704552e-05
+  },
+  "s3": {
+   "bc_end": 0.0002780466939566909,
+   "bc_matched_it4_end": 0.00022576100733534318,
+   "bc_matched_it4_rel_bc": -0.18804642442356045,
+   "bc_matched_it5_end_CONTAMINATED": 6.15255843445192e-05,
+   "bc_dart_end": 0.0006764243818988633,
+   "bc_dart_rel_bc": 1.4327726119420237,
+   "bc_state_end": 5.804869597202008e-05
+  },
+  "s4": {
+   "bc_end": 0.00026576880532591565,
+   "bc_matched_it4_end": 0.0002177930184511279,
+   "bc_matched_it4_rel_bc": -0.18051699790708864,
+   "bc_matched_it5_end_CONTAMINATED": 5.946851466115655e-05,
+   "bc_dart_end": 0.0006908925937003711,
+   "bc_dart_rel_bc": 1.599600027750137,
+   "bc_state_end": 7.442743513453811e-05
+  }
+ },
+ "openloop_mse_comparisons_vs_bc_final_ema": {
+  "s0": {
+   "openloop_mse_clean_it4_end_over_bc": -0.19775796529209289,
+   "openloop_mse_clean_it5_end_over_bc_CONTAMINATED": -0.7827407954881332,
+   "openloop_mse_dart_it5_end_over_bc": 0.1451929963084171,
+   "openloop_mse_dart_selected_over_bc": 0.1451929963084171,
+   "trJ3_heldout_it0_bc": 0.811,
+   "trJ3_heldout_it5_end": 0.8863,
+   "trJ3_heldout_selected": 0.8863,
+   "bc_dart_sel_openloop_mse_clean_over_bc": 1.5304433118177614,
+   "bc_dart_sel_openloop_mse_dart_over_bc": -0.9543012784714792
+  },
+  "s1": {
+   "openloop_mse_clean_it4_end_over_bc": -0.21297698000473497,
+   "openloop_mse_clean_it5_end_over_bc_CONTAMINATED": -0.811849817500138,
+   "openloop_mse_dart_it5_end_over_bc": 0.10255606643572435,
+   "openloop_mse_dart_selected_over_bc": 0.10255606643572435,
+   "trJ3_heldout_it0_bc": 0.801,
+   "trJ3_heldout_it5_end": 0.882,
+   "trJ3_heldout_selected": 0.882,
+   "bc_dart_sel_openloop_mse_clean_over_bc": 1.3088848402215159,
+   "bc_dart_sel_openloop_mse_dart_over_bc": -0.9491868587235834
+  },
+  "s2": {
+   "openloop_mse_clean_it4_end_over_bc": -0.2228970842085034,
+   "openloop_mse_clean_it5_end_over_bc_CONTAMINATED": -0.7862589617139062,
+   "openloop_mse_dart_it5_end_over_bc": 0.15530918319331932,
+   "openloop_mse_dart_selected_over_bc": 0.15530918319331932,
+   "trJ3_heldout_it0_bc": 0.8137,
+   "trJ3_heldout_it5_end": 0.9107,
+   "trJ3_heldout_selected": 0.9107,
+   "bc_dart_sel_openloop_mse_clean_over_bc": 1.4104890613568704,
+   "bc_dart_sel_openloop_mse_dart_over_bc": -0.9550058530063043
+  },
+  "s3": {
+   "openloop_mse_clean_it4_end_over_bc": -0.2033990071302395,
+   "openloop_mse_clean_it5_end_over_bc_CONTAMINATED": -0.782789682943673,
+   "openloop_mse_dart_it5_end_over_bc": 0.14899993538965983,
+   "openloop_mse_dart_selected_over_bc": 0.12349866358098605,
+   "trJ3_heldout_it0_bc": 0.7767,
+   "trJ3_heldout_it5_end": 0.8577,
+   "trJ3_heldout_selected": 0.8443,
+   "bc_dart_sel_openloop_mse_clean_over_bc": 1.5685030531800628,
+   "bc_dart_sel_openloop_mse_dart_over_bc": -0.9346556871543908
+  },
+  "s4": {
+   "openloop_mse_clean_it4_end_over_bc": -0.1683986812199535,
+   "openloop_mse_clean_it5_end_over_bc_CONTAMINATED": -0.78311609603508,
+   "openloop_mse_dart_it5_end_over_bc": 0.1291109187674282,
+   "openloop_mse_dart_selected_over_bc": 0.10650022436578199,
+   "trJ3_heldout_it0_bc": 0.8233,
+   "trJ3_heldout_it5_end": 0.8883,
+   "trJ3_heldout_selected": 0.876,
+   "bc_dart_sel_openloop_mse_clean_over_bc": 1.622235095003861,
+   "bc_dart_sel_openloop_mse_dart_over_bc": -0.9476945727228203
+  }
+ },
+ "sigma_star_winners_curse": {
+  "sigma_star_selected": 150,
+  "mean_selected_over_3_trials": 149.33333333333334,
+  "mean_over_18_candidates": 148.05555555555554,
+  "bc_dart_s0_minus_mean_selected_s1_s4": 0.25,
+  "bc_dart_seeds1_4_selected": [
+   149,
+   150,
+   150,
+   150
+  ]
+ },
+ "budget": {
+  "runs_summary_csv_sha256": "c1c0af76a761d2cbc3321b39206fcd913073eb62bfc16a402cd7d9720262c029",
+  "budget_projection_csv_sha256": "d5a4d1e03f89f3fe1cb7a11530eaa71de5549a0bf56392072d4dae2f4cec8980",
+  "n_runs": 23,
+  "measured_gpu_h": {
+   "sigma trials": 2.3699,
+   "bc": 3.9549000000000003,
+   "bc_state": 0.2114,
+   "bc_matched": 6.9447,
+   "bc_dart": 4.0176
+  },
+  "projected_gpu_h": {
+   "sigma trials": 2.3538,
+   "bc": 3.923,
+   "bc_state": 0.1265,
+   "bc_matched": 6.5283,
+   "bc_dart": 3.923
+  },
+  "measured_total": 17.4985,
+  "projected_total": 16.8546,
+  "overrun_rel": 0.03820322048580205,
+  "manifest_sum_check": 17.498502967224162,
+  "duplicate_bc_dart_s0_gpu_h": 0.8070541985749959
+ },
+ "lengths": {
+  "bc": {
+   "mean": 65.29066666666667,
+   "max": 237,
+   "rel_teacher_61.47": 0.062154980749417055
+  },
+  "bc_state": {
+   "mean": 61.52133333333333,
+   "max": 73,
+   "rel_teacher_61.47": 0.0008350957106446621
+  },
+  "bc_matched": {
+   "mean": 62.7,
+   "max": 164,
+   "rel_teacher_61.47": 0.02000976085895556
+  },
+  "bc_dart": {
+   "mean": 61.629333333333335,
+   "max": 78,
+   "rel_teacher_61.47": 0.002592050322650641
+  },
+  "teacher_reference": "61.47 steps: results/throughput_projection.csv, P8 e07 ppo s0 mean on id SS3-SS5 (P2-D2 central projection)"
+ },
+ "bc_matched_s1_dive": {
+  "outcome": "off_pad",
+  "closing_speed_normal_m_s": 1.2340832204523604,
+  "bc_selected_max_closing_m_s": 0.6391538044339286,
+  "ratio": 1.9308079086618841
+ },
+ "script_sha256": {
+  "diag.py": "aa4423535f8387bebc4d4a1def0ba722a280014cb442afb56b6fb56ec228e3d7",
+  "diag2.py": "ea1110b18a93f4d6c37759fbefc417f34e9f8f845df4ed4eee28294227765cfc",
+  "curves.py": "928f36f9bacb13fcac91f1e202b21e977165ceec93c76bbfe63a5bbf7b402bc1",
+  "selcheck.py": "78db685a2b1bf4d6a3a9b669055251854a52639bf25c7fd659a82d11c31fe9bf",
+  "shacheck.py": "07aca2a464db43274ba8366b67236482f190632c1452bf57f41065ead7e40340",
+  "chk.py": "6e70dc55723889acee5b4cb208b9410857a75630557fa11bd2d28f6f7a164217",
+  "chk2.py": "7226f618cb500e05712a4f84464ac352fd60905bf857f5ce04953ce7febf1c6b",
+  "bcm_prov.py": "49c54bd4602c05dedbabc3ed65c2bfdcc48e507d90a244208ba710b585382f53",
+  "bcm_sha.py": "ac3c8427ade018692369eade321957215a3c8a01491f4a654c767f02cffa2fbc",
+  "bcm_sel.py": "0c8f8e1694e40ade96051a5928babbbf2dcaf3c7f7fe107d82a0f6424923c1a9",
+  "bcm_diag.py": "73a7c8b80cfabd4f64428636fc655f562ec7a0ba410e3958b5d0c260e1dedb34",
+  "bcm_jtrend.py": "97e2cbb4c4318a4f6f9ef771ae1a5dceeded4714492a3fe2252e50d559c26a55",
+  "dart_sha_ident.py": "c6a4d77be93bbdadf1d3a83235d43bf0a4a8de0932d220fb281d1b2c1b075a00",
+  "dart_sel.py": "d92e6a9584d6cf34e8bcf48439bcfdf849941c87e6ba8af7ee70cd879b8856ab",
+  "dart_curves.py": "e12886031c6ca300b530cbcbbdb9e773fd19de61dee9e7611eba3370f0033bef",
+  "dart_diag.py": "03b06889a72cc9a1d2c86a28d9ed5de343dd39e61fffcd9d65cdf715cf421ede",
+  "teacher_jac.py": "5226a3b67bc78bcf62d4c3b3b7bc6d06c98cd0baef9ae278621fa46110d903a0",
+  "sigma_sha.py": "13ab709b1667bb49ba85a50b6d257ab248a2b9c7d68596463cfb17c46bb52871",
+  "phase4_consolidate.py": "b1ef9b0eb35ed2957ae2647f0467e5ab5bbeb0d11198ace0001f8cf9d33e6a43"
+ },
+ "input_sha256": {
+  "diag.json": "351d2e718b2d3f9502235b726c728b161416ed2026c1363eac4d7f8912fa1be0",
+  "diag.log": "93ecd7488470dd6315ea228252967414da8ec2a8c19ce5b1fa82e18858fe200f",
+  "diag2.json": "bb3f3210cab56e8afd46205a1c1c021d071dcf3300eaafea92b92584613f29aa",
+  "diag2.log": "9bbc11d2024367f3d3090fde25ae8935106e8aacdc0c2f9a6e868beea4ccd8a3",
+  "curves.log": "d4861eaed437745a902484940ff5f55d554ab9661d5bda1a5066c0407eaf3ba0",
+  "selcheck.log": "c92a1e2a921f665556e7931e9e392cca5b806920af8c6c0443c0b376b97ef9ea",
+  "sha_phase4.log": "666123af21e72a4f49b3ae4e2ad1e0be162b07a821af5e31e6d2b5f3bac480b5",
+  "bcm_prov.log": "b8580ea71a3b1320f7d05fda742ac45981fcfcc431839ca74b775a353339cc20",
+  "bcm_sha.log": "b93c74463a8d278c5d15ba1fd8ab80eb2b2ad5cf4219c3a46e812d06f8dd78af",
+  "bcm_sel.log": "0450dcaf9c1fdf8bc3c250a70d1e1ff80227ef95b81ad9ffe84b096137651412",
+  "bcm_diag.json": "2cdf34172d6fdf6d7d93786240b3b7da91473e189de53f79297357b19ae84826",
+  "bcm_diag.log": "ef04f87d5bf6ef9460b4402804ecf201e6da81e91aa2c399d569da52e1a51e97",
+  "bcm_jtrend.log": "d4f15151578377b423160d896121c0dd9a252db9b8f6b6c4f2c43ecd0b68a7be",
+  "dart_sha_ident.log": "824e255747575673edaa9977a74757e28db0aa6e8df55e342edf45ff3476d99d",
+  "dart_sel.log": "fc2eb393ebcaa4037f1d17f9c27bfa9562ccb59a6c202bc8a1012d45951c5e3c",
+  "dart_curves.log": "d558a3a31424eee994c8021a88ed135cd40536a0091fdca969af33d331d86677",
+  "dart_diag.json": "223000008900623fccfb30a3d931ee69fcf33f288cc7288a8e9726be000faf64",
+  "dart_diag.log": "6ae017aaa5a842f7c9fc8c06cc40e259343617f0c064d073e1c9041d85645456",
+  "teacher_jac.json": "b45c0b8ac632c939b17915bfbb3b850c6789a3f9b1469d080aedf3ba64403447",
+  "teacher_jac.log": "4dbf98daa41f8c49f674123c9b6a2e8017fd091b263e402abae85e917bcc201e",
+  "sigma_sha.json": "32e9f9a1a0ec793b388037210a22478ca9255c213182ffa348fc4d07cec29e49",
+  "sigma_sha.log": "ddd74ac25c3b7ae592fb577e806973ed99a8ec0f326d1e9223d1175d43234781"
+ },
+ "per_run_files": {
+  "bc/s0": "bc/s0.json",
+  "bc/s1": "bc/s1.json",
+  "bc/s2": "bc/s2.json",
+  "bc/s3": "bc/s3.json",
+  "bc/s4": "bc/s4.json",
+  "bc_state/s0": "bc_state/s0.json",
+  "bc_state/s1": "bc_state/s1.json",
+  "bc_state/s2": "bc_state/s2.json",
+  "bc_state/s3": "bc_state/s3.json",
+  "bc_state/s4": "bc_state/s4.json",
+  "bc_matched/s0": "bc_matched/s0.json",
+  "bc_matched/s1": "bc_matched/s1.json",
+  "bc_matched/s2": "bc_matched/s2.json",
+  "bc_matched/s3": "bc_matched/s3.json",
+  "bc_matched/s4": "bc_matched/s4.json",
+  "bc_dart/s0": "bc_dart/s0.json",
+  "bc_dart/s1": "bc_dart/s1.json",
+  "bc_dart/s2": "bc_dart/s2.json",
+  "bc_dart/s3": "bc_dart/s3.json",
+  "bc_dart/s4": "bc_dart/s4.json",
+  "bc_dart_tune/sigma_0.05/s0": "bc_dart_tune/sigma_0.05/s0.json",
+  "bc_dart_tune/sigma_0.10/s0": "bc_dart_tune/sigma_0.10/s0.json",
+  "bc_dart_tune/sigma_0.20/s0": "bc_dart_tune/sigma_0.20/s0.json"
+ },
+ "disagreements": [
+  {
+   "figure": "bc dA/dlast_action diagonal 0.75-0.91",
+   "p4d4": "0.75-0.91",
+   "reproduced": [
+    0.701,
+    0.91
+   ],
+   "agrees": false,
+   "note": "final EMA, heldout states; s3 z-axis is 0.701. On dart states: [0.741, 0.845]"
+  },
+  {
+   "figure": "bc_matched DART-state open-loop MSE 10-15% worse than bc",
+   "p4d4": "+10..15%",
+   "reproduced": {
+    "it5_end": [
+     0.145,
+     0.103,
+     0.155,
+     0.149,
+     0.129
+    ],
+    "selected": [
+     0.145,
+     0.103,
+     0.155,
+     0.123,
+     0.107
+    ]
+   },
+   "agrees": false,
+   "note": "max is 15.5% (s2, it5_end = selected)"
+  },
+  {
+   "figure": "BC-family lengths within 6% of the teacher's 61.5",
+   "p4d4": "<=6%",
+   "reproduced": {
+    "bc": 6.22,
+    "bc_state": 0.08,
+    "bc_matched": 2.0,
+    "bc_dart": 0.26
+   },
+   "agrees": false,
+   "note": "bc is +6.2% vs 61.47 (+6.2% vs 61.5 too)"
+  },
+  {
+   "figure": "Phase 4 measured 17.50 GPU-h vs 16.9 projected (+3.5%)",
+   "p4d4": "17.50, 16.9, +3.5%",
+   "reproduced": [
+    17.498,
+    16.8546,
+    3.82
+   ],
+   "agrees": false,
+   "note": "exact projection is 16.8546; overrun 3.82%"
+  },
+  {
+   "figure": "budget bc 3.96",
+   "p4d4": 3.96,
+   "reproduced": 3.9549,
+   "agrees": false,
+   "note": ""
+  },
+  {
+   "figure": "budget bc_matched 6.95",
+   "p4d4": 6.95,
+   "reproduced": 6.9447,
+   "agrees": false,
+   "note": ""
+  }
+ ]
+}

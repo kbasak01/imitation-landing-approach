@@ -17,9 +17,13 @@ WORKERS ?= 24
 CFG     ?= configs/train/bc.yaml
 SEED    ?= 0
 ARM     ?= bc
+# Extra flags for train-bg (e.g. ARGS="--max-steps 2000" for a P3-D1 §5 timing run, or
+# ARGS="--sigma 0.10 --tuning" for a DART trial) and select-bg (e.g. SELECT="--arm bc --seeds 0 1").
+ARGS    ?=
+SELECT  ?=
 
 .PHONY: lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
-        dagger-bg eval bench report figures gifs all
+        select-bg budget dagger-bg eval bench report figures gifs all
 
 # --- implemented ------------------------------------------------------------------
 
@@ -50,13 +54,23 @@ determinism: ; mkdir -p artifacts/runs/determinism && $(PY) scripts/determinism.
 # Pilot (foreground): $(PY) scripts/collect.py pid_1000 --limit 8 --data-root <scratch> --run-root <scratch>/runs
 # The store is never overwritten unless OVERWRITE=1 (passes --overwrite).
 collect: ; mkdir -p artifacts/runs/collect/$(COLLECTION) && $(PY) scripts/collect.py $(COLLECTION) --workers $(WORKERS) $(if $(OVERWRITE),--overwrite,)
+# Phase 4 smoke pre-flight (foreground, a few minutes): overfit the first 8 ppo_2000 train
+# episodes (action MSE < 1e-4) and land >= 7/8 closed loop -> results/phase4/smoke_<arm>.json.
+train-smoke: ; $(PY) scripts/train_smoke.py $(ARM)
+# Phase 4 training (background; prepare with /train-job). Run dir artifacts/runs/<arm>/s<seed>/
+# (status.json, manifest.json, train_log.jsonl, checkpoints/); an existing run dir resumes.
+#   mkdir -p artifacts/runs/bc/s0 && nohup make train-bg CFG=configs/train/bc.yaml SEED=0 > artifacts/runs/bc/s0/train.log 2>&1 &
+train-bg: ; $(PY) scripts/train.py $(CFG) --seed $(SEED) $(ARGS)
+# Closed-loop selection on splits/select.parquet, CPU fp32 single-sample path (background).
+#   nohup make select-bg SELECT="--arm bc --seeds 0 1 2 3 4" > artifacts/runs/bc/select.log 2>&1 &
+select-bg: ; $(PY) scripts/select.py $(SELECT)
+# P3-D1 §5 budget projection from the timing runs -> results/phase4/budget_projection.csv.
+budget: ; $(PY) scripts/budget.py
 
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.
 # Replace the stub in its own phase.
 
-train-smoke:  ; @echo "not implemented: phase 4 (ARM=$(ARM))"
-train-bg:     ; @echo "not implemented: phase 4 (CFG=$(CFG) SEED=$(SEED))"
 dagger-bg:    ; @echo "not implemented: phase 5"
 eval:         ; @echo "not implemented: phase 8"
 bench:        ; @echo "not implemented: phase 9"

@@ -1,0 +1,391 @@
+{
+ "run": "bc_state/s1",
+ "provenance": {
+  "arm": "bc_state",
+  "purpose": "train",
+  "run_seed": 1,
+  "sigma": null,
+  "state": "done",
+  "status_state": "done",
+  "global_step": 30000,
+  "total_steps": 30000,
+  "config": {
+   "path": "configs/train/bc_state.yaml",
+   "sha256": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f",
+   "frozen_sha256": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f",
+   "matches_frozen": true
+  },
+  "data_stores": [
+   {
+    "iteration_or_stage": 0,
+    "collection": "ppo_2000",
+    "sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+    "matches_expected": true
+   }
+  ],
+  "labelled_episodes_final": 1000,
+  "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4",
+  "ila_dirty": false,
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "invocations": 1,
+  "resumes": [],
+  "init_from": null,
+  "init_from_sha256": null,
+  "wall_clock_s": 155.21527777099982,
+  "gpu_hours": 0.043115354936388836,
+  "steps_per_s_loop": 209.76399679958814,
+  "gpu": "NVIDIA RTX A4000",
+  "numerics": {
+   "cudnn_allow_tf32": false,
+   "cudnn_benchmark": false,
+   "cudnn_deterministic": false,
+   "device": "cuda",
+   "float32_matmul_precision": "highest",
+   "matmul_allow_tf32": false
+  },
+  "precision": "fp32",
+  "ema": {
+   "decay": 0.999,
+   "inv_gamma": 1.0,
+   "kind": "constant",
+   "max_value": 1.0,
+   "min_value": 0.0,
+   "power": 0.0
+  },
+  "checkpoint_sha256_recomputed": {
+   "s0_step005000.pt": true,
+   "s0_step010000.pt": true,
+   "s0_step015000.pt": true,
+   "s0_step020000.pt": true,
+   "s0_step025000.pt": true,
+   "s0_step030000.pt": true,
+   "ema_last.pt": true
+  },
+  "unlisted_checkpoint_files": [],
+  "checkpoint_sha256_all_ok": true
+ },
+ "curves": {
+  "n_train_points": 300,
+  "n_heldout_points": 30,
+  "nonfinite": 0,
+  "lr_schedule_max_rel_err": 2.26e-16,
+  "stages": {
+   "0": {
+    "train_loss_first": 0.06336515426635742,
+    "train_loss_end": 2.7741801459342242e-05,
+    "train_loss_late_median": 3.00627201795578e-05,
+    "loss_spikes_3x_median10": [],
+    "grad_norm_max_overall": 0.725630521774292,
+    "grad_norm_max_late": 0.009073389694094658,
+    "heldout_ema_end": 5.755044575693115e-05,
+    "heldout_raw_end": 5.752603651176284e-05,
+    "ema_over_raw_end": 1.0004243164773454,
+    "heldout_ema_min": 5.755044575693115e-05,
+    "heldout_ema_min_step": 30000,
+    "heldout_overlap_episodes": [
+     0
+    ]
+   }
+  }
+ },
+ "selection": {
+  "rule": "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); then min global step (P3-D1 \u00a74)",
+  "weights": "ema",
+  "inference_path": "cpu_fp32_single_sample",
+  "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+  "selected_step_recorded": 20000,
+  "selected_step_recomputed": 20000,
+  "selection_correct": true,
+  "row_problems": [],
+  "candidates": [
+   {
+    "global_step": 5000,
+    "stage": 0,
+    "stage_step": 5000,
+    "success": 148,
+    "p95_closing_speed_m_s": 0.2729508490157298,
+    "outcomes": {
+     "success": 148,
+     "hard_landing": 2,
+     "bounce": 0,
+     "off_pad": 0,
+     "timeout": 0,
+     "crash": 0
+    },
+    "mean_steps": 62.1,
+    "max_steps": 72,
+    "max_closing_speed_m_s": 0.2949983023634319
+   },
+   {
+    "global_step": 10000,
+    "stage": 0,
+    "stage_step": 10000,
+    "success": 148,
+    "p95_closing_speed_m_s": 0.26904131465127484,
+    "outcomes": {
+     "success": 148,
+     "hard_landing": 2,
+     "bounce": 0,
+     "off_pad": 0,
+     "timeout": 0,
+     "crash": 0
+    },
+    "mean_steps": 61.60666666666667,
+    "max_steps": 71,
+    "max_closing_speed_m_s": 0.3107447223441848
+   },
+   {
+    "global_step": 15000,
+    "stage": 0,
+    "stage_step": 15000,
+    "success": 149,
+    "p95_closing_speed_m_s": 0.26994303700958877,
+    "outcomes": {
+     "success": 149,
+     "hard_landing": 1,
+     "bounce": 0,
+     "off_pad": 0,
+     "timeout": 0,
+     "crash": 0
+    },
+    "mean_steps": 61.553333333333335,
+    "max_steps": 68,
+    "max_closing_speed_m_s": 0.3087952584507579
+   },
+   {
+    "global_step": 20000,
+    "stage": 0,
+    "stage_step": 20000,
+    "success": 150,
+    "p95_closing_speed_m_s": 0.2729338361311143,
+    "outcomes": {
+     "success": 150,
+     "hard_landing": 0,
+     "bounce": 0,
+     "off_pad": 0,
+     "timeout": 0,
+     "crash": 0
+    },
+    "mean_steps": 61.54666666666667,
+    "max_steps": 72,
+    "max_closing_speed_m_s": 0.2958516218994272
+   },
+   {
+    "global_step": 25000,
+    "stage": 0,
+    "stage_step": 25000,
+    "success": 149,
+    "p95_closing_speed_m_s": 0.2711549123232111,
+    "outcomes": {
+     "success": 149,
+     "hard_landing": 0,
+     "bounce": 0,
+     "off_pad": 1,
+     "timeout": 0,
+     "crash": 0
+    },
+    "mean_steps": 61.373333333333335,
+    "max_steps": 70,
+    "max_closing_speed_m_s": 0.5511943444691457
+   },
+   {
+    "global_step": 30000,
+    "stage": 0,
+    "stage_step": 30000,
+    "success": 149,
+    "p95_closing_speed_m_s": 0.267673344732454,
+    "outcomes": {
+     "success": 149,
+     "hard_landing": 1,
+     "bounce": 0,
+     "off_pad": 0,
+     "timeout": 0,
+     "crash": 0
+    },
+    "mean_steps": 61.56666666666667,
+    "max_steps": 71,
+    "max_closing_speed_m_s": 0.2877974509205795
+   }
+  ],
+  "selected": {
+   "success": 150,
+   "p95_closing_speed_m_s": 0.2729338361311143,
+   "outcomes": {
+    "success": 150,
+    "hard_landing": 0,
+    "bounce": 0,
+    "off_pad": 0,
+    "timeout": 0,
+    "crash": 0
+   },
+   "mean_steps": 61.54666666666667,
+   "max_steps": 72,
+   "by_ss": {
+    "SS3": "50/50",
+    "SS4": "50/50",
+    "SS5": "50/50"
+   },
+   "failures": []
+  },
+  "candidate_success_range": [
+   148,
+   150
+  ],
+  "candidates_at_max_success": [
+   20000
+  ],
+  "winners_curse": {
+   "selected_minus_mean_candidates": 1.1666666666666572,
+   "selected_minus_final_candidate": 1
+  }
+ },
+ "openloop_diagnostics": {
+  "source": "diag2.json + teacher_jac.json (bc_state on the same 512-state samples)",
+  "J_last_action_final_ema_heldout": {
+   "diag": [
+    0.096,
+    0.106,
+    0.287
+   ],
+   "trace_over_3": 0.163,
+   "offdiag_max_abs": 0.044
+  },
+  "J_last_action_diag_teacher_jac_run": {
+   "selected_step": 20000,
+   "final_ema": {
+    "diag_heldout": [
+     0.0959,
+     0.1062,
+     0.2872
+    ],
+    "diag_dart": [
+     0.0935,
+     0.1047,
+     0.2947
+    ],
+    "tr3_heldout": 0.1631,
+    "tr3_dart": 0.1643
+   },
+   "sel_ema": {
+    "diag_heldout": [
+     0.097,
+     0.1066,
+     0.2977
+    ],
+    "diag_dart": [
+     0.095,
+     0.1062,
+     0.3042
+    ],
+    "tr3_heldout": 0.1671,
+    "tr3_dart": 0.1685
+   }
+  },
+  "input_sensitivity_by_field_final_ema_heldout": {
+   "attitude": 0.3267,
+   "body_rates": 0.3252,
+   "velocity": 0.4782,
+   "rel_position": 0.6511,
+   "rel_velocity": 0.6084,
+   "deck_normal": 0.075,
+   "rel_tilt": 0.0356,
+   "height": 0.102,
+   "time_fraction": 0.0967,
+   "last_action": 0.196,
+   "in_contact": 0.1081
+  },
+  "final_ema_heldout": {
+   "mse": 6.051157834008336e-05,
+   "frac_norm>=0.98_s/l": [
+    0.0275,
+    0.0282
+   ],
+   "frac_norm>1_s/l": [
+    0.0098,
+    0.0138
+   ],
+   "norm_mean_s/l": [
+    0.419,
+    0.4197
+   ],
+   "W1_per_comp": [
+    0.0014,
+    0.0013,
+    0.0017
+   ],
+   "std_s": [
+    0.18170000612735748,
+    0.20309999585151672,
+    0.27239999175071716
+   ],
+   "std_l": [
+    0.18150000274181366,
+    0.20309999585151672,
+    0.2736000120639801
+   ],
+   "mse_to_label_t": 5.9455349401105195e-05,
+   "mse_to_label_t-1": 0.022747905924916267,
+   "mse_to_last_action": 0.022747905924916267,
+   "frac_dS<0.25dL|dL>0.02": 0.0,
+   "mean_dS/dL": [
+    0.2125,
+    0.2129
+   ],
+   "episode_jerk_s/l": [
+    0.2125,
+    0.2129
+   ],
+   "n_frames": 1526
+  },
+  "final_ema_train": {
+   "mse": 2.4684550226083957e-05,
+   "frac_norm>=0.98_s/l": [
+    0.033,
+    0.0358
+   ],
+   "frac_norm>1_s/l": [
+    0.0165,
+    0.0201
+   ],
+   "norm_mean_s/l": [
+    0.4298,
+    0.4301
+   ],
+   "W1_per_comp": [
+    0.0009,
+    0.0008,
+    0.0011
+   ],
+   "std_s": [
+    0.18960000574588776,
+    0.19830000400543213,
+    0.2840000092983246
+   ],
+   "std_l": [
+    0.18970000743865967,
+    0.19840000569820404,
+    0.2847000062465668
+   ],
+   "mse_to_label_t": 2.431806206004694e-05,
+   "mse_to_label_t-1": 0.023562872782349586,
+   "mse_to_last_action": 0.023562872782349586,
+   "frac_dS<0.25dL|dL>0.02": 0.0,
+   "mean_dS/dL": [
+    0.2138,
+    0.214
+   ],
+   "episode_jerk_s/l": [
+    0.2138,
+    0.214
+   ],
+   "n_frames": 2486
+  }
+ },
+ "verdict": "TRUSTWORTHY",
+ "reasons": [
+  "provenance, SHA-256 and selection verified",
+  "arm caveat: select ceiling (every candidate 148-150/150)",
+  "last_action Jacobian close to the teacher's (privileged-state arm, by design)"
+ ],
+ "automatic_check_failures": []
+}

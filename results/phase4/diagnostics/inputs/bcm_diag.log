@@ -1,0 +1,35 @@
+pybullet build time: Sep 21 2026 16:29:47
+frames heldout 1526 dart 2415 6s
+  s0 it0_bc_final 37s diagJ_ho=[0.896 0.782 0.755] diagJ_dart=[0.826 0.784 0.8  ] ho_mse=2.745e-04 dart_mse=1.002e-02
+  s0 it1_end 59s diagJ_ho=[0.916 0.806 0.792] diagJ_dart=[0.848 0.806 0.84 ] ho_mse=2.497e-04
+  s0 it2_end 80s diagJ_ho=[0.934 0.827 0.811] diagJ_dart=[0.864 0.83  0.865] ho_mse=2.440e-04
+  s0 it3_end 103s diagJ_ho=[0.944 0.841 0.823] diagJ_dart=[0.873 0.847 0.877] ho_mse=2.325e-04
+  s0 it4_end 126s diagJ_ho=[0.95  0.858 0.836] diagJ_dart=[0.882 0.867 0.891] ho_mse=2.202e-04
+  s0 it5_end 154s diagJ_ho=[0.952 0.865 0.842] diagJ_dart=[0.889 0.878 0.899] ho_mse=5.964e-05 dart_mse=1.148e-02
+  s1 it0_bc_final 184s diagJ_ho=[0.878 0.774 0.751] diagJ_dart=[0.813 0.765 0.774] ho_mse=2.959e-04 dart_mse=1.013e-02
+  s1 it1_end 207s diagJ_ho=[0.903 0.796 0.782] diagJ_dart=[0.831 0.793 0.813] ho_mse=2.777e-04
+  s1 it2_end 230s diagJ_ho=[0.925 0.819 0.8  ] diagJ_dart=[0.851 0.811 0.838] ho_mse=2.595e-04
+  s1 it3_end 250s diagJ_ho=[0.936 0.836 0.815] diagJ_dart=[0.86  0.821 0.857] ho_mse=2.522e-04
+  s1 it4_end 273s diagJ_ho=[0.945 0.851 0.822] diagJ_dart=[0.87  0.834 0.875] ho_mse=2.329e-04
+  s1 it5_end 303s diagJ_ho=[0.951 0.862 0.833] diagJ_dart=[0.878 0.846 0.889] ho_mse=5.567e-05 dart_mse=1.117e-02
+  s2 it0_bc_final 335s diagJ_ho=[0.904 0.768 0.769] diagJ_dart=[0.844 0.778 0.788] ho_mse=2.762e-04 dart_mse=9.973e-03
+  s2 it1_end 356s diagJ_ho=[0.921 0.8   0.816] diagJ_dart=[0.86  0.807 0.839] ho_mse=2.526e-04
+  s2 it2_end 380s diagJ_ho=[0.939 0.829 0.846] diagJ_dart=[0.876 0.832 0.866] ho_mse=2.407e-04
+  s2 it3_end 403s diagJ_ho=[0.948 0.853 0.866] diagJ_dart=[0.887 0.847 0.894] ho_mse=2.265e-04
+  s2 it4_end 425s diagJ_ho=[0.957 0.872 0.879] diagJ_dart=[0.898 0.862 0.91 ] ho_mse=2.147e-04
+  s2 it5_end 454s diagJ_ho=[0.959 0.884 0.889] diagJ_dart=[0.902 0.874 0.922] ho_mse=5.904e-05 dart_mse=1.152e-02
+  s3 it0_bc_final 484s diagJ_ho=[0.878 0.751 0.701] diagJ_dart=[0.817 0.753 0.741] ho_mse=2.799e-04 dart_mse=9.542e-03
+  s3 it1_end 506s diagJ_ho=[0.899 0.779 0.728] diagJ_dart=[0.84  0.78  0.768] ho_mse=2.608e-04
+  s3 it2_end 527s diagJ_ho=[0.92  0.803 0.746] diagJ_dart=[0.857 0.8   0.788] ho_mse=2.508e-04
+  s3 it3_end 550s diagJ_ho=[0.933 0.821 0.762] diagJ_dart=[0.872 0.82  0.804] ho_mse=2.407e-04
+  s3 it4_end 573s diagJ_ho=[0.943 0.837 0.773] diagJ_dart=[0.878 0.836 0.82 ] ho_mse=2.229e-04
+  s3 it5_end 604s diagJ_ho=[0.945 0.848 0.78 ] diagJ_dart=[0.888 0.848 0.837] ho_mse=6.079e-05 dart_mse=1.096e-02
+  s3 it5_5k_selected 632s diagJ_ho=[0.929 0.828 0.776] diagJ_dart=[0.873 0.831 0.83 ] ho_mse=8.394e-05 dart_mse=1.072e-02
+  s4 it0_bc_final 661s diagJ_ho=[0.91  0.776 0.784] diagJ_dart=[0.845 0.776 0.784] ho_mse=2.663e-04 dart_mse=9.804e-03
+  s4 it1_end 683s diagJ_ho=[0.923 0.803 0.809] diagJ_dart=[0.857 0.802 0.816] ho_mse=2.509e-04
+  s4 it2_end 705s diagJ_ho=[0.936 0.832 0.826] diagJ_dart=[0.871 0.823 0.838] ho_mse=2.503e-04
+  s4 it3_end 726s diagJ_ho=[0.94  0.851 0.831] diagJ_dart=[0.877 0.844 0.849] ho_mse=2.319e-04
+  s4 it4_end 749s diagJ_ho=[0.946 0.865 0.836] diagJ_dart=[0.882 0.86  0.857] ho_mse=2.214e-04
+  s4 it5_end 777s diagJ_ho=[0.95  0.874 0.841] diagJ_dart=[0.885 0.871 0.871] ho_mse=5.775e-05 dart_mse=1.107e-02
+  s4 it5_5k_selected 806s diagJ_ho=[0.936 0.856 0.836] diagJ_dart=[0.873 0.853 0.863] ho_mse=7.873e-05 dart_mse=1.085e-02
+wrote /tmp/claude-1000/-home-kbasak-projects-02-imitation-landing-approach/fe7dd47a-dc95-4581-b4a2-20a0afbc331d/scratchpad/bcm_diag.json

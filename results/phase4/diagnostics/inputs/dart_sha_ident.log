@@ -1,0 +1,50 @@
+sha 0 s0_step005000.pt 5000 OK
+sha 0 s0_step010000.pt 10000 OK
+sha 0 s0_step015000.pt 15000 OK
+sha 0 s0_step020000.pt 20000 OK
+sha 0 s0_step025000.pt 25000 OK
+sha 0 s0_step030000.pt 30000 OK
+sha 0 ema_last.pt 30000 OK
+sha 0 unlisted []
+sha 1 s0_step005000.pt 5000 OK
+sha 1 s0_step010000.pt 10000 OK
+sha 1 s0_step015000.pt 15000 OK
+sha 1 s0_step020000.pt 20000 OK
+sha 1 s0_step025000.pt 25000 OK
+sha 1 s0_step030000.pt 30000 OK
+sha 1 ema_last.pt 30000 OK
+sha 1 unlisted []
+sha 2 s0_step005000.pt 5000 OK
+sha 2 s0_step010000.pt 10000 OK
+sha 2 s0_step015000.pt 15000 OK
+sha 2 s0_step020000.pt 20000 OK
+sha 2 s0_step025000.pt 25000 OK
+sha 2 s0_step030000.pt 30000 OK
+sha 2 ema_last.pt 30000 OK
+sha 2 unlisted []
+sha 3 s0_step005000.pt 5000 OK
+sha 3 s0_step010000.pt 10000 OK
+sha 3 s0_step015000.pt 15000 OK
+sha 3 s0_step020000.pt 20000 OK
+sha 3 s0_step025000.pt 25000 OK
+sha 3 s0_step030000.pt 30000 OK
+sha 3 ema_last.pt 30000 OK
+sha 3 unlisted []
+sha 4 s0_step005000.pt 5000 OK
+sha 4 s0_step010000.pt 10000 OK
+sha 4 s0_step015000.pt 15000 OK
+sha 4 s0_step020000.pt 20000 OK
+sha 4 s0_step025000.pt 25000 OK
+sha 4 s0_step030000.pt 30000 OK
+sha 4 ema_last.pt 30000 OK
+sha 4 unlisted []
+ident 5000: model maxabs=0 n_tensors_differ=0/74 | ema maxabs=0 n_tensors_differ=0/74 | optim maxabs=0 groups_equal=True | rng_equal {'torch': False, 'cuda': True} | config_equal True | meta_diff {'purpose': ('train', 'tuning')}
+ident 10000: model maxabs=0 n_tensors_differ=0/74 | ema maxabs=0 n_tensors_differ=0/74 | optim maxabs=0 groups_equal=True | rng_equal {'torch': False, 'cuda': True} | config_equal True | meta_diff {'purpose': ('train', 'tuning')}
+ident 15000: model maxabs=0 n_tensors_differ=0/74 | ema maxabs=0 n_tensors_differ=0/74 | optim maxabs=0 groups_equal=True | rng_equal {'torch': False, 'cuda': True} | config_equal True | meta_diff {'purpose': ('train', 'tuning')}
+ident 20000: model maxabs=0 n_tensors_differ=0/74 | ema maxabs=0 n_tensors_differ=0/74 | optim maxabs=0 groups_equal=True | rng_equal {'torch': False, 'cuda': True} | config_equal True | meta_diff {'purpose': ('train', 'tuning')}
+ident 25000: model maxabs=0 n_tensors_differ=0/74 | ema maxabs=0 n_tensors_differ=0/74 | optim maxabs=0 groups_equal=True | rng_equal {'torch': False, 'cuda': True} | config_equal True | meta_diff {'purpose': ('train', 'tuning')}
+ident 30000: model maxabs=0 n_tensors_differ=0/74 | ema maxabs=0 n_tensors_differ=0/74 | optim maxabs=0 groups_equal=True | rng_equal {'torch': False, 'cuda': True} | config_equal True | meta_diff {'purpose': ('train', 'tuning')}
+ident ema_last: maxabs=0 n_tensors_differ=0/74 {'purpose': ('train', 'tuning')}
+control s0 vs s1 30k ema: maxabs=0.735 n_tensors_differ=72/74
+control sigma 0.05 vs bc_dart s0 5k model: maxabs=0.269 n_tensors_differ=74/74
+control sigma 0.20 vs bc_dart s0 5k model: maxabs=0.736 n_tensors_differ=74/74

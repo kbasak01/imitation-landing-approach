@@ -1367,3 +1367,382 @@ Notes:
   of 150 `select` flips first (P3-D1 §3).
 - **Stores:** `${data_root}/demos/{ppo_2000,pid_1000,mix_1000,dart_0.05,dart_0.10,dart_0.20}.h5`.
   `old_float64/` is not part of the dataset.
+
+### P4-D1 — Training implementation choices P3-D1 leaves open (2026-10-28)
+*Decision.* The settings below are not fixed by any frozen config or by P3-D1. They are
+implementation choices within the frozen protocol, not deviations. They are recorded here before
+any training run, and every run manifest repeats them.
+1. **Proprio standardisation (vision arms).** The encoder's `proprio_mean`/`proprio_std` are
+   fitted once per run, at train start, from the allowlisted proprio of that run's own training
+   frames. They are stored in the checkpoint and restored on resume. `bc_matched` inherits the
+   values of the `bc` run it starts from.
+2. **Optimiser details.** AdamW betas (0.9, 0.999) and eps 1e-8 (torch defaults). No gradient
+   clipping; the gradient norm is logged only.
+3. **Held-out loss.**
+   - It is computed on `ppo_2000` stream indices 1950–1999. These are 50 `train`-pool episodes,
+     all `success`, read through the same student path.
+   - Plan Phase 4 item 4's "held-out `tune` demos" is **not** followed. `tune` feeds `select`
+     only (P3-D1 §2), so no `tune` episode may enter training code.
+   - These episodes are disjoint from the training episodes 0–999 by episode, but not by
+     realization: all 50 share wave realizations with training episodes. So held-out loss
+     measures generalisation within a realization.
+   - It is logged only. No selection, stopping or threshold reads it.
+   - `bc_matched` trains on these episodes from iteration 5 on. The overlap is logged, and its
+     held-out loss is contaminated from then on.
+4. **`bc_matched` warm start** (P3-D1 §3, "copies the weights and the EMA"):
+   - iteration 1 takes the same-seed `bc` run's step-30 000 raw weights as weights and its EMA as
+     EMA;
+   - each iteration resets AdamW and runs cosine with 500 warm-up steps over 10 k steps.
+5. **`dp` EMA.** It follows the `diffusion_policy` reference `EMAModel`: the first two updates
+   are copies, then decay 1 − (1 + n − 2)^−0.75, capped at 0.9999. The BC family uses a constant
+   0.999 from init, without bias correction.
+6. **Timing runs** (P3-D1 §5):
+   - they use the full config's learning-rate schedule, so they time the first 2 k steps of a real
+     run;
+   - they skip held-out loss and checkpoints, are tagged `timing`, and are refused by selection.
+7. **Run guards.** Training, tuning and timing runs refuse a dirty tree, and refuse a config whose
+   SHA-256 differs from P3-D1's.
+8. **GPU training is not bit-reproducible run to run** (cuDNN, bf16). Resume bit-identity is
+   tested on the CPU path only. An infrastructure resume (P3-D1 §4) restores RNG state, but the
+   continued GPU run is not claimed to be identical to an uninterrupted one.
+9. **`bc_state` data path.** `ila/train/state_dataset.py` reads `teacher_obs` through one
+   `AUDIT_ALLOWLIST` entry (`privileged_observations`). `privileged-leak-auditor` approved it on
+   2026-10-28, on the condition that a name scan confines `StateFrames` and `state_dataset` to
+   `train/{state_dataset,loop,smoke}.py`.
+
+*Reason.* Each item is something a reviewer would otherwise have to reverse-engineer from code.
+Item 3 also blocks a plan reading that would break P3-D1 §2.
+
+*Evidence.* `privileged-leak-auditor`, Phase 4 pre-run review, 2026-10-28: no LEAK, 1 RISK (the
+`StateFrames` name scan, fixed in code before the first run), 6 NOTEs.
+- The six stores have 0 realization-key or episode-seed overlap with `select` and with the five
+  frozen lists.
+- Every store holds SS3–SS5 only, at 45°, 135° and 180°.
+
+*Consequence.*
+- `training-run-diagnostician` reads held-out loss as within-realization.
+- Smoke runs use 8 000 (`bc`) and 10 000 (`bc_state`) steps. At 4 000 steps, the un-corrected EMA
+  still weighted the random init by 0.999^4000 ≈ 1.8 %, and actions came out about 3 % short. At
+  30 k steps that weight is about 1e-13. Only the smoke step counts changed; no frozen
+  hyper-parameter did.
+
+### P4-D2 — Training budget: projection 91.6 GPU-h, no cut (2026-10-28)
+*Decision.* **No step cut** (P3-D1 §5). The projection over every planned training run is
+**91.6 GPU-hours**, under the 120 h limit, so the cut factor is 1.0. Under P3-D1 §5, no later cut
+is allowed.
+
+*Evidence.* Timing runs at `661ed76` (clean tree), RTX A4000, 2 000 steps each, using the full
+configs' schedules. Tagged `timing`; never selected; no `select` number existed when this entry
+was written.
+
+| Run | Loop rate | Wall clock (2 k steps) | Per-run overhead |
+|---|---|---|---|
+| `dp` s0 (batch 128, bf16) | 12.79 steps/s | 168 s | 11.4 s |
+| `bc` s0 (batch 256, bf16) | 10.66 steps/s | 198 s | 10.9 s |
+| `bc_state` s0 (batch 256, fp32) | 347.7 steps/s | 11 s | 4.8 s |
+
+Projection: `results/phase4/budget_projection.csv` (SHA-256 `d5a4d1e0…4cec8980`).
+
+| Group | GPU-h |
+|---|---|
+| Phase 4: `bc_state` 0.13, `bc` 3.92, `bc_matched` iterations 1–5 6.53, DART σ trials 2.35, `bc_dart` 3.92 | 16.9 |
+| `bc_dagger` iterations 1–5 (rollouts on the CPU, not counted) | 6.5 |
+| `dp` 5 seeds × 100 k steps | 10.9 |
+| `modular` (costed as the `bc` encoder) | 3.9 |
+| Ablations: 6 `bc` × 3 seeds (14.1), 5 `dp` × 3 seeds (32.6) | 46.8 |
+| `R1_lerobot_dp` (its Phase 6 config isn't written yet; costed as `dp` at 100 k steps) | 6.5 |
+| Timing runs already spent | 0.1 |
+| **Total** | **91.6** |
+
+*Assumptions.* Selection, DAgger rollouts and evaluation run on the CPU and are not training GPU
+time. `R1` and `modular` are costed by proxy, as above. If either proxy is far off, the 28 h
+margin absorbs it. A later overrun is reported, never fixed with a second cut.
+
+*Consequence.*
+- Every arm trains at its frozen step count.
+- Measured GPU-hours per run go in each run's manifest and in the Gate 4 table.
+- Student episode lengths (P3-D1 §5, last line) are measured from the `select` flights of the
+  selected checkpoints, and re-project P2-D2's evaluation budget at Gate 4.
+
+### P4-D3 — DART σ* = 0.10, the only tuning (2026-10-28)
+*Decision.* σ* = **0.10**. `bc_dart` seeds 0–4 train on `dart_0.10`, seed 0 re-trained
+(P3-D1 §4).
+
+*Evidence.* Tuning log: three trials, `bc_dart` seed 0, 30 k steps each, at `32c8cf9`. The
+selected checkpoint of each trial (EMA weights, CPU fp32 single-sample path) was flown on the 150
+`select` episodes. Files: `results/phase4/dart_tune/selection_sigma_{0.05,0.10,0.20}.json` and
+`sigma_star.json` (SHA-256 `516b21c1…31799826`).
+
+| σ | Selected step | `select` success | Losses | p95 closing speed (m/s, model) |
+|---|---|---|---|---|
+| 0.05 | 25 000 | 149/150 | 1 bounce | 0.372 |
+| **0.10** | **30 000** | **150/150** | none | **0.322** |
+| 0.20 | 15 000 | 149/150 | 1 hard landing | 0.377 |
+
+*Caveat, stated with every DART result.*
+- σ* was decided by one `select` episode. All three trials sit at the `select` ceiling, and
+  a 150/150 vs 149/150 difference is well inside the Wilson intervals.
+- The choice is by rule, not evidence that 0.10 is better. It is final; no trial is added.
+- σ* = 0.10 is not 0.20, so P3-D1 §2's clear-colour statement for 0.20 does not apply.
+  `dart_0.10` has 24 frames with a far-plane residual (max fraction 0.148).
+
+*Consequence.* No other tuning is permitted (P3-D1 §4). The trial runs are tuning runs, never
+core seeds.
+
+### P4-D4 — Run verdicts, two corrections, measured lengths (2026-10-29)
+*Decision.* This entry records the `training-run-diagnostician` verdicts on all 23 Phase 4 runs,
+corrects P4-D1 item 8 and P4-D3, and fixes the disclosures that every later use of these arms
+carries. No run is excluded, no seed is dropped or replaced (P3-D1 §4), and no threshold changes.
+
+*Verdicts.* Every run's provenance was re-verified: config and data SHA-256, clean tree, every
+checkpoint SHA-256 recomputed against its manifest. Selection was recomputed from the rows.
+
+| Arm | Runs | Verdict | Arm-level caveat |
+|---|---|---|---|
+| `bc_dart` σ trials | 3 | TRUSTWORTHY | σ* decided by one `select` episode (P4-D3) |
+| `bc` | s0–s4 | TRUSTWORTHY | selection is noise-level (all candidates 140–149/150; winner's curse about +2 episodes); strong `last_action` reliance (∂a/∂last_action diagonal 0.75–0.91) |
+| `bc_state` | s0–s4 | TRUSTWORTHY | at the `select` ceiling (148–150 for every candidate) |
+| `bc_matched` | s0–s4 | CAVEAT (all five) | see below |
+| `bc_dart` | s1–s4 TRUSTWORTHY; s0 CAVEAT | | s0 is the tuning trial (correction 2); selection at the ceiling |
+
+**`bc_matched` caveats.** None is a defect in a run.
+- (a) Iteration 5's held-out loss is contaminated (P4-D1 item 3). The last clean point is the
+  end of iteration 4, where held-out loss is about 20 % below `bc`'s.
+- (b) `bc` → `bc_matched` changes both data (2×) and steps (+50 k). `bc`'s own
+  `last_action` reliance rises with steps alone (0.57 → 0.81 from 5 k to 30 k on s0), so this pair
+  is not a clean data-scaling contrast and is not reported as one. `bc_matched` vs `bc_dagger`
+  (H1) is matched in steps, data count and schedule, and is unaffected.
+- (c) The two candidates differ by 1–4 `select` episodes, which is within binomial noise.
+- (d) `last_action` reliance rises across iterations, from 0.78–0.82 to 0.86–0.91. On
+  DART-perturbed states, open-loop MSE is 10–15 % worse than `bc`'s, even though it is about
+  20 % better on clean states.
+- (e) In s1, the selected checkpoint goes off pad on `select` SS4 #35 at 1.234 m/s normal
+  closing speed (model scale), about 2× the fastest `bc` touchdown. It is scored as a failure.
+  It is a dive mode to watch in Phase 8.
+- Bookkeeping: checkpoint `global_step` counts this run's steps only (5 k–50 k). The candidates
+  are cumulative steps 75 k and 80 k of P3-D1's 80 k schedule.
+
+*Correction 1, P4-D1 item 8.* "GPU training is not bit-reproducible run to run" is wrong as
+observed.
+- Determinism is **not guaranteed**: non-deterministic cuDNN algorithms are allowed. But it was
+  **observed** bit-identical at a fixed seed and code on this host: A4000, bf16, TF32 off,
+  `cudnn.benchmark = False`.
+- The evidence is `bc_dart` s0 against the σ = 0.10 trial, two processes about 13 h apart.
+  Model, EMA and AdamW tensors are identical at all six checkpoints. The training logs are
+  identical at every point, and the `select` rows are identical in every column except
+  `ckpt_sha256`.
+- Training randomness is keyed by step. The saved global CPU RNG state is never consumed.
+- No Phase 4 run resumed, so the P3-D1 §4 resume rule was never exercised.
+
+*Correction 2, P4-D3.* "`bc_dart` seed 0 re-trained" and "trial runs … never core seeds" did not
+separate the two.
+- The re-training reproduced the σ = 0.10 trial bit for bit, so **`bc_dart` s0 is the model whose
+  `select` score chose σ\*** (best of 3 σ × 6 checkpoints).
+- It is kept: P3-D1 §4 forbids replacing or re-drawing a seed. Its frozen-list rows remain an
+  unbiased measurement of that model. But the 5-seed arm estimate includes one seed chosen partly
+  for looking good on `select`.
+- The evidence suggests the bias is small: seeds 1–4 score 149/150/150/150 on `select`, so s0's
+  150 is typical.
+- **Binding on Phase 8 and the README:**
+  - a footnote on every `bc_dart` row stating the above;
+  - a labelled sensitivity row giving `bc_dart`'s IQM and its scored contrast (H1 DART secondary,
+    against `bc`) on seeds 1–4 alone, reported beside the 5-seed result and never substituted for
+    it;
+  - s0's `select` number is never quoted.
+- 0.807 GPU-h went on the duplicate s0.
+
+*Measured student episode lengths* (P3-D1 §5, last line). These are the mean steps on `select`
+of the selected checkpoints, over 5 seeds:
+
+| Arm | Mean steps |
+|---|---|
+| `bc` | 65.3 (max 237) |
+| `bc_state` | 61.5 |
+| `bc_matched` | 62.7 |
+| `bc_dart` | 61.6 |
+
+- P2-D2's central evaluation projection used the teacher's 61.5. The measured BC-family lengths
+  are within 6 % of it, so the 12.2 h central estimate stands for these arms.
+- `select` is SS3–SS5. SS6 and timeouts on frozen lists can lengthen episodes toward P2-D2's
+  upper bound.
+
+*Budget.* Phase 4 measured **17.50 GPU-h** against 16.9 projected (+3.5 %).
+
+| Arm | Measured | Projected |
+|---|---|---|
+| σ trials | 2.37 | 2.35 |
+| `bc` | 3.96 | 3.92 |
+| `bc_state` | 0.21 | 0.13 |
+| `bc_matched` | 6.95 | 6.53 |
+| `bc_dart` | 4.02 | 3.92 |
+
+There is no cut and none is possible (P4-D2). Per-run values are in
+`results/phase4/runs_summary.csv` (SHA-256 `bc8dcdeb…8c26f123`).
+
+*Evidence.*
+- `results/phase4/runs/<arm>/s<n>/{manifest,selection}.json` and
+  `results/phase4/runs_summary.csv`, committed at `9074803`.
+- The diagnostician's scripts and logs are session scratch, not committed. The figures above are
+  quoted from its reports.
+
+### P4-D5 — Two user-approved readings, evidence committed, corrections to P4-D4 (2026-10-29)
+*Decision.* Both readings below were approved by the user on 2026-10-29, after the
+`results-skeptic` pre-gate review (no BLOCKING findings). Neither relaxes a threshold.
+1. **CAVEAT verdicts and the Gate 4 criterion** (interpretation). The plan says "TRUSTWORTHY on
+   each, or the run is excluded with a reason", and P3-D1 §4 says no run is excluded alone. Under
+   those rules, a CAVEAT verdict meets the gate only if all of the following hold:
+   - (i) it names no defect, so it is not a §4 bug;
+   - (ii) every caveat becomes a binding disclosure or reporting restriction;
+   - (iii) the reviewer's evidence is committed.
+
+   A caveat that implicates a code path is a §4 bug instead. That would mean fix and retrain,
+   including every arm that shares the path; for `bc_matched` this includes `bc_dagger`. The six
+   CAVEATs are `bc_matched` s0–s4 and `bc_dart` s0. Each is classified **not a bug**:
+   - `bc_matched` (a)–(e) are consequences of the design or observed behaviour (P4-D4);
+   - `bc_dart` s0's caveat is about provenance.
+2. **`bc_dart` s0 is the σ = 0.10 tuning trial** (deviation from P3-D1 §4).
+   - §4 says trials are "logged as tuning, not core seeds", and also "seed 0 included
+     (re-trained)" and "no seed … replaced or re-drawn". Because training turned out to be
+     deterministic (P4-D4 correction 1), these cannot all hold.
+   - **s0 is kept**, and seeds 0–4 stay as frozen.
+   - **Binding on Phase 8 and the README:**
+     - a footnote on every `bc_dart` row;
+     - a sensitivity row on seeds 1–4, labelled "post hoc: added after `select`, before any
+       frozen-list read". It gives the IQM and the H1 DART secondary contrast, printed beside the
+       5-seed result and never substituted for it.
+   - **H4's "best end-to-end" rule** (P3-D1 §6) uses all five seeds as frozen. The seeds 1–4 value
+     is printed beside it. This supersedes P4-D4's "s0's `select` number is never quoted"; that
+     restriction now applies only to quoting it as an estimate of performance. On the current
+     numbers, `bc_dart` ranks first either way: 149.8 on five seeds, 149.75 on seeds 1–4, against
+     146.6 for `bc` and for `bc_matched`.
+3. **P4-D1 item 3 is relabelled a deviation from the plan.** Held-out loss uses `train`
+   `ppo_2000` 1950–1999 instead of the plan's "held-out `tune` demos". P3-D1 §2 takes
+   precedence, so this is a deviation, not an open choice.
+4. **P4-D1 item 5, stated.** The constant 0.999 EMA leaves 0.999^5000 ≈ 0.7 % of the random-init
+   weights in every 5 k-step candidate. No `bc`, `bc_state` or `bc_dart` 5 k candidate was
+   selected. `bc_matched`'s 5 k candidates are iteration-5 checkpoints that started from
+   initialised weights, so this does not apply to them.
+
+*Evidence committed* (closes skeptic G1, S2, S3, S4).
+- **Diagnostics:** `results/phase4/diagnostics/`. It contains one JSON per run (verdict,
+  reasons, every quoted metric), `summary.json` (`dbc31be9…b7a84bed`, with arm-level figures and the SHA-256
+  of every script and input), the 19 scripts, and the logs they read. The scripts are kept as run, for audit. They read
+  session-scratch paths, so they are not a reproduction target.
+- **Teacher reference for copycat (S4):** the `ppo` s0 teacher's ∂a/∂last_action diagonal on the
+  same states (`inputs/teacher_jac.json` `b45c0b8a…64403447`). It was computed by central finite differences
+  (ε = 0.05, raw units), because P8's SB3 path is not differentiable here.
+
+  | Model | Diagonal (held-out `ppo_2000`) |
+  |---|---|
+  | Teacher | x 0.074, y 0.097, z 0.176 (dart_0.10 states: 0.066 / 0.090 / 0.161) |
+  | `bc_state` | x, y 0.09–0.11; z 0.25–0.29 |
+  | `bc_dart` | 0.13–0.16 |
+  | `bc` | **0.70–0.91** (about 4–10× the teacher) |
+  | `bc_matched`, end of iteration 5 | 0.78–0.96 |
+
+- **Tunnelling and detector disagreement (S2).** `selection.json` and `runs_summary.csv`
+  (`c1c0af76…0262c029`) now carry `n_tunnelled` and `n_detectors_disagree`.
+  - They were rebuilt from the stored rows by `scripts/select.py --resummarise`, with no flight.
+    Every selection reproduced exactly, `sigma_star.json` is byte-identical, and σ* is unchanged.
+  - Over all 118 candidates: 41 tunnelled, 6 disagreements. Over the 23 selected checkpoints:
+    10 tunnelled and 1 disagreement.
+  - Three flagged episodes are scored `success`, because P8 counts tunnelling without changing the
+    outcome class:
+    - tunnelled: σ = 0.05 trial, SS5 #16, and `bc_matched` s4, SS5 #16;
+    - detectors disagree: `bc_matched` s0.
+  - **P4-D4 (e) is amended:** `bc_matched` s1's 1.234 m/s off-pad touchdown (SS4 #35) also
+    tunnelled, with 15.8 mm penetration.
+  - Phase 8 prints `n_tunnelled` beside success (P8 rule).
+- **Timing manifests (S3):** `results/phase4/timing/{dp,bc,bc_state}_manifest.json`, the P4-D2
+  inputs.
+
+*Corrections to P4-D4.* Figures are reproduced from `results/phase4/diagnostics/summary.json` and
+`runs_summary.csv`.
+
+| P4-D4 said | Correct value |
+|---|---|
+| `bc` ∂a/∂last_action diagonal 0.75–0.91 | **0.70–0.91** |
+| `bc_matched` 10–15 % worse on DART states | **10–16 %** (+10.3 to +15.5 %) |
+| BC-family lengths "within 6 %" of 61.5 | `bc` is **+6.2 %** (65.29 against P2-D2's exact 61.47); `bc_state` +0.1 %, `bc_matched` +2.0 %, `bc_dart` +0.3 %. The central evaluation estimate stands for `bc_state`, `bc_matched` and `bc_dart`; `bc` runs about 6 % over it |
+| Budget: `bc` 3.96, `bc_matched` 6.95 GPU-h | **3.95** and **6.94** |
+| Phase 4 total +3.5 % | **+3.82 %** (17.498 against 16.855) |
+| `runs_summary.csv` SHA-256 | superseded by `c1c0af76…0262c029` above, which adds the two columns; every earlier field is byte-identical |
+
+- **Winner's curse** (selected minus the mean over each seed's candidates, averaged over seeds):
+
+  | Arm | Episodes |
+  |---|---|
+  | `bc` | +2.33 |
+  | `bc_state` | +0.7 |
+  | `bc_matched` | +1.2 |
+  | `bc_dart` | +1.07 |
+  | σ trials | +1.28 |
+
+- **Open-loop against closed-loop**, reported with H1's DART secondary. `bc_dart`'s open-loop MSE
+  on clean teacher states is 31–62 % above `bc`'s, yet it is better closed-loop on `select`.
+
+*Notes on the record.*
+- The 4 k-step smoke behind P4-D1's "3 % short" has no committed artifact; its file was overwritten.
+- `bc_matched` manifests record `init_from` and its SHA-256, but not the normaliser values. Those
+  are inherited bit-identically from `bc` s<n>'s manifest (verified by the diagnostician).
+- No teacher row on `select` is committed, so "at the `select` ceiling" is relative to 150/150,
+  not to the teacher.
+- `bc_matched`'s lowest-step tie-break uses run-local steps, which preserves the order.
+
+### Gate 4 passed (2026-10-29)
+
+| Criterion (plan Phase 4 exit gate; P3-D1 §4, §5; P4-D5) | Evidence | Verdict |
+|---|---|---|
+| `make lint` / `make test` | ruff and format clean; `mypy --strict` 60 files; **643 passed** in 264.5 s, all markers, at `b4ae711` | PASS |
+| Smoke: overfit 8 episodes to MSE < 1e-4, land ≥ 7/8 | `results/phase4/smoke_bc.json`: MSE 8.9e-7, 8/8. `smoke_bc_state.json`: MSE 5.7e-7, 8/8. Replay 4/4 identical against a fresh teacher rollout. Code at `63750c1` | PASS |
+| Every run present with a manifest (config SHA, data SHA, checkpoint SHA, wall clock) | 23 runs in `results/phase4/runs/**/manifest.json`. Config and data SHA-256 match P3-D1, every tree was clean, and there were no resumes. Every checkpoint SHA-256 was recomputed by the diagnostician and by `results-skeptic` | PASS |
+| Diagnostician TRUSTWORTHY on each, or excluded with a reason | 17 TRUSTWORTHY and 6 CAVEAT (`bc_matched` s0–s4, `bc_dart` s0). Each CAVEAT is classified "not a bug" and carries binding disclosures. They meet the criterion under the user-approved reading in P4-D5 item 1 (2026-10-29). No run is excluded. Evidence: `results/phase4/diagnostics/` | PASS (under P4-D5 item 1) |
+| Selection on `select` only | `select.parquet` `07ecf049…422b`, CPU fp32 single-sample path, EMA weights. `results-skeptic` recomputed all 118 candidates and found no student row on a frozen list | PASS |
+| Only tuning = DART σ, 3 trials, logged | P4-D3, σ\* = 0.10. `bc_dart` s0 = the trial, a deviation approved by the user (P4-D5 item 2) | PASS |
+| Budget rule before any `select` number; GPU-hours per run in the budget entry | P4-D2 (no cut) was committed at 11:03 on 2026-10-28. The first `select` row was written at 13:37. Per-run GPU-hours are in `results/phase4/runs_summary.csv`; Phase 4 totals 17.50 GPU-h (P4-D4, as corrected in P4-D5) | PASS |
+
+Reviewers:
+- `privileged-leak-auditor` (pre-run): no LEAK, 1 RISK, which was fixed before the first run (P4-D1).
+- `training-run-diagnostician`: all 23 runs (P4-D4, P4-D5).
+- `results-skeptic` round 1: no BLOCKING; 2 gate-procedural items, 4 SHOULD-FIX, 7 NOTEs.
+- `results-skeptic` round 2: no BLOCKING. All four of its CAVEAT conditions met, and every round-1 item closed, with the two wording fixes below.
+
+**Corrections recorded here** (entries are not edited):
+- P4-D5 says "over the 23 selected checkpoints: 10 tunnelled". The committed figure is **9**:
+  `bc` s0, s3 and s4 (1 each), the σ = 0.05 trial (1), and `bc_matched` s1 (2), s3 (2) and s4 (1).
+  This is the sum of `n_tunnelled` in `runs_summary.csv`. The disagreement count of 1 is correct.
+- P4-D5 says "`bc_dart`'s open-loop MSE on clean teacher states is 31–62 % above `bc`'s". The
+  committed ratio is **+131–162 %** (2.3–2.6×; `summary.json`,
+  `openloop_mse_comparisons_vs_bc_final_ema`). On DART states the same ratio is about −95 %.
+- In P4-D5's teacher-reference table, `bc_dart` on held-out states is **0.125–0.153**. The 0.16
+  is its upper value on DART states.
+- `bc` relative to the teacher is **about 4–12× per axis**, not "4–10×".
+- The 15.8 mm penetration of `bc_matched` s1's dive is read from the uncommitted select row
+  (`artifacts/runs/bc_matched/s1/select/s5_step010000_rows.csv`, `max_penetration_m` −0.01576).
+  No committed file holds it.
+
+Incidents:
+- `bc_dart` s0 reproduced the σ = 0.10 trial bit for bit (P4-D4 correction 1, P4-D5 item 2).
+- No threshold was relaxed.
+- The reproduction gate was not re-run. Phase 4 changed nothing under `ila/render/`,
+  `ila/eval/runner.py` or the adapter.
+
+## Phase 5
+
+*Before you start (from Phase 4).*
+- **Shared code path.** `bc_dagger` reuses `bc_matched`'s iteration driver in `ila/train/loop.py`:
+  warm start, normaliser inheritance, stage data. A bug found there is a P3-D1 §4 bug for both
+  arms (P4-D5 item 1).
+- **Iteration 0.** It is `bc/s<n>/checkpoints/s0_step030000.pt`; the `bc_matched` manifests record
+  its SHA-256. Rollouts fly the EMA at the last step of the previous iteration, on the CPU fp32
+  single-sample path.
+- **Determinism.** GPU training was observed bit-identical at a fixed seed and code (P4-D4
+  correction 1). A DAgger re-run with unchanged code will reproduce, not resample.
+- **Copycat.** `bc`'s ∂a/∂last_action is 0.70–0.91 against the teacher's 0.07–0.18 (P4-D5). Report
+  it per DAgger iteration beside teacher agreement on the student's own states. DAgger rollouts
+  break the `last_action[t] = label[t−1]` identity that demos have.
+- **Report** `n_tunnelled` and `n_detectors_disagree` with every `select` result.
+- **Budget.** `bc_dagger` is projected at 6.5 GPU-h plus CPU rollouts (P4-D2). `bc_matched` ran
+  6.4 % over its projection.
+- **Watch items for Phase 8.** `bc_matched` s1's tunnelled 1.234 m/s off-pad dive. `bc`'s
+  slow-landing tail (max 237 steps on `select`).

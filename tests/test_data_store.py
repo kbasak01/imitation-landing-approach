@@ -14,11 +14,13 @@ P1-D2 obligations covered here:
 
 ``STUDENT_BATCHERS`` is the list every student dataset/batch builder must join; both obligations
 are parametrised over it. Every class defined in ``ila.train.dataset`` (Phase 4) must be registered
-in ``STUDENT_DATASET_CLASSES``, except the one named in ``BC_STATE_DATASET_CLASS`` (``bc_state``
-takes P8's 25-d observation by design and is covered by its own allowlist entry in
-``tests/test_render_access.py``). ``test_every_train_dataset_class_is_registered`` enforces this;
-it is an expected failure (xfail, strict=False, reason "Phase 4 must register ...") until the
-module defines a class, and a hard failure from then on.
+in ``STUDENT_DATASET_CLASSES``, except the one named in ``BC_STATE_DATASET_CLASS``.
+``test_every_train_dataset_class_is_registered`` enforces this (a hard test since Phase 4).
+Phase 4 keeps ``bc_state``'s dataset (P8's 25-d observation, privileged by design) **out** of
+``ila.train.dataset``: it is ``ila.train.state_dataset.StateFrames``, the only file with an
+``AUDIT_ALLOWLIST`` entry in ``tests/test_render_access.py``, so ``BC_STATE_DATASET_CLASS`` is
+``None`` and every class of ``ila.train.dataset`` is a registered student batcher
+(``test_bc_state_dataset_lives_apart`` pins the split).
 
 The windowed contract Phase 4's dataset must satisfy (each registered adapter returns, for one
 episode, its samples stacked along a leading axis):
@@ -42,6 +44,7 @@ episode, its samples stacked along a leading axis):
 
 from __future__ import annotations
 
+import ast
 import dataclasses
 import importlib
 import inspect
@@ -57,6 +60,7 @@ import pytest
 from ila.data import store as st
 from ila.eval.runner import render_cfg_sha256
 from ila.obs.split import CLOCK_FIELD, NEVER_STUDENT, load_contract
+from ila.train.dataset import BCWindowDataset, DPChunkDataset, FrameTable
 
 CONTRACT = load_contract()
 CAMERA = render_cfg_sha256("full", None)
@@ -174,12 +178,32 @@ def _expected_proprio(obs: np.ndarray, variant: str) -> np.ndarray:
     return np.concatenate([CONTRACT.audit_field(obs, f) for f in fields], axis=-1)
 
 
-#: Phase 4: every dataset/batch class of ``ila.train.dataset`` -> an adapter ``Batcher`` building
-#: one episode's samples with it (windowed contract in the module docstring). Empty in Phase 3.
-STUDENT_DATASET_CLASSES: dict[str, Batcher] = {}
+#: ``To`` and ``Tp`` of the registered adapters (the contract's and ``dp.yaml``'s).
+TO, TP = CONTRACT.n_obs_steps, 16
 
-#: Phase 4: the name of the ``bc_state`` dataset class (privileged 25-d input by design), the
-#: only class of ``ila.train.dataset`` exempt from ``STUDENT_DATASET_CLASSES``.
+
+def _frame_table_batch(store: st.DemoStore, name: str, variant: str) -> dict[str, np.ndarray]:
+    return dict(FrameTable.from_store(store, [name], variant).frames(name))
+
+
+def _bc_window_batch(store: st.DemoStore, name: str, variant: str) -> dict[str, np.ndarray]:
+    return dict(BCWindowDataset.episode_samples(store, name, variant, n_obs_steps=TO))
+
+
+def _dp_chunk_batch(store: st.DemoStore, name: str, variant: str) -> dict[str, np.ndarray]:
+    return dict(DPChunkDataset.episode_samples(store, name, variant, n_obs_steps=TO, horizon=TP))
+
+
+#: Phase 4: every dataset/batch class of ``ila.train.dataset`` -> an adapter ``Batcher`` building
+#: one episode's samples with it (windowed contract in the module docstring).
+STUDENT_DATASET_CLASSES: dict[str, Batcher] = {
+    "FrameTable": _frame_table_batch,
+    "BCWindowDataset": _bc_window_batch,
+    "DPChunkDataset": _dp_chunk_batch,
+}
+
+#: The ``bc_state`` dataset class exempt from ``STUDENT_DATASET_CLASSES`` if it lived in
+#: ``ila.train.dataset``. It does not (``ila.train.state_dataset``), so nothing is exempt.
 BC_STATE_DATASET_CLASS: str | None = None
 
 STUDENT_BATCHERS: list[Batcher] = [_store_path_batch, *STUDENT_DATASET_CLASSES.values()]
@@ -201,20 +225,36 @@ def _train_dataset_classes() -> set[str]:
 _TRAIN_DATASET_CLASSES = _train_dataset_classes()
 
 
-@pytest.mark.xfail(
-    not _TRAIN_DATASET_CLASSES,
-    reason=(
-        "Phase 4 must register every dataset/batch class of ila.train.dataset in "
-        "STUDENT_DATASET_CLASSES (tests/test_data_store.py); the module defines none yet"
-    ),
-    strict=False,
-)
 def test_every_train_dataset_class_is_registered() -> None:
     assert _TRAIN_DATASET_CLASSES, "ila.train.dataset defines no dataset class yet"
     expected = _TRAIN_DATASET_CLASSES - {BC_STATE_DATASET_CLASS}
     assert set(STUDENT_DATASET_CLASSES) == expected
     if BC_STATE_DATASET_CLASS is not None:
         assert BC_STATE_DATASET_CLASS in _TRAIN_DATASET_CLASSES
+
+
+def test_bc_state_dataset_lives_apart() -> None:
+    """``bc_state``'s privileged dataset: one class in its own module, unused by the vision one."""
+    module = importlib.import_module("ila.train.state_dataset")
+    own = {
+        n for n, o in inspect.getmembers(module, inspect.isclass) if o.__module__ == module.__name__
+    }
+    assert own == {"StateFrames"}
+    tree = ast.parse(Path(importlib.import_module("ila.train.dataset").__file__ or "").read_text())
+    imported = {
+        m
+        for n in ast.walk(tree)
+        for m in (
+            [a.name for a in n.names]
+            if isinstance(n, ast.Import)
+            else [n.module or "", *(a.name for a in n.names)]
+            if isinstance(n, ast.ImportFrom)
+            else []
+        )
+    }
+    names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    assert not any("state_dataset" in m or m == "StateFrames" for m in imported)
+    assert "StateFrames" not in names
 
 
 # --------------------------------------------------------------------------- schema
@@ -408,10 +448,26 @@ def test_variant_proprio_columns(store_path: Path, variant: str) -> None:
                 assert p.tobytes() == stored.tobytes()
 
 
+def _window(t: int, to: int) -> list[int]:
+    """Observation steps at anchor ``t``, written out independently of ``chunking``."""
+    return [max(0, t - to + 1 + i) for i in range(to)]
+
+
+def _chunk(t: int, to: int, tp: int, t_len: int) -> list[int]:
+    """Target steps of a chunk anchored at ``t``, independently of ``chunking``."""
+    return [min(max(t - to + 1 + j, 0), t_len - 1) for j in range(tp)]
+
+
 @pytest.mark.parametrize("variant", VARIANTS)
 @pytest.mark.parametrize("batcher", STUDENT_BATCHERS)
 def test_exact_student_columns(store_path: Path, batcher: Batcher, variant: str) -> None:
-    """Every student batch carries pixels, the variant's proprio columns and the label."""
+    """Every student batch carries pixels, the variant's proprio and the label (windowed contract).
+
+    A frame-level batcher returns ``images (T, 96, 96, 3)``, ``proprio (T, D)``, ``target (T, 3)``
+    (``To = 1``). A windowed one returns ``images (T, To, 96, 96, 3)``, ``proprio (T, To, D)`` at
+    steps ``t-To+1 .. t`` (first-frame padding) and ``target`` ``label[t]`` (BC, ``(T, 3)``) or
+    the edge-repeated chunk ``label[t-To+1 .. t-To+Tp]`` (Diffusion Policy, ``(T, Tp, 3)``).
+    """
     width = load_contract(variant=variant).proprio_dim
     with st.DemoStore(store_path) as s:
         for name in s.episodes():
@@ -419,14 +475,40 @@ def test_exact_student_columns(store_path: Path, batcher: Batcher, variant: str)
             assert set(batch) == {"images", "proprio", "target"}
             arrays = s.audit_arrays(name)
             t_len = arrays["label"].shape[0]
-            assert batch["images"].shape == (t_len, 96, 96, 3)
-            assert batch["images"].dtype == np.uint8
-            assert batch["proprio"].shape == (t_len, width)
-            np.testing.assert_array_equal(batch["images"], arrays["images"])
-            np.testing.assert_array_equal(
-                batch["proprio"], _expected_proprio(arrays["teacher_obs"], variant)
-            )
-            np.testing.assert_array_equal(batch["target"], arrays["label"])
+            proprio = _expected_proprio(arrays["teacher_obs"], variant)
+            images, prop, target = batch["images"], batch["proprio"], batch["target"]
+            assert images.dtype == np.uint8 and prop.dtype == np.float32
+            if images.ndim == 4:  # frame level
+                images, prop = images[:, None], prop[:, None]
+            to = images.shape[1]
+            assert images.shape == (t_len, to, 96, 96, 3)
+            assert prop.shape == (t_len, to, width)
+            for t in range(t_len):
+                np.testing.assert_array_equal(images[t], arrays["images"][_window(t, to)])
+                np.testing.assert_array_equal(prop[t], proprio[_window(t, to)])
+            if target.ndim == 2:
+                np.testing.assert_array_equal(target, arrays["label"])
+            else:
+                tp = target.shape[1]
+                assert target.shape == (t_len, tp, 3)
+                for t in range(t_len):
+                    np.testing.assert_array_equal(
+                        target[t], arrays["label"][_chunk(t, to, tp, t_len)]
+                    )
+
+
+def test_windowed_batchers_are_windowed(store_path: Path) -> None:
+    """The registered windowed adapters really pad and chunk (``To = 2``, ``Tp = 16``)."""
+    with st.DemoStore(store_path) as s:
+        name = s.episodes()[2]  # 7 steps < Tp: the chunk's tail is edge-repeated
+        bc = _bc_window_batch(s, name, "default")
+        dp = _dp_chunk_batch(s, name, "default")
+        label = s.labels(name)
+    assert bc["images"].shape[:2] == (7, 2) and dp["target"].shape == (7, 16, 3)
+    np.testing.assert_array_equal(bc["images"][0, 0], bc["images"][0, 1])  # t = 0 padded
+    np.testing.assert_array_equal(dp["target"][0, 0], label[0])  # step -1 -> label[0]
+    np.testing.assert_array_equal(dp["target"][3, 1], label[3])  # index To-1 is step t
+    np.testing.assert_array_equal(dp["target"][3, -1], label[6])  # past T-1 -> label[T-1]
 
 
 @pytest.mark.parametrize("variant", VARIANTS)

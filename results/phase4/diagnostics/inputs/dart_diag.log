@@ -1,0 +1,21 @@
+pybullet build time: Sep 21 2026 16:29:47
+frames heldout 1526 dart(train) 2415
+s0 cpu-rng state equal 5k vs 30k: True; first 16 bytes [80, 43, 137, 3, 160, 142, 152, 251, 1, 0, 0, 0, 1, 0, 0, 0]
+s1 cpu-rng state equal 5k vs 30k: True; first 16 bytes [87, 40, 143, 0, 25, 214, 195, 56, 1, 0, 0, 0, 1, 0, 0, 0]
+s2 cpu-rng state equal 5k vs 30k: True; first 16 bytes [206, 30, 61, 180, 11, 71, 13, 221, 1, 0, 0, 0, 1, 0, 0, 0]
+s3 cpu-rng state equal 5k vs 30k: True; first 16 bytes [122, 255, 247, 104, 68, 80, 216, 212, 1, 0, 0, 0, 1, 0, 0, 0]
+s4 cpu-rng state equal 5k vs 30k: True; first 16 bytes [133, 136, 120, 240, 52, 107, 27, 165, 1, 0, 0, 0, 1, 0, 0, 0]
+  s0 sel_ema 46s diagJ_ho=[0.149 0.146 0.137] diagJ_dart=[0.153 0.152 0.14 ] ho_mse=6.947e-04 dart_mse=4.580e-04
+  s0 final_raw 84s diagJ_ho=[0.149 0.146 0.137] diagJ_dart=[0.153 0.152 0.14 ] ho_mse=6.948e-04 dart_mse=4.576e-04
+  s1 sel_ema 126s diagJ_ho=[0.151 0.148 0.14 ] diagJ_dart=[0.152 0.154 0.146] ho_mse=6.832e-04 dart_mse=5.149e-04
+  s1 final_ema 172s diagJ_ho=[0.149 0.146 0.141] diagJ_dart=[0.15  0.152 0.145] ho_mse=6.635e-04 dart_mse=4.518e-04
+  s1 final_raw 219s diagJ_ho=[0.149 0.146 0.141] diagJ_dart=[0.15  0.152 0.145] ho_mse=6.634e-04 dart_mse=4.517e-04
+  s2 sel_ema 264s diagJ_ho=[0.149 0.147 0.129] diagJ_dart=[0.154 0.154 0.128] ho_mse=6.659e-04 dart_mse=4.487e-04
+  s2 final_raw 310s diagJ_ho=[0.149 0.147 0.129] diagJ_dart=[0.154 0.154 0.129] ho_mse=6.655e-04 dart_mse=4.487e-04
+  s3 sel_ema 358s diagJ_ho=[0.15  0.147 0.125] diagJ_dart=[0.156 0.157 0.128] ho_mse=7.189e-04 dart_mse=6.235e-04
+  s3 final_ema 400s diagJ_ho=[0.145 0.147 0.128] diagJ_dart=[0.148 0.154 0.13 ] ho_mse=6.803e-04 dart_mse=4.603e-04
+  s3 final_raw 438s diagJ_ho=[0.145 0.147 0.128] diagJ_dart=[0.148 0.154 0.13 ] ho_mse=6.798e-04 dart_mse=4.602e-04
+  s4 sel_ema 480s diagJ_ho=[0.153 0.151 0.134] diagJ_dart=[0.159 0.152 0.136] ho_mse=6.983e-04 dart_mse=5.128e-04
+  s4 final_ema 518s diagJ_ho=[0.15  0.15  0.133] diagJ_dart=[0.157 0.15  0.133] ho_mse=6.865e-04 dart_mse=4.482e-04
+  s4 final_raw 557s diagJ_ho=[0.15  0.15  0.133] diagJ_dart=[0.157 0.15  0.133] ho_mse=6.865e-04 dart_mse=4.478e-04
+wrote /tmp/claude-1000/-home-kbasak-projects-02-imitation-landing-approach/fe7dd47a-dc95-4581-b4a2-20a0afbc331d/scratchpad/dart_diag.json

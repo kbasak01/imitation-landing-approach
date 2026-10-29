@@ -84,11 +84,40 @@ def test_dp_entry_points_exist() -> None:
     assert {"DiffusionPolicyNet.sample", "DiffusionPolicyNet.predict_noise"} <= names
 
 
+def test_ddpm_loss_signature() -> None:
+    """The DDPM training objective takes the batch, epsilon and the diffusion index only.
+
+    ``noise`` and ``timestep`` come from the data-loading generator (P2-D3 item 4); the only
+    integer is the diffusion index k. No clock, no episode seed, no ``**kwargs``.
+    """
+    params = list(inspect.signature(dpp.ddpm_loss).parameters)
+    assert params == ["net", "images", "proprio", "target", "noise", "timestep", "crop_generator"]
+    assert set(params) - {"net", "target"} <= ALLOWED_PARAMS
+
+
+def test_state_mlp_is_the_declared_exception() -> None:
+    """``bc_state``'s MLP takes P8's 25-d ``obs`` (declared exception 3) and nothing else.
+
+    ``obs`` is never an allowed parameter of a vision network, and no vision network contains a
+    ``StateMLP``.
+    """
+    from ila.policies.state_mlp import StateMLP
+
+    params = [p for p in inspect.signature(StateMLP.forward).parameters if p != "self"]
+    assert params == ["obs"]
+    assert "obs" not in ALLOWED_PARAMS
+    for arm in ("bc", "dp"):
+        net = build_dummy(arm, 0).net
+        assert not any(isinstance(m, StateMLP) for m in net.modules())
+
+
 #: Every ``nn.Module`` subclass defined under ``ila.policies``, reviewed. ``entry``: its
 #: ``forward`` is in :func:`_entry_points` (signature allowlisted). ``internal``: reached only
 #: from an entry point's forward, with the argument named here, so it sees nothing the entry
-#: point did not. A new network fails :func:`test_policy_networks_are_reviewed` until it is
-#: added here, and an ``entry`` must also join ``_entry_points``.
+#: point did not. ``state``: ``bc_state``'s MLP, P8's 25-d observation by design (P3-D1 §3,
+#: declared exception 3), checked by :func:`test_state_mlp_is_the_declared_exception`. A new
+#: network fails :func:`test_policy_networks_are_reviewed` until it is added here, and an
+#: ``entry`` must also join ``_entry_points``.
 REVIEWED_MODULES: dict[str, str] = {
     "ila.policies.bc.BCNet": "entry",
     "ila.policies.encoder.VisionEncoder": "entry",
@@ -99,6 +128,7 @@ REVIEWED_MODULES: dict[str, str] = {
     "ila.policies.dp.unet1d.ConditionalResidualBlock1D": (
         "internal: ConditionalUnet1D.forward (sample, FiLM of timestep embedding + global_cond)"
     ),
+    "ila.policies.state_mlp.StateMLP": "state: forward(obs), P8's 25-d observation (bc_state)",
 }
 
 
@@ -219,7 +249,7 @@ def test_dp_inputs_and_actions_do_not_depend_on_episode_seed_or_step(
 def _registry_arms() -> list[str]:
     from ila.policies.registry import REGISTRY
 
-    return sorted(REGISTRY)
+    return sorted(a for a, e in REGISTRY.items() if e.is_vision)
 
 
 @pytest.mark.parametrize("arm", _registry_arms())

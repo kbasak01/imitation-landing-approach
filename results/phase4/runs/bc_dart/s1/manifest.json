@@ -1,0 +1,335 @@
+{
+  "arm": "bc_dart",
+  "batch_size": 256,
+  "checkpoint_every_override": null,
+  "checkpoints": [
+    {
+      "bytes": 181401307,
+      "file": "s0_step005000.pt",
+      "global_step": 5000,
+      "kind": "full",
+      "sha256": "bbc125a6bea34079851162f81ca0447a15d93b7407ea5a899be9c6f39441e141",
+      "stage": 0,
+      "stage_step": 5000
+    },
+    {
+      "bytes": 181401307,
+      "file": "s0_step010000.pt",
+      "global_step": 10000,
+      "kind": "full",
+      "sha256": "80f34251d1c29ffa22cd63c3e84033bc64e5dc3c53a2697ad2712454c312431c",
+      "stage": 0,
+      "stage_step": 10000
+    },
+    {
+      "bytes": 181401307,
+      "file": "s0_step015000.pt",
+      "global_step": 15000,
+      "kind": "full",
+      "sha256": "5348dfb69196022034ee5b70f9df37b7869d0ca8fa78a5fe5265029cad765090",
+      "stage": 0,
+      "stage_step": 15000
+    },
+    {
+      "bytes": 181401307,
+      "file": "s0_step020000.pt",
+      "global_step": 20000,
+      "kind": "full",
+      "sha256": "f4c8a83f4eba109a6a3efb4c50d93ab305e14c46d2ce266df34438a35f7c7bd5",
+      "stage": 0,
+      "stage_step": 20000
+    },
+    {
+      "bytes": 181401307,
+      "file": "s0_step025000.pt",
+      "global_step": 25000,
+      "kind": "full",
+      "sha256": "af32bfe6f9683148439f4e384d21a8c5e4c21d0fc6016e7f1cf235de9783d46a",
+      "stage": 0,
+      "stage_step": 25000
+    },
+    {
+      "bytes": 181401307,
+      "file": "s0_step030000.pt",
+      "global_step": 30000,
+      "kind": "full",
+      "sha256": "f66d3cb15bf8eac2f6cfeb47d988c9f758e2e63fb8ad7d4be00143c146677610",
+      "stage": 0,
+      "stage_step": 30000
+    },
+    {
+      "bytes": 45346005,
+      "file": "ema_last.pt",
+      "global_step": 30000,
+      "kind": "ema_last",
+      "sha256": "316fb257bd9b6e4b048188819dd587348c3ab38d634444f6343d57a43ab797d3",
+      "stage": 0,
+      "stage_step": 30000
+    }
+  ],
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "5dff64bf8b951dfcd3d5c740fe68a1e85a219bfc3c286a3f2424d418b5a60c02",
+        "matches": true,
+        "path": "configs/train/bc_dart.yaml",
+        "sha256": "5dff64bf8b951dfcd3d5c740fe68a1e85a219bfc3c286a3f2424d418b5a60c02"
+      }
+    ]
+  },
+  "config_resolved": {
+    "arm": "bc_dart",
+    "augment": {
+      "crop": {
+        "eval": "center",
+        "size": 88,
+        "train": "random"
+      }
+    },
+    "batch_size": 256,
+    "checkpoint_every": 5000,
+    "data": {
+      "collection": "dart",
+      "first_n": 1000,
+      "sigma": "selected_on_select"
+    },
+    "ema": 0.999,
+    "encoder": {
+      "groups": 16,
+      "norm": "groupnorm",
+      "pretrained": false,
+      "spatial_softmax_keypoints": 32,
+      "trunk": "resnet18"
+    },
+    "head": {
+      "activation": "tanh",
+      "hidden": [
+        256,
+        256
+      ],
+      "out": 3
+    },
+    "loss": "mse",
+    "optim": {
+      "lr": 0.0003,
+      "name": "adamw",
+      "schedule": "cosine",
+      "warmup_steps": 500,
+      "weight_decay": 0.0001
+    },
+    "precision": "bf16",
+    "proprio_mlp": [
+      64,
+      64
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "selection": {
+      "list": "select",
+      "metric": "success",
+      "tie_break": [
+        "p95_closing_speed",
+        "lowest_step"
+      ]
+    },
+    "steps": 30000,
+    "success_filter": false
+  },
+  "data": {
+    "0": {
+      "choices": [
+        {
+          "attempted": 1000,
+          "first_kept": 0,
+          "kept": 1000,
+          "kept_fraction": 1.0,
+          "last_kept": 999,
+          "outcomes": {
+            "bounce": 242,
+            "hard_landing": 5,
+            "off_pad": 2,
+            "success": 751
+          },
+          "start": 0,
+          "store": "/home/kbasak/data/ila/demos/dart_0.10.h5",
+          "success_filter": false
+        }
+      ],
+      "data_load_s": 11.968575909006177,
+      "heldout_frames": 3067,
+      "heldout_overlap_episodes": 0,
+      "kept_episodes": 1000,
+      "labelled_episodes": 1000,
+      "labelled_episodes_total": 1000,
+      "stage": 0,
+      "stores": [
+        {
+          "collection": "dart_0.10",
+          "expected_sha256": "7c0a1210f729f99c1a63255ff32dd9fcdd53678071809b5a93b7635caaee6902",
+          "matches": true,
+          "path": "/home/kbasak/data/ila/demos/dart_0.10.h5",
+          "sha256": "7c0a1210f729f99c1a63255ff32dd9fcdd53678071809b5a93b7635caaee6902"
+        }
+      ],
+      "train_frames": 60907
+    }
+  },
+  "ema": {
+    "decay": 0.999,
+    "inv_gamma": 1.0,
+    "kind": "constant",
+    "max_value": 1.0,
+    "min_value": 0.0,
+    "power": 0.0
+  },
+  "finished_unix": 1793256761.1118166,
+  "first_n_override": null,
+  "git": {
+    "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "global_step": 30000,
+  "gpu_hours": 0.8025931399005559,
+  "gpu_mem_max_bytes": 2436262400,
+  "heldout": {
+    "collection": "ppo_2000",
+    "n": 50,
+    "start": 1950
+  },
+  "host": {
+    "cpu": "x86_64",
+    "cpu_count": 36,
+    "cuda": "13.0",
+    "device": "cuda",
+    "gpu": "NVIDIA RTX A4000",
+    "gpu_memory_bytes": 17170956288,
+    "hostname": "DATTA-BASAK",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130"
+  },
+  "init_from": null,
+  "invocations": [
+    {
+      "git": {
+        "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4",
+        "ila_dirty": false,
+        "ila_dirty_paths": [],
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+      },
+      "host": {
+        "cpu": "x86_64",
+        "cpu_count": 36,
+        "cuda": "13.0",
+        "device": "cuda",
+        "gpu": "NVIDIA RTX A4000",
+        "gpu_memory_bytes": 17170956288,
+        "hostname": "DATTA-BASAK",
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130"
+      },
+      "numerics": {
+        "cudnn_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": false,
+        "device": "cuda",
+        "float32_matmul_precision": "highest",
+        "matmul_allow_tf32": false
+      },
+      "unix": 1793253719.763392
+    }
+  ],
+  "kind": "bc",
+  "loop_s_total": 2876.931995106017,
+  "max_steps": null,
+  "normaliser": {
+    "proprio_mean": [
+      -0.0018271987792104483,
+      -0.003390168771147728,
+      0.0028928364627063274,
+      -0.0073721399530768394,
+      -0.0010630431352183223,
+      0.007939890027046204,
+      0.004981104750186205,
+      -0.003959698602557182,
+      -0.38783809542655945,
+      -0.009062792174518108,
+      0.03828295320272446,
+      -0.3021804690361023,
+      0.20675784349441528
+    ],
+    "proprio_std": [
+      0.08032690733671188,
+      0.09339193254709244,
+      0.04201933741569519,
+      1.0064194202423096,
+      1.0448967218399048,
+      0.8367257118225098,
+      0.20636001229286194,
+      0.17138782143592834,
+      0.4289451539516449,
+      0.21629934012889862,
+      0.22606080770492554,
+      0.2981763780117035,
+      0.40498030185699463
+    ]
+  },
+  "numerics": {
+    "cudnn_allow_tf32": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": false,
+    "device": "cuda",
+    "float32_matmul_precision": "highest",
+    "matmul_allow_tf32": false
+  },
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "grad_clip": null,
+    "lr": 0.0003,
+    "name": "adamw",
+    "schedule": "cosine (diffusers), linear warm-up from 0",
+    "weight_decay": 0.0001
+  },
+  "precision": "bf16",
+  "purpose": "train",
+  "resumes": [],
+  "run_seed": 1,
+  "segments": [
+    {
+      "first_step": 0,
+      "loader_wait_s": 0.2907915391260758,
+      "loop_s": 2876.931995106017,
+      "stage": 0,
+      "steps": 30000
+    }
+  ],
+  "selectable": true,
+  "sigma": 0.1,
+  "stages": [
+    {
+      "checkpoint_every": 5000,
+      "index": 0,
+      "steps": 30000,
+      "warmup": 500
+    }
+  ],
+  "state": "done",
+  "steps_override": null,
+  "steps_per_s_loop": 10.42777516153783,
+  "steps_timed_total": 30000,
+  "total_steps": 30000,
+  "wall_clock_s": 2889.3353036420012
+}

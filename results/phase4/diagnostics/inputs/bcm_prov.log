@@ -1,0 +1,118 @@
+ppo_2000 manifest keys ['collection', 'teacher', 'policies', 'ppo_model_sha256', 'label_path', 'dart_sigma', 'dart_seed', 'mix_seed', 'mix_p_ppo', 'beta', 'stream', 'generator_seed']
+
+######## s0: state=done status=done purpose=train seed=0 kind=bc total_steps=50000 global_step=50000
+  config sha=f956e182d1d9 frozen_match=True; ila=6d8517fa dirty=False p8=7237b706; invocations=1 resumes=[]
+  init_from=bc/s0/checkpoints/s0_step030000.pt sha=40be7901bca1 iteration0={'global_step': 30000, 'labelled_episodes': 1000}
+  wall_clock_s=5040 loop_s=4858 gpu_hours=1.400 steps/s=10.29 gpu=NVIDIA RTX A4000 numerics={'cudnn_allow_tf32': False, 'cudnn_benchmark': False, 'cudnn_deterministic': False, 'device': 'cuda', 'float32_matmul_precision': 'highest', 'matmul_allow_tf32': False}
+  ema={'decay': 0.999, 'inv_gamma': 1.0, 'kind': 'constant', 'max_value': 1.0, 'min_value': 0.0, 'power': 0.0} optimizer={'lr': 0.0003, 'grad_clip': None, 'schedule': 'cosine (diffusers), linear warm-up from 0'} stages=[(1, 10000, 500), (2, 10000, 500), (3, 10000, 500), (4, 10000, 500), (5, 10000, 500)] normaliser_in_manifest=False
+  it1: labelled=1200/1200 kept=1199 train_frames=73810 (+-) added=[1000..1199] attempted=200 kept=200 outcomes={'success': 200} expected_start=1000 ok=True n_choices=2 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it2: labelled=1400/1400 kept=1399 train_frames=86072 (+12262) added=[1200..1399] attempted=200 kept=200 outcomes={'success': 200} expected_start=1200 ok=True n_choices=3 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it3: labelled=1600/1600 kept=1599 train_frames=98365 (+12293) added=[1400..1599] attempted=200 kept=200 outcomes={'success': 200} expected_start=1400 ok=True n_choices=4 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it4: labelled=1800/1800 kept=1799 train_frames=110617 (+12252) added=[1600..1799] attempted=200 kept=200 outcomes={'success': 200} expected_start=1600 ok=True n_choices=5 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it5: labelled=2000/2000 kept=1999 train_frames=122873 (+12256) added=[1800..1999] attempted=200 kept=200 outcomes={'success': 200} expected_start=1800 ok=True n_choices=6 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=50 store_ok=True {'35b70cbdbd60'}
+  log: n_train=500 n_heldout=50 nonfinite=0 lr_maxrelerr(vs step-1)=1.81e-16 other_events=[]; bc final train 1.054e-04 ho ema 2.738e-04
+   it1: loss first100=1.406e-04 max(0-1k)=2.697e-04@600 end=9.422e-05 late_med=1.015e-04 | gn_max warm=0.0278 overall=0.0278@900 late=0.0104 gn_mean first=0.0049 end=0.0029 | spikes=[]
+        heldout ema: 2.652 2.575 2.555 2.522 2.489 2.477 2.467 2.461 2.472 2.473  (x1e-4); raw end 2.484; ema/raw end 0.9954; raw max 3.522@1000; ovl [0]; ho/train end 2.62
+   it2: loss first100=1.220e-04 max(0-1k)=2.349e-04@700 end=8.144e-05 late_med=8.658e-05 | gn_max warm=0.0260 overall=0.0260@600 late=0.0080 gn_mean first=0.0044 end=0.0026 | spikes=[]
+        heldout ema: 2.435 2.408 2.368 2.370 2.361 2.375 2.385 2.393 2.396 2.396  (x1e-4); raw end 2.404; ema/raw end 0.9968; raw max 3.200@11000; ovl [0]; ho/train end 2.94
+   it3: loss first100=1.107e-04 max(0-1k)=2.142e-04@700 end=7.252e-05 late_med=7.698e-05 | gn_max warm=0.0212 overall=0.0212@800 late=0.0077 gn_mean first=0.0039 end=0.0024 | spikes=[]
+        heldout ema: 2.325 2.322 2.306 2.317 2.311 2.304 2.321 2.335 2.339 2.345  (x1e-4); raw end 2.353; ema/raw end 0.9965; raw max 2.879@22000; ovl [0]; ho/train end 3.23
+   it4: loss first100=9.666e-05 max(0-1k)=1.804e-04@700 end=6.474e-05 late_med=6.972e-05 | gn_max warm=0.0217 overall=0.0217@900 late=0.0078 gn_mean first=0.0039 end=0.0023 | spikes=[]
+        heldout ema: 2.289 2.245 2.208 2.197 2.196 2.196 2.197 2.182 2.184 2.191  (x1e-4); raw end 2.196; ema/raw end 0.9979; raw max 2.950@31000; ovl [0]; ho/train end 3.38
+   it5: loss first100=8.832e-05 max(0-1k)=1.797e-04@900 end=6.189e-05 late_med=6.502e-05 | gn_max warm=0.0193 overall=0.0193@500 late=0.0078 gn_mean first=0.0035 end=0.0023 | spikes=[]
+        heldout ema: 1.777 1.353 1.107 0.942 0.831 0.748 0.690 0.651 0.625 0.612  (x1e-4); raw end 0.604; ema/raw end 1.0126; raw max 1.944@41000; ovl [50]; ho/train end 0.99
+  checkpoint events=10 match manifest=True files=['s1_step005000.pt', 's1_step010000.pt', 's2_step005000.pt', 's2_step010000.pt', 's3_step005000.pt', 's3_step010000.pt', 's4_step005000.pt', 's4_step010000.pt', 's5_step005000.pt', 's5_step010000.pt', 'ema_last.pt']
+
+######## s1: state=done status=done purpose=train seed=1 kind=bc total_steps=50000 global_step=50000
+  config sha=f956e182d1d9 frozen_match=True; ila=6d8517fa dirty=False p8=7237b706; invocations=1 resumes=[]
+  init_from=bc/s1/checkpoints/s0_step030000.pt sha=ec1a7f9ba06d iteration0={'global_step': 30000, 'labelled_episodes': 1000}
+  wall_clock_s=4993 loop_s=4852 gpu_hours=1.387 steps/s=10.31 gpu=NVIDIA RTX A4000 numerics={'cudnn_allow_tf32': False, 'cudnn_benchmark': False, 'cudnn_deterministic': False, 'device': 'cuda', 'float32_matmul_precision': 'highest', 'matmul_allow_tf32': False}
+  ema={'decay': 0.999, 'inv_gamma': 1.0, 'kind': 'constant', 'max_value': 1.0, 'min_value': 0.0, 'power': 0.0} optimizer={'lr': 0.0003, 'grad_clip': None, 'schedule': 'cosine (diffusers), linear warm-up from 0'} stages=[(1, 10000, 500), (2, 10000, 500), (3, 10000, 500), (4, 10000, 500), (5, 10000, 500)] normaliser_in_manifest=False
+  it1: labelled=1200/1200 kept=1199 train_frames=73810 (+-) added=[1000..1199] attempted=200 kept=200 outcomes={'success': 200} expected_start=1000 ok=True n_choices=2 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it2: labelled=1400/1400 kept=1399 train_frames=86072 (+12262) added=[1200..1399] attempted=200 kept=200 outcomes={'success': 200} expected_start=1200 ok=True n_choices=3 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it3: labelled=1600/1600 kept=1599 train_frames=98365 (+12293) added=[1400..1599] attempted=200 kept=200 outcomes={'success': 200} expected_start=1400 ok=True n_choices=4 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it4: labelled=1800/1800 kept=1799 train_frames=110617 (+12252) added=[1600..1799] attempted=200 kept=200 outcomes={'success': 200} expected_start=1600 ok=True n_choices=5 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it5: labelled=2000/2000 kept=1999 train_frames=122873 (+12256) added=[1800..1999] attempted=200 kept=200 outcomes={'success': 200} expected_start=1800 ok=True n_choices=6 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=50 store_ok=True {'35b70cbdbd60'}
+  log: n_train=500 n_heldout=50 nonfinite=0 lr_maxrelerr(vs step-1)=1.81e-16 other_events=[]; bc final train 1.021e-04 ho ema 2.861e-04
+   it1: loss first100=1.415e-04 max(0-1k)=2.648e-04@500 end=8.782e-05 late_med=9.690e-05 | gn_max warm=0.0221 overall=0.0264@1400 late=0.0091 gn_mean first=0.0047 end=0.0028 | spikes=[]
+        heldout ema: 2.751 2.677 2.610 2.561 2.550 2.551 2.564 2.576 2.579 2.592  (x1e-4); raw end 2.591; ema/raw end 1.0003; raw max 3.407@1000; ovl [0]; ho/train end 2.95
+   it2: loss first100=1.204e-04 max(0-1k)=2.299e-04@600 end=7.686e-05 late_med=8.267e-05 | gn_max warm=0.0209 overall=0.0214@1100 late=0.0079 gn_mean first=0.0042 end=0.0025 | spikes=[]
+        heldout ema: 2.522 2.460 2.434 2.435 2.427 2.424 2.425 2.433 2.447 2.451  (x1e-4); raw end 2.455; ema/raw end 0.9986; raw max 3.263@11000; ovl [0]; ho/train end 3.19
+   it3: loss first100=1.054e-04 max(0-1k)=2.021e-04@700 end=6.654e-05 late_med=7.145e-05 | gn_max warm=0.0180 overall=0.0183@1200 late=0.0071 gn_mean first=0.0040 end=0.0023 | spikes=[]
+        heldout ema: 2.368 2.323 2.314 2.310 2.326 2.349 2.362 2.385 2.395 2.404  (x1e-4); raw end 2.413; ema/raw end 0.9964; raw max 2.887@21000; ovl [0]; ho/train end 3.61
+   it4: loss first100=9.008e-05 max(0-1k)=1.750e-04@600 end=6.264e-05 late_med=6.399e-05 | gn_max warm=0.0188 overall=0.0188@500 late=0.0075 gn_mean first=0.0036 end=0.0022 | spikes=[]
+        heldout ema: 2.302 2.271 2.262 2.237 2.266 2.283 2.293 2.311 2.314 2.315  (x1e-4); raw end 2.315; ema/raw end 0.9999; raw max 2.877@32000; ovl [0]; ho/train end 3.70
+   it5: loss first100=8.261e-05 max(0-1k)=1.646e-04@900 end=5.708e-05 late_med=5.968e-05 | gn_max warm=0.0198 overall=0.0198@800 late=0.0065 gn_mean first=0.0036 end=0.0021 | spikes=[]
+        heldout ema: 1.765 1.304 1.067 0.905 0.791 0.706 0.652 0.618 0.591 0.580  (x1e-4); raw end 0.573; ema/raw end 1.0127; raw max 1.955@41000; ovl [50]; ho/train end 1.02
+  checkpoint events=10 match manifest=True files=['s1_step005000.pt', 's1_step010000.pt', 's2_step005000.pt', 's2_step010000.pt', 's3_step005000.pt', 's3_step010000.pt', 's4_step005000.pt', 's4_step010000.pt', 's5_step005000.pt', 's5_step010000.pt', 'ema_last.pt']
+
+######## s2: state=done status=done purpose=train seed=2 kind=bc total_steps=50000 global_step=50000
+  config sha=f956e182d1d9 frozen_match=True; ila=6d8517fa dirty=False p8=7237b706; invocations=1 resumes=[]
+  init_from=bc/s2/checkpoints/s0_step030000.pt sha=a1a5de39c93b iteration0={'global_step': 30000, 'labelled_episodes': 1000}
+  wall_clock_s=5050 loop_s=4905 gpu_hours=1.403 steps/s=10.19 gpu=NVIDIA RTX A4000 numerics={'cudnn_allow_tf32': False, 'cudnn_benchmark': False, 'cudnn_deterministic': False, 'device': 'cuda', 'float32_matmul_precision': 'highest', 'matmul_allow_tf32': False}
+  ema={'decay': 0.999, 'inv_gamma': 1.0, 'kind': 'constant', 'max_value': 1.0, 'min_value': 0.0, 'power': 0.0} optimizer={'lr': 0.0003, 'grad_clip': None, 'schedule': 'cosine (diffusers), linear warm-up from 0'} stages=[(1, 10000, 500), (2, 10000, 500), (3, 10000, 500), (4, 10000, 500), (5, 10000, 500)] normaliser_in_manifest=False
+  it1: labelled=1200/1200 kept=1199 train_frames=73810 (+-) added=[1000..1199] attempted=200 kept=200 outcomes={'success': 200} expected_start=1000 ok=True n_choices=2 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it2: labelled=1400/1400 kept=1399 train_frames=86072 (+12262) added=[1200..1399] attempted=200 kept=200 outcomes={'success': 200} expected_start=1200 ok=True n_choices=3 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it3: labelled=1600/1600 kept=1599 train_frames=98365 (+12293) added=[1400..1599] attempted=200 kept=200 outcomes={'success': 200} expected_start=1400 ok=True n_choices=4 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it4: labelled=1800/1800 kept=1799 train_frames=110617 (+12252) added=[1600..1799] attempted=200 kept=200 outcomes={'success': 200} expected_start=1600 ok=True n_choices=5 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it5: labelled=2000/2000 kept=1999 train_frames=122873 (+12256) added=[1800..1999] attempted=200 kept=200 outcomes={'success': 200} expected_start=1800 ok=True n_choices=6 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=50 store_ok=True {'35b70cbdbd60'}
+  log: n_train=500 n_heldout=50 nonfinite=0 lr_maxrelerr(vs step-1)=1.81e-16 other_events=[]; bc final train 1.091e-04 ho ema 2.700e-04
+   it1: loss first100=1.425e-04 max(0-1k)=2.669e-04@600 end=9.946e-05 late_med=1.055e-04 | gn_max warm=0.0233 overall=0.0233@800 late=0.0083 gn_mean first=0.0045 end=0.0028 | spikes=[]
+        heldout ema: 2.631 2.610 2.554 2.508 2.472 2.444 2.446 2.453 2.457 2.454  (x1e-4); raw end 2.450; ema/raw end 1.0013; raw max 3.283@1000; ovl [0]; ho/train end 2.47
+   it2: loss first100=1.285e-04 max(0-1k)=2.420e-04@600 end=8.771e-05 late_med=9.119e-05 | gn_max warm=0.0235 overall=0.0235@600 late=0.0076 gn_mean first=0.0042 end=0.0026 | spikes=[]
+        heldout ema: 2.397 2.363 2.330 2.316 2.294 2.289 2.289 2.298 2.320 2.324  (x1e-4); raw end 2.333; ema/raw end 0.9961; raw max 3.059@11000; ovl [0]; ho/train end 2.65
+   it3: loss first100=1.143e-04 max(0-1k)=1.974e-04@700 end=7.380e-05 late_med=7.798e-05 | gn_max warm=0.0178 overall=0.0178@900 late=0.0065 gn_mean first=0.0039 end=0.0024 | spikes=[]
+        heldout ema: 2.280 2.245 2.236 2.201 2.196 2.201 2.202 2.225 2.236 2.243  (x1e-4); raw end 2.246; ema/raw end 0.9988; raw max 2.850@23000; ovl [0]; ho/train end 3.04
+   it4: loss first100=9.297e-05 max(0-1k)=1.756e-04@900 end=6.719e-05 late_med=7.053e-05 | gn_max warm=0.0183 overall=0.0194@1200 late=0.0073 gn_mean first=0.0032 end=0.0022 | spikes=[]
+        heldout ema: 2.162 2.148 2.140 2.156 2.152 2.142 2.154 2.166 2.184 2.189  (x1e-4); raw end 2.197; ema/raw end 0.9961; raw max 2.790@31000; ovl [0]; ho/train end 3.26
+   it5: loss first100=8.784e-05 max(0-1k)=1.719e-04@600 end=5.947e-05 late_med=6.528e-05 | gn_max warm=0.0211 overall=0.0211@600 late=0.0074 gn_mean first=0.0033 end=0.0021 | spikes=[]
+        heldout ema: 1.723 1.343 1.088 0.929 0.831 0.745 0.683 0.644 0.619 0.612  (x1e-4); raw end 0.603; ema/raw end 1.0152; raw max 1.825@41000; ovl [50]; ho/train end 1.03
+  checkpoint events=10 match manifest=True files=['s1_step005000.pt', 's1_step010000.pt', 's2_step005000.pt', 's2_step010000.pt', 's3_step005000.pt', 's3_step010000.pt', 's4_step005000.pt', 's4_step010000.pt', 's5_step005000.pt', 's5_step010000.pt', 'ema_last.pt']
+
+######## s3: state=done status=done purpose=train seed=3 kind=bc total_steps=50000 global_step=50000
+  config sha=f956e182d1d9 frozen_match=True; ila=6d8517fa dirty=False p8=7237b706; invocations=1 resumes=[]
+  init_from=bc/s3/checkpoints/s0_step030000.pt sha=10c937ebd655 iteration0={'global_step': 30000, 'labelled_episodes': 1000}
+  wall_clock_s=4968 loop_s=4827 gpu_hours=1.380 steps/s=10.36 gpu=NVIDIA RTX A4000 numerics={'cudnn_allow_tf32': False, 'cudnn_benchmark': False, 'cudnn_deterministic': False, 'device': 'cuda', 'float32_matmul_precision': 'highest', 'matmul_allow_tf32': False}
+  ema={'decay': 0.999, 'inv_gamma': 1.0, 'kind': 'constant', 'max_value': 1.0, 'min_value': 0.0, 'power': 0.0} optimizer={'lr': 0.0003, 'grad_clip': None, 'schedule': 'cosine (diffusers), linear warm-up from 0'} stages=[(1, 10000, 500), (2, 10000, 500), (3, 10000, 500), (4, 10000, 500), (5, 10000, 500)] normaliser_in_manifest=False
+  it1: labelled=1200/1200 kept=1199 train_frames=73810 (+-) added=[1000..1199] attempted=200 kept=200 outcomes={'success': 200} expected_start=1000 ok=True n_choices=2 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it2: labelled=1400/1400 kept=1399 train_frames=86072 (+12262) added=[1200..1399] attempted=200 kept=200 outcomes={'success': 200} expected_start=1200 ok=True n_choices=3 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it3: labelled=1600/1600 kept=1599 train_frames=98365 (+12293) added=[1400..1599] attempted=200 kept=200 outcomes={'success': 200} expected_start=1400 ok=True n_choices=4 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it4: labelled=1800/1800 kept=1799 train_frames=110617 (+12252) added=[1600..1799] attempted=200 kept=200 outcomes={'success': 200} expected_start=1600 ok=True n_choices=5 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it5: labelled=2000/2000 kept=1999 train_frames=122873 (+12256) added=[1800..1999] attempted=200 kept=200 outcomes={'success': 200} expected_start=1800 ok=True n_choices=6 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=50 store_ok=True {'35b70cbdbd60'}
+  log: n_train=500 n_heldout=50 nonfinite=0 lr_maxrelerr(vs step-1)=1.81e-16 other_events=[]; bc final train 1.136e-04 ho ema 2.780e-04
+   it1: loss first100=1.533e-04 max(0-1k)=2.666e-04@600 end=1.067e-04 late_med=1.093e-04 | gn_max warm=0.0272 overall=0.0272@600 late=0.0087 gn_mean first=0.0049 end=0.0029 | spikes=[]
+        heldout ema: 2.709 2.674 2.630 2.579 2.562 2.554 2.536 2.538 2.539 2.544  (x1e-4); raw end 2.551; ema/raw end 0.9973; raw max 3.615@1000; ovl [0]; ho/train end 2.38
+   it2: loss first100=1.339e-04 max(0-1k)=2.330e-04@600 end=8.819e-05 late_med=9.576e-05 | gn_max warm=0.0185 overall=0.0186@1300 late=0.0086 gn_mean first=0.0041 end=0.0026 | spikes=[]
+        heldout ema: 2.493 2.462 2.414 2.395 2.386 2.381 2.390 2.407 2.421 2.428  (x1e-4); raw end 2.435; ema/raw end 0.9972; raw max 3.474@11000; ovl [0]; ho/train end 2.75
+   it3: loss first100=1.183e-04 max(0-1k)=2.147e-04@600 end=8.203e-05 late_med=8.365e-05 | gn_max warm=0.0176 overall=0.0190@1600 late=0.0072 gn_mean first=0.0039 end=0.0025 | spikes=[]
+        heldout ema: 2.372 2.334 2.325 2.326 2.322 2.341 2.348 2.360 2.362 2.363  (x1e-4); raw end 2.364; ema/raw end 0.9994; raw max 2.876@21000; ovl [0]; ho/train end 2.88
+   it4: loss first100=9.936e-05 max(0-1k)=1.926e-04@800 end=6.958e-05 late_med=7.455e-05 | gn_max warm=0.0171 overall=0.0171@1000 late=0.0073 gn_mean first=0.0034 end=0.0022 | spikes=[]
+        heldout ema: 2.298 2.244 2.232 2.215 2.210 2.207 2.225 2.243 2.260 2.258  (x1e-4); raw end 2.259; ema/raw end 0.9993; raw max 2.831@31000; ovl [0]; ho/train end 3.24
+   it5: loss first100=9.632e-05 max(0-1k)=1.741e-04@700 end=6.404e-05 late_med=6.841e-05 | gn_max warm=0.0191 overall=0.0191@600 late=0.0080 gn_mean first=0.0034 end=0.0022 | spikes=[]
+        heldout ema: 1.777 1.367 1.124 0.966 0.854 0.773 0.700 0.655 0.631 0.615  (x1e-4); raw end 0.611; ema/raw end 1.0065; raw max 1.999@41000; ovl [50]; ho/train end 0.96
+  checkpoint events=10 match manifest=True files=['s1_step005000.pt', 's1_step010000.pt', 's2_step005000.pt', 's2_step010000.pt', 's3_step005000.pt', 's3_step010000.pt', 's4_step005000.pt', 's4_step010000.pt', 's5_step005000.pt', 's5_step010000.pt', 'ema_last.pt']
+
+######## s4: state=done status=done purpose=train seed=4 kind=bc total_steps=50000 global_step=50000
+  config sha=f956e182d1d9 frozen_match=True; ila=6d8517fa dirty=False p8=7237b706; invocations=1 resumes=[]
+  init_from=bc/s4/checkpoints/s0_step030000.pt sha=a9cb4276cb06 iteration0={'global_step': 30000, 'labelled_episodes': 1000}
+  wall_clock_s=4950 loop_s=4810 gpu_hours=1.375 steps/s=10.39 gpu=NVIDIA RTX A4000 numerics={'cudnn_allow_tf32': False, 'cudnn_benchmark': False, 'cudnn_deterministic': False, 'device': 'cuda', 'float32_matmul_precision': 'highest', 'matmul_allow_tf32': False}
+  ema={'decay': 0.999, 'inv_gamma': 1.0, 'kind': 'constant', 'max_value': 1.0, 'min_value': 0.0, 'power': 0.0} optimizer={'lr': 0.0003, 'grad_clip': None, 'schedule': 'cosine (diffusers), linear warm-up from 0'} stages=[(1, 10000, 500), (2, 10000, 500), (3, 10000, 500), (4, 10000, 500), (5, 10000, 500)] normaliser_in_manifest=False
+  it1: labelled=1200/1200 kept=1199 train_frames=73810 (+-) added=[1000..1199] attempted=200 kept=200 outcomes={'success': 200} expected_start=1000 ok=True n_choices=2 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it2: labelled=1400/1400 kept=1399 train_frames=86072 (+12262) added=[1200..1399] attempted=200 kept=200 outcomes={'success': 200} expected_start=1200 ok=True n_choices=3 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it3: labelled=1600/1600 kept=1599 train_frames=98365 (+12293) added=[1400..1599] attempted=200 kept=200 outcomes={'success': 200} expected_start=1400 ok=True n_choices=4 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it4: labelled=1800/1800 kept=1799 train_frames=110617 (+12252) added=[1600..1799] attempted=200 kept=200 outcomes={'success': 200} expected_start=1600 ok=True n_choices=5 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=0 store_ok=True {'35b70cbdbd60'}
+  it5: labelled=2000/2000 kept=1999 train_frames=122873 (+12256) added=[1800..1999] attempted=200 kept=200 outcomes={'success': 200} expected_start=1800 ok=True n_choices=6 base=1000,999,{'bounce': 1, 'success': 999} ho_overlap=50 store_ok=True {'35b70cbdbd60'}
+  log: n_train=500 n_heldout=50 nonfinite=0 lr_maxrelerr(vs step-1)=1.81e-16 other_events=[]; bc final train 1.060e-04 ho ema 2.658e-04
+   it1: loss first100=1.403e-04 max(0-1k)=2.660e-04@600 end=9.433e-05 late_med=9.924e-05 | gn_max warm=0.0210 overall=0.0227@2000 late=0.0086 gn_mean first=0.0050 end=0.0028 | spikes=[]
+        heldout ema: 2.565 2.517 2.494 2.440 2.432 2.429 2.428 2.442 2.461 2.465  (x1e-4); raw end 2.473; ema/raw end 0.9968; raw max 3.422@1000; ovl [0]; ho/train end 2.61
+   it2: loss first100=1.237e-04 max(0-1k)=2.230e-04@600 end=8.215e-05 late_med=8.594e-05 | gn_max warm=0.0211 overall=0.0235@2400 late=0.0086 gn_mean first=0.0041 end=0.0026 | spikes=[]
+        heldout ema: 2.397 2.377 2.360 2.376 2.365 2.366 2.391 2.407 2.422 2.431  (x1e-4); raw end 2.440; ema/raw end 0.9964; raw max 3.122@11000; ovl [0]; ho/train end 2.96
+   it3: loss first100=1.067e-04 max(0-1k)=2.142e-04@600 end=7.172e-05 late_med=7.628e-05 | gn_max warm=0.0189 overall=0.0189@600 late=0.0081 gn_mean first=0.0037 end=0.0023 | spikes=[]
+        heldout ema: 2.333 2.291 2.262 2.246 2.252 2.266 2.268 2.272 2.267 2.271  (x1e-4); raw end 2.268; ema/raw end 1.0012; raw max 2.978@21000; ovl [0]; ho/train end 3.17
+   it4: loss first100=9.783e-05 max(0-1k)=1.772e-04@600 end=6.548e-05 late_med=6.938e-05 | gn_max warm=0.0193 overall=0.0212@1100 late=0.0071 gn_mean first=0.0034 end=0.0023 | spikes=[]
+        heldout ema: 2.224 2.218 2.193 2.185 2.166 2.161 2.146 2.169 2.177 2.178  (x1e-4); raw end 2.181; ema/raw end 0.9986; raw max 2.788@31000; ovl [0]; ho/train end 3.33
+   it5: loss first100=8.960e-05 max(0-1k)=1.656e-04@1000 end=6.088e-05 late_med=6.456e-05 | gn_max warm=0.0183 overall=0.0183@1000 late=0.0062 gn_mean first=0.0032 end=0.0022 | spikes=[]
+        heldout ema: 1.748 1.317 1.074 0.939 0.822 0.748 0.675 0.632 0.602 0.595  (x1e-4); raw end 0.590; ema/raw end 1.0081; raw max 1.977@41000; ovl [50]; ho/train end 0.98
+  checkpoint events=10 match manifest=True files=['s1_step005000.pt', 's1_step010000.pt', 's2_step005000.pt', 's2_step010000.pt', 's3_step005000.pt', 's3_step010000.pt', 's4_step005000.pt', 's4_step010000.pt', 's5_step005000.pt', 's5_step010000.pt', 'ema_last.pt']
+
+Total bc_matched GPU-h 6.945 vs P4-D2 projection 6.53
