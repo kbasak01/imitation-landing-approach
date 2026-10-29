@@ -3,11 +3,11 @@
 One loop serves every arm and every stage structure:
 
 * a **single-stage** run (``bc``, ``bc_state``, ``bc_dart``, ``dp``, the ablations) is stage 0;
-* an **iterated** run (``bc_matched`` here; ``bc_dagger`` in Phase 5 through the same
-  :class:`Stage` hook) is stages ``1 .. n``, warm-started from the same-seed ``bc`` run's last
-  step (weights **and** EMA copied, AdamW reset, its own cosine schedule with warm-up per
-  stage, frames sampled uniformly from the aggregate; P3-D1 §3). A stage builds its data
-  lazily, when it starts, so a DAgger stage can roll out the previous stage's EMA first.
+* an **iterated** run (``bc_matched``, ``bc_dagger``: one driver, P4-D5 item 1) is stages
+  ``1 .. n``, warm-started from the same-seed ``bc`` run's last step (weights **and** EMA
+  copied, AdamW reset, its own cosine schedule with warm-up per stage, frames sampled uniformly
+  from the aggregate; P3-D1 §3). A stage builds its data lazily, when it starts, so a DAgger
+  stage rolls out the previous stage's last-step EMA first (:mod:`ila.train.dagger_stage`).
 
 Per step (``s`` = optimiser steps already taken in the stage): ``lr = lr_peak * m(s)`` with
 diffusers' ``cosine`` multiplier ``m(s) = s / W`` for ``s < W``, else
@@ -27,6 +27,8 @@ Held-out loss: every ``eval_every`` steps and at each checkpoint, raw and EMA we
 crop, on :data:`HELDOUT` -- ``ppo_2000`` stream indices 1950-1999, ``train``-pool demos outside
 every single-stage arm's first 1 000 (never ``tune``, ``select`` or a frozen list). The
 iterated ``bc_matched`` trains on them from iteration 5 on; the overlap is counted and logged.
+``bc_dagger`` never trains on them (overlap 0), but its iteration 5 flies the same 50 starting
+conditions with the student; that count is logged as ``heldout_shared_starting_conditions``.
 
 Units: steps are optimiser steps; times are wall-clock seconds; actions are normalised
 world-frame velocity setpoints (x v_max = 1.5 m/s model scale, lambda = 1/25).
@@ -227,6 +229,8 @@ class DataBundle:
         labelled_episodes: Episodes attempted in the aggregate (P3-D1 §2's labelled count).
         heldout_overlap: Held-out episodes that are also training episodes.
         stores: Store records (path, SHA-256 vs the committed summary).
+        extra: Arm-specific stage records merged into :meth:`summary` (``bc_dagger``: the
+            ``"dagger"`` record of :mod:`ila.train.dagger_stage`); empty otherwise.
     """
 
     train: BCWindowDataset | StateFrames
@@ -235,6 +239,7 @@ class DataBundle:
     labelled_episodes: int
     heldout_overlap: int = 0
     stores: list[dict[str, Any]] = field(default_factory=list)
+    extra: dict[str, Any] = field(default_factory=dict)
 
     def summary(self) -> dict[str, Any]:
         """JSON-ready accounting."""
@@ -246,6 +251,7 @@ class DataBundle:
             "heldout_frames": None if self.heldout is None else len(self.heldout),
             "heldout_overlap_episodes": self.heldout_overlap,
             "stores": self.stores,
+            **self.extra,
         }
 
 
@@ -368,6 +374,10 @@ class RunSpec:
         init_from: Iterated arms: the same-seed ``bc`` run's final full checkpoint.
         hash_store: Hash the store file for the manifest.
         allow_dirty: Allow a dirty ``ila`` tree (recorded; never for ``train``/``tuning``).
+        rollout_workers: ``bc_dagger``: rollout processes (rows do not depend on it).
+        rollout_limit: Smoke/test runs only: ``bc_dagger`` flies the first ``rollout_limit``
+            episodes of each iteration's 200.
+        iterations_override: Smoke/test runs only: run iterations ``1 .. iterations_override``.
     """
 
     cfg: TrainConfig
@@ -388,6 +398,9 @@ class RunSpec:
     init_from: Path | None = None
     hash_store: bool = True
     allow_dirty: bool = False
+    rollout_workers: int = 24
+    rollout_limit: int | None = None
+    iterations_override: int | None = None
 
     def __post_init__(self) -> None:
         """Validate the purpose-gated overrides.
@@ -404,11 +417,17 @@ class RunSpec:
             self.steps_override is not None
             or self.checkpoint_every_override is not None
             or self.first_n_override is not None
+            or self.rollout_limit is not None
+            or self.iterations_override is not None
         )
         if overrides and self.purpose not in ("smoke", "test"):
             raise ValueError("step/cadence overrides are for smoke and test runs only")
         if self.purpose == "tuning" and (self.cfg.arm != "bc_dart" or self.run_seed != 0):
             raise ValueError("the only tuning runs are bc_dart seed 0 per sigma (P3-D1 §4)")
+        if self.cfg.dagger is not None and self.purpose == "timing":
+            raise ValueError("bc_dagger has no timing run: iteration i needs i - 1's checkpoint")
+        if self.rollout_workers < 1:
+            raise ValueError(f"rollout_workers must be >= 1, got {self.rollout_workers}")
 
 
 def _iteration_data(spec: RunSpec, ranges: list[tuple[int, int]], hash_store: bool) -> DataBundle:
@@ -419,8 +438,12 @@ def build_stages(spec: RunSpec) -> list[Stage]:
     """Return the run's stages from its config.
 
     Single-stage arms: stage 0 over the first ``first_n`` episodes. Iterated arms
-    (``schedule.iterations``): stages ``1 .. n``, stage ``i`` training on stream slices
-    ``[0, first_added)`` plus every slice added up to ``i`` (P3-D1 §3).
+    (``cfg.iterations``): stages ``1 .. n``, stage ``i`` training on stream slices
+    ``[0, first_added)`` plus every slice added up to ``i`` (P3-D1 §3) -- the teacher's demos
+    of those slices for ``bc_matched``; for ``bc_dagger`` the demos ``[0, first_added)`` and
+    the on-policy rollouts of iterations ``1 .. i``, flown when stage ``i`` starts
+    (:func:`ila.train.dagger_stage.stage_data`). Both arms get the same stages (indices,
+    steps, warm-up, cadence).
 
     Raises:
         ValueError: If an iterated arm has no ``init_from``.
@@ -445,10 +468,18 @@ def build_stages(spec: RunSpec) -> list[Stage]:
     if spec.init_from is None:
         raise ValueError(f"{cfg.arm}: iteration 0 is the same-seed bc run (--init-from)")
     it_steps = it.steps_per_iteration if spec.steps_override is None else spec.steps_override
+    n_iter = it.n if spec.iterations_override is None else min(it.n, spec.iterations_override)
 
     def ranges(i: int) -> list[tuple[int, int]]:
         added = [(it.added_range(j).start, it.add_per_iteration) for j in range(1, i + 1)]
-        return [(0, it.first_added), *added]
+        return [(0, first_n), *added]
+
+    def data(i: int) -> Callable[[bool], DataBundle]:
+        if cfg.dagger is None:
+            return functools.partial(_iteration_data, spec, ranges(i))
+        from ila.train import dagger_stage  # lazy: it imports this module
+
+        return functools.partial(dagger_stage.stage_data, spec, i, it_steps)
 
     return [
         Stage(
@@ -456,9 +487,9 @@ def build_stages(spec: RunSpec) -> list[Stage]:
             steps=it_steps,
             warmup=it.warmup_steps,
             checkpoint_every=every,
-            data=functools.partial(_iteration_data, spec, ranges(i)),
+            data=data(i),
         )
-        for i in range(1, it.n + 1)
+        for i in range(1, n_iter + 1)
     ]
 
 
@@ -808,6 +839,22 @@ def train_run(
             "batch_size": cfg.batch_size,
             "heldout": None if spec.heldout is None else vars(spec.heldout),
             "init_from": None if spec.init_from is None else str(spec.init_from),
+            **(
+                {}
+                if cfg.dagger is None
+                else {
+                    "dagger_run": {
+                        "rollout_workers": spec.rollout_workers,
+                        "rollout_limit": spec.rollout_limit,
+                        "iterations_override": spec.iterations_override,
+                        "beta": list(cfg.dagger.beta),
+                        "per_stage_records": "data.<i>.dagger and dagger/iter<i>.json",
+                        "wall_clock_note": "wall_clock_s and gpu_hours include the CPU "
+                        "rollouts and audits (data.<i>.dagger.timing_s); subtract them for "
+                        "GPU training time",
+                    }
+                }
+            ),
             "checkpoints": [],
             "resumes": [],
             "segments": [],
@@ -1056,6 +1103,9 @@ def train_run(
         if steps_in_loop and first + steps_in_loop < stage.steps:
             state = "stopped" if spec.max_steps is None else "done"
             break
+        # Release this stage's aggregate before the next stage builds (and, for bc_dagger,
+        # flies) its own: two aggregates never coexist.
+        del data, prefetch, sampler
     wall = time.perf_counter() - t_start
     prior = float(manifest.get("wall_clock_s", 0.0))
     manifest.update(

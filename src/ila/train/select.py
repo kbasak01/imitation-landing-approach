@@ -11,7 +11,10 @@
   count, P2-D3 item 1), render ``full``. Vision students take ``act_vision``; ``bc_state`` takes
   P8's observation (it has no ``act_vision``).
 * **Candidates.** Every full checkpoint of the run, EMA weights (the evaluated weights). An
-  iterated arm (``bc_matched``) restricts them to its final iteration's checkpoints (P3-D1 §3).
+  iterated arm restricts them to its final iteration's checkpoints (P3-D1 §3): any run whose
+  config says ``selection.candidates: final_iteration_checkpoints`` (``bc_matched``,
+  ``bc_dagger``: iteration 5's 5 k and 10 k) or that has more than one stage. The rule reads the
+  run's manifest (its resolved config and stages), never the arm name.
   ``ema_last.pt`` duplicates the last checkpoint's EMA and is not a separate candidate.
 * **Rule.** Highest ``success`` count; ties by the lower pooled p95 closing speed
   (``closing_speed_normal_m_s``, m/s model scale, over touched-down episodes only, P8's
@@ -45,6 +48,7 @@ from ila.train.config import sha256_file
 
 __all__ = [
     "OUTCOME_ORDER",
+    "FINAL_ITERATION",
     "SELECTION_RULE",
     "ResummaryMismatchError",
     "P95",
@@ -67,6 +71,9 @@ SELECT_SPLIT: Final[str] = data_episodes.SELECT_NAME
 #: The closing-speed quantile (P8's ``rld.eval.stats.P95_QUANTILE``, not re-exported by the
 #: adapter; P3-D1 §1 "relative p95"). The quantile itself is P8's ``quantile_linear``.
 P95: Final[float] = 0.95
+
+#: ``selection.candidates`` of the iterated arms' configs (P3-D1 §3).
+FINAL_ITERATION: Final[str] = "final_iteration_checkpoints"
 
 #: The rule's text in every ``selection.json``.
 SELECTION_RULE: Final[str] = (
@@ -257,7 +264,10 @@ def candidates(run_dir: Path) -> list[Candidate]:
     if not full:
         raise ValueError(f"{run_dir}: no checkpoints")
     stages = [s["index"] for s in man["stages"]]
-    if len(stages) > 1:  # iterated arm: the final iteration's checkpoints only
+    rule = man.get("config_resolved", {}).get("selection", {}).get("candidates")
+    if rule not in (None, FINAL_ITERATION):
+        raise ValueError(f"{run_dir}: unknown candidate rule {rule!r}")
+    if rule == FINAL_ITERATION or len(stages) > 1:  # iterated arms: the final iteration only
         full = [c for c in full if c["stage"] == stages[-1]]
     out = []
     for c in sorted(full, key=lambda c: c["global_step"]):

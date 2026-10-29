@@ -18,12 +18,14 @@ CFG     ?= configs/train/bc.yaml
 SEED    ?= 0
 ARM     ?= bc
 # Extra flags for train-bg (e.g. ARGS="--max-steps 2000" for a P3-D1 §5 timing run, or
-# ARGS="--sigma 0.10 --tuning" for a DART trial) and select-bg (e.g. SELECT="--arm bc --seeds 0 1").
+# ARGS="--sigma 0.10 --tuning" for a DART trial, ARGS="--rollout-workers 16" for dagger-bg) and
+# select-bg (e.g. SELECT="--arm bc --seeds 0 1"); dagger-report takes REPORT (e.g. REPORT="--seeds 0").
 ARGS    ?=
 SELECT  ?=
+REPORT  ?=
 
 .PHONY: lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
-        select-bg budget dagger-bg eval bench report figures gifs all
+        select-bg budget dagger-bg dagger-report eval bench report figures gifs all
 
 # --- implemented ------------------------------------------------------------------
 
@@ -56,6 +58,8 @@ determinism: ; mkdir -p artifacts/runs/determinism && $(PY) scripts/determinism.
 collect: ; mkdir -p artifacts/runs/collect/$(COLLECTION) && $(PY) scripts/collect.py $(COLLECTION) --workers $(WORKERS) $(if $(OVERWRITE),--overwrite,)
 # Phase 4 smoke pre-flight (foreground, a few minutes): overfit the first 8 ppo_2000 train
 # episodes (action MSE < 1e-4) and land >= 7/8 closed loop -> results/phase4/smoke_<arm>.json.
+# ARM=bc_dagger (Phase 5, about 30 min): 2 DAgger iterations x 4 rollouts from bc s0 + a resume,
+# then the 8 rollout episodes overfit and flown -> results/phase5/smoke_bc_dagger.json.
 train-smoke: ; $(PY) scripts/train_smoke.py $(ARM)
 # Phase 4 training (background; prepare with /train-job). Run dir artifacts/runs/<arm>/s<seed>/
 # (status.json, manifest.json, train_log.jsonl, checkpoints/); an existing run dir resumes.
@@ -66,12 +70,22 @@ train-bg: ; $(PY) scripts/train.py $(CFG) --seed $(SEED) $(ARGS)
 select-bg: ; $(PY) scripts/select.py $(SELECT)
 # P3-D1 §5 budget projection from the timing runs -> results/phase4/budget_projection.csv.
 budget: ; $(PY) scripts/budget.py
+# Phase 5 bc_dagger training (background; prepare with /train-job; needs bc s<SEED> finished).
+# Each iteration flies 200 CPU rollouts (--rollout-workers, default 24) from the previous
+# iteration's last-step EMA, audits them, then trains 10 000 steps on the aggregate. Run dir
+# artifacts/runs/bc_dagger/s<seed>/ (+ dagger/iter<i>.json); rollouts under
+# ${data_root}/dagger/bc_dagger/s<seed>/. An existing run dir resumes (rollouts reused).
+#   mkdir -p artifacts/runs/bc_dagger/s0 && nohup make dagger-bg SEED=0 > artifacts/runs/bc_dagger/s0/train.log 2>&1 &
+dagger-bg: ; $(PY) scripts/train.py configs/train/bc_dagger.yaml --seed $(SEED) $(ARGS)
+# Phase 5 per-iteration report -> results/phase5/dagger_iterations.{csv,json}. Background job:
+# it flies the select list for every iteration's last-step EMA without reusable rows.
+#   mkdir -p artifacts/runs/bc_dagger && nohup make dagger-report > artifacts/runs/bc_dagger/report.log 2>&1 &
+dagger-report: ; $(PY) scripts/dagger_report.py $(REPORT)
 
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.
 # Replace the stub in its own phase.
 
-dagger-bg:    ; @echo "not implemented: phase 5"
 eval:         ; @echo "not implemented: phase 8"
 bench:        ; @echo "not implemented: phase 9"
 report:       ; @echo "not implemented: phase 8"

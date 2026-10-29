@@ -11,6 +11,13 @@ checkpoint with identical RNG state (P3-D1 §4) and the resume is logged. Exampl
     python scripts/train.py configs/train/bc_dart.yaml --seed 0 --sigma 0.10 --tuning
     python scripts/train.py configs/train/bc_dart.yaml --seed 3                   # at sigma*
     python scripts/train.py configs/train/bc_matched.yaml --seed 2                # init: bc s2
+    python scripts/train.py configs/train/bc_dagger.yaml --seed 2 --rollout-workers 24
+
+``bc_dagger`` (``make dagger-bg SEED=<s>``) runs ``bc_matched``'s iteration driver; each
+iteration first flies its 200 on-policy rollouts on the CPU (``--rollout-workers`` processes,
+rows independent of the count) from the previous iteration's last-step EMA, audits them, then
+trains on the aggregate. Rollouts land in ``${data_root}/dagger/bc_dagger/s<seed>/`` and are
+reused on resume.
 
 ``--max-steps`` exists only for the timing runs: such a run is labelled ``timing`` in its
 manifest, writes no checkpoint and can never be selected. A ``train``/``tuning``/``timing`` run
@@ -49,6 +56,9 @@ def main() -> int:
     parser.add_argument("--data-root", type=Path, default=None)
     parser.add_argument("--run-root", type=Path, default=mf.RUNS_ROOT)
     parser.add_argument("--allow-dirty", action="store_true")
+    parser.add_argument(
+        "--rollout-workers", type=int, default=24, help="bc_dagger: CPU rollout processes"
+    )
     args = parser.parse_args()
 
     cfg = TrainConfig.load(args.config.resolve())
@@ -86,6 +96,7 @@ def main() -> int:
         heldout=None if timing else loop.HELDOUT,
         init_from=init_from,
         allow_dirty=args.allow_dirty,
+        rollout_workers=args.rollout_workers,
     )
     print(f"run dir: {run_dir}  purpose: {purpose}  device: {args.device}", flush=True)
     try:

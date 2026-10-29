@@ -458,7 +458,7 @@ def test_frozen_config_sha256_match_files_and_protocol() -> None:
     protocol = (REPO_ROOT / "docs" / "protocol.md").read_text(encoding="utf-8")
     for rel, sha in mf.FROZEN_CONFIG_SHA256.items():
         assert sha256_file(REPO_ROOT / rel) == sha, rel
-        assert f"{sha[:8]}…{sha[-4:]}" in protocol, rel
+        assert f"{sha[:8]}…{sha[-4:]}" in protocol or f"`{sha}`" in protocol, rel
     check = mf.check_config_frozen(
         _cfg("bc").files_sha256
     )  # dataclasses.replace keeps the file SHAs

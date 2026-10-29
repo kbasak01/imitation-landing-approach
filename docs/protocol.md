@@ -1746,3 +1746,81 @@ Incidents:
   6.4 % over its projection.
 - **Watch items for Phase 8.** `bc_matched` s1's tunnelled 1.234 m/s off-pad dive. `bc`'s
   slow-landing tail (max 237 steps on `select`).
+
+### P5-D1 — DAgger implementation choices P3-D1 leaves open (2026-10-29)
+*Decision.* The settings below are not fixed by `bc_dagger.yaml` (`dbc7c0d2…9da7`),
+`demos.yaml#dagger` (`1fd413e2…3f11`) or P3-D1. They are implementation choices within the frozen
+protocol, not deviations. They are recorded before any `bc_dagger` run, and every run manifest
+repeats them. Neither frozen file was edited.
+1. **Rollout student.** Iteration 1 flies the EMA of `bc/s<n>/checkpoints/s0_step030000.pt`, and
+   iteration i > 1 flies the EMA of this run's `s<i−1>_step010000.pt`. The checkpoint's SHA-256 must
+   equal the run manifest's entry and is written into every rollout episode
+   (`student_ckpt_sha256`). Path: `ila.train.select.checkpoint_policy`, CPU fp32, one torch thread
+   per worker, through `runner.StudentWindow` (frames + the 13-d allowlisted proprio only).
+2. **Teacher shadowing.** `ppo` s0 on the SB3 label path is `reset` every episode and queried on
+   every visited observation, including steps where the student's action is executed. The label is
+   always the teacher's action at `teacher_obs[t]`.
+3. **β coin.** Entropy `[run_seed, H("dagger_beta"), iteration, episode_seed]` (SHA-256 label
+   entropy, as for DART). Exactly one `rng.random()` per step whatever β is; the teacher's action
+   is executed when u < β. So the coin sequence does not depend on β, on the student or on the
+   worker count. The executed action is `collect.executable(·)` of the chosen action (float32
+   before `env.step`).
+4. **Storage.** `<data_root>/dagger/bc_dagger/s<seed>/iter<i>.h5` uses the unchanged demo-store
+   schema, with per-episode `beta`, `dagger_iteration` and `student_ckpt_sha256`. Beside it:
+   - `iter<i>.sidecar.npz`: per step, the student's proposed action, the coin draw u and whether
+     the teacher was executed. It is diagnostics only and never a training input.
+   - `iter<i>.manifest.json` (written last), `iter<i>.audit.json`, `aggregate_iter<i>.json`,
+     `iter<i>.episodes.csv`.
+   Store and sidecar are written to `*.tmp` and renamed.
+5. **Resume.** An existing iteration is reused only if its manifest's student SHA, purpose and
+   limit match. A mismatch, or a store without a manifest, raises; nothing is overwritten.
+   Rollouts are deterministic: the same checkpoint and code give byte-identical stores for 1 or 2
+   workers (tested).
+6. **Audit gate.** Before stage i trains, `ila.data.dagger.audit_iteration` must return clean:
+   - re-label of 1 000 random visited states from `teacher_obs`, identical;
+   - replay of 20 stored `action_exec` states, byte-identical frames and observations;
+   - attributes: `train` pool only, indices = `dagger_indices(i)`, no `tune`/`select`/frozen-list
+     row, no SS6, no 90°, β and iteration right, DART σ = 0;
+   - `last_action[t] = action_exec[t−1]`;
+   - the coin re-drawn bit-identically, and the executed-action choice recomputed against the store.
+   If it is not clean, the stage is not trained.
+7. **Aggregate and counts.** Stage i trains on `ppo_2000` 0–999 (success-filtered, as `bc`) plus
+   rollout iterations 1..i (unfiltered), frames sampled uniformly. The labelled-episode count is
+   asserted at 1 000 + 200 i and at 2 000 = `bc_matched` after iteration 5. The normaliser is
+   inherited from `bc`, not refitted, as for `bc_matched`.
+8. **Frozen-config check** now also covers `configs/data/demos.yaml`, because `bc_dagger.yaml`
+   reads its `dagger` block.
+9. **Held-out loss.** `ppo_2000` 1950–1999 is never in `bc_dagger`'s training data (overlap 0). But
+   iteration 5 flies the same 50 starting conditions with the student, so their t = 0 frames match.
+   Logged as `heldout_shared_starting_conditions`; held-out loss after iteration 5 is read with that
+   caveat, as for `bc_matched`.
+10. **Per-iteration report** (`make dagger-report` → `results/phase5/dagger_iterations.{csv,json}`),
+    descriptive only. Selection stays iteration 5's 5 k and 10 k checkpoints, EMA (P3-D1 §3).
+    - *Rollout success* on `train`. For iterations 1–3 (β > 0) it measures the β-mixture policy, not
+      the student (column `policy_flown`).
+    - *Teacher agreement* on the student's own proposals (sidecar): mean ‖a_student − label‖₂, and the
+      fraction of steps with ‖Δ‖∞ ≤ 0.1 normalised units (0.15 m/s model scale, 0.75 m/s full
+      scale). Both are over all steps and over steps where the student's action was executed.
+    - *Copycat:* the mean autograd ∂a/∂last_action diagonal (EMA, eval, fp32 CPU) for three cases:
+      the rollout student on its own states; the end-of-iteration EMA on P4-D5's held-out states;
+      the same EMA on the iteration's own states. On `bc` s0's 30 k EMA, autograd gives
+      0.909 / 0.785 / 0.746 against P4-D5's finite differences 0.896 / 0.782 / 0.755. The method is
+      stated with every number.
+    - *`select` success* of each iteration's end EMA (CPU fp32 path), with outcomes, p95 closing
+      speed, `n_tunnelled` and `n_detectors_disagree`. The iteration-0 row is `bc`'s 30 k EMA.
+11. **Wall clock.** The driver's `gpu_hours` for `bc_dagger` is wall clock and includes CPU rollouts
+    and audits, which P4-D2 did not count. Per-stage `timing_s` is recorded so they can be
+    separated.
+12. **Layering.** `ila.data.dagger` imports `ila.train.select` (student loading, outcome order).
+    `ila.train` imports `ila.data.dagger` lazily, and there is no cycle.
+
+*Reason.* Each item is something a reviewer would otherwise reverse-engineer from code. Items 6–7
+are the Phase 5 audits the plan requires. Item 9 extends P4-D1 item 3's held-out caveat to the
+on-policy arm.
+
+*Evidence.* `src/ila/data/dagger.py`, `src/ila/train/dagger_stage.py`,
+`src/ila/train/diagnostics.py`, `src/ila/train/dagger_report.py`; `tests/test_data_dagger.py`,
+`tests/test_train_dagger.py`.
+
+*Consequence.* `bc_dagger` runs through `make dagger-bg SEED=<n>`. Its pre-flight is
+`make train-smoke ARM=bc_dagger` → `results/phase5/smoke_bc_dagger.json`.

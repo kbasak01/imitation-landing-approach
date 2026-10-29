@@ -3,7 +3,8 @@
 Phase 2 builds the **real architectures with random initialisation** (user decision
 2026-10-27) for the throughput and determinism studies; Phase 4 adds ``bc_state``
 (:mod:`ila.policies.state_mlp`, P8's 25-d observation, privileged by design and never a vision
-row), the ``bc_matched`` / ``bc_dart`` entries (the ``bc`` architecture) and trained-checkpoint
+row), the ``bc_matched`` / ``bc_dart`` entries (the ``bc`` architecture; Phase 5 adds
+``bc_dagger``, ``base: bc.yaml``) and trained-checkpoint
 loading (:func:`load_student`) on the same modules. Every builder:
 
 * reads the arm's ``configs/train/<arm>.yaml``, the camera config (input 96 px, crop 88 px) and
@@ -103,6 +104,7 @@ REGISTRY: Final[Mapping[str, StudentEntry]] = MappingProxyType(
     {
         "bc": _entry("bc", "bc"),
         "bc_matched": _entry("bc_matched", "bc"),
+        "bc_dagger": _entry("bc_dagger", "bc"),
         "bc_dart": _entry("bc_dart", "bc"),
         "bc_state": _entry("bc_state", "state"),
         "dp": _entry("dp", "dp"),
@@ -117,7 +119,7 @@ def load_train_config(arm: str) -> dict[str, Any]:
         arm: A key of :data:`REGISTRY`.
 
     Returns:
-        The parsed mapping.
+        The parsed mapping, one ``base:`` level resolved.
 
     Raises:
         KeyError: If the arm is not registered.
@@ -127,7 +129,17 @@ def load_train_config(arm: str) -> dict[str, Any]:
     cfg: dict[str, Any] = yaml.safe_load(entry.config.read_text(encoding="utf-8"))
     if cfg.get("arm") != arm:
         raise ValueError(f"{entry.config} declares arm {cfg.get('arm')!r}, expected {arm!r}")
-    return cfg
+    base = cfg.pop("base", None)
+    if base is None:
+        return cfg
+    # One level, this file's top-level keys replacing the base's (``ila.train.config``'s rule;
+    # ``bc_dagger.yaml``: ``base: bc.yaml``, the identical architecture).
+    parent: dict[str, Any] = yaml.safe_load(
+        (entry.config.parent / str(base)).read_text(encoding="utf-8")
+    )
+    if "base" in parent:
+        raise ValueError(f"{entry.config}: nested base configs are not supported")
+    return {**parent, **cfg}
 
 
 def encoder_config(train_cfg: Mapping[str, Any], obs_variant: str = "default") -> EncoderConfig:

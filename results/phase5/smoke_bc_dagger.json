@@ -1,0 +1,251 @@
+{
+  "arm": "bc_dagger",
+  "checkpoint": {
+    "file": "artifacts/runs/smoke/bc_dagger/overfit/ema_last.pt",
+    "sha256": "4008579cb5651c26b766f009e00f59c25a713a9439efc252a67c7239c499859e"
+  },
+  "checks": {
+    "audits_clean": true,
+    "heldout_overlap_0": true,
+    "iteration1_flies_bc_last_step": true,
+    "iteration2_flies_iteration1_last_step": true,
+    "labelled_episodes_1000_plus_4i": true,
+    "loop_done": true,
+    "normaliser_inherited": true,
+    "overfit_lands_7_of_8": true,
+    "overfit_mse_below_threshold": true,
+    "resume_reuses_rollouts": true
+  },
+  "closed_loop": {
+    "mean_steps": 68.125,
+    "n": 8,
+    "n_detectors_disagree": 0,
+    "n_touchdown": 8,
+    "n_tunnelled": 0,
+    "outcome_order": [
+      "crash",
+      "off_pad",
+      "hard_landing",
+      "bounce",
+      "success",
+      "timeout"
+    ],
+    "outcomes": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 0,
+      "off_pad": 0,
+      "success": 8,
+      "timeout": 0
+    },
+    "p95_closing_speed_m_s": 0.32013417692195856,
+    "per_episode": [
+      {
+        "closing_speed_normal_m_s": 0.3115949049295487,
+        "demo_index": 1000,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 66
+      },
+      {
+        "closing_speed_normal_m_s": 0.3247322464563331,
+        "demo_index": 1001,
+        "outcome": "success",
+        "ss": "SS5",
+        "steps": 61
+      },
+      {
+        "closing_speed_normal_m_s": 0.18840575936958048,
+        "demo_index": 1002,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 83
+      },
+      {
+        "closing_speed_normal_m_s": 0.104869981194519,
+        "demo_index": 1003,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 74
+      },
+      {
+        "closing_speed_normal_m_s": 0.12045436649023075,
+        "demo_index": 1200,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 75
+      },
+      {
+        "closing_speed_normal_m_s": 0.28885112656753426,
+        "demo_index": 1201,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 60
+      },
+      {
+        "closing_speed_normal_m_s": 0.2108621673225736,
+        "demo_index": 1202,
+        "outcome": "success",
+        "ss": "SS5",
+        "steps": 62
+      },
+      {
+        "closing_speed_normal_m_s": 0.13890024420947192,
+        "demo_index": 1203,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 64
+      }
+    ],
+    "required_success": 7,
+    "success": 8,
+    "wall_s": 11.845706138003152,
+    "workers": 8
+  },
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+        "matches": true,
+        "path": "configs/train/bc_dagger.yaml",
+        "sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7"
+      },
+      {
+        "frozen_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+        "matches": true,
+        "path": "configs/train/bc.yaml",
+        "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+      },
+      {
+        "frozen_sha256": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11",
+        "matches": true,
+        "path": "configs/data/demos.yaml",
+        "sha256": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+      }
+    ]
+  },
+  "frozen_hyperparameters_unchanged": true,
+  "git": {
+    "ila_commit": "dce79fef57360ede5aec0ea2e99b1dd694b070ec",
+    "ila_dirty": true,
+    "ila_dirty_paths": [
+      "M Makefile",
+      " M docs/protocol.md",
+      " M scripts/train.py",
+      " M scripts/train_smoke.py",
+      " M src/ila/data/audit.py",
+      " M src/ila/data/collect.py",
+      " M src/ila/data/dagger.py",
+      " M src/ila/policies/registry.py",
+      " M src/ila/train/config.py",
+      " M src/ila/train/loop.py",
+      " M src/ila/train/manifest.py",
+      " M src/ila/train/select.py",
+      " M src/ila/train/smoke.py",
+      " M tests/test_train_loop.py",
+      "?? scripts/dagger_report.py",
+      "?? src/ila/train/dagger_report.py",
+      "?? src/ila/train/dagger_stage.py",
+      "?? src/ila/train/diagnostics.py",
+      "?? tests/test_data_dagger.py",
+      "?? tests/test_train_dagger.py"
+    ],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "init_from": {
+    "file": "artifacts/runs/bc/s0/checkpoints/s0_step030000.pt",
+    "sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31"
+  },
+  "loop": {
+    "device": "cuda",
+    "iterations": {
+      "1": {
+        "aggregate_frames": 61767,
+        "audit_clean": true,
+        "beta": 0.5,
+        "heldout_shared_starting_conditions": 0,
+        "labelled_episodes": 1004,
+        "labelled_frames_rollouts": 249,
+        "rollout_outcomes": {
+          "bounce": 0,
+          "crash": 0,
+          "hard_landing": 0,
+          "off_pad": 0,
+          "success": 4,
+          "timeout": 0
+        },
+        "rollout_student": {
+          "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s0/checkpoints/s0_step030000.pt",
+          "inference_path": "cpu_fp32_single_sample",
+          "rule": "ema_last_step_of_previous_iteration",
+          "sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+          "source": "init_from (bc run, last step)",
+          "weights": "ema"
+        }
+      },
+      "2": {
+        "aggregate_frames": 62007,
+        "audit_clean": true,
+        "beta": 0.25,
+        "heldout_shared_starting_conditions": 0,
+        "labelled_episodes": 1008,
+        "labelled_frames_rollouts": 489,
+        "rollout_outcomes": {
+          "bounce": 0,
+          "crash": 0,
+          "hard_landing": 0,
+          "off_pad": 0,
+          "success": 4,
+          "timeout": 0
+        },
+        "rollout_student": {
+          "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/smoke/bc_dagger/run/checkpoints/s1_step000200.pt",
+          "inference_path": "cpu_fp32_single_sample",
+          "rule": "ema_last_step_of_previous_iteration",
+          "sha256": "8583fcd9ed5898504131fed139822715621ba5dafdfd6d72ad55591e5fb86dee",
+          "source": "this run",
+          "weights": "ema"
+        }
+      }
+    },
+    "resume": {
+      "final_ema_identical_after_resume": true,
+      "note": "identity is informational: GPU training is not guaranteed bit-reproducible (P4-D4 correction 1)",
+      "rollouts_reused": true
+    },
+    "state": "done",
+    "steps": 400,
+    "wall_s": 99.66476056500687
+  },
+  "overfit": {
+    "episodes": [
+      {
+        "n": 4,
+        "start": 1000,
+        "store": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/smoke/bc_dagger/data/dagger/bc_dagger/s0/iter1.h5"
+      },
+      {
+        "n": 4,
+        "start": 1200,
+        "store": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/smoke/bc_dagger/data/dagger/bc_dagger/s0/iter2.h5"
+      }
+    ],
+    "mse": {
+      "frames": 489,
+      "threshold": 0.0001,
+      "value": 2.1356781608004183e-06
+    },
+    "wall_s": 771.8325373549887
+  },
+  "overrides": {
+    "batch_size": null,
+    "iterations": 2,
+    "overfit_steps": 8000,
+    "purpose": "smoke",
+    "rollout_limit": 4,
+    "steps_per_iteration": 200
+  },
+  "passed": true,
+  "what": "A: 2 DAgger iterations x 4 rollout episodes from bc s0's last step, then a resume between stages; B: the bc architecture overfit on those 8 rollout episodes, flown closed loop from their starting conditions (CPU fp32 single-sample path, EMA)"
+}
