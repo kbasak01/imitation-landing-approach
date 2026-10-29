@@ -1488,3 +1488,99 @@ selected checkpoint of each trial (EMA weights, CPU fp32 single-sample path) was
 
 *Consequence.* No other tuning is permitted (P3-D1 §4). The trial runs are tuning runs, never
 core seeds.
+
+### P4-D4 — Run verdicts, two corrections, measured lengths (2026-10-29)
+*Decision.* This entry records the `training-run-diagnostician` verdicts on all 23 Phase 4 runs,
+corrects P4-D1 item 8 and P4-D3, and fixes the disclosures that every later use of these arms
+carries. No run is excluded, no seed is dropped or replaced (P3-D1 §4), and no threshold changes.
+
+*Verdicts.* Every run's provenance was re-verified: config and data SHA-256, clean tree, every
+checkpoint SHA-256 recomputed against its manifest. Selection was recomputed from the rows.
+
+| Arm | Runs | Verdict | Arm-level caveat |
+|---|---|---|---|
+| `bc_dart` σ trials | 3 | TRUSTWORTHY | σ* decided by one `select` episode (P4-D3) |
+| `bc` | s0–s4 | TRUSTWORTHY | selection is noise-level (all candidates 140–149/150; winner's curse about +2 episodes); strong `last_action` reliance (∂a/∂last_action diagonal 0.75–0.91) |
+| `bc_state` | s0–s4 | TRUSTWORTHY | at the `select` ceiling (148–150 for every candidate) |
+| `bc_matched` | s0–s4 | CAVEAT (all five) | see below |
+| `bc_dart` | s1–s4 TRUSTWORTHY; s0 CAVEAT | | s0 is the tuning trial (correction 2); selection at the ceiling |
+
+**`bc_matched` caveats.** None is a defect in a run.
+- (a) Iteration 5's held-out loss is contaminated (P4-D1 item 3). The last clean point is the
+  end of iteration 4, where held-out loss is about 20 % below `bc`'s.
+- (b) `bc` → `bc_matched` changes both data (2×) and steps (+50 k). `bc`'s own
+  `last_action` reliance rises with steps alone (0.57 → 0.81 from 5 k to 30 k on s0), so this pair
+  is not a clean data-scaling contrast and is not reported as one. `bc_matched` vs `bc_dagger`
+  (H1) is matched in steps, data count and schedule, and is unaffected.
+- (c) The two candidates differ by 1–4 `select` episodes, which is within binomial noise.
+- (d) `last_action` reliance rises across iterations, from 0.78–0.82 to 0.86–0.91. On
+  DART-perturbed states, open-loop MSE is 10–15 % worse than `bc`'s, even though it is about
+  20 % better on clean states.
+- (e) In s1, the selected checkpoint goes off pad on `select` SS4 #35 at 1.234 m/s normal
+  closing speed (model scale), about 2× the fastest `bc` touchdown. It is scored as a failure.
+  It is a dive mode to watch in Phase 8.
+- Bookkeeping: checkpoint `global_step` counts this run's steps only (5 k–50 k). The candidates
+  are cumulative steps 75 k and 80 k of P3-D1's 80 k schedule.
+
+*Correction 1, P4-D1 item 8.* "GPU training is not bit-reproducible run to run" is wrong as
+observed.
+- Determinism is **not guaranteed**: non-deterministic cuDNN algorithms are allowed. But it was
+  **observed** bit-identical at a fixed seed and code on this host: A4000, bf16, TF32 off,
+  `cudnn.benchmark = False`.
+- The evidence is `bc_dart` s0 against the σ = 0.10 trial, two processes about 13 h apart.
+  Model, EMA and AdamW tensors are identical at all six checkpoints. The training logs are
+  identical at every point, and the `select` rows are identical in every column except
+  `ckpt_sha256`.
+- Training randomness is keyed by step. The saved global CPU RNG state is never consumed.
+- No Phase 4 run resumed, so the P3-D1 §4 resume rule was never exercised.
+
+*Correction 2, P4-D3.* "`bc_dart` seed 0 re-trained" and "trial runs … never core seeds" did not
+separate the two.
+- The re-training reproduced the σ = 0.10 trial bit for bit, so **`bc_dart` s0 is the model whose
+  `select` score chose σ\*** (best of 3 σ × 6 checkpoints).
+- It is kept: P3-D1 §4 forbids replacing or re-drawing a seed. Its frozen-list rows remain an
+  unbiased measurement of that model. But the 5-seed arm estimate includes one seed chosen partly
+  for looking good on `select`.
+- The evidence suggests the bias is small: seeds 1–4 score 149/150/150/150 on `select`, so s0's
+  150 is typical.
+- **Binding on Phase 8 and the README:**
+  - a footnote on every `bc_dart` row stating the above;
+  - a labelled sensitivity row giving `bc_dart`'s IQM and its scored contrast (H1 DART secondary,
+    against `bc`) on seeds 1–4 alone, reported beside the 5-seed result and never substituted for
+    it;
+  - s0's `select` number is never quoted.
+- 0.807 GPU-h went on the duplicate s0.
+
+*Measured student episode lengths* (P3-D1 §5, last line). These are the mean steps on `select`
+of the selected checkpoints, over 5 seeds:
+
+| Arm | Mean steps |
+|---|---|
+| `bc` | 65.3 (max 237) |
+| `bc_state` | 61.5 |
+| `bc_matched` | 62.7 |
+| `bc_dart` | 61.6 |
+
+- P2-D2's central evaluation projection used the teacher's 61.5. The measured BC-family lengths
+  are within 6 % of it, so the 12.2 h central estimate stands for these arms.
+- `select` is SS3–SS5. SS6 and timeouts on frozen lists can lengthen episodes toward P2-D2's
+  upper bound.
+
+*Budget.* Phase 4 measured **17.50 GPU-h** against 16.9 projected (+3.5 %).
+
+| Arm | Measured | Projected |
+|---|---|---|
+| σ trials | 2.37 | 2.35 |
+| `bc` | 3.96 | 3.92 |
+| `bc_state` | 0.21 | 0.13 |
+| `bc_matched` | 6.95 | 6.53 |
+| `bc_dart` | 4.02 | 3.92 |
+
+There is no cut and none is possible (P4-D2). Per-run values are in
+`results/phase4/runs_summary.csv` (SHA-256 `bc8dcdeb…8c26f123`).
+
+*Evidence.*
+- `results/phase4/runs/<arm>/s<n>/{manifest,selection}.json` and
+  `results/phase4/runs_summary.csv`, committed at `9074803`.
+- The diagnostician's scripts and logs are session scratch, not committed. The figures above are
+  quoted from its reports.
