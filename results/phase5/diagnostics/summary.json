@@ -1,0 +1,749 @@
+{
+ "what": "training-run-diagnostician, Gate 5: bc_dagger s0-s4",
+ "date": "2026-10-29",
+ "arm": {
+  "verdicts": {
+   "bc_dagger/s0": "TRUSTWORTHY",
+   "bc_dagger/s1": "TRUSTWORTHY",
+   "bc_dagger/s2": "TRUSTWORTHY",
+   "bc_dagger/s3": "TRUSTWORTHY",
+   "bc_dagger/s4": "TRUSTWORTHY"
+  },
+  "selection": {
+   "selected_success": [
+    149,
+    149,
+    148,
+    149,
+    150
+   ],
+   "mean_selected_success": 149.0,
+   "selected_steps": [
+    45000,
+    50000,
+    45000,
+    50000,
+    45000
+   ],
+   "p95": [
+    0.3730873621547154,
+    0.41051962725233265,
+    0.3661307575757112,
+    0.3472883491510876,
+    0.3814832036072747
+   ],
+   "all_candidate_success": [
+    [
+     149,
+     148
+    ],
+    [
+     149,
+     149
+    ],
+    [
+     148,
+     147
+    ],
+    [
+     149,
+     149
+    ],
+    [
+     150,
+     148
+    ]
+   ],
+   "mean_all_candidates": 148.6,
+   "winners_curse_mean": 0.4,
+   "pooled_outcomes": {
+    "success": 745,
+    "bounce": 3,
+    "hard_landing": 2
+   },
+   "pooled_by_ss": {
+    "SS3": "250/250",
+    "SS4": "250/250",
+    "SS5": "245/250"
+   },
+   "pooled_closing_q50_q95_max": [
+    0.2496,
+    0.3791,
+    0.4963
+   ],
+   "pooled_mean_steps": 62.268,
+   "pooled_max_steps": 84,
+   "pooled_action_jerk_mean": 0.21455689724557858,
+   "pooled_lateral_offset_q95": 0.029346751672165564,
+   "n_tunnelled_selected": 1,
+   "n_detectors_disagree_selected": 0,
+   "failing_episodes_shared_across_seeds": {
+    "827350810": 2,
+    "1127793918": 3
+   },
+   "distinct_failing_episodes": 2
+  },
+  "bc_matched_selection": {
+   "selected_success": [
+    148,
+    145,
+    147,
+    147,
+    146
+   ],
+   "mean_selected_success": 146.6,
+   "selected_steps": [
+    50000,
+    50000,
+    50000,
+    45000,
+    45000
+   ],
+   "p95": [
+    0.4223242703413011,
+    0.4320821089580639,
+    0.39715337812629564,
+    0.4461828972919239,
+    0.4154159175216692
+   ],
+   "all_candidate_success": [
+    [
+     144,
+     148
+    ],
+    [
+     144,
+     145
+    ],
+    [
+     146,
+     147
+    ],
+    [
+     147,
+     143
+    ],
+    [
+     146,
+     144
+    ]
+   ],
+   "mean_all_candidates": 145.4,
+   "winners_curse_mean": 1.2,
+   "pooled_outcomes": {
+    "success": 733,
+    "bounce": 6,
+    "hard_landing": 6,
+    "off_pad": 5
+   },
+   "pooled_by_ss": {
+    "SS3": "249/250",
+    "SS4": "243/250",
+    "SS5": "241/250"
+   },
+   "pooled_closing_q50_q95_max": [
+    0.2699,
+    0.4233,
+    1.2341
+   ],
+   "pooled_mean_steps": 62.7,
+   "pooled_max_steps": 164,
+   "pooled_action_jerk_mean": 0.21497446350672889,
+   "pooled_lateral_offset_q95": 0.057494935882485824,
+   "n_tunnelled_selected": 5,
+   "n_detectors_disagree_selected": 1,
+   "failing_episodes_shared_across_seeds": {
+    "1903057976": 2,
+    "1127793918": 4,
+    "1821327225": 2
+   },
+   "distinct_failing_episodes": 12
+  },
+  "paired_selected_per_seed": {
+   "s0": {
+    "dagger": 149,
+    "matched": 148,
+    "dagger_fail": 1,
+    "matched_fail": 2,
+    "shared_fail": 0
+   },
+   "s1": {
+    "dagger": 149,
+    "matched": 145,
+    "dagger_fail": 1,
+    "matched_fail": 5,
+    "shared_fail": 1
+   },
+   "s2": {
+    "dagger": 148,
+    "matched": 147,
+    "dagger_fail": 2,
+    "matched_fail": 3,
+    "shared_fail": 1
+   },
+   "s3": {
+    "dagger": 149,
+    "matched": 147,
+    "dagger_fail": 1,
+    "matched_fail": 3,
+    "shared_fail": 1
+   },
+   "s4": {
+    "dagger": 150,
+    "matched": 146,
+    "dagger_fail": 0,
+    "matched_fail": 4,
+    "shared_fail": 0
+   }
+  },
+  "decided_by": {
+   "s0": "success",
+   "s1": "p95",
+   "s2": "success",
+   "s3": "p95",
+   "s4": "success"
+  },
+  "per_iteration_select_success_mean": {
+   "0": 146.0,
+   "1": 145.8,
+   "2": 145.2,
+   "3": 148.4,
+   "4": 148.4,
+   "5": 148.2
+  },
+  "per_iteration_rollout_success_mean": {
+   "1": 200.0,
+   "2": 199.0,
+   "3": 198.4,
+   "4": 197.0,
+   "5": 199.0
+  },
+  "teacher_agreement_own_states_l2_range": {
+   "1": [
+    0.030627,
+    0.031837
+   ],
+   "2": [
+    0.042194,
+    0.04315
+   ],
+   "3": [
+    0.055125,
+    0.057902
+   ],
+   "4": [
+    0.07373,
+    0.080932
+   ],
+   "5": [
+    0.069647,
+    0.073954
+   ]
+  },
+  "teacher_agreement_4_to_5_falls_all_seeds": true,
+  "fixed_set_sibling_l2": {
+   "bc_dagger": {
+    "0": [
+     0.072592,
+     0.076601
+    ],
+    "1": [
+     0.072076,
+     0.075826
+    ],
+    "2": [
+     0.071108,
+     0.074619
+    ],
+    "3": [
+     0.069486,
+     0.072727
+    ],
+    "4": [
+     0.067438,
+     0.070885
+    ],
+    "5": [
+     0.06185,
+     0.064299
+    ]
+   },
+   "bc_matched": {
+    "0": [
+     0.072592,
+     0.076601
+    ],
+    "1": [
+     0.072562,
+     0.076409
+    ],
+    "2": [
+     0.072614,
+     0.076591
+    ],
+    "3": [
+     0.072702,
+     0.076651
+    ],
+    "4": [
+     0.072805,
+     0.076674
+    ],
+    "5": [
+     0.071891,
+     0.075735
+    ]
+   }
+  },
+  "fixed_set_sibling_l2_it0_to_it4_rel_change_bc_dagger": [
+   -0.074621,
+   -0.056035
+  ],
+  "fixed_set_sibling_l2_it0_to_it5_rel_change_bc_matched": [
+   -0.012075,
+   -0.007799
+  ],
+  "heldout_mse_teacher_states": {
+   "bc_dagger": {
+    "0": [
+     0.000266,
+     0.000296
+    ],
+    "1": [
+     0.000257,
+     0.000284
+    ],
+    "2": [
+     0.000268,
+     0.000318
+    ],
+    "3": [
+     0.000327,
+     0.000373
+    ],
+    "4": [
+     0.000406,
+     0.000475
+    ],
+    "5": [
+     0.00041,
+     0.000474
+    ]
+   },
+   "bc_matched": {
+    "0": [
+     0.000266,
+     0.000296
+    ],
+    "1": [
+     0.00025,
+     0.000278
+    ],
+    "2": [
+     0.000241,
+     0.00026
+    ],
+    "3": [
+     0.000227,
+     0.000252
+    ],
+    "4": [
+     0.000215,
+     0.000233
+    ],
+    "5": [
+     5.6e-05,
+     6.1e-05
+    ]
+   }
+  },
+  "heldout_mse_it0_to_it5_rel_change_bc_dagger": [
+   0.463949,
+   0.601406
+  ],
+  "heldout_ema_loss_log_bc30k_vs_it5": {
+   "bc": [
+    0.000266,
+    0.000286
+   ],
+   "bc_dagger_it5": [
+    0.000413,
+    0.00049
+   ],
+   "bc_matched_it4": [
+    0.000218,
+    0.000232
+   ]
+  },
+  "copycat_J_diag_heldout_FD": {
+   "bc_dagger_it0": [
+    [
+     0.8777,
+     0.9102
+    ],
+    [
+     0.7514,
+     0.7817
+    ],
+    [
+     0.7005,
+     0.7843
+    ]
+   ],
+   "bc_dagger_it5": [
+    [
+     0.7601,
+     0.7827
+    ],
+    [
+     0.6661,
+     0.692
+    ],
+    [
+     0.4613,
+     0.5119
+    ]
+   ],
+   "bc_matched_it5": [
+    [
+     0.945,
+     0.9592
+    ],
+    [
+     0.8483,
+     0.8842
+    ],
+    [
+     0.7804,
+     0.8891
+    ]
+   ],
+   "teacher": {
+    "heldout": [
+     0.074,
+     0.097,
+     0.176
+    ],
+    "dart_0.10": [
+     0.066,
+     0.09,
+     0.161
+    ],
+    "source": "P4-D5, results/phase4/diagnostics/inputs/teacher_jac.json (finite differences, eps 0.05)"
+   }
+  },
+  "copycat_autograd_csv_vs_FD_it5_heldout_max_abs_diff": 0.011188613057136587,
+  "rollout_copycat_frac_range": [
+   0.000198,
+   0.000991
+  ],
+  "rollout_lag_mse_t_vs_tminus1_beta0": [
+   [
+    0.009066,
+    0.01226
+   ],
+   [
+    0.075645,
+    0.078907
+   ]
+  ],
+  "rollout_saturation_student_vs_label_beta0": [
+   [
+    0.024905,
+    0.029623
+   ],
+   [
+    0.025888,
+    0.029946
+   ]
+  ],
+  "rollout_jerk_student_vs_label_beta0": [
+   [
+    0.213387,
+    0.217035
+   ],
+   [
+    0.208804,
+    0.213794
+   ]
+  ],
+  "rollout_timeouts_total": 0,
+  "rollout_steps_max": 133,
+  "labelled_frames": {
+   "bc_dagger_rollouts_per_seed": [
+    61698,
+    61495,
+    61841,
+    61705,
+    61724
+   ],
+   "teacher_demos_1000_1999": 61355,
+   "aggregate_stage5_bc_dagger": [
+    123216,
+    123013,
+    123359,
+    123223,
+    123242
+   ],
+   "aggregate_stage5_bc_matched": 122873
+  },
+  "budget": {
+   "wall_h_total": 7.112141381374709,
+   "wall_h_range": [
+    1.400191,
+    1.461943
+   ],
+   "gpu_h_net_of_rollouts_audit_aggregate_total": 6.319257801471063,
+   "gpu_h_net_of_rollouts_audit_only_total": 6.4450652695455375,
+   "cpu_in_wall_s_range": [
+    562.694958,
+    579.18819
+   ],
+   "projected_P4_D2": 6.53,
+   "phase4_measured": 17.498,
+   "bc_matched_total_gpu_h": 6.944744621121661,
+   "cut_rule": "P4-D2: no cut, cut factor 1.0, no later cut allowed"
+  },
+  "dagger_iterations_csv": {
+   "duplicate_column_names_in_header": [
+    "rollout_success",
+    "select_success"
+   ],
+   "mismatches": []
+  },
+  "frozen_list_rows_for_bc_dagger": []
+ },
+ "scripts_sha256": {
+  "consolidate.py": "0c40845a45005aa1dd1d4be10b168c6b2516a1d1063e1a74b84f8f8dbc2bf349",
+  "curves.py": "6eba30811d80f99f970c11fdbe9d6d392607f21ac4c1d656e3307e4c23841fd2",
+  "openloop.py": "07f16bedfd674161aa9c4325fd89ffae697a8cdfe4d40aa3958dc19f5f768aaa",
+  "prov.py": "201b13c3775b17ae82fd43a9e6c170d5ac92c03da723b5b1c9d49d35d1f1d010",
+  "rollouts.py": "72938523960dccb66b20640eef7ef34e651ab06346f4c7287142bc97295a435c",
+  "selection.py": "e60ddbe7f61b0e37b36fd89dc8a867b5ae7c27d4cc7415572df44dc9aabbd057"
+ },
+ "logs_sha256": {
+  "curves.json": "807a837594417ff8883dcb7abd31da9ff1cfe2e27c43028d6ccbc71da23db286",
+  "curves.log": "0eaef971ff4153862b614a51a2d0b560659d582d4c1b0ce1957873f449d03160",
+  "openloop.json": "4d7e813c97dae0ae98ebf6f9b273c5357e469362b8fdc08edc37323d1f2522b8",
+  "openloop.log": "839206b6143dddc70f3969c5e19caff59e724073119759204f0df3fa7aefbf83",
+  "prov.json": "e085a52a9d4a20536371c35d226aa6ca5f496a8d024d3c80c4cb8bc62a8f7261",
+  "rollouts.json": "8ac027588a97cc7fccd313739d5cc6d827d90d3126451e8eedc291e1c5fba6e8",
+  "rollouts.log": "bb59f4d5c030e06239449f0c29b106cbe5f2a655a8116bab2f4d65fe3e17d60b",
+  "selection.json": "e933a2c84f6bed821151c9bc0433a6e950ba5176aa1f413d13993f8d865036a2",
+  "selection.log": "7469a298fe6e6d37b85f35e6a7dfe0c3d35871974138a72add04fe0817641e96"
+ },
+ "per_run_json_sha256": {
+  "bc_dagger/s0.json": "61a39c71464e5c1096f318870a6d1c5058ef7fa1d82001661278014f5e42173d",
+  "bc_dagger/s1.json": "81038f03590fbd811e878c4e99168cc6d530ee7eaa10d0de0a9c08fb5f1b6800",
+  "bc_dagger/s2.json": "3d86bae4f9ff36caf0bc2ffac1df9f63148764b3f6ec4e8116ace7a55531450e",
+  "bc_dagger/s3.json": "d58e12d262c59936a9a7c230798ffcf68b4f3809d50d2380b1bfc8c7188a5417",
+  "bc_dagger/s4.json": "c1ff036cd959c5dd307d39e80bc91e676b3fa6de2d79c3aefa701fd3c4549493"
+ },
+ "inputs_sha256": {
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter1.h5": "a56f461c1aafaac112e56e55cbd8dac3118ed0da56a7a1778c12e566326e28ee",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter1.manifest.json": "0a51bc62835a262830a468210c2fa350fcef7f8f58261b2b14669c382b80557c",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter1.sidecar.npz": "c19ce1ab1861ef4bf77a19376a61c4314d16ea33e59db619bb784be2bea46cae",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter2.h5": "b669690da45a4108718cd4c08159a289d877858eac5c1ad0c55a9be4658bc769",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter2.manifest.json": "26ad98f8ca5101c2289c3951b557aa920013252179487d357d7dc058c5ed6857",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter2.sidecar.npz": "9de9afde15ee5e9f6f8afa5db15eefbe8c33b5526bf8ace97822f95e4c375d34",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter3.h5": "e66043e0dca0c3cdf4b1e03813dfe65409793970c87e07aaaad8bf2d60e07111",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter3.manifest.json": "97e2c3d2814a67ae659cac84e61754c13d2e2b74be7f2f7a7b3df80a5d760358",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter3.sidecar.npz": "806143c8aabea060fb0c1b2c194f501afc74d5324ca37efa0c7412ae8f06b092",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter4.h5": "76c41832c70cbfe082c9bb6126fbaced519be5ebc1f4a9de2e6839a9e410cc82",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter4.manifest.json": "1dfba2e7e49aa5384abf4685f5e82c844047b0093cb2ac80f0df4eec5ea7b4a2",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter4.sidecar.npz": "12138c3dd4d153992f8b06c121e0da3a80304a5e0fdce88348b613d0eb21e37b",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter5.h5": "da42d231398bedf9b32753ffbac6d4756a8fb7bc895579d40a4e7c5686c73e50",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter5.manifest.json": "c5abef3f361805aa43aaf589a5f9d84ce96eef7e8ae7f7ae5aaebae6e92b3834",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter5.sidecar.npz": "54252568381238219d01b4fbb476692781fe32ba520951347812a2c170907cde",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.h5": "43394c673fdb1d54e4f751e306272b1891a207f45f6479bf43f696dcb9d93fdb",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.manifest.json": "8aee8b8ea73c247a5d9d467e696bde98dc8b8993ae1af726121e940f21642aec",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.sidecar.npz": "1f7cfa37072e71bd241747c0790783cbce247cfddceda0ed8bee7861f5b51df3",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter2.h5": "8076b308ec4b3985920a572a3f0300bca61a141c87eafd14ce0a770ea911da92",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter2.manifest.json": "fefefb13b9252d23961d19467d2141779e18290d436c30c0d7d08ea22abc3934",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter2.sidecar.npz": "4f5cb477b50046d848afcbf68daac9711d58d2414cc57c1bc18daaa439390b97",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter3.h5": "53a09015471991415d8c0e8755fdbc161c900f6a8f4c83fb7d4960b164ef1f0f",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter3.manifest.json": "0faf8ca96fa8f6269ae49cbc9bb0968fd7450205f64c527edde30166f94bd6e6",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter3.sidecar.npz": "a778158502b79e3b0ec0681c4dca3a6cf3822f5faabd101066af7f92f981e2a6",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter4.h5": "5f29f7bbb9da4792df77948176b051b36c001d24805b77b9a8910d5c617a1d18",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter4.manifest.json": "5fdba5c0f491933ef26f0746ad891b09e998f8138a9e8c19ba9318d02932169d",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter4.sidecar.npz": "a233b063bcda2c6a50de10ee1d0d0d02633a90b56f8e428d885e87763b06d6a7",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter5.h5": "743164c440e1bc599142abd5d733104f5c61210b2e0d914e5602cd8cb4bdf862",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter5.manifest.json": "c328efa8db0e6ec24bcdf75c871e82e6ab0d82db616626628b4bd255b984d6b5",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter5.sidecar.npz": "529d6b924ccf6607d2ac96031f8df51d3ea8f6c9fa7b905841805315b6d8093b",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter1.h5": "baacc8a5dcc9d46ca3f4f0281fce52cc65c48ad32db390a59ebf172432410ff1",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter1.manifest.json": "f09664d95ef20c74157fd2444910afa8f219996584e9bb5bade0ec47182cefca",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter1.sidecar.npz": "bddfb2bc5a4a77f9f1470d6eda2c23b0a49770c62c433779566c4b10db52e6ae",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter2.h5": "2e78cb4ba1d0b2b57b66b847d0bb33ed24c94e4f7c479a93c5393fd7eb0769b7",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter2.manifest.json": "3a05ced4c387ffc8d01599b71fb7eadc613047f2d03386db2ceab49513c68acd",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter2.sidecar.npz": "4866e0d6311912bb64ee3e9b9ab54bc495d3d0cfcf4b62333a68568028ee6468",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter3.h5": "e350a4a64bcf332189ec97cd89b00d1048a2649b4818594e0dc3a4b9b6dd3bf8",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter3.manifest.json": "3f26d7448b4bc6ffc91cd63a7228e8159fcb47bf6745fd480550ea7f8666e9f0",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter3.sidecar.npz": "d5d6660dea0740da7eea9bd231c19a72950f5867914ab3e7523971b0b85c3dbb",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter4.h5": "d8f2ac4353debfd37c07040e175897aca417e966f8873728ebaabf50922e993f",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter4.manifest.json": "ae50ee862ed4a606904917809253e9844bfbd96749b5045eade3bc52f3c008a8",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter4.sidecar.npz": "3ab684e88664515549ba5ac87b655bb119ad3c0b10dd89459f17d510ab70687a",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter5.h5": "71940e65f7c7dad67c1c660a8c6370ff42eed9cbe5586c7c4ef84ff0690155ae",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter5.manifest.json": "0cab7221fb3b21f7f6192eaf230b391c4791fe71bd2f7b31df4cfe87e3d4517d",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s2/iter5.sidecar.npz": "7590298a2222e2e148a2970896a2d35644c9a8a97c44a34908008da232f2fc60",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter1.h5": "0e5e4b0d7380db243db1dde6e90cf0f1584cd4854b0a11604575868e7c0c56ba",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter1.manifest.json": "d3bc26cf7b3052f23e228defc96a0ae1a9e7ffae20fe813cc4198acda90e7c17",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter1.sidecar.npz": "e48514405d2dc7f5d9a67dec5dda485f6914ddbe647679b643d81adca6e990ff",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter2.h5": "414eaa655338afb4996e6debc7371a4d8c0459de86d919db62a13550049138f7",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter2.manifest.json": "d4fa26c6422952bb973e9473fe5bff5e95647de558a2d6c2fc296cd2caf0fce1",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter2.sidecar.npz": "c33e372dc89ba57161cea053b0ec8d035764bc978a6f9037bcded61603d6c1d7",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter3.h5": "5ada89769ec4b5e5ac3be9965913035a72950aac77d365523041b04b8af86176",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter3.manifest.json": "3d957dcec4de8da83772c40a8c2b123f24612c404a7a8bde6f85ee7a3a38c014",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter3.sidecar.npz": "30c6098fbeb4223e27c86c0fb3b38b1389741e4bf82910990d1178aa4e06ae08",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter4.h5": "a12364c215660cf76aadc3b8fadc28fb0fc9fc18b11f6c246ae6a4dae2c41365",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter4.manifest.json": "f0aaa85eea73ba446841e9a326f31a6c75ed623f5768cb8bdb602080f9a8cf3e",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter4.sidecar.npz": "67e3490a9521c51f51c85ee44278febe557b82b98b6e5e6761834cf3c4666e15",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter5.h5": "5cdc76dbbb23661a688ae1e7e803f8a14ca74ca87e4727bb2b95db616438ff70",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter5.manifest.json": "62551ea8e36fcd3e1e242d6c418b6f00056798ad6bf02e98ae3db5b1316ecf57",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter5.sidecar.npz": "e796c26a9349617fab0a3fb396aec5d21fc64f07a44885547186d72ae1eac55e",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter1.h5": "7e9a6da1d69cddbc08e445c28c28a9406734d85d77ad493d9d843a2319cb9246",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter1.manifest.json": "bbd63306ec848b04772568c11fc4c80529b63d8195db5d96e806b8e1715abf35",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter1.sidecar.npz": "2548e4e7a0d2f2ad7a7bddabf1850af9b0e02c27cf41885700acf6598e4d2170",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter2.h5": "cee2fdb6edf33280b99e67967896dbd20a3765e1bf79f4f33047345038691271",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter2.manifest.json": "4580732711dfbccd084d2e4b24db09d1c916f51558410f371ee9fbc2b66a0935",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter2.sidecar.npz": "14f5c2ac702e19029f78b8ecb4e1e46560df41d733d14bc827db963b88e91e67",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter3.h5": "33149e08508b0e0bf4a51bfae6d6b278cd003f5305319c547bb740ddf2f1562a",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter3.manifest.json": "a70b987bd3b6836971a42715c0c99f89273b68f6cf4d65dfde68b7c822ad9a49",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter3.sidecar.npz": "a667f554e019aab95d0c012d647c0b2895fa2a7c2a035491ff8896b9092e5304",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter4.h5": "98b10ee223cad28b2e394e18ab147ca23839c60b3a1bd7c9fa4e49d9c1106a2f",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter4.manifest.json": "52ef631db3f41a26bb38142bf96cce1ae0344077ef89888930b82077dc0b155f",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter4.sidecar.npz": "adf7862608b2584e49694b7b461de8aa657d6ef36982439edc14fe98c8198f9e",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter5.h5": "8435a03e5c92802d6a093fcc73bb1decfabce336a31f072891a0fa83661ef2fa",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter5.manifest.json": "95e58134d74dbc26ef9be6fbd466553ce1af91c2d84d14afdbcadb8b695b2e48",
+  "/home/kbasak/data/ila/dagger/bc_dagger/s4/iter5.sidecar.npz": "e135e36640cf8416b29dad305105336f2d42ac5474a2bbc00ac2d2aaa3e4b374",
+  "/home/kbasak/data/ila/demos/ppo_2000.h5": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s0/manifest.json": "16e74516a62f329eab940acc1c72d9e2b8b60d30a4187a8556c145de2c0663e1",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s0/select/s0_step030000_rows.csv": "d1ac9a511acdfd9ef08c7fac0442d3dc0c960430a8f7031f9ea00f9d881741c9",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s0/selection.json": "c4f0fe532d2f183f19e5e68a6d6c27389864b606fa0198b706f3ffa764f954fb",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s0/train_log.jsonl": "2d64fa4af7060e8fd38598c960f103f35398a777858cdfb5663bfe6d82c33d04",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s1/manifest.json": "e1eaa25dc9f2b8c0d521c866ec42309df52351c1a9a077ad101a0c1f6a2e37b7",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s1/select/s0_step030000_rows.csv": "aea7c3b6e282c96fb8c787e10e4bb25d5b4ca02a25b2043deba5cb48bd175285",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s1/selection.json": "e712704acb69afd2bc74fd46bf74ac0a0e85ab048f2ba16e492648e6a209c19c",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s1/train_log.jsonl": "946b6523acfdeeb5c21addbfe945422d81b029bc96380f77f1db5684d597c77f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s2/manifest.json": "ace2b12c3a82f0ebe513e449f9838fe9e930af5e72f64d17cef0923cd4a48e01",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s2/select/s0_step030000_rows.csv": "a21811380a2fd3e5b866a86b7f8cb5b8a803621e9d2fa5ac1c846ccc0fdda79e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s2/selection.json": "80d5972970251e4ca226c438f6821d8c2c9e4e1cde6189ce994a46691adefe8b",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s2/train_log.jsonl": "4476bf3faca3be7c1bcc7938f0fa1fa3420ca4b7f9ef82790ad948f3a6463f0d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s3/manifest.json": "82377c61a107333603200f25cd9b630b61427ce785189f83db9d20a9f1e2dfd4",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s3/select/s0_step030000_rows.csv": "70cbf86561abf9b827f064f9b5c40be0d61fc09e155b6dd127c4618739717083",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s3/selection.json": "661ea8972428540fc523f26998af3d7abb635f1226338e1b2f17a71350283d3d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s3/train_log.jsonl": "ed81c15c3f8a3f4ba6f879d3bd8dce9b36cff910ed1f0424a9ba112c54875b98",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s4/manifest.json": "6babe2c75c9fe80704b6b67366c64d88175805062d9f1898fdf87ddf7802df6f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s4/select/s0_step030000_rows.csv": "f6e0f2e62aef6eb21387dfd5bd83518bf93776cb52ba286bc2cc46e3e9067c76",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s4/selection.json": "731059467710dd1adf74815b39c5a2c26b6cad97911d8a06ab431c579da1fc3d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s4/train_log.jsonl": "3c60d1c47f78013468259612522ca2ff55394f4c025b54548f9e3dfc36437446",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/iter1.json": "aadc0a15091aaf40a064cca08b8dba437ce3a98f56cff1d558f07c8b1807ab94",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/iter2.json": "d57a449eea5b950deb1d8550cfa6712b1b69eed223df25a88148db6110bfcf32",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/iter3.json": "d193fcddbdf1e87a0b874f6c9e8de2979bb1d129153a284b9dfcd305801c4f1c",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/iter4.json": "98a12892fbe87d2b9f967e0113795cfbe194593459e5e4192210e9a619834b76",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/iter5.json": "330cd6612432330d6b2d39b7837ed1b1d981514a3bfe009d015ad06b56312b97",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/select_rows/s1_step010000_rows.csv": "9698a65d0f73936c710bdc69c486b696302da26a0d7cec2e0d32a6d2ab28e208",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/select_rows/s2_step010000_rows.csv": "0d4af30947831a789535c7549f307d5792e7f2449b6766dbe406d848c761aa8c",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/select_rows/s3_step010000_rows.csv": "e4f1f21ed5604fee409d40fe7519ee22792e66f05723a6176c571887ddfd863a",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/dagger/select_rows/s4_step010000_rows.csv": "7dbb40f301ed20b2c06ca4337a3cc643fb09eb6b493941bd93081ca0657a137e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/manifest.json": "4c27fbde7adffb1d74d9d49442acafa344e6e405e045645def27dd8da76f04ec",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/select/s5_step005000_rows.csv": "b4880f57567975a78bb97c24db0f216f25d524b27909c7a4a3bc283f6a9e9281",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/select/s5_step010000_rows.csv": "a92ac1b4d13aa09647c904fa8d0fd91aebb200ff0b4813e89686f99919642f51",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/selection.json": "98e2451fd9a01f0d38a8d68bd787fa0485cb73cae7a6931e606e227a68f47e30",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/status.json": "704c6c2985e10488c722e08915deff386dafff6b897b5242d3cec6ef4e0d841e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/train_log.jsonl": "14a62a7a17c3cc26638c46ea100e64d67896fa54a1850ef58b596e07af10e4f6",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/iter1.json": "098aa54b38e6e9a88840aa91e6e758a9c35bf9c680286a1a35e646e935fc803b",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/iter2.json": "ac926510d8fccf4d31120128eba85ab5e31612c9bd5f13a4475f86b460f16f6c",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/iter3.json": "7e92bc97c2218b1004407e9f9f35ccb820925025a4a8f5c45edaaf029e5c7ebf",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/iter4.json": "a2c539597e2893903d36529ba9b2e3ea7810502bb4a8ea8374f6a186f84d3326",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/iter5.json": "ac287c6a1e729f7dff5314ad47750d6bc48505f05efd882fe2086fac454b73f3",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/select_rows/s1_step010000_rows.csv": "0f917a8d12db9417e9a69b92f14422da47841c2a0b980bb79241f00e7758a7a6",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/select_rows/s2_step010000_rows.csv": "3b0063b04124a30862e868ac89ad73740bcb38fed329a10582c71b34f8c9ac71",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/select_rows/s3_step010000_rows.csv": "b230e6b53d41e5c30599e6a5000d55a6c4b5194987fd8fdde41c48966554cbff",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/dagger/select_rows/s4_step010000_rows.csv": "0225f3c9f4937426e59d9113d53993702f1a8925ef84caff714ffc5e7b6b2c02",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/manifest.json": "5794e0081fc73ba0566e160232939d119d4a352ef63085801f727e321934390d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/select/s5_step005000_rows.csv": "88fe6d3426d491659663c689b326c12346d4f9d2e81208096d74be988a8ad792",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/select/s5_step010000_rows.csv": "59b0fac0ba0d5affc758dd709a04677b404ec90086485a0d4b18d691dcd766fa",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/selection.json": "6ff57e624f44e4e32ac1c71d2ea1578dedff2d830dc2fdc4d116a1ddd9c538af",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/status.json": "0cd59a134949c85d6174df46b55d6b760b237827b6a162dfd00a32c596a876ab",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/train_log.jsonl": "0df3be1955caa32708ba346899a6f9066cd53805bc3f5d00e6465238e5e72eed",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/iter1.json": "5dc426dc6afb140c271c3a538a288eccc4c268c124af7073203a095c825c3bca",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/iter2.json": "a764417c088f4d9decd335ab95dfb2fd5411a49e117206ffe1a96507e8d1664a",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/iter3.json": "8ad5404c31d25a628db96b93a77d5decbed971a2201f3c5a58c9a60dac00ee37",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/iter4.json": "1d41cf1976e5d496acff9ffd36bcf32c18fc2acae8b8b4c3c707d32577d51e6c",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/iter5.json": "768af221d086ff99e738210b63fa3c74a9f3d4e51013a845ff167769f366d731",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/select_rows/s1_step010000_rows.csv": "4c67227577bf2c2b64145241aa58ffc1134b6b95c87cbcb59cd8d5e34ca7e44f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/select_rows/s2_step010000_rows.csv": "7a310574b7dc200279a5e2ee7e3798f42a1a3da255b437ef5583c06190b5de2e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/select_rows/s3_step010000_rows.csv": "bd429c88e5da2b00298622ba81c3743211178989234afa07e1802103ecd6d401",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/dagger/select_rows/s4_step010000_rows.csv": "73484fcc9cc5987671cf5d768809c9353953a8c677e05bdad34a4165af4b8379",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/manifest.json": "c0a414b6a023951fe10665429eb1c897cca4cdcdf4430f98e9abca5ef8e266d5",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/select/s5_step005000_rows.csv": "ba2b8e93d2da36d6f380910ef993c2face8d7939bcd8afac96c92d6f1cb5a411",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/select/s5_step010000_rows.csv": "ef46d46a14d1159e4d01ba637db11226a597b5c2ec5016dab0f7f9eb234fb07f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/selection.json": "f89b7c1373d27d577d0d2ba11a395a6581a5f90f30bbcbbaff4d44137c524cdc",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/status.json": "69f6e341a85d308f3edc643c601003dd2b1c8aac6e4c61fd2c9c2f7c6a1ecde9",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/train_log.jsonl": "94831749917ca4eb09d6d2c961f80908d204f5f97227ffde1f667df3f28cebe4",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/iter1.json": "7f29bd12057ba27b138734cf6a45273ac51e26baf34460257ccc5b0248b6e354",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/iter2.json": "4c372eecc256b0b303836d490d3b673b6e9d3d8770031ddacd8a666ff1cd04b8",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/iter3.json": "a6b93f008933df2e6b72630b1e6810eb7022c70d5886528033f5b9d991a6bd04",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/iter4.json": "17d41f8f0d035d1aa594cc0798256e89d3fa9787e31a868c0e0dded38772e95a",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/iter5.json": "7f201aa89527137a394e2f403290a3f53a777dc4021bd536838af0dac21f46b4",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/select_rows/s1_step010000_rows.csv": "a0442d3cbde06ca20798e159e98c51c1654e620c751128c9d8dcb17f4921f786",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/select_rows/s2_step010000_rows.csv": "84f69fb19a02823873adc9916224d9c2a971da551344d240092913569d37248a",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/select_rows/s3_step010000_rows.csv": "ea0fd63997443fb2f91a738498af7d0a63489c01a2d30bff0525318cc1d6f158",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/dagger/select_rows/s4_step010000_rows.csv": "ba7b43239dc78db8ef5c28510a32d942e86fffb2666998e9ffa656489d11feb7",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/manifest.json": "bf1305d6f9c801001f9a5015f89e6f589945ffa448dd9a6996be3bbc2e041eda",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/select/s5_step005000_rows.csv": "febdb383b00bfb95186975ee72692bef100f0d93b7614dcd0c70c108ad1ef25e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/select/s5_step010000_rows.csv": "414340abca1f6186c2ab140f1b449541798c03a1b21aabca5bffab34326ec143",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/selection.json": "64a8076d195cc52ddd6e550c30724b59a0f9fe8e0035e193a8c241f272b41a04",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/status.json": "7171f3358cdc89fc55880100380983ee59bcf276884bf80f4e18716e0847999d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/train_log.jsonl": "647842ec79c3e2fe9b5e0ee31e7a311801c92e1f68edec82bafe01de0c4b0cdb",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/iter1.json": "2b9851a064ddc01cf30785c1fdd48177f38c02831a892caf40787b2e50bab6b0",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/iter2.json": "ceee84ca01efa75042dbd3f3017d9bfe70181b6c914eded9b6f022287ad51e5d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/iter3.json": "dc77b868f0fe66bc95897a0130b9031d5ae1a722a93895095b3e31a96a51fa72",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/iter4.json": "f2d277c08a342ee7d3b92b5f32634ac0f6fdb0f007b3e315160fd68783205536",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/iter5.json": "50c3d7d76cd35baeedd260a091212d0122ec7c3473e8dcb721e855e7c4e8d907",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/select_rows/s1_step010000_rows.csv": "326d494ac2b649880d46095c5d553c37a9fc5a0126e0de37d6f02e548e5e1a4e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/select_rows/s2_step010000_rows.csv": "6d05a7dc6e9906863e375524ae6b49ec61351ecf5dcdec8fa2e2d83926b9ee4b",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/select_rows/s3_step010000_rows.csv": "8f6795283aa6254e2fceedadcb2ac08493f8fa7f60e24a86d52069aaad2017e2",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/dagger/select_rows/s4_step010000_rows.csv": "d3381718e570430f16261465d533a43c08db0147939ef746b3143252fe601b95",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/manifest.json": "6bb7d9ee4d5716114abca2df9d94776e414c2ae0defc6cbdb615b6eac121547f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/select/s5_step005000_rows.csv": "25cde40636bf2dbf4aff087d2bd4c16bf8ea57db2e9ef5da183d8fc863053251",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/select/s5_step010000_rows.csv": "ff8dce4cb50999776d11768e98416baed33de867fd2b04c083142a16cdd705ff",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/selection.json": "39e41f8d8706cda700738d245e5a36df893ce0035d4341f0f2576fa7356e5459",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/status.json": "4c78ecad8591eda00366a4514de21c3ae6adf920e0aac4a381fe9cabe4d2e00d",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/train_log.jsonl": "b839d871b7f994eeadca5849deaaa44e906c92f9dcb75e4de17cd5c728bc0e17",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s0/manifest.json": "54c5fc3a48f1ade3febd40888697758c02dfe51e0437d1bef0d4b495fa247c1a",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s0/select/s5_step005000_rows.csv": "8b61ee1e834d102753f0df9ab8ad32bfd025c9131a94708a486dafefbb694b83",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s0/select/s5_step010000_rows.csv": "18789bd00857ba4db4eabd04366340f08c1af7d042afe6bcddb6b496ab95ec71",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s0/selection.json": "94cf88cccae688c8127d5404403d13bc46a3327bd9b10ed96073be81fc4cf7bc",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s0/train_log.jsonl": "11ede26f2444cc545131eca25caa6dd02dca66773251331d6e3753c5a21d9973",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s1/manifest.json": "cb5469fb828dcbbcb4d7d5b03ac2757721eb4635f2d086ebf666d0332a24bbf0",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s1/select/s5_step005000_rows.csv": "ea1213c137075fdea89c4ded397dab78b191548b72bb13ffa2614c48a5012a34",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s1/select/s5_step010000_rows.csv": "944a8e4aef9c37252a3dc96329062da2071423d4f015f714dd9aa8a5b7426824",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s1/selection.json": "10850bf46b3bc30322a9bb61b31c71075b82aaee668a599686e21fdb72d48014",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s1/train_log.jsonl": "79792ebad14b0498d551336149c4d50ef66206889e71aa33e0d4e982741f345a",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s2/manifest.json": "d140d8d6006de38dee4dae969054c22b5f1e57cd03875c6c5c3a0a34a2765e63",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s2/select/s5_step005000_rows.csv": "149c15d0ceac8d1a9006ced117e07e00d13e833c8461ba1268e4263ca08ce3bd",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s2/select/s5_step010000_rows.csv": "653027e16309b4c9fbf35f6f44764544d2922d4d649e6b71b63d76b4ad3243bc",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s2/selection.json": "56c2bf359c7968e98c15f1ceaabe168a8cafe9f175ecc1a858c630c88bc74e58",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s2/train_log.jsonl": "d79d4f1fac87884b062890530247e0ade1caa1feb9e16b66da1bd3c9cc034cef",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s3/manifest.json": "d91c72f1f5002a891f98c5fdc4397c4b22174fe8ce1e32a3efbfe0a1cdf6b0df",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s3/select/s5_step005000_rows.csv": "3e4da6f9cb80aff89e793daa5cfa5639b0b2cbdb1de60a813b6c44b57466740e",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s3/select/s5_step010000_rows.csv": "bcc548ec2ec1c54e66cf2f24f8f788a669f9c2feeefc3fd85c1e22164d4feda9",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s3/selection.json": "2caf12f8b929899808ec48570c2b5e3a6ffa8b31f57796f6ccebbee68fe390a9",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s3/train_log.jsonl": "6c85b68f096e4caa805be296e0ede94f70e676dcefa030b8b359423d7fa28779",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/manifest.json": "79830b1082d9cccf4661ee649bf949c7a5bca016e5f3732d73088b2b1b964a5f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/select/s5_step005000_rows.csv": "e4308cbb6bf04158ed41ee8b8d0bf390358c0d43af617de75892d0eadde84a46",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/select/s5_step010000_rows.csv": "73761a45a3c62e19f556eabc936460adecd34c0013418b8df8d2f08f8ee72ddf",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/selection.json": "c732c9aefea5591b8cda9609ab0e56d27c2fe8d2b09705e8cf74f1aa8062612f",
+  "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/train_log.jsonl": "b8181f9e4a605f0afa11057b5f73cd6f923f51a68b58bfdf48debdd13599da52",
+  "/home/kbasak/projects_02/imitation-landing-approach/configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11",
+  "/home/kbasak/projects_02/imitation-landing-approach/configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+  "/home/kbasak/projects_02/imitation-landing-approach/configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+  "/home/kbasak/projects_02/imitation-landing-approach/results/phase4/runs_summary.csv": "c1c0af76a761d2cbc3321b39206fcd913073eb62bfc16a402cd7d9720262c029",
+  "/home/kbasak/projects_02/imitation-landing-approach/results/phase5/dagger_iterations.csv": "4d0f832ee8882323582034e9fa174709919b191cdbd8efe27a56b61ec114aae6",
+  "/home/kbasak/projects_02/imitation-landing-approach/results/phase5/dagger_iterations.json": "17dbe1c9c7f1c9e348a283b8d2d106a54455827c061c622166c741365e5a87c9",
+  "/home/kbasak/projects_02/imitation-landing-approach/results/phase5/runs_summary.csv": "115ebc926fc9e347dcb2f2fff4b134dd5cb6244bdddf6fe6cb7ba537723875de",
+  "/home/kbasak/projects_02/imitation-landing-approach/splits/select.parquet": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b"
+ },
+ "checkpoints": "checkpoint SHA-256s (bc_dagger 50 + ema_last 5, bc s0_step030000 5) are recorded per run in bc_dagger/s<n>.json (provenance), recomputed by scripts/prov.py"
+}

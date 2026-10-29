@@ -585,6 +585,7 @@ def test_report_csv_has_every_column_and_policy_flown(tmp_path: Path) -> None:
     out = dagger_report.write_report({"rows": rows, "missing": []}, tmp_path / "d.csv")
     text = (tmp_path / "d.csv").read_text().splitlines()
     assert text[0].split(",") == list(dagger_report.COLUMNS) and len(text) == 3
+    assert len(set(dagger_report.COLUMNS)) == len(dagger_report.COLUMNS)
     assert json.loads(out.read_text())["csv_sha256"] == sha256_file(tmp_path / "d.csv")
 
 

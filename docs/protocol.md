@@ -1824,3 +1824,176 @@ on-policy arm.
 
 *Consequence.* `bc_dagger` runs through `make dagger-bg SEED=<n>`. Its pre-flight is
 `make train-smoke ARM=bc_dagger` → `results/phase5/smoke_bc_dagger.json`.
+
+### P5-D2 — `bc_dagger` runs, per-iteration findings, review corrections (2026-10-29)
+*Decision.* All five `bc_dagger` runs (s0–s4) are kept, and none is excluded. All five are
+TRUSTWORTHY (`training-run-diagnostician`). The selected checkpoints are final for Phase 8.
+Everything below is descriptive and was measured in simulation (PyBullet, TinyRenderer frames).
+`bc_dagger` is distilled from P8 `ppo` seed 0. Nothing here is an H1 result: H1 is scored only on
+`id` SS5, in Phase 8.
+
+*Runs* (`results/phase5/runs_summary.csv` `115ebc92…723875de`; `results/phase5/runs/bc_dagger/s<n>/`).
+- Commit `576447c`, clean tree, P8 `7237b70`, one invocation each, no resumes. Config SHA-256s
+  equal P3-D1's (`bc_dagger.yaml`, `bc.yaml`, `demos.yaml`).
+- Iteration 1 flew `bc/s<n>` `s0_step030000.pt`, and iteration i flew `s<i−1>_step010000.pt`.
+  The SHA-256s agree across the run manifest, `dagger/iter<i>.json`, the rollout manifest and
+  every episode attribute (`results/phase5/diagnostics/bc_dagger/s<n>.json`).
+- **Audits:** 25 of 25 seed × iteration audits are clean (`runs/bc_dagger/s<n>/rollouts/iter<i>.audit.json`).
+  - Each re-labels 1 000 states, all identical, max-abs 0.0.
+  - Each replays 20 states, byte-identical.
+  - 0 attribute violations, and 0 coin, executed-action or `last_action` mismatches.
+- **Counts.** Labelled episodes are 1 200 / 1 400 / 1 600 / 1 800 / 2 000 in every seed, so 2 000
+  = `bc_matched`. Labelled frames at iteration 5 are 123 013–123 359 against `bc_matched`'s
+  122 873. Rollouts add 61 495–61 841 frames against 61 355 for teacher demos 1000–1999. P3-D1's
+  361-step concern did not materialise: the longest rollout is 133 steps and there are 0 timeouts
+  (`diagnostics/summary.json` `arm.labelled_frames`, `arm.rollout_steps_max`, `arm.rollout_timeouts_total`).
+
+*Selection* (`select` only, iteration 5's 5 k and 10 k checkpoints, EMA, CPU fp32 path;
+`runs_summary.csv`, `diagnostics/summary.json` `arm.selection`, `arm.decided_by`).
+
+| Seed | Selected | `select` | Failures | p95 closing speed (m/s, model scale) | `n_tunnelled` | `n_detectors_disagree` | Decided by |
+|---|---|---|---|---|---|---|---|
+| s0 | s5 5 k | 149/150 | 1 hard landing | 0.373 | 1 | 0 | success |
+| s1 | s5 10 k | 149/150 | 1 bounce | 0.411 | 0 | 0 | p95 tie-break |
+| s2 | s5 5 k | 148/150 | 1 hard landing, 1 bounce | 0.366 | 0 | 0 | success |
+| s3 | s5 10 k | 149/150 | 1 bounce | 0.347 | 0 | 0 | p95 tie-break |
+| s4 | s5 5 k | 150/150 | none | 0.381 | 0 | 0 | success |
+
+- 0 crashes, 0 off-pad landings and 0 timeouts in the selected rows. s0's one failure (SS5 #16)
+  is tunnelled. The same episode tunnelled for `bc_matched` s4 and for the σ = 0.05 trial.
+- The two candidates of a seed differ by 0–2 episodes. Mean over all candidates is 148.6, so the
+  winner's curse is +0.4.
+- **Unpaired reading, on the selection list:**
+  - selected mean 149.0 (`bc_dagger`) against 146.6 (`bc_matched`);
+  - all-candidate mean 148.6 against 145.4 (winner's curse +0.4 against +1.2);
+  - pooled failures over the selected checkpoints: 3 bounces and 2 hard landings, against 6
+    bounces, 6 hard landings and 5 off-pad landings (`arm.selection`, `arm.bc_matched_selection`).
+  This is not H1 evidence: `select` chose these checkpoints, sits near the ceiling, and is
+  decided by a few episodes.
+
+*Per-iteration results* (`results/phase5/dagger_iterations.csv` `da37f68a…52441693`, means over
+seeds from `diagnostics/summary.json` `arm.per_iteration_*`). Row i's rollout columns are flown by
+the EMA at the end of iteration i − 1, at β_i. Row i's `select` columns are the EMA at the end of
+iteration i. The `select` numbers for iterations 1–4 were flown after selection had finished
+(17:20–17:44 against 17:10–17:18). They are findings, not candidates.
+
+| Iteration | β | `train` rollout success, mean of 200 | Rollout failures, 5 seeds (crash / off-pad / hard / bounce / timeout) | `select`, mean of 150 |
+|---|---|---|---|---|
+| 0 (`bc` 30 k) | – | – | – | 146.0 |
+| 1 | 0.5 | 200.0 | 0 / 0 / 0 / 0 / 0 | 145.8 |
+| 2 | 0.25 | 199.0 | 0 / 0 / 4 / 1 / 0 | 145.2 |
+| 3 | 0.125 | 198.4 | 0 / 1 / 5 / 2 / 0 | 148.4 |
+| 4 | 0 | 197.0 | 0 / 1 / 12 / 2 / 0 | 148.4 |
+| 5 | 0 | 199.0 | 0 / 0 / 4 / 1 / 0 | 148.2 |
+
+- **Rollout success.** For iterations 1–3 it measures the β-mixture, not the student. The
+  iterations also fly different start slices. No interval was computed, so there is no
+  "rises on `train`, flat on `select`" claim either way (plan Phase 5 item 3). Both stay near the
+  ceiling. A transient dip at iteration 2: s1's end-of-iteration-2 EMA scores 141/150 on `select`.
+- **Teacher agreement.** The fraction of steps with ‖a_student − label‖∞ ≤ 0.1 normalised
+  (0.15 m/s model scale, 0.75 m/s full scale, λ = 1/25). Split by who executed the previous step
+  (`results/phase5/agreement_by_previous_executor.csv` `84203043…432c7b3f`, script
+  `results/phase5/scripts/agreement_split.py`):
+  - after a teacher-executed step: 0.981–0.996 at every β > 0;
+  - after a student-executed step: 0.944–0.953 (iteration 1), 0.897–0.906 (iteration 2),
+    0.841–0.866 (iteration 3);
+  - all steps: 0.968–0.973, 0.920–0.928, 0.859–0.881, 0.744–0.778 and 0.774–0.804 for
+    iterations 1–5.
+  - **Correction to the reading given in chat** (results-skeptic S1): the fall over iterations 1–4
+    is not shown to be a β-driven state shift with an unchanged student. At β > 0 agreement is
+    inflated by the student copying a teacher-chosen `last_action`. Iterations 1–3 are not
+    comparable with 4–5.
+  - Iterations 4 and 5 are not like-for-like either. They fly different start slices, and
+    step-0 agreement moves the other way in all five seeds (0.89–0.915 → 0.84–0.885).
+  - **Common-state check** (diagnostician; `arm.fixed_set_sibling_l2`): open-loop L2 error on one
+    fixed set of β = 0 states from a sibling seed's iteration-5 rollouts. Neither run of a seed
+    trained on that set. `bc_dagger` falls 5.6–7.5 % from iteration 0 to 4, and `bc_matched` falls
+    0.8–1.2 % from iteration 0 to 5. Iteration 5 of `bc_dagger` is excluded because it has seen
+    those starting conditions.
+- **Copycat.** ∂a/∂last_action diagonal on held-out `ppo_2000` states, finite differences
+  (`arm.copycat_J_diag_heldout_FD`; the CSV's autograd values agree to ≤ 0.011):
+  - `bc_dagger`, x / y / z: 0.88–0.91 / 0.75–0.78 / 0.70–0.78 at iteration 0, falling to
+    0.76–0.78 / 0.67–0.69 / 0.46–0.51 at iteration 5;
+  - `bc_matched` at iteration 5 rises to 0.95–0.96 / 0.85–0.88 / 0.78–0.89;
+  - the teacher is 0.074 / 0.097 / 0.176 (P4-D5), so at iteration 5 `bc_dagger` is 10.3–10.6×,
+    6.9–7.1× and 2.6–2.9× the teacher per axis;
+  - closed loop at β = 0, copycat steps are 0.02–0.10 % of moving steps, and MSE against label t
+    is 0.009–0.012 against 0.076–0.079 against label t − 1, so there is no one-step lag
+    (`arm.rollout_copycat_frac_range`, `arm.rollout_lag_mse_t_vs_tminus1_beta0`).
+  - **For H1's mechanism (Phase 8):** on-policy rollouts break the `last_action[t] = label[t−1]`
+    shortcut that demos carry. Part of any H1 effect may be shortcut removal rather than
+    state-distribution correction.
+- **Open-loop and closed-loop move in opposite directions.** On teacher states (`ppo_2000`
+  1950–1999), `bc_dagger`'s fp32 open-loop MSE rises 46–60 % from iteration 0 to 5
+  (`arm.heldout_mse_it0_to_it5_rel_change_bc_dagger`), starting at stage 2–3. Over the same
+  iterations, error on student states falls and `select` success rises. This is the same pattern
+  as `bc_dart` in Phase 4. Held-out loss must not be used to compare `bc_dagger` with `bc_matched`.
+
+*Disclosures and corrections.*
+1. **Held-out overlap, wider than P5-D1 item 9 says** (leak auditor NOTE 1).
+   - Between `ppo_2000` 1950–1999 and iteration 5's rollouts, the first ~5 frames (mean 5.2, max 8)
+     are pixel-identical, not only t = 0.
+   - That is about 260 of the slice's 3 067 frames per seed.
+   - The caveat applies to iteration 5's held-out loss and to its `copycat_heldout_*` columns.
+   - It is not a leak: all of it is `train` pool, and nothing is decided on it.
+2. **Report CSV columns** (diagnostician item 5). The first `dagger_iterations.csv` (`4d0f832e…aae6`)
+   repeated `rollout_success` and `select_success` as outcome-class columns.
+   - `ila.train.dagger_report` now omits `success` from the class breakdown.
+   - The file was regenerated with `--no-fly`. Every value is unchanged; only the two duplicate
+     columns (equal to the counts in every row) were removed, and `select_rows_source` now reads
+     `reused:` (cached rows) instead of `flown`.
+   - `diagnostics/summary.json` hashes the earlier file.
+3. **Budget** (results-skeptic S5).
+   - The figure for the budget tally is wall clock: **7.11 GPU-h** for the five runs,
+     **+0.58 h (+8.9 %) over P4-D2's 6.53**.
+   - Net of CPU rollouts, audits and aggregate loading (563–579 s per run) it is 6.32 h; net of
+     rollouts and audits only, 6.45 h. `bc_matched` took 6.94 h.
+   - Neither figure includes about 5 min of setup per run or the `select`/report flights.
+   - Running total: 17.50 (Phase 4) + 7.11 = 24.61 GPU-h, against 23.48 projected through Phase 5 (`results/phase4/budget_projection.csv`: the Phase 4 lines plus `bc_dagger`). P4-D2's no-cut rule stands.
+   - Sources: `arm.budget`; `runs_summary.csv` `cpu_in_wall_s`, `gpu_hours_net_of_cpu`.
+4. **Smoke provenance.** `results/phase5/smoke_bc_dagger.json` was run on a dirty tree based on
+   `dce79fe`. Its code files are identical to `576447c`; only `docs/protocol.md` changed before
+   that commit.
+5. **Different commits for the matched pair.** `bc_matched` ran at `6d8517f` and `bc_dagger` at
+   `576447c`. The shared-path changes leave `bc_matched` unchanged: `first_n` still resolves to
+   `first_added` = 1 000, and `_iteration_data` is `load_stage_data`. Iteration-0 SHA-256s, stages,
+   candidate rule and the proprio normaliser are bit-identical across `bc`, `bc_matched` and
+   `bc_dagger` (results-skeptic; `diagnostics/bc_dagger/s<n>.json`).
+6. **Pre-flight split checks** (leak auditor NOTE 2). The check before flying tests SS6/90° only.
+   The tune/select/frozen-list disjointness is checked by the per-iteration audit, after flying,
+   and by `read_split`'s MANIFEST hash on `demos_0-1999.parquet`. Accepted as is.
+
+*Reviewers.* `privileged-leak-auditor`: no LEAK, no RISK, 3 NOTEs (items 1 and 6 above; per-iteration
+`select` wording). `training-run-diagnostician`: 5 TRUSTWORTHY (`results/phase5/diagnostics/`,
+`summary.json` `f3a32c04…f00fbf49`). `results-skeptic`: no BLOCKING. Its SHOULD-FIX items S1–S6 are
+all addressed in this entry; S6 (commit the evidence) is addressed in this commit.
+
+*Consequence.* Phase 8 flies the selected `bc_dagger` checkpoints. H1 is scored as frozen in P3-D1,
+and labelled frames (123 013–123 359 against 122 873) are printed beside it.
+
+### Gate 5 passed (2026-10-29)
+
+| Criterion (plan Phase 5 exit gate) | Evidence | Verdict |
+|---|---|---|
+| `make lint` / `make test` | `make lint`: ruff and format clean, `mypy --strict` on 63 files. Full suite with all markers: **680 passed** in 562.9 s, on the `576447c` tree with the evidence present. After the report fix: `tests/test_train_dagger.py` 21 passed, lint clean | PASS |
+| 5 seeds × 5 iterations complete | `runs_summary.csv`: 5 runs `done`, 50 000 steps each; `runs/bc_dagger/s<n>/dagger/iter1–5.json` and `rollouts/iter1–5.manifest.json` for every seed | PASS |
+| Audits clean (label audit per iteration; counts = `bc_matched`) | 25 of 25 `iter<i>.audit.json` `clean: true`, each with 1 000 of 1 000 re-labelled states identical. Labelled episodes 1 200…2 000 per seed = `bc_matched`'s 2 000. Leak auditor's own re-label: 6 180 steps, max-abs 0.0 | PASS |
+| Final checkpoints selected on `select` only | Candidates: iteration 5 only, rule by config (`select.py`). 30 row files hold exactly the 150 `select.parquet` episodes. No `bc_dagger` row on any frozen list. Selection finished before any per-iteration flight | PASS |
+| Per-iteration report: `train` rollout success, teacher agreement, `select` success | `results/phase5/dagger_iterations.csv`, `agreement_by_previous_executor.csv`; P5-D2 | PASS |
+
+Reviewers: `privileged-leak-auditor` (no LEAK or RISK), `training-run-diagnostician` (5 TRUSTWORTHY),
+`results-skeptic` (no BLOCKING; S1–S6 addressed in P5-D2). No threshold was relaxed. The
+reproduction gate was not re-run, because Phase 5 changed nothing under `ila/render/`,
+`ila/eval/runner.py` or the adapter.
+
+## Phase 6
+
+*Before you start (from Phase 5).*
+- **Budget.** Training so far is 24.61 GPU-h of wall clock against 23.48 projected through Phase 5
+  (P5-D2 item 3). `dp` is P4-D2's largest line; compare its first run with the projection
+  before queuing the other seeds.
+- **Held-out loss is not comparable across arms** after iteration 5 of either iterated arm
+  (P5-D2), and open-loop loss on teacher states moved against closed-loop success for `bc_dagger`
+  and `bc_dart`. Read `dp`'s held-out curves as diagnostics only.
+- **`select` is decided by a few episodes** (SS5 #16 and #49 recur across arms). Expect `dp`'s
+  selection to be decided by the p95 tie-break and say so.

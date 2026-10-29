@@ -1,0 +1,1359 @@
+{
+  "kind": "dagger_rollouts",
+  "arm": "bc_dagger",
+  "run_seed": 3,
+  "iteration": 1,
+  "beta": 0.5,
+  "purpose": "train",
+  "limit": null,
+  "n_planned": 200,
+  "complete": true,
+  "full_iteration": true,
+  "collection": "bc_dagger_s3_iter1",
+  "episodes": {
+    "stream": "demos",
+    "split_file": "splits/demos_0-1999.parquet",
+    "split_file_sha256": "20940abcce53298c3ca26e4fb92103226116aac1a0f55b730b74381c0b5805ef",
+    "split_content_sha256": "5cf9a5a5ce01835897601abd18e8354304ac591f6126e037db3f67a96c401066",
+    "first_index": 1000,
+    "last_index": 1199,
+    "list": [
+      {
+        "demo_index": 1000,
+        "ss": "SS4",
+        "index": 333,
+        "episode_seed": 244277768
+      },
+      {
+        "demo_index": 1001,
+        "ss": "SS5",
+        "index": 333,
+        "episode_seed": 1996290351
+      },
+      {
+        "demo_index": 1002,
+        "ss": "SS3",
+        "index": 334,
+        "episode_seed": 799105102
+      },
+      {
+        "demo_index": 1003,
+        "ss": "SS4",
+        "index": 334,
+        "episode_seed": 131934417
+      },
+      {
+        "demo_index": 1004,
+        "ss": "SS5",
+        "index": 334,
+        "episode_seed": 1932164288
+      },
+      {
+        "demo_index": 1005,
+        "ss": "SS3",
+        "index": 335,
+        "episode_seed": 98122431
+      },
+      {
+        "demo_index": 1006,
+        "ss": "SS4",
+        "index": 335,
+        "episode_seed": 377658661
+      },
+      {
+        "demo_index": 1007,
+        "ss": "SS5",
+        "index": 335,
+        "episode_seed": 1990691861
+      },
+      {
+        "demo_index": 1008,
+        "ss": "SS3",
+        "index": 336,
+        "episode_seed": 345303700
+      },
+      {
+        "demo_index": 1009,
+        "ss": "SS4",
+        "index": 336,
+        "episode_seed": 201090140
+      },
+      {
+        "demo_index": 1010,
+        "ss": "SS5",
+        "index": 336,
+        "episode_seed": 661081045
+      },
+      {
+        "demo_index": 1011,
+        "ss": "SS3",
+        "index": 337,
+        "episode_seed": 1554043175
+      },
+      {
+        "demo_index": 1012,
+        "ss": "SS4",
+        "index": 337,
+        "episode_seed": 1421232398
+      },
+      {
+        "demo_index": 1013,
+        "ss": "SS5",
+        "index": 337,
+        "episode_seed": 1014579297
+      },
+      {
+        "demo_index": 1014,
+        "ss": "SS3",
+        "index": 338,
+        "episode_seed": 859824230
+      },
+      {
+        "demo_index": 1015,
+        "ss": "SS4",
+        "index": 338,
+        "episode_seed": 828269923
+      },
+      {
+        "demo_index": 1016,
+        "ss": "SS5",
+        "index": 338,
+        "episode_seed": 649725051
+      },
+      {
+        "demo_index": 1017,
+        "ss": "SS3",
+        "index": 339,
+        "episode_seed": 1808987004
+      },
+      {
+        "demo_index": 1018,
+        "ss": "SS4",
+        "index": 339,
+        "episode_seed": 1500160497
+      },
+      {
+        "demo_index": 1019,
+        "ss": "SS5",
+        "index": 339,
+        "episode_seed": 1559386467
+      },
+      {
+        "demo_index": 1020,
+        "ss": "SS3",
+        "index": 340,
+        "episode_seed": 9974769
+      },
+      {
+        "demo_index": 1021,
+        "ss": "SS4",
+        "index": 340,
+        "episode_seed": 218300182
+      },
+      {
+        "demo_index": 1022,
+        "ss": "SS5",
+        "index": 340,
+        "episode_seed": 2103944624
+      },
+      {
+        "demo_index": 1023,
+        "ss": "SS3",
+        "index": 341,
+        "episode_seed": 852807246
+      },
+      {
+        "demo_index": 1024,
+        "ss": "SS4",
+        "index": 341,
+        "episode_seed": 1169518809
+      },
+      {
+        "demo_index": 1025,
+        "ss": "SS5",
+        "index": 341,
+        "episode_seed": 1106534013
+      },
+      {
+        "demo_index": 1026,
+        "ss": "SS3",
+        "index": 342,
+        "episode_seed": 607275720
+      },
+      {
+        "demo_index": 1027,
+        "ss": "SS4",
+        "index": 342,
+        "episode_seed": 1854443193
+      },
+      {
+        "demo_index": 1028,
+        "ss": "SS5",
+        "index": 342,
+        "episode_seed": 816320092
+      },
+      {
+        "demo_index": 1029,
+        "ss": "SS3",
+        "index": 343,
+        "episode_seed": 34352342
+      },
+      {
+        "demo_index": 1030,
+        "ss": "SS4",
+        "index": 343,
+        "episode_seed": 427793316
+      },
+      {
+        "demo_index": 1031,
+        "ss": "SS5",
+        "index": 343,
+        "episode_seed": 156542749
+      },
+      {
+        "demo_index": 1032,
+        "ss": "SS3",
+        "index": 344,
+        "episode_seed": 1921459349
+      },
+      {
+        "demo_index": 1033,
+        "ss": "SS4",
+        "index": 344,
+        "episode_seed": 399768524
+      },
+      {
+        "demo_index": 1034,
+        "ss": "SS5",
+        "index": 344,
+        "episode_seed": 349331361
+      },
+      {
+        "demo_index": 1035,
+        "ss": "SS3",
+        "index": 345,
+        "episode_seed": 597706699
+      },
+      {
+        "demo_index": 1036,
+        "ss": "SS4",
+        "index": 345,
+        "episode_seed": 546014982
+      },
+      {
+        "demo_index": 1037,
+        "ss": "SS5",
+        "index": 345,
+        "episode_seed": 2095025518
+      },
+      {
+        "demo_index": 1038,
+        "ss": "SS3",
+        "index": 346,
+        "episode_seed": 681242096
+      },
+      {
+        "demo_index": 1039,
+        "ss": "SS4",
+        "index": 346,
+        "episode_seed": 1932299218
+      },
+      {
+        "demo_index": 1040,
+        "ss": "SS5",
+        "index": 346,
+        "episode_seed": 1418043417
+      },
+      {
+        "demo_index": 1041,
+        "ss": "SS3",
+        "index": 347,
+        "episode_seed": 1740175919
+      },
+      {
+        "demo_index": 1042,
+        "ss": "SS4",
+        "index": 347,
+        "episode_seed": 1135138402
+      },
+      {
+        "demo_index": 1043,
+        "ss": "SS5",
+        "index": 347,
+        "episode_seed": 133742491
+      },
+      {
+        "demo_index": 1044,
+        "ss": "SS3",
+        "index": 348,
+        "episode_seed": 525363022
+      },
+      {
+        "demo_index": 1045,
+        "ss": "SS4",
+        "index": 348,
+        "episode_seed": 165358067
+      },
+      {
+        "demo_index": 1046,
+        "ss": "SS5",
+        "index": 348,
+        "episode_seed": 2046965656
+      },
+      {
+        "demo_index": 1047,
+        "ss": "SS3",
+        "index": 349,
+        "episode_seed": 1097454163
+      },
+      {
+        "demo_index": 1048,
+        "ss": "SS4",
+        "index": 349,
+        "episode_seed": 1801663890
+      },
+      {
+        "demo_index": 1049,
+        "ss": "SS5",
+        "index": 349,
+        "episode_seed": 398532315
+      },
+      {
+        "demo_index": 1050,
+        "ss": "SS3",
+        "index": 350,
+        "episode_seed": 1600286254
+      },
+      {
+        "demo_index": 1051,
+        "ss": "SS4",
+        "index": 350,
+        "episode_seed": 1085908675
+      },
+      {
+        "demo_index": 1052,
+        "ss": "SS5",
+        "index": 350,
+        "episode_seed": 1264883681
+      },
+      {
+        "demo_index": 1053,
+        "ss": "SS3",
+        "index": 351,
+        "episode_seed": 303660361
+      },
+      {
+        "demo_index": 1054,
+        "ss": "SS4",
+        "index": 351,
+        "episode_seed": 1345356287
+      },
+      {
+        "demo_index": 1055,
+        "ss": "SS5",
+        "index": 351,
+        "episode_seed": 527243509
+      },
+      {
+        "demo_index": 1056,
+        "ss": "SS3",
+        "index": 352,
+        "episode_seed": 1825857615
+      },
+      {
+        "demo_index": 1057,
+        "ss": "SS4",
+        "index": 352,
+        "episode_seed": 657544863
+      },
+      {
+        "demo_index": 1058,
+        "ss": "SS5",
+        "index": 352,
+        "episode_seed": 2517374
+      },
+      {
+        "demo_index": 1059,
+        "ss": "SS3",
+        "index": 353,
+        "episode_seed": 738675556
+      },
+      {
+        "demo_index": 1060,
+        "ss": "SS4",
+        "index": 353,
+        "episode_seed": 1447480832
+      },
+      {
+        "demo_index": 1061,
+        "ss": "SS5",
+        "index": 353,
+        "episode_seed": 1195313964
+      },
+      {
+        "demo_index": 1062,
+        "ss": "SS3",
+        "index": 354,
+        "episode_seed": 1571307989
+      },
+      {
+        "demo_index": 1063,
+        "ss": "SS4",
+        "index": 354,
+        "episode_seed": 1018671317
+      },
+      {
+        "demo_index": 1064,
+        "ss": "SS5",
+        "index": 354,
+        "episode_seed": 1195797976
+      },
+      {
+        "demo_index": 1065,
+        "ss": "SS3",
+        "index": 355,
+        "episode_seed": 243451786
+      },
+      {
+        "demo_index": 1066,
+        "ss": "SS4",
+        "index": 355,
+        "episode_seed": 861396517
+      },
+      {
+        "demo_index": 1067,
+        "ss": "SS5",
+        "index": 355,
+        "episode_seed": 1701340834
+      },
+      {
+        "demo_index": 1068,
+        "ss": "SS3",
+        "index": 356,
+        "episode_seed": 1583789765
+      },
+      {
+        "demo_index": 1069,
+        "ss": "SS4",
+        "index": 356,
+        "episode_seed": 377315435
+      },
+      {
+        "demo_index": 1070,
+        "ss": "SS5",
+        "index": 356,
+        "episode_seed": 283433454
+      },
+      {
+        "demo_index": 1071,
+        "ss": "SS3",
+        "index": 357,
+        "episode_seed": 974086677
+      },
+      {
+        "demo_index": 1072,
+        "ss": "SS4",
+        "index": 357,
+        "episode_seed": 1539837211
+      },
+      {
+        "demo_index": 1073,
+        "ss": "SS5",
+        "index": 357,
+        "episode_seed": 1114429143
+      },
+      {
+        "demo_index": 1074,
+        "ss": "SS3",
+        "index": 358,
+        "episode_seed": 28660179
+      },
+      {
+        "demo_index": 1075,
+        "ss": "SS4",
+        "index": 358,
+        "episode_seed": 2092464702
+      },
+      {
+        "demo_index": 1076,
+        "ss": "SS5",
+        "index": 358,
+        "episode_seed": 883965407
+      },
+      {
+        "demo_index": 1077,
+        "ss": "SS3",
+        "index": 359,
+        "episode_seed": 1500634231
+      },
+      {
+        "demo_index": 1078,
+        "ss": "SS4",
+        "index": 359,
+        "episode_seed": 1480717149
+      },
+      {
+        "demo_index": 1079,
+        "ss": "SS5",
+        "index": 359,
+        "episode_seed": 1303927553
+      },
+      {
+        "demo_index": 1080,
+        "ss": "SS3",
+        "index": 360,
+        "episode_seed": 323582085
+      },
+      {
+        "demo_index": 1081,
+        "ss": "SS4",
+        "index": 360,
+        "episode_seed": 1974481610
+      },
+      {
+        "demo_index": 1082,
+        "ss": "SS5",
+        "index": 360,
+        "episode_seed": 1954688133
+      },
+      {
+        "demo_index": 1083,
+        "ss": "SS3",
+        "index": 361,
+        "episode_seed": 1520576873
+      },
+      {
+        "demo_index": 1084,
+        "ss": "SS4",
+        "index": 361,
+        "episode_seed": 1939496807
+      },
+      {
+        "demo_index": 1085,
+        "ss": "SS5",
+        "index": 361,
+        "episode_seed": 1928086832
+      },
+      {
+        "demo_index": 1086,
+        "ss": "SS3",
+        "index": 362,
+        "episode_seed": 849910255
+      },
+      {
+        "demo_index": 1087,
+        "ss": "SS4",
+        "index": 362,
+        "episode_seed": 2015991538
+      },
+      {
+        "demo_index": 1088,
+        "ss": "SS5",
+        "index": 362,
+        "episode_seed": 103036028
+      },
+      {
+        "demo_index": 1089,
+        "ss": "SS3",
+        "index": 363,
+        "episode_seed": 1996590113
+      },
+      {
+        "demo_index": 1090,
+        "ss": "SS4",
+        "index": 363,
+        "episode_seed": 425011943
+      },
+      {
+        "demo_index": 1091,
+        "ss": "SS5",
+        "index": 363,
+        "episode_seed": 603764733
+      },
+      {
+        "demo_index": 1092,
+        "ss": "SS3",
+        "index": 364,
+        "episode_seed": 238653153
+      },
+      {
+        "demo_index": 1093,
+        "ss": "SS4",
+        "index": 364,
+        "episode_seed": 631061291
+      },
+      {
+        "demo_index": 1094,
+        "ss": "SS5",
+        "index": 364,
+        "episode_seed": 2132431387
+      },
+      {
+        "demo_index": 1095,
+        "ss": "SS3",
+        "index": 365,
+        "episode_seed": 133427706
+      },
+      {
+        "demo_index": 1096,
+        "ss": "SS4",
+        "index": 365,
+        "episode_seed": 1668961290
+      },
+      {
+        "demo_index": 1097,
+        "ss": "SS5",
+        "index": 365,
+        "episode_seed": 1992763175
+      },
+      {
+        "demo_index": 1098,
+        "ss": "SS3",
+        "index": 366,
+        "episode_seed": 937770321
+      },
+      {
+        "demo_index": 1099,
+        "ss": "SS4",
+        "index": 366,
+        "episode_seed": 550660608
+      },
+      {
+        "demo_index": 1100,
+        "ss": "SS5",
+        "index": 366,
+        "episode_seed": 158720488
+      },
+      {
+        "demo_index": 1101,
+        "ss": "SS3",
+        "index": 367,
+        "episode_seed": 1923774910
+      },
+      {
+        "demo_index": 1102,
+        "ss": "SS4",
+        "index": 367,
+        "episode_seed": 1371342158
+      },
+      {
+        "demo_index": 1103,
+        "ss": "SS5",
+        "index": 367,
+        "episode_seed": 1185984690
+      },
+      {
+        "demo_index": 1104,
+        "ss": "SS3",
+        "index": 368,
+        "episode_seed": 356532501
+      },
+      {
+        "demo_index": 1105,
+        "ss": "SS4",
+        "index": 368,
+        "episode_seed": 307131994
+      },
+      {
+        "demo_index": 1106,
+        "ss": "SS5",
+        "index": 368,
+        "episode_seed": 307754774
+      },
+      {
+        "demo_index": 1107,
+        "ss": "SS3",
+        "index": 369,
+        "episode_seed": 296115077
+      },
+      {
+        "demo_index": 1108,
+        "ss": "SS4",
+        "index": 369,
+        "episode_seed": 1874971455
+      },
+      {
+        "demo_index": 1109,
+        "ss": "SS5",
+        "index": 369,
+        "episode_seed": 242289385
+      },
+      {
+        "demo_index": 1110,
+        "ss": "SS3",
+        "index": 370,
+        "episode_seed": 1042492982
+      },
+      {
+        "demo_index": 1111,
+        "ss": "SS4",
+        "index": 370,
+        "episode_seed": 1013215402
+      },
+      {
+        "demo_index": 1112,
+        "ss": "SS5",
+        "index": 370,
+        "episode_seed": 1648643583
+      },
+      {
+        "demo_index": 1113,
+        "ss": "SS3",
+        "index": 371,
+        "episode_seed": 1884646574
+      },
+      {
+        "demo_index": 1114,
+        "ss": "SS4",
+        "index": 371,
+        "episode_seed": 1941923708
+      },
+      {
+        "demo_index": 1115,
+        "ss": "SS5",
+        "index": 371,
+        "episode_seed": 383876904
+      },
+      {
+        "demo_index": 1116,
+        "ss": "SS3",
+        "index": 372,
+        "episode_seed": 1393720884
+      },
+      {
+        "demo_index": 1117,
+        "ss": "SS4",
+        "index": 372,
+        "episode_seed": 175535235
+      },
+      {
+        "demo_index": 1118,
+        "ss": "SS5",
+        "index": 372,
+        "episode_seed": 871022176
+      },
+      {
+        "demo_index": 1119,
+        "ss": "SS3",
+        "index": 373,
+        "episode_seed": 1356726010
+      },
+      {
+        "demo_index": 1120,
+        "ss": "SS4",
+        "index": 373,
+        "episode_seed": 1783618214
+      },
+      {
+        "demo_index": 1121,
+        "ss": "SS5",
+        "index": 373,
+        "episode_seed": 1804384536
+      },
+      {
+        "demo_index": 1122,
+        "ss": "SS3",
+        "index": 374,
+        "episode_seed": 157462324
+      },
+      {
+        "demo_index": 1123,
+        "ss": "SS4",
+        "index": 374,
+        "episode_seed": 1853430491
+      },
+      {
+        "demo_index": 1124,
+        "ss": "SS5",
+        "index": 374,
+        "episode_seed": 425851708
+      },
+      {
+        "demo_index": 1125,
+        "ss": "SS3",
+        "index": 375,
+        "episode_seed": 982746965
+      },
+      {
+        "demo_index": 1126,
+        "ss": "SS4",
+        "index": 375,
+        "episode_seed": 1035325054
+      },
+      {
+        "demo_index": 1127,
+        "ss": "SS5",
+        "index": 375,
+        "episode_seed": 412659564
+      },
+      {
+        "demo_index": 1128,
+        "ss": "SS3",
+        "index": 376,
+        "episode_seed": 885191430
+      },
+      {
+        "demo_index": 1129,
+        "ss": "SS4",
+        "index": 376,
+        "episode_seed": 1547321453
+      },
+      {
+        "demo_index": 1130,
+        "ss": "SS5",
+        "index": 376,
+        "episode_seed": 151760934
+      },
+      {
+        "demo_index": 1131,
+        "ss": "SS3",
+        "index": 377,
+        "episode_seed": 522783343
+      },
+      {
+        "demo_index": 1132,
+        "ss": "SS4",
+        "index": 377,
+        "episode_seed": 1756432643
+      },
+      {
+        "demo_index": 1133,
+        "ss": "SS5",
+        "index": 377,
+        "episode_seed": 846543623
+      },
+      {
+        "demo_index": 1134,
+        "ss": "SS3",
+        "index": 378,
+        "episode_seed": 2017921310
+      },
+      {
+        "demo_index": 1135,
+        "ss": "SS4",
+        "index": 378,
+        "episode_seed": 591563522
+      },
+      {
+        "demo_index": 1136,
+        "ss": "SS5",
+        "index": 378,
+        "episode_seed": 934814499
+      },
+      {
+        "demo_index": 1137,
+        "ss": "SS3",
+        "index": 379,
+        "episode_seed": 1683603344
+      },
+      {
+        "demo_index": 1138,
+        "ss": "SS4",
+        "index": 379,
+        "episode_seed": 1571002972
+      },
+      {
+        "demo_index": 1139,
+        "ss": "SS5",
+        "index": 379,
+        "episode_seed": 236397630
+      },
+      {
+        "demo_index": 1140,
+        "ss": "SS3",
+        "index": 380,
+        "episode_seed": 1004541176
+      },
+      {
+        "demo_index": 1141,
+        "ss": "SS4",
+        "index": 380,
+        "episode_seed": 158887745
+      },
+      {
+        "demo_index": 1142,
+        "ss": "SS5",
+        "index": 380,
+        "episode_seed": 612011640
+      },
+      {
+        "demo_index": 1143,
+        "ss": "SS3",
+        "index": 381,
+        "episode_seed": 1821721586
+      },
+      {
+        "demo_index": 1144,
+        "ss": "SS4",
+        "index": 381,
+        "episode_seed": 803149017
+      },
+      {
+        "demo_index": 1145,
+        "ss": "SS5",
+        "index": 381,
+        "episode_seed": 932562905
+      },
+      {
+        "demo_index": 1146,
+        "ss": "SS3",
+        "index": 382,
+        "episode_seed": 1380460402
+      },
+      {
+        "demo_index": 1147,
+        "ss": "SS4",
+        "index": 382,
+        "episode_seed": 1371098869
+      },
+      {
+        "demo_index": 1148,
+        "ss": "SS5",
+        "index": 382,
+        "episode_seed": 909963169
+      },
+      {
+        "demo_index": 1149,
+        "ss": "SS3",
+        "index": 383,
+        "episode_seed": 1035609880
+      },
+      {
+        "demo_index": 1150,
+        "ss": "SS4",
+        "index": 383,
+        "episode_seed": 2098558216
+      },
+      {
+        "demo_index": 1151,
+        "ss": "SS5",
+        "index": 383,
+        "episode_seed": 1096901958
+      },
+      {
+        "demo_index": 1152,
+        "ss": "SS3",
+        "index": 384,
+        "episode_seed": 84024246
+      },
+      {
+        "demo_index": 1153,
+        "ss": "SS4",
+        "index": 384,
+        "episode_seed": 1371051605
+      },
+      {
+        "demo_index": 1154,
+        "ss": "SS5",
+        "index": 384,
+        "episode_seed": 376574645
+      },
+      {
+        "demo_index": 1155,
+        "ss": "SS3",
+        "index": 385,
+        "episode_seed": 1871099427
+      },
+      {
+        "demo_index": 1156,
+        "ss": "SS4",
+        "index": 385,
+        "episode_seed": 1439264690
+      },
+      {
+        "demo_index": 1157,
+        "ss": "SS5",
+        "index": 385,
+        "episode_seed": 1677591576
+      },
+      {
+        "demo_index": 1158,
+        "ss": "SS3",
+        "index": 386,
+        "episode_seed": 109011160
+      },
+      {
+        "demo_index": 1159,
+        "ss": "SS4",
+        "index": 386,
+        "episode_seed": 1690562518
+      },
+      {
+        "demo_index": 1160,
+        "ss": "SS5",
+        "index": 386,
+        "episode_seed": 1479337912
+      },
+      {
+        "demo_index": 1161,
+        "ss": "SS3",
+        "index": 387,
+        "episode_seed": 1172787672
+      },
+      {
+        "demo_index": 1162,
+        "ss": "SS4",
+        "index": 387,
+        "episode_seed": 312392605
+      },
+      {
+        "demo_index": 1163,
+        "ss": "SS5",
+        "index": 387,
+        "episode_seed": 202251628
+      },
+      {
+        "demo_index": 1164,
+        "ss": "SS3",
+        "index": 388,
+        "episode_seed": 822447333
+      },
+      {
+        "demo_index": 1165,
+        "ss": "SS4",
+        "index": 388,
+        "episode_seed": 760101176
+      },
+      {
+        "demo_index": 1166,
+        "ss": "SS5",
+        "index": 388,
+        "episode_seed": 684202499
+      },
+      {
+        "demo_index": 1167,
+        "ss": "SS3",
+        "index": 389,
+        "episode_seed": 1715848102
+      },
+      {
+        "demo_index": 1168,
+        "ss": "SS4",
+        "index": 389,
+        "episode_seed": 1411944185
+      },
+      {
+        "demo_index": 1169,
+        "ss": "SS5",
+        "index": 389,
+        "episode_seed": 1800250583
+      },
+      {
+        "demo_index": 1170,
+        "ss": "SS3",
+        "index": 390,
+        "episode_seed": 633087383
+      },
+      {
+        "demo_index": 1171,
+        "ss": "SS4",
+        "index": 390,
+        "episode_seed": 1598190095
+      },
+      {
+        "demo_index": 1172,
+        "ss": "SS5",
+        "index": 390,
+        "episode_seed": 1777443064
+      },
+      {
+        "demo_index": 1173,
+        "ss": "SS3",
+        "index": 391,
+        "episode_seed": 602548028
+      },
+      {
+        "demo_index": 1174,
+        "ss": "SS4",
+        "index": 391,
+        "episode_seed": 1564672309
+      },
+      {
+        "demo_index": 1175,
+        "ss": "SS5",
+        "index": 391,
+        "episode_seed": 527786177
+      },
+      {
+        "demo_index": 1176,
+        "ss": "SS3",
+        "index": 392,
+        "episode_seed": 1789030173
+      },
+      {
+        "demo_index": 1177,
+        "ss": "SS4",
+        "index": 392,
+        "episode_seed": 347834034
+      },
+      {
+        "demo_index": 1178,
+        "ss": "SS5",
+        "index": 392,
+        "episode_seed": 355156088
+      },
+      {
+        "demo_index": 1179,
+        "ss": "SS3",
+        "index": 393,
+        "episode_seed": 1705786483
+      },
+      {
+        "demo_index": 1180,
+        "ss": "SS4",
+        "index": 393,
+        "episode_seed": 930212643
+      },
+      {
+        "demo_index": 1181,
+        "ss": "SS5",
+        "index": 393,
+        "episode_seed": 756108266
+      },
+      {
+        "demo_index": 1182,
+        "ss": "SS3",
+        "index": 394,
+        "episode_seed": 866575256
+      },
+      {
+        "demo_index": 1183,
+        "ss": "SS4",
+        "index": 394,
+        "episode_seed": 1125874911
+      },
+      {
+        "demo_index": 1184,
+        "ss": "SS5",
+        "index": 394,
+        "episode_seed": 1203498061
+      },
+      {
+        "demo_index": 1185,
+        "ss": "SS3",
+        "index": 395,
+        "episode_seed": 129023242
+      },
+      {
+        "demo_index": 1186,
+        "ss": "SS4",
+        "index": 395,
+        "episode_seed": 2018469440
+      },
+      {
+        "demo_index": 1187,
+        "ss": "SS5",
+        "index": 395,
+        "episode_seed": 599575392
+      },
+      {
+        "demo_index": 1188,
+        "ss": "SS3",
+        "index": 396,
+        "episode_seed": 1356091659
+      },
+      {
+        "demo_index": 1189,
+        "ss": "SS4",
+        "index": 396,
+        "episode_seed": 1970746964
+      },
+      {
+        "demo_index": 1190,
+        "ss": "SS5",
+        "index": 396,
+        "episode_seed": 1523935435
+      },
+      {
+        "demo_index": 1191,
+        "ss": "SS3",
+        "index": 397,
+        "episode_seed": 1520786244
+      },
+      {
+        "demo_index": 1192,
+        "ss": "SS4",
+        "index": 397,
+        "episode_seed": 1907701629
+      },
+      {
+        "demo_index": 1193,
+        "ss": "SS5",
+        "index": 397,
+        "episode_seed": 880313367
+      },
+      {
+        "demo_index": 1194,
+        "ss": "SS3",
+        "index": 398,
+        "episode_seed": 1666240568
+      },
+      {
+        "demo_index": 1195,
+        "ss": "SS4",
+        "index": 398,
+        "episode_seed": 1982484240
+      },
+      {
+        "demo_index": 1196,
+        "ss": "SS5",
+        "index": 398,
+        "episode_seed": 972703846
+      },
+      {
+        "demo_index": 1197,
+        "ss": "SS3",
+        "index": 399,
+        "episode_seed": 96687510
+      },
+      {
+        "demo_index": 1198,
+        "ss": "SS4",
+        "index": 399,
+        "episode_seed": 252547765
+      },
+      {
+        "demo_index": 1199,
+        "ss": "SS5",
+        "index": 399,
+        "episode_seed": 908679466
+      }
+    ]
+  },
+  "student": {
+    "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s3/checkpoints/s0_step030000.pt",
+    "sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+    "arm": "bc",
+    "run_seed": 3,
+    "stage": 0,
+    "stage_step": 30000,
+    "global_step": 30000,
+    "purpose": "train",
+    "config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+    "weights": "ema",
+    "inference_path": "cpu_fp32_single_sample"
+  },
+  "teacher": {
+    "id": "T_ppo",
+    "policy": "ppo",
+    "label_path": "sb3",
+    "ppo_model_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+    "shadowing": "reset per episode; act on every visited obs, in order"
+  },
+  "beta_coin": {
+    "entropy": "[run_seed, H('dagger_beta'), iteration, episode_seed]",
+    "rule": "one u ~ U[0,1) per control step whatever beta; the teacher label is executed iff u < beta"
+  },
+  "executed_action": "ila.data.collect.executable (clip, float32 before env.step)",
+  "outcomes": {
+    "crash": 0,
+    "off_pad": 0,
+    "hard_landing": 0,
+    "bounce": 0,
+    "success": 200,
+    "timeout": 0
+  },
+  "outcome_order": [
+    "crash",
+    "off_pad",
+    "hard_landing",
+    "bounce",
+    "success",
+    "timeout"
+  ],
+  "success": 200,
+  "labelled_episodes": 200,
+  "labelled_frames": 12306,
+  "teacher_executed_frames": 6094,
+  "student_executed_frames": 6212,
+  "teacher_executed_fraction": 0.4952055907687307,
+  "teacher_agreement": {
+    "metric": "l2(student proposal - teacher label), normalised action units",
+    "all": {
+      "frames": 12306,
+      "mean_l2": 0.031350843275854745,
+      "median_l2": 0.02245751919872379,
+      "p90_l2": 0.06734363122159626,
+      "max_l2": 0.4640104330611471,
+      "mse_per_component": 0.0006843591353345066
+    },
+    "student_executed": {
+      "frames": 6212,
+      "mean_l2": 0.031444425521582595,
+      "median_l2": 0.022299517803445197,
+      "p90_l2": 0.06743568060845537,
+      "max_l2": 0.4640104330611471,
+      "mse_per_component": 0.0007026121608093321
+    },
+    "teacher_executed": {
+      "frames": 6094,
+      "mean_l2": 0.03125544896826345,
+      "median_l2": 0.022670823739839294,
+      "p90_l2": 0.06704815405250654,
+      "max_l2": 0.40416131357758384,
+      "mse_per_component": 0.0006657526709023413
+    }
+  },
+  "by_ss": {
+    "SS3": 66,
+    "SS4": 67,
+    "SS5": 67
+  },
+  "success_by_ss": {
+    "SS3": 66,
+    "SS4": 67,
+    "SS5": 67
+  },
+  "by_heading_deg": {
+    "135": 78,
+    "180": 65,
+    "45": 57
+  },
+  "by_speed_kn": {
+    "0": 79,
+    "12": 63,
+    "6": 58
+  },
+  "steps_mean": 61.53,
+  "steps_max": 67,
+  "clear_frac_max": 0.0,
+  "clear_frames": 0,
+  "success_filtered": false,
+  "store": {
+    "path": "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter1.h5",
+    "sha256": "0e5e4b0d7380db243db1dde6e90cf0f1584cd4854b0a11604575868e7c0c56ba",
+    "bytes": 24192617
+  },
+  "sidecar": {
+    "path": "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter1.sidecar.npz",
+    "sha256": "e48514405d2dc7f5d9a67dec5dda485f6914ddbe647679b643d81adca6e990ff",
+    "bytes": 265330,
+    "keys": [
+      "beta",
+      "demo_index",
+      "episode_seed",
+      "iteration",
+      "offsets",
+      "proposed",
+      "run_seed",
+      "teacher_exec",
+      "u"
+    ]
+  },
+  "rows_csv": {
+    "path": "/home/kbasak/data/ila/dagger/bc_dagger/s3/iter1.episodes.csv",
+    "sha256": "5a32e0dd657fdb75b6f9b3e4aac0851caa36728bffb1c22d1e7d6405c4543c1d"
+  },
+  "h5py": "3.16.0",
+  "hdf5": "2.0.0",
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "576447cb8a73c402a60588d9525cbd73274b1bc7",
+  "ila_dirty_paths": [],
+  "camera_cfg_sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380",
+  "render": "full",
+  "appearance_shift": null,
+  "workers": 24,
+  "chunk": 10,
+  "wall_s": 75.78655616598553,
+  "wall_s_per_episode": 0.37893278082992765
+}

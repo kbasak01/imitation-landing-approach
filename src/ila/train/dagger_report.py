@@ -68,6 +68,9 @@ ARM: Final[str] = "bc_dagger"
 
 _AXES: Final[tuple[str, ...]] = ("x", "y", "z")
 
+#: Outcome classes other than ``success``, whose count has its own column (one name per column).
+_FAILURES: Final[tuple[str, ...]] = tuple(o for o in OUTCOME_ORDER if o != "success")
+
 
 def _axes(prefix: str) -> list[str]:
     return [f"{prefix}_{a}" for a in _AXES]
@@ -84,7 +87,7 @@ COLUMNS: Final[tuple[str, ...]] = (
     "rollout_n",
     "rollout_success",
     "rollout_success_rate",
-    *(f"rollout_{o}" for o in OUTCOME_ORDER),
+    *(f"rollout_{o}" for o in _FAILURES),
     "labelled_episodes_added",
     "labelled_episodes_cumulative",
     "labelled_frames_added",
@@ -104,7 +107,7 @@ COLUMNS: Final[tuple[str, ...]] = (
     "select_n",
     "select_success",
     "select_success_rate",
-    *(f"select_{o}" for o in OUTCOME_ORDER),
+    *(f"select_{o}" for o in _FAILURES),
     "select_p95_closing_speed_m_s",
     "select_n_tunnelled",
     "select_n_detectors_disagree",
@@ -252,7 +255,7 @@ def _select_cells(summary: Mapping[str, Any] | None, source: str) -> dict[str, A
         "select_n": summary["n"],
         "select_success": summary["success"],
         "select_success_rate": summary["success"] / summary["n"] if summary["n"] else None,
-        **{f"select_{o}": summary["outcomes"][o] for o in OUTCOME_ORDER},
+        **{f"select_{o}": summary["outcomes"][o] for o in _FAILURES},
         "select_p95_closing_speed_m_s": None if p95 == float("inf") else p95,
         "select_n_tunnelled": summary["n_tunnelled"],
         "select_n_detectors_disagree": summary["n_detectors_disagree"],
@@ -355,7 +358,7 @@ def _seed_rows(
                 "rollout_n": n,
                 "rollout_success": r.outcomes["success"],
                 "rollout_success_rate": r.outcomes["success"] / n if n else None,
-                **{f"rollout_{o}": r.outcomes[o] for o in OUTCOME_ORDER},
+                **{f"rollout_{o}": r.outcomes[o] for o in _FAILURES},
                 "labelled_episodes_added": n,
                 "labelled_episodes_cumulative": int(rec["labelled_episodes"]),
                 "labelled_frames_added": r.labelled_frames,

@@ -1,0 +1,271 @@
+{
+  "kind": "dagger_aggregate",
+  "arm": "bc_dagger",
+  "run_seed": 1,
+  "iteration": 4,
+  "strict": true,
+  "demos": {
+    "choices": [
+      {
+        "store": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+        "start": 0,
+        "attempted": 1000,
+        "kept": 999,
+        "kept_fraction": 0.999,
+        "success_filter": true,
+        "outcomes": {
+          "bounce": 1,
+          "success": 999
+        },
+        "first_kept": 0,
+        "last_kept": 999
+      }
+    ],
+    "labelled_episodes": 1000,
+    "kept_episodes": 999,
+    "train_frames": 61518,
+    "heldout_frames": 3067,
+    "heldout_overlap_episodes": 0,
+    "stores": [
+      {
+        "collection": "ppo_2000",
+        "path": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+        "sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+        "expected_sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+        "matches": true
+      }
+    ]
+  },
+  "rollouts": [
+    {
+      "arm": "bc_dagger",
+      "run_seed": 1,
+      "iteration": 1,
+      "beta": 0.5,
+      "purpose": "train",
+      "limit": null,
+      "store": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.h5",
+      "store_sha256": "43394c673fdb1d54e4f751e306272b1891a207f45f6479bf43f696dcb9d93fdb",
+      "manifest": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.manifest.json",
+      "sidecar": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.sidecar.npz",
+      "student_ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s1/checkpoints/s0_step030000.pt",
+      "student_ckpt_sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+      "labelled_episodes": 200,
+      "labelled_frames": 12328,
+      "outcomes": {
+        "crash": 0,
+        "off_pad": 0,
+        "hard_landing": 0,
+        "bounce": 0,
+        "success": 200,
+        "timeout": 0
+      },
+      "success": 200,
+      "teacher_agreement": {
+        "metric": "l2(student proposal - teacher label), normalised action units",
+        "all": {
+          "frames": 12328,
+          "mean_l2": 0.03183746028446271,
+          "median_l2": 0.022309949789218214,
+          "p90_l2": 0.07021444990131345,
+          "max_l2": 0.4552259532956364,
+          "mse_per_component": 0.00072897827699493
+        },
+        "student_executed": {
+          "frames": 6237,
+          "mean_l2": 0.031996190181583735,
+          "median_l2": 0.0223084748926823,
+          "p90_l2": 0.0707647886452116,
+          "max_l2": 0.4552259532956364,
+          "mse_per_component": 0.0007488344939071889
+        },
+        "teacher_executed": {
+          "frames": 6091,
+          "mean_l2": 0.03167492566480356,
+          "median_l2": 0.0223163636831392,
+          "p90_l2": 0.06997919378833739,
+          "max_l2": 0.4355768320172194,
+          "mse_per_component": 0.0007086461107033917
+        }
+      },
+      "reused": true
+    },
+    {
+      "arm": "bc_dagger",
+      "run_seed": 1,
+      "iteration": 2,
+      "beta": 0.25,
+      "purpose": "train",
+      "limit": null,
+      "store": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter2.h5",
+      "store_sha256": "8076b308ec4b3985920a572a3f0300bca61a141c87eafd14ce0a770ea911da92",
+      "manifest": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter2.manifest.json",
+      "sidecar": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter2.sidecar.npz",
+      "student_ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s1_step010000.pt",
+      "student_ckpt_sha256": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+      "labelled_episodes": 200,
+      "labelled_frames": 12294,
+      "outcomes": {
+        "crash": 0,
+        "off_pad": 0,
+        "hard_landing": 1,
+        "bounce": 1,
+        "success": 198,
+        "timeout": 0
+      },
+      "success": 198,
+      "teacher_agreement": {
+        "metric": "l2(student proposal - teacher label), normalised action units",
+        "all": {
+          "frames": 12294,
+          "mean_l2": 0.043149820800583334,
+          "median_l2": 0.029345779652285985,
+          "p90_l2": 0.0965050695384284,
+          "max_l2": 0.5778979060746657,
+          "mse_per_component": 0.001362935074971541
+        },
+        "student_executed": {
+          "frames": 9317,
+          "mean_l2": 0.04322776392475529,
+          "median_l2": 0.02944833339741411,
+          "p90_l2": 0.09653054881082589,
+          "max_l2": 0.5778979060746657,
+          "mse_per_component": 0.0013817407740564702
+        },
+        "teacher_executed": {
+          "frames": 2977,
+          "mean_l2": 0.04290588526551106,
+          "median_l2": 0.02900995763882206,
+          "p90_l2": 0.09593141282480296,
+          "max_l2": 0.4285660188511041,
+          "mse_per_component": 0.001304079617002348
+        }
+      },
+      "reused": true
+    },
+    {
+      "arm": "bc_dagger",
+      "run_seed": 1,
+      "iteration": 3,
+      "beta": 0.125,
+      "purpose": "train",
+      "limit": null,
+      "store": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter3.h5",
+      "store_sha256": "53a09015471991415d8c0e8755fdbc161c900f6a8f4c83fb7d4960b164ef1f0f",
+      "manifest": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter3.manifest.json",
+      "sidecar": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter3.sidecar.npz",
+      "student_ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s2_step010000.pt",
+      "student_ckpt_sha256": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+      "labelled_episodes": 200,
+      "labelled_frames": 12141,
+      "outcomes": {
+        "crash": 0,
+        "off_pad": 0,
+        "hard_landing": 3,
+        "bounce": 0,
+        "success": 197,
+        "timeout": 0
+      },
+      "success": 197,
+      "teacher_agreement": {
+        "metric": "l2(student proposal - teacher label), normalised action units",
+        "all": {
+          "frames": 12141,
+          "mean_l2": 0.057902276235580544,
+          "median_l2": 0.038704138558240266,
+          "p90_l2": 0.13063539266432747,
+          "max_l2": 0.6034554973047644,
+          "mse_per_component": 0.00237807053752783
+        },
+        "student_executed": {
+          "frames": 10607,
+          "mean_l2": 0.058015104116892056,
+          "median_l2": 0.03873234742323554,
+          "p90_l2": 0.13077993672588328,
+          "max_l2": 0.6034554973047644,
+          "mse_per_component": 0.0023866969341961135
+        },
+        "teacher_executed": {
+          "frames": 1534,
+          "mean_l2": 0.05712211630267879,
+          "median_l2": 0.03856454030690244,
+          "p90_l2": 0.12988109079615068,
+          "max_l2": 0.5365877603286475,
+          "mse_per_component": 0.0023184224348808385
+        }
+      },
+      "reused": true
+    },
+    {
+      "arm": "bc_dagger",
+      "run_seed": 1,
+      "iteration": 4,
+      "beta": 0.0,
+      "purpose": "train",
+      "limit": null,
+      "store": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter4.h5",
+      "store_sha256": "5f29f7bbb9da4792df77948176b051b36c001d24805b77b9a8910d5c617a1d18",
+      "manifest": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter4.manifest.json",
+      "sidecar": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter4.sidecar.npz",
+      "student_ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s3_step010000.pt",
+      "student_ckpt_sha256": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+      "labelled_episodes": 200,
+      "labelled_frames": 12388,
+      "outcomes": {
+        "crash": 0,
+        "off_pad": 0,
+        "hard_landing": 1,
+        "bounce": 0,
+        "success": 199,
+        "timeout": 0
+      },
+      "success": 199,
+      "teacher_agreement": {
+        "metric": "l2(student proposal - teacher label), normalised action units",
+        "all": {
+          "frames": 12388,
+          "mean_l2": 0.07676214965158797,
+          "median_l2": 0.057095098953907866,
+          "p90_l2": 0.17329135989304129,
+          "max_l2": 0.5072773752950545,
+          "mse_per_component": 0.003557645736826542
+        },
+        "student_executed": {
+          "frames": 12388,
+          "mean_l2": 0.07676214965158797,
+          "median_l2": 0.057095098953907866,
+          "p90_l2": 0.17329135989304129,
+          "max_l2": 0.5072773752950545,
+          "mse_per_component": 0.003557645736826542
+        },
+        "teacher_executed": {
+          "frames": 0
+        }
+      },
+      "reused": false
+    }
+  ],
+  "betas": [
+    0.5,
+    0.25,
+    0.125,
+    0.0
+  ],
+  "student_ckpt_sha256": [
+    "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+    "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+    "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+    "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f"
+  ],
+  "labelled_episodes": 1800,
+  "labelled_episodes_demos": 1000,
+  "labelled_episodes_rollouts": 800,
+  "labelled_episodes_expected": 1800,
+  "labelled_episodes_total_final": 2000,
+  "labelled_frames": {
+    "demos_kept": 61518,
+    "rollouts": 49151,
+    "total": 110669
+  },
+  "rollouts_success_filtered": false
+}

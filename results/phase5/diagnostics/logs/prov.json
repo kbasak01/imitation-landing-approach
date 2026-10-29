@@ -1,0 +1,2363 @@
+{
+ "repo_files_sha256": {
+  "configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+  "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+  "configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+ },
+ "ppo_2000_sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+ "select_parquet_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+ "repo_files_match_frozen": true,
+ "s0": {
+  "problems": [],
+  "state": "done",
+  "status_state": "done",
+  "config_sha256": {
+   "configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+   "configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+  },
+  "init_from": {
+   "path_ok": true,
+   "sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+   "recomputed": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+   "bc_manifest_record": [
+    "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31"
+   ],
+   "bc_matched_init_from_sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31"
+  },
+  "ema_last_sha256": {
+   "recorded": [
+    "197a78eb9991804031cf130f2587271c7fbe482c8675d4b7662a3e7b852c50e0"
+   ],
+   "recomputed": "197a78eb9991804031cf130f2587271c7fbe482c8675d4b7662a3e7b852c50e0"
+  },
+  "checkpoints": {
+   "s1_step005000.pt": {
+    "sha256": "1c21c3d5c498a7da681faa7cae20fb6e5993468fdb7c7205a4163bf71553252b",
+    "matches_manifest": true,
+    "global_step": 5000
+   },
+   "s1_step010000.pt": {
+    "sha256": "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02",
+    "matches_manifest": true,
+    "global_step": 10000
+   },
+   "s2_step005000.pt": {
+    "sha256": "8d36c82a741f090d2f830a91149138866d98544d69ea7e3976d4170d3a97078e",
+    "matches_manifest": true,
+    "global_step": 15000
+   },
+   "s2_step010000.pt": {
+    "sha256": "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1",
+    "matches_manifest": true,
+    "global_step": 20000
+   },
+   "s3_step005000.pt": {
+    "sha256": "b43c47458e7a311f3dc05eac4586e3f712a59cfd27f19467b7a51336631d293b",
+    "matches_manifest": true,
+    "global_step": 25000
+   },
+   "s3_step010000.pt": {
+    "sha256": "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38",
+    "matches_manifest": true,
+    "global_step": 30000
+   },
+   "s4_step005000.pt": {
+    "sha256": "f8b440f0950b2094f63881442244c3de7d23fffd3491a127e7ac1d4f39d48446",
+    "matches_manifest": true,
+    "global_step": 35000
+   },
+   "s4_step010000.pt": {
+    "sha256": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+    "matches_manifest": true,
+    "global_step": 40000
+   },
+   "s5_step005000.pt": {
+    "sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+    "matches_manifest": true,
+    "global_step": 45000
+   },
+   "s5_step010000.pt": {
+    "sha256": "6fac305de2973beb9c5676aee6ecee4b533c723404aa09208cce1cb295a77a02",
+    "matches_manifest": true,
+    "global_step": 50000
+   }
+  },
+  "rollout_chain": [
+   {
+    "iteration": 1,
+    "beta": 0.5,
+    "expected_student": "bc/s0/checkpoints/s0_step030000.pt",
+    "expected_sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+    "manifest_rollout_student_sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+    "iter_json_sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+    "store_manifest_student": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+    "episode_attr_student_sha256": [
+     "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31"
+    ],
+    "store_sha256": "a56f461c1aafaac112e56e55cbd8dac3118ed0da56a7a1778c12e566326e28ee",
+    "store_sha256_recorded": "a56f461c1aafaac112e56e55cbd8dac3118ed0da56a7a1778c12e566326e28ee",
+    "sidecar_sha256": "c19ce1ab1861ef4bf77a19376a61c4314d16ea33e59db619bb784be2bea46cae",
+    "demo_indices": [
+     1000,
+     1199
+    ],
+    "n_episodes": 200,
+    "frames": 12313,
+    "frames_recorded": 12313,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 17.242773860984016,
+     "audit": 19.218062785977963,
+     "rollouts": 77.36505685199518
+    },
+    "labelled_episodes_cum": 1200,
+    "aggregate_frames": 73831,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s0/checkpoints/s0_step030000.pt",
+     "sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+     "arm": "bc",
+     "run_seed": 0,
+     "stage": 0,
+     "stage_step": 30000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 2,
+    "beta": 0.25,
+    "expected_student": "bc_dagger/s0/checkpoints/s1_step010000.pt",
+    "expected_sha256": "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02",
+    "manifest_rollout_student_sha256": "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02",
+    "iter_json_sha256": "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02",
+    "store_manifest_student": "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02",
+    "episode_attr_student_sha256": [
+     "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02"
+    ],
+    "store_sha256": "b669690da45a4108718cd4c08159a289d877858eac5c1ad0c55a9be4658bc769",
+    "store_sha256_recorded": "b669690da45a4108718cd4c08159a289d877858eac5c1ad0c55a9be4658bc769",
+    "sidecar_sha256": "9de9afde15ee5e9f6f8afa5db15eefbe8c33b5526bf8ace97822f95e4c375d34",
+    "demo_indices": [
+     1200,
+     1399
+    ],
+    "n_episodes": 200,
+    "frames": 12274,
+    "frames_recorded": 12274,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 16.557823020004435,
+     "audit": 18.35850161500275,
+     "rollouts": 77.23219979999703
+    },
+    "labelled_episodes_cum": 1400,
+    "aggregate_frames": 86105,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/checkpoints/s1_step010000.pt",
+     "sha256": "0f83d682a083e4b6860cfa03adf20826538c6264609bd69ec300079eedae5a02",
+     "arm": "bc_dagger",
+     "run_seed": 0,
+     "stage": 1,
+     "stage_step": 10000,
+     "global_step": 10000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 3,
+    "beta": 0.125,
+    "expected_student": "bc_dagger/s0/checkpoints/s2_step010000.pt",
+    "expected_sha256": "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1",
+    "manifest_rollout_student_sha256": "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1",
+    "iter_json_sha256": "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1",
+    "store_manifest_student": "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1",
+    "episode_attr_student_sha256": [
+     "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1"
+    ],
+    "store_sha256": "e66043e0dca0c3cdf4b1e03813dfe65409793970c87e07aaaad8bf2d60e07111",
+    "store_sha256_recorded": "e66043e0dca0c3cdf4b1e03813dfe65409793970c87e07aaaad8bf2d60e07111",
+    "sidecar_sha256": "806143c8aabea060fb0c1b2c194f501afc74d5324ca37efa0c7412ae8f06b092",
+    "demo_indices": [
+     1400,
+     1599
+    ],
+    "n_episodes": 200,
+    "frames": 12344,
+    "frames_recorded": 12344,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 17.60782139201183,
+     "audit": 18.052010796003742,
+     "rollouts": 77.32293335700524
+    },
+    "labelled_episodes_cum": 1600,
+    "aggregate_frames": 98449,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/checkpoints/s2_step010000.pt",
+     "sha256": "8a1f8d5ef4ed2d89688fc1351db731a27e0f1aeffe19254693a654a6d38764e1",
+     "arm": "bc_dagger",
+     "run_seed": 0,
+     "stage": 2,
+     "stage_step": 10000,
+     "global_step": 20000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 4,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s0/checkpoints/s3_step010000.pt",
+    "expected_sha256": "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38",
+    "manifest_rollout_student_sha256": "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38",
+    "iter_json_sha256": "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38",
+    "store_manifest_student": "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38",
+    "episode_attr_student_sha256": [
+     "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38"
+    ],
+    "store_sha256": "76c41832c70cbfe082c9bb6126fbaced519be5ebc1f4a9de2e6839a9e410cc82",
+    "store_sha256_recorded": "76c41832c70cbfe082c9bb6126fbaced519be5ebc1f4a9de2e6839a9e410cc82",
+    "sidecar_sha256": "12138c3dd4d153992f8b06c121e0da3a80304a5e0fdce88348b613d0eb21e37b",
+    "demo_indices": [
+     1600,
+     1799
+    ],
+    "n_episodes": 200,
+    "frames": 12378,
+    "frames_recorded": 12378,
+    "outcomes": {
+     "success": 197,
+     "hard_landing": 3
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 18.667917967017274,
+     "audit": 18.682191946019884,
+     "rollouts": 78.03299638698809
+    },
+    "labelled_episodes_cum": 1800,
+    "aggregate_frames": 110827,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/checkpoints/s3_step010000.pt",
+     "sha256": "f7915f665b4e7bd36bc18932fced1dca14bbcfccee3cc60c881c134adddb0d38",
+     "arm": "bc_dagger",
+     "run_seed": 0,
+     "stage": 3,
+     "stage_step": 10000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 5,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s0/checkpoints/s4_step010000.pt",
+    "expected_sha256": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+    "manifest_rollout_student_sha256": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+    "iter_json_sha256": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+    "store_manifest_student": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+    "episode_attr_student_sha256": [
+     "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528"
+    ],
+    "store_sha256": "da42d231398bedf9b32753ffbac6d4756a8fb7bc895579d40a4e7c5686c73e50",
+    "store_sha256_recorded": "da42d231398bedf9b32753ffbac6d4756a8fb7bc895579d40a4e7c5686c73e50",
+    "sidecar_sha256": "54252568381238219d01b4fbb476692781fe32ba520951347812a2c170907cde",
+    "demo_indices": [
+     1800,
+     1999
+    ],
+    "n_episodes": 200,
+    "frames": 12389,
+    "frames_recorded": 12389,
+    "outcomes": {
+     "success": 198,
+     "bounce": 1,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 21.423860240989598,
+     "audit": 19.58202970601269,
+     "rollouts": 81.18000684899744
+    },
+    "labelled_episodes_cum": 2000,
+    "aggregate_frames": 123216,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 50,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/checkpoints/s4_step010000.pt",
+     "sha256": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+     "arm": "bc_dagger",
+     "run_seed": 0,
+     "stage": 4,
+     "stage_step": 10000,
+     "global_step": 40000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   }
+  ],
+  "checkpoint_keys": [
+   "arm",
+   "config",
+   "config_sha256",
+   "ema",
+   "ema_updates",
+   "format",
+   "global_step",
+   "kind",
+   "labelled_episodes",
+   "model",
+   "obs_variant",
+   "optimizer",
+   "purpose",
+   "rng",
+   "run_seed",
+   "sigma",
+   "stage",
+   "stage_step"
+  ],
+  "normaliser_inherited_from_bc": {
+   "model.encoder.proprio_mean": true,
+   "model.encoder.proprio_std": true,
+   "ema.encoder.proprio_mean": true,
+   "ema.encoder.proprio_std": true,
+   "s1_5k.ema.encoder.proprio_mean": true,
+   "s2_5k.ema.encoder.proprio_mean": true,
+   "s3_5k.ema.encoder.proprio_mean": true,
+   "s4_5k.ema.encoder.proprio_mean": true,
+   "s5_5k.ema.encoder.proprio_mean": true,
+   "s1_5k.ema.encoder.proprio_std": true,
+   "s2_5k.ema.encoder.proprio_std": true,
+   "s3_5k.ema.encoder.proprio_std": true,
+   "s4_5k.ema.encoder.proprio_std": true,
+   "s5_5k.ema.encoder.proprio_std": true
+  },
+  "ema_last_equals_final_ema": true,
+  "ckpt_meta_s5_10k": {
+   "format": "ila-ckpt/1",
+   "arm": "bc_dagger",
+   "kind": "bc",
+   "obs_variant": "default",
+   "config": "dict",
+   "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "run_seed": 0,
+   "purpose": "train",
+   "sigma": null,
+   "stage": 5,
+   "stage_step": 10000,
+   "global_step": 50000,
+   "ema_updates": 80000,
+   "rng": "dict",
+   "labelled_episodes": 2000
+  },
+  "timeline_unix": {
+   "train_start": 1793280825.9565053,
+   "train_finished": 1793286401.111095,
+   "select_rows_mtime": {
+    "s5_step005000_rows.csv": 1793308131.9914997,
+    "s5_step010000_rows.csv": 1793308202.2741036
+   },
+   "selection_json_mtime": 1793308202.2778528,
+   "per_iteration_select_rows_mtime": {
+    "s4_step010000_rows.csv": 1793309032.129102,
+    "s1_step010000_rows.csv": 1793308816.6355972,
+    "s2_step010000_rows.csv": 1793308888.2661736,
+    "s3_step010000_rows.csv": 1793308960.3848364
+   }
+  },
+  "wall": {
+   "wall_clock_s": 5262.995379392989,
+   "gpu_hours_field": 1.4619431609424969,
+   "loop_s_total": 4683.505555009993,
+   "data_load_s": [
+    114.20933460400556,
+    112.50793708697893,
+    113.32422719500028,
+    115.74824417798663,
+    122.5642156440008
+   ],
+   "timing_s_sum": 576.5261865750072,
+   "rollouts_s": 391.133193244983,
+   "audit_s": 93.89279684901703,
+   "aggregate_load_s": 91.50019648100715,
+   "steps_per_s_loop": 10.675764000432217,
+   "gpu_mem_max_bytes": 2436786688
+  },
+  "selection_json": {
+   "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+   "weights": "ema",
+   "inference_path": "cpu_fp32_single_sample",
+   "render": "full",
+   "purpose": "train",
+   "candidates": [
+    "s5_step005000.pt",
+    "s5_step010000.pt"
+   ],
+   "wall_clock_s": 129.97544243800803
+  }
+ },
+ "s1": {
+  "problems": [],
+  "state": "done",
+  "status_state": "done",
+  "config_sha256": {
+   "configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+   "configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+  },
+  "init_from": {
+   "path_ok": true,
+   "sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+   "recomputed": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+   "bc_manifest_record": [
+    "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b"
+   ],
+   "bc_matched_init_from_sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b"
+  },
+  "ema_last_sha256": {
+   "recorded": [
+    "618f18fa59c0aa552c0d71a98a2626d44db334c1dc9d10c55be27ecb416e97f9"
+   ],
+   "recomputed": "618f18fa59c0aa552c0d71a98a2626d44db334c1dc9d10c55be27ecb416e97f9"
+  },
+  "checkpoints": {
+   "s1_step005000.pt": {
+    "sha256": "639591ea8b461daa39801f985a0bc4dea4d987844278618f79b183e5b0a466c5",
+    "matches_manifest": true,
+    "global_step": 5000
+   },
+   "s1_step010000.pt": {
+    "sha256": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+    "matches_manifest": true,
+    "global_step": 10000
+   },
+   "s2_step005000.pt": {
+    "sha256": "68e7e2caa1f818d8c4081adca9950ee8b55c1fc6f8e675b571a44aa84ef95280",
+    "matches_manifest": true,
+    "global_step": 15000
+   },
+   "s2_step010000.pt": {
+    "sha256": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+    "matches_manifest": true,
+    "global_step": 20000
+   },
+   "s3_step005000.pt": {
+    "sha256": "b29b5e958803a7a94434610b3327af03739458428dc9dfe06fab62ba601d101e",
+    "matches_manifest": true,
+    "global_step": 25000
+   },
+   "s3_step010000.pt": {
+    "sha256": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+    "matches_manifest": true,
+    "global_step": 30000
+   },
+   "s4_step005000.pt": {
+    "sha256": "74c9e0ff1901582fd04f841e043f62416283664f3e8432ee3c76f401dfc5fd20",
+    "matches_manifest": true,
+    "global_step": 35000
+   },
+   "s4_step010000.pt": {
+    "sha256": "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47",
+    "matches_manifest": true,
+    "global_step": 40000
+   },
+   "s5_step005000.pt": {
+    "sha256": "196ca18939c2cfe02d8727d40bf4a8e16826badd96ddeb255911be6ae2ecf722",
+    "matches_manifest": true,
+    "global_step": 45000
+   },
+   "s5_step010000.pt": {
+    "sha256": "191a66003864afa126e6ab56fab0d0f27242a69d2082d8f3159d4beae5ab9075",
+    "matches_manifest": true,
+    "global_step": 50000
+   }
+  },
+  "rollout_chain": [
+   {
+    "iteration": 1,
+    "beta": 0.5,
+    "expected_student": "bc/s1/checkpoints/s0_step030000.pt",
+    "expected_sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+    "manifest_rollout_student_sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+    "iter_json_sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+    "store_manifest_student": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+    "episode_attr_student_sha256": [
+     "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b"
+    ],
+    "store_sha256": "43394c673fdb1d54e4f751e306272b1891a207f45f6479bf43f696dcb9d93fdb",
+    "store_sha256_recorded": "43394c673fdb1d54e4f751e306272b1891a207f45f6479bf43f696dcb9d93fdb",
+    "sidecar_sha256": "1f7cfa37072e71bd241747c0790783cbce247cfddceda0ed8bee7861f5b51df3",
+    "demo_indices": [
+     1000,
+     1199
+    ],
+    "n_episodes": 200,
+    "frames": 12328,
+    "frames_recorded": 12328,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 15.969209438015241,
+     "audit": 19.54513072600821,
+     "rollouts": 79.29460845299764
+    },
+    "labelled_episodes_cum": 1200,
+    "aggregate_frames": 73846,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s1/checkpoints/s0_step030000.pt",
+     "sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+     "arm": "bc",
+     "run_seed": 1,
+     "stage": 0,
+     "stage_step": 30000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 2,
+    "beta": 0.25,
+    "expected_student": "bc_dagger/s1/checkpoints/s1_step010000.pt",
+    "expected_sha256": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+    "manifest_rollout_student_sha256": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+    "iter_json_sha256": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+    "store_manifest_student": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+    "episode_attr_student_sha256": [
+     "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb"
+    ],
+    "store_sha256": "8076b308ec4b3985920a572a3f0300bca61a141c87eafd14ce0a770ea911da92",
+    "store_sha256_recorded": "8076b308ec4b3985920a572a3f0300bca61a141c87eafd14ce0a770ea911da92",
+    "sidecar_sha256": "4f5cb477b50046d848afcbf68daac9711d58d2414cc57c1bc18daaa439390b97",
+    "demo_indices": [
+     1200,
+     1399
+    ],
+    "n_episodes": 200,
+    "frames": 12294,
+    "frames_recorded": 12294,
+    "outcomes": {
+     "success": 198,
+     "bounce": 1,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 16.691221022018,
+     "audit": 18.92838264501188,
+     "rollouts": 75.76574254702427
+    },
+    "labelled_episodes_cum": 1400,
+    "aggregate_frames": 86140,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s1_step010000.pt",
+     "sha256": "252df1e0bdef11e499f674ef13ca4f7b4554d74b3570062dae848fbb982c3bbb",
+     "arm": "bc_dagger",
+     "run_seed": 1,
+     "stage": 1,
+     "stage_step": 10000,
+     "global_step": 10000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 3,
+    "beta": 0.125,
+    "expected_student": "bc_dagger/s1/checkpoints/s2_step010000.pt",
+    "expected_sha256": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+    "manifest_rollout_student_sha256": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+    "iter_json_sha256": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+    "store_manifest_student": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+    "episode_attr_student_sha256": [
+     "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b"
+    ],
+    "store_sha256": "53a09015471991415d8c0e8755fdbc161c900f6a8f4c83fb7d4960b164ef1f0f",
+    "store_sha256_recorded": "53a09015471991415d8c0e8755fdbc161c900f6a8f4c83fb7d4960b164ef1f0f",
+    "sidecar_sha256": "a778158502b79e3b0ec0681c4dca3a6cf3822f5faabd101066af7f92f981e2a6",
+    "demo_indices": [
+     1400,
+     1599
+    ],
+    "n_episodes": 200,
+    "frames": 12141,
+    "frames_recorded": 12141,
+    "outcomes": {
+     "success": 197,
+     "hard_landing": 3
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 18.168236842000624,
+     "audit": 19.90561578600318,
+     "rollouts": 78.88632252099342
+    },
+    "labelled_episodes_cum": 1600,
+    "aggregate_frames": 98281,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s2_step010000.pt",
+     "sha256": "871e32b2a01813715dbefed2c0cd87c3cc7e42113f9cf6e431011d00b254de1b",
+     "arm": "bc_dagger",
+     "run_seed": 1,
+     "stage": 2,
+     "stage_step": 10000,
+     "global_step": 20000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 4,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s1/checkpoints/s3_step010000.pt",
+    "expected_sha256": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+    "manifest_rollout_student_sha256": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+    "iter_json_sha256": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+    "store_manifest_student": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+    "episode_attr_student_sha256": [
+     "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f"
+    ],
+    "store_sha256": "5f29f7bbb9da4792df77948176b051b36c001d24805b77b9a8910d5c617a1d18",
+    "store_sha256_recorded": "5f29f7bbb9da4792df77948176b051b36c001d24805b77b9a8910d5c617a1d18",
+    "sidecar_sha256": "a233b063bcda2c6a50de10ee1d0d0d02633a90b56f8e428d885e87763b06d6a7",
+    "demo_indices": [
+     1600,
+     1799
+    ],
+    "n_episodes": 200,
+    "frames": 12388,
+    "frames_recorded": 12388,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 19.437824269989505,
+     "audit": 18.243560654023895,
+     "rollouts": 79.28882304899162
+    },
+    "labelled_episodes_cum": 1800,
+    "aggregate_frames": 110669,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s3_step010000.pt",
+     "sha256": "66b2ab0e11a5d1189bd3b54c756e8a2d752c0cf3bcf34a79163532bd50eb519f",
+     "arm": "bc_dagger",
+     "run_seed": 1,
+     "stage": 3,
+     "stage_step": 10000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 5,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s1/checkpoints/s4_step010000.pt",
+    "expected_sha256": "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47",
+    "manifest_rollout_student_sha256": "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47",
+    "iter_json_sha256": "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47",
+    "store_manifest_student": "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47",
+    "episode_attr_student_sha256": [
+     "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47"
+    ],
+    "store_sha256": "743164c440e1bc599142abd5d733104f5c61210b2e0d914e5602cd8cb4bdf862",
+    "store_sha256_recorded": "743164c440e1bc599142abd5d733104f5c61210b2e0d914e5602cd8cb4bdf862",
+    "sidecar_sha256": "529d6b924ccf6607d2ac96031f8df51d3ea8f6c9fa7b905841805315b6d8093b",
+    "demo_indices": [
+     1800,
+     1999
+    ],
+    "n_episodes": 200,
+    "frames": 12344,
+    "frames_recorded": 12344,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 21.6722131120041,
+     "audit": 16.975141665985575,
+     "rollouts": 80.41615697101224
+    },
+    "labelled_episodes_cum": 2000,
+    "aggregate_frames": 123013,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 50,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s1/checkpoints/s4_step010000.pt",
+     "sha256": "e896c99e1782571216c09411450fefa6e49cf25b570ff2414488f567e612be47",
+     "arm": "bc_dagger",
+     "run_seed": 1,
+     "stage": 4,
+     "stage_step": 10000,
+     "global_step": 40000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   }
+  ],
+  "checkpoint_keys": [
+   "arm",
+   "config",
+   "config_sha256",
+   "ema",
+   "ema_updates",
+   "format",
+   "global_step",
+   "kind",
+   "labelled_episodes",
+   "model",
+   "obs_variant",
+   "optimizer",
+   "purpose",
+   "rng",
+   "run_seed",
+   "sigma",
+   "stage",
+   "stage_step"
+  ],
+  "normaliser_inherited_from_bc": {
+   "model.encoder.proprio_mean": true,
+   "model.encoder.proprio_std": true,
+   "ema.encoder.proprio_mean": true,
+   "ema.encoder.proprio_std": true,
+   "s1_5k.ema.encoder.proprio_mean": true,
+   "s2_5k.ema.encoder.proprio_mean": true,
+   "s3_5k.ema.encoder.proprio_mean": true,
+   "s4_5k.ema.encoder.proprio_mean": true,
+   "s5_5k.ema.encoder.proprio_mean": true,
+   "s1_5k.ema.encoder.proprio_std": true,
+   "s2_5k.ema.encoder.proprio_std": true,
+   "s3_5k.ema.encoder.proprio_std": true,
+   "s4_5k.ema.encoder.proprio_std": true,
+   "s5_5k.ema.encoder.proprio_std": true
+  },
+  "ema_last_equals_final_ema": true,
+  "ckpt_meta_s5_10k": {
+   "format": "ila-ckpt/1",
+   "arm": "bc_dagger",
+   "kind": "bc",
+   "obs_variant": "default",
+   "config": "dict",
+   "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "run_seed": 1,
+   "purpose": "train",
+   "sigma": null,
+   "stage": 5,
+   "stage_step": 10000,
+   "global_step": 50000,
+   "ema_updates": 80000,
+   "rng": "dict",
+   "labelled_episodes": 2000
+  },
+  "timeline_unix": {
+   "train_start": 1793286409.6628828,
+   "train_finished": 1793291895.371891,
+   "select_rows_mtime": {
+    "s5_step005000_rows.csv": 1793308270.6468785,
+    "s5_step010000_rows.csv": 1793308337.2697413
+   },
+   "selection_json_mtime": 1793308337.2697413,
+   "per_iteration_select_rows_mtime": {
+    "s4_step010000_rows.csv": 1793309331.930316,
+    "s1_step010000_rows.csv": 1793309113.0563407,
+    "s2_step010000_rows.csv": 1793309185.6861649,
+    "s3_step010000_rows.csv": 1793309260.3019364
+   }
+  },
+  "wall": {
+   "wall_clock_s": 5172.590259438992,
+   "gpu_hours_field": 1.4368306276219422,
+   "loop_s_total": 4590.555913670949,
+   "data_load_s": [
+    115.18757994499174,
+    111.7401623140031,
+    117.35286565299612,
+    117.33926952097681,
+    119.41938067501178
+   ],
+   "timing_s_sum": 579.1881897020794,
+   "rollouts_s": 393.6516535410192,
+   "audit_s": 93.59783147703274,
+   "aggregate_load_s": 91.93870468402747,
+   "steps_per_s_loop": 10.891927021539379,
+   "gpu_mem_max_bytes": 2436786688
+  },
+  "selection_json": {
+   "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+   "weights": "ema",
+   "inference_path": "cpu_fp32_single_sample",
+   "render": "full",
+   "purpose": "train",
+   "candidates": [
+    "s5_step005000.pt",
+    "s5_step010000.pt"
+   ],
+   "wall_clock_s": 126.08791567099979
+  }
+ },
+ "s2": {
+  "problems": [],
+  "state": "done",
+  "status_state": "done",
+  "config_sha256": {
+   "configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+   "configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+  },
+  "init_from": {
+   "path_ok": true,
+   "sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+   "recomputed": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+   "bc_manifest_record": [
+    "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c"
+   ],
+   "bc_matched_init_from_sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c"
+  },
+  "ema_last_sha256": {
+   "recorded": [
+    "6c21b7a5edfc01b97e81b0d307ceeee16907b2c94facfe400d5588db5a1d2960"
+   ],
+   "recomputed": "6c21b7a5edfc01b97e81b0d307ceeee16907b2c94facfe400d5588db5a1d2960"
+  },
+  "checkpoints": {
+   "s1_step005000.pt": {
+    "sha256": "dea7d83b8cc45fb6d7686460e14d0670e52b5e57026fe550710d7a626e1c7955",
+    "matches_manifest": true,
+    "global_step": 5000
+   },
+   "s1_step010000.pt": {
+    "sha256": "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef",
+    "matches_manifest": true,
+    "global_step": 10000
+   },
+   "s2_step005000.pt": {
+    "sha256": "2b28bc8927fb1fb50605428a926f4f41e6f0d9e3fe07b0cf5d342224fa1744d1",
+    "matches_manifest": true,
+    "global_step": 15000
+   },
+   "s2_step010000.pt": {
+    "sha256": "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed",
+    "matches_manifest": true,
+    "global_step": 20000
+   },
+   "s3_step005000.pt": {
+    "sha256": "e59328b8f84125275cc5e6c09db3a0d6ff99734e2ac888286423b2cb53b28c98",
+    "matches_manifest": true,
+    "global_step": 25000
+   },
+   "s3_step010000.pt": {
+    "sha256": "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5",
+    "matches_manifest": true,
+    "global_step": 30000
+   },
+   "s4_step005000.pt": {
+    "sha256": "6a8ca43581fc55362d18ff9ffa39abd71cc5b4e534de484b8f9b60ac0fc76e05",
+    "matches_manifest": true,
+    "global_step": 35000
+   },
+   "s4_step010000.pt": {
+    "sha256": "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd",
+    "matches_manifest": true,
+    "global_step": 40000
+   },
+   "s5_step005000.pt": {
+    "sha256": "751210e85a5239c37c8258233e3bd1bce1c3f15bf279212c175010106316ba22",
+    "matches_manifest": true,
+    "global_step": 45000
+   },
+   "s5_step010000.pt": {
+    "sha256": "4974a0d542123d54794118a77f94131abb596d5e370f9e4bcafbb6a5d79b6446",
+    "matches_manifest": true,
+    "global_step": 50000
+   }
+  },
+  "rollout_chain": [
+   {
+    "iteration": 1,
+    "beta": 0.5,
+    "expected_student": "bc/s2/checkpoints/s0_step030000.pt",
+    "expected_sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+    "manifest_rollout_student_sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+    "iter_json_sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+    "store_manifest_student": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+    "episode_attr_student_sha256": [
+     "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c"
+    ],
+    "store_sha256": "baacc8a5dcc9d46ca3f4f0281fce52cc65c48ad32db390a59ebf172432410ff1",
+    "store_sha256_recorded": "baacc8a5dcc9d46ca3f4f0281fce52cc65c48ad32db390a59ebf172432410ff1",
+    "sidecar_sha256": "bddfb2bc5a4a77f9f1470d6eda2c23b0a49770c62c433779566c4b10db52e6ae",
+    "demo_indices": [
+     1000,
+     1199
+    ],
+    "n_episodes": 200,
+    "frames": 12319,
+    "frames_recorded": 12319,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 15.23242430400569,
+     "audit": 18.09475862799445,
+     "rollouts": 77.24584110500291
+    },
+    "labelled_episodes_cum": 1200,
+    "aggregate_frames": 73837,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s2/checkpoints/s0_step030000.pt",
+     "sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+     "arm": "bc",
+     "run_seed": 2,
+     "stage": 0,
+     "stage_step": 30000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 2,
+    "beta": 0.25,
+    "expected_student": "bc_dagger/s2/checkpoints/s1_step010000.pt",
+    "expected_sha256": "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef",
+    "manifest_rollout_student_sha256": "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef",
+    "iter_json_sha256": "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef",
+    "store_manifest_student": "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef",
+    "episode_attr_student_sha256": [
+     "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef"
+    ],
+    "store_sha256": "2e78cb4ba1d0b2b57b66b847d0bb33ed24c94e4f7c479a93c5393fd7eb0769b7",
+    "store_sha256_recorded": "2e78cb4ba1d0b2b57b66b847d0bb33ed24c94e4f7c479a93c5393fd7eb0769b7",
+    "sidecar_sha256": "4866e0d6311912bb64ee3e9b9ab54bc495d3d0cfcf4b62333a68568028ee6468",
+    "demo_indices": [
+     1200,
+     1399
+    ],
+    "n_episodes": 200,
+    "frames": 12322,
+    "frames_recorded": 12322,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 16.72663320900756,
+     "audit": 18.56086788198445,
+     "rollouts": 78.93853547901381
+    },
+    "labelled_episodes_cum": 1400,
+    "aggregate_frames": 86159,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/checkpoints/s1_step010000.pt",
+     "sha256": "89a227125fb01597d93f3d29118d39478761f827d98bbab785e90de418236aef",
+     "arm": "bc_dagger",
+     "run_seed": 2,
+     "stage": 1,
+     "stage_step": 10000,
+     "global_step": 10000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 3,
+    "beta": 0.125,
+    "expected_student": "bc_dagger/s2/checkpoints/s2_step010000.pt",
+    "expected_sha256": "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed",
+    "manifest_rollout_student_sha256": "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed",
+    "iter_json_sha256": "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed",
+    "store_manifest_student": "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed",
+    "episode_attr_student_sha256": [
+     "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed"
+    ],
+    "store_sha256": "e350a4a64bcf332189ec97cd89b00d1048a2649b4818594e0dc3a4b9b6dd3bf8",
+    "store_sha256_recorded": "e350a4a64bcf332189ec97cd89b00d1048a2649b4818594e0dc3a4b9b6dd3bf8",
+    "sidecar_sha256": "d5d6660dea0740da7eea9bd231c19a72950f5867914ab3e7523971b0b85c3dbb",
+    "demo_indices": [
+     1400,
+     1599
+    ],
+    "n_episodes": 200,
+    "frames": 12370,
+    "frames_recorded": 12370,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 18.075949829013553,
+     "audit": 17.28488363599172,
+     "rollouts": 80.29835348197958
+    },
+    "labelled_episodes_cum": 1600,
+    "aggregate_frames": 98529,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/checkpoints/s2_step010000.pt",
+     "sha256": "fadfa4e9da49b8b9ccfcfde9001db66eb778ca200324b8170ee44144add32bed",
+     "arm": "bc_dagger",
+     "run_seed": 2,
+     "stage": 2,
+     "stage_step": 10000,
+     "global_step": 20000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 4,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s2/checkpoints/s3_step010000.pt",
+    "expected_sha256": "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5",
+    "manifest_rollout_student_sha256": "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5",
+    "iter_json_sha256": "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5",
+    "store_manifest_student": "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5",
+    "episode_attr_student_sha256": [
+     "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5"
+    ],
+    "store_sha256": "d8f2ac4353debfd37c07040e175897aca417e966f8873728ebaabf50922e993f",
+    "store_sha256_recorded": "d8f2ac4353debfd37c07040e175897aca417e966f8873728ebaabf50922e993f",
+    "sidecar_sha256": "3ab684e88664515549ba5ac87b655bb119ad3c0b10dd89459f17d510ab70687a",
+    "demo_indices": [
+     1600,
+     1799
+    ],
+    "n_episodes": 200,
+    "frames": 12469,
+    "frames_recorded": 12469,
+    "outcomes": {
+     "success": 197,
+     "hard_landing": 3
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 19.21115404300508,
+     "audit": 18.41890340700047,
+     "rollouts": 76.84947386098793
+    },
+    "labelled_episodes_cum": 1800,
+    "aggregate_frames": 110998,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/checkpoints/s3_step010000.pt",
+     "sha256": "38b4684cc9f07b7dbaf4243b5e10055bfad8871ef05c12a2c8be49462322bef5",
+     "arm": "bc_dagger",
+     "run_seed": 2,
+     "stage": 3,
+     "stage_step": 10000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 5,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s2/checkpoints/s4_step010000.pt",
+    "expected_sha256": "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd",
+    "manifest_rollout_student_sha256": "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd",
+    "iter_json_sha256": "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd",
+    "store_manifest_student": "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd",
+    "episode_attr_student_sha256": [
+     "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd"
+    ],
+    "store_sha256": "71940e65f7c7dad67c1c660a8c6370ff42eed9cbe5586c7c4ef84ff0690155ae",
+    "store_sha256_recorded": "71940e65f7c7dad67c1c660a8c6370ff42eed9cbe5586c7c4ef84ff0690155ae",
+    "sidecar_sha256": "7590298a2222e2e148a2970896a2d35644c9a8a97c44a34908008da232f2fc60",
+    "demo_indices": [
+     1800,
+     1999
+    ],
+    "n_episodes": 200,
+    "frames": 12361,
+    "frames_recorded": 12361,
+    "outcomes": {
+     "success": 198,
+     "hard_landing": 2
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 20.860321399988607,
+     "audit": 18.245738254016032,
+     "rollouts": 77.50281485400046
+    },
+    "labelled_episodes_cum": 2000,
+    "aggregate_frames": 123359,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 50,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s2/checkpoints/s4_step010000.pt",
+     "sha256": "f5dbd355ed4f485d46a4979df7e827730cc3d2825fe3d3d1262335aaa183b0fd",
+     "arm": "bc_dagger",
+     "run_seed": 2,
+     "stage": 4,
+     "stage_step": 10000,
+     "global_step": 40000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   }
+  ],
+  "checkpoint_keys": [
+   "arm",
+   "config",
+   "config_sha256",
+   "ema",
+   "ema_updates",
+   "format",
+   "global_step",
+   "kind",
+   "labelled_episodes",
+   "model",
+   "obs_variant",
+   "optimizer",
+   "purpose",
+   "rng",
+   "run_seed",
+   "sigma",
+   "stage",
+   "stage_step"
+  ],
+  "normaliser_inherited_from_bc": {
+   "model.encoder.proprio_mean": true,
+   "model.encoder.proprio_std": true,
+   "ema.encoder.proprio_mean": true,
+   "ema.encoder.proprio_std": true,
+   "s1_5k.ema.encoder.proprio_mean": true,
+   "s2_5k.ema.encoder.proprio_mean": true,
+   "s3_5k.ema.encoder.proprio_mean": true,
+   "s4_5k.ema.encoder.proprio_mean": true,
+   "s5_5k.ema.encoder.proprio_mean": true,
+   "s1_5k.ema.encoder.proprio_std": true,
+   "s2_5k.ema.encoder.proprio_std": true,
+   "s3_5k.ema.encoder.proprio_std": true,
+   "s4_5k.ema.encoder.proprio_std": true,
+   "s5_5k.ema.encoder.proprio_std": true
+  },
+  "ema_last_equals_final_ema": true,
+  "ckpt_meta_s5_10k": {
+   "format": "ila-ckpt/1",
+   "arm": "bc_dagger",
+   "kind": "bc",
+   "obs_variant": "default",
+   "config": "dict",
+   "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "run_seed": 2,
+   "purpose": "train",
+   "sigma": null,
+   "stage": 5,
+   "stage_step": 10000,
+   "global_step": 50000,
+   "ema_updates": 80000,
+   "rng": "dict",
+   "labelled_episodes": 2000
+  },
+  "timeline_unix": {
+   "train_start": 1793291900.9157217,
+   "train_finished": 1793297283.3160748,
+   "select_rows_mtime": {
+    "s5_step005000_rows.csv": 1793308405.4401383,
+    "s5_step010000_rows.csv": 1793308471.3057659
+   },
+   "selection_json_mtime": 1793308471.3057659,
+   "per_iteration_select_rows_mtime": {
+    "s4_step010000_rows.csv": 1793309642.186364,
+    "s1_step010000_rows.csv": 1793309428.6291244,
+    "s2_step010000_rows.csv": 1793309498.9832563,
+    "s3_step010000_rows.csv": 1793309571.2815664
+   }
+  },
+  "wall": {
+   "wall_clock_s": 5072.984712165984,
+   "gpu_hours_field": 1.4091624200461066,
+   "loop_s_total": 4498.6620408349845,
+   "data_load_s": [
+    110.93442070001038,
+    114.5600333189941,
+    116.02201863299706,
+    114.8475049190165,
+    116.98832206000225
+   ],
+   "timing_s_sum": 571.5466533729923,
+   "rollouts_s": 390.8350187809847,
+   "audit_s": 90.60515180698712,
+   "aggregate_load_s": 90.10648278502049,
+   "steps_per_s_loop": 11.114415696521101,
+   "gpu_mem_max_bytes": 2436786688
+  },
+  "selection_json": {
+   "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+   "weights": "ema",
+   "inference_path": "cpu_fp32_single_sample",
+   "render": "full",
+   "purpose": "train",
+   "candidates": [
+    "s5_step005000.pt",
+    "s5_step010000.pt"
+   ],
+   "wall_clock_s": 125.40415722099715
+  }
+ },
+ "s3": {
+  "problems": [],
+  "state": "done",
+  "status_state": "done",
+  "config_sha256": {
+   "configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+   "configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+  },
+  "init_from": {
+   "path_ok": true,
+   "sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+   "recomputed": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+   "bc_manifest_record": [
+    "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684"
+   ],
+   "bc_matched_init_from_sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684"
+  },
+  "ema_last_sha256": {
+   "recorded": [
+    "d4f229f4e80017929e37c618d9beee4f6ae3f9ec2e41fda1963d7e5fbc0c2cad"
+   ],
+   "recomputed": "d4f229f4e80017929e37c618d9beee4f6ae3f9ec2e41fda1963d7e5fbc0c2cad"
+  },
+  "checkpoints": {
+   "s1_step005000.pt": {
+    "sha256": "a485be26827e1255bc7d27d160b6c2c1c4df4fd3c8f1e74ebec29fc426b02929",
+    "matches_manifest": true,
+    "global_step": 5000
+   },
+   "s1_step010000.pt": {
+    "sha256": "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6",
+    "matches_manifest": true,
+    "global_step": 10000
+   },
+   "s2_step005000.pt": {
+    "sha256": "597028ea12b2054289df113d5a4dcf941f334d7b3365946081d041306fdfe276",
+    "matches_manifest": true,
+    "global_step": 15000
+   },
+   "s2_step010000.pt": {
+    "sha256": "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85",
+    "matches_manifest": true,
+    "global_step": 20000
+   },
+   "s3_step005000.pt": {
+    "sha256": "11fd71394db536a525edb27a1a656fc26a622418af03eaeec18ae53c80d27386",
+    "matches_manifest": true,
+    "global_step": 25000
+   },
+   "s3_step010000.pt": {
+    "sha256": "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a",
+    "matches_manifest": true,
+    "global_step": 30000
+   },
+   "s4_step005000.pt": {
+    "sha256": "40a8a7f17859ba270317979ed4dfc66c19c305ce05804f51b3edd56129115018",
+    "matches_manifest": true,
+    "global_step": 35000
+   },
+   "s4_step010000.pt": {
+    "sha256": "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8",
+    "matches_manifest": true,
+    "global_step": 40000
+   },
+   "s5_step005000.pt": {
+    "sha256": "bfbf8ac25403d00cad9dcdbaaac222d0be98d8d01a7525ec7307daaa4d6aef24",
+    "matches_manifest": true,
+    "global_step": 45000
+   },
+   "s5_step010000.pt": {
+    "sha256": "b4b7eb20a3642b2e2a74771841b511ef951de08b977cc83e5713d48777d8dc98",
+    "matches_manifest": true,
+    "global_step": 50000
+   }
+  },
+  "rollout_chain": [
+   {
+    "iteration": 1,
+    "beta": 0.5,
+    "expected_student": "bc/s3/checkpoints/s0_step030000.pt",
+    "expected_sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+    "manifest_rollout_student_sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+    "iter_json_sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+    "store_manifest_student": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+    "episode_attr_student_sha256": [
+     "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684"
+    ],
+    "store_sha256": "0e5e4b0d7380db243db1dde6e90cf0f1584cd4854b0a11604575868e7c0c56ba",
+    "store_sha256_recorded": "0e5e4b0d7380db243db1dde6e90cf0f1584cd4854b0a11604575868e7c0c56ba",
+    "sidecar_sha256": "e48514405d2dc7f5d9a67dec5dda485f6914ddbe647679b643d81adca6e990ff",
+    "demo_indices": [
+     1000,
+     1199
+    ],
+    "n_episodes": 200,
+    "frames": 12306,
+    "frames_recorded": 12306,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 15.446118349005701,
+     "audit": 18.403274939977564,
+     "rollouts": 76.73248157600756
+    },
+    "labelled_episodes_cum": 1200,
+    "aggregate_frames": 73824,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s3/checkpoints/s0_step030000.pt",
+     "sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+     "arm": "bc",
+     "run_seed": 3,
+     "stage": 0,
+     "stage_step": 30000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 2,
+    "beta": 0.25,
+    "expected_student": "bc_dagger/s3/checkpoints/s1_step010000.pt",
+    "expected_sha256": "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6",
+    "manifest_rollout_student_sha256": "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6",
+    "iter_json_sha256": "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6",
+    "store_manifest_student": "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6",
+    "episode_attr_student_sha256": [
+     "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6"
+    ],
+    "store_sha256": "414eaa655338afb4996e6debc7371a4d8c0459de86d919db62a13550049138f7",
+    "store_sha256_recorded": "414eaa655338afb4996e6debc7371a4d8c0459de86d919db62a13550049138f7",
+    "sidecar_sha256": "c33e372dc89ba57161cea053b0ec8d035764bc978a6f9037bcded61603d6c1d7",
+    "demo_indices": [
+     1200,
+     1399
+    ],
+    "n_episodes": 200,
+    "frames": 12285,
+    "frames_recorded": 12285,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 16.71893407200696,
+     "audit": 18.008614423015388,
+     "rollouts": 75.21015220400295
+    },
+    "labelled_episodes_cum": 1400,
+    "aggregate_frames": 86109,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/checkpoints/s1_step010000.pt",
+     "sha256": "4cd544f0ed6838f400c48d252b1e8d97c85954ba58a14675a543834e004758f6",
+     "arm": "bc_dagger",
+     "run_seed": 3,
+     "stage": 1,
+     "stage_step": 10000,
+     "global_step": 10000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 3,
+    "beta": 0.125,
+    "expected_student": "bc_dagger/s3/checkpoints/s2_step010000.pt",
+    "expected_sha256": "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85",
+    "manifest_rollout_student_sha256": "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85",
+    "iter_json_sha256": "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85",
+    "store_manifest_student": "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85",
+    "episode_attr_student_sha256": [
+     "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85"
+    ],
+    "store_sha256": "5ada89769ec4b5e5ac3be9965913035a72950aac77d365523041b04b8af86176",
+    "store_sha256_recorded": "5ada89769ec4b5e5ac3be9965913035a72950aac77d365523041b04b8af86176",
+    "sidecar_sha256": "30c6098fbeb4223e27c86c0fb3b38b1389741e4bf82910990d1178aa4e06ae08",
+    "demo_indices": [
+     1400,
+     1599
+    ],
+    "n_episodes": 200,
+    "frames": 12212,
+    "frames_recorded": 12212,
+    "outcomes": {
+     "success": 197,
+     "bounce": 2,
+     "off_pad": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 17.68220509000821,
+     "audit": 17.31092050598818,
+     "rollouts": 75.464045789995
+    },
+    "labelled_episodes_cum": 1600,
+    "aggregate_frames": 98321,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/checkpoints/s2_step010000.pt",
+     "sha256": "76373896adb88dd43bc3c0fe1d328dffe31b6e2e85604eec03f853fa93f74d85",
+     "arm": "bc_dagger",
+     "run_seed": 3,
+     "stage": 2,
+     "stage_step": 10000,
+     "global_step": 20000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 4,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s3/checkpoints/s3_step010000.pt",
+    "expected_sha256": "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a",
+    "manifest_rollout_student_sha256": "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a",
+    "iter_json_sha256": "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a",
+    "store_manifest_student": "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a",
+    "episode_attr_student_sha256": [
+     "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a"
+    ],
+    "store_sha256": "a12364c215660cf76aadc3b8fadc28fb0fc9fc18b11f6c246ae6a4dae2c41365",
+    "store_sha256_recorded": "a12364c215660cf76aadc3b8fadc28fb0fc9fc18b11f6c246ae6a4dae2c41365",
+    "sidecar_sha256": "67e3490a9521c51f51c85ee44278febe557b82b98b6e5e6761834cf3c4666e15",
+    "demo_indices": [
+     1600,
+     1799
+    ],
+    "n_episodes": 200,
+    "frames": 12390,
+    "frames_recorded": 12390,
+    "outcomes": {
+     "success": 196,
+     "hard_landing": 3,
+     "off_pad": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 19.02766461201827,
+     "audit": 17.727026670996565,
+     "rollouts": 77.92969096201705
+    },
+    "labelled_episodes_cum": 1800,
+    "aggregate_frames": 110711,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/checkpoints/s3_step010000.pt",
+     "sha256": "8ec7c822a644d50b058eb20e4edde7749f0a3b63e6c5ab24420155d7d5df6d7a",
+     "arm": "bc_dagger",
+     "run_seed": 3,
+     "stage": 3,
+     "stage_step": 10000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 5,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s3/checkpoints/s4_step010000.pt",
+    "expected_sha256": "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8",
+    "manifest_rollout_student_sha256": "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8",
+    "iter_json_sha256": "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8",
+    "store_manifest_student": "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8",
+    "episode_attr_student_sha256": [
+     "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8"
+    ],
+    "store_sha256": "5cdc76dbbb23661a688ae1e7e803f8a14ca74ca87e4727bb2b95db616438ff70",
+    "store_sha256_recorded": "5cdc76dbbb23661a688ae1e7e803f8a14ca74ca87e4727bb2b95db616438ff70",
+    "sidecar_sha256": "e796c26a9349617fab0a3fb396aec5d21fc64f07a44885547186d72ae1eac55e",
+    "demo_indices": [
+     1800,
+     1999
+    ],
+    "n_episodes": 200,
+    "frames": 12512,
+    "frames_recorded": 12512,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 20.970536694017937,
+     "audit": 17.74669028900098,
+     "rollouts": 80.04654415798723
+    },
+    "labelled_episodes_cum": 2000,
+    "aggregate_frames": 123223,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 50,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s3/checkpoints/s4_step010000.pt",
+     "sha256": "310e96c285da410ebd788f069ec0e81dd3032f751875f6b17256f4d8fa44e2f8",
+     "arm": "bc_dagger",
+     "run_seed": 3,
+     "stage": 4,
+     "stage_step": 10000,
+     "global_step": 40000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   }
+  ],
+  "checkpoint_keys": [
+   "arm",
+   "config",
+   "config_sha256",
+   "ema",
+   "ema_updates",
+   "format",
+   "global_step",
+   "kind",
+   "labelled_episodes",
+   "model",
+   "obs_variant",
+   "optimizer",
+   "purpose",
+   "rng",
+   "run_seed",
+   "sigma",
+   "stage",
+   "stage_step"
+  ],
+  "normaliser_inherited_from_bc": {
+   "model.encoder.proprio_mean": true,
+   "model.encoder.proprio_std": true,
+   "ema.encoder.proprio_mean": true,
+   "ema.encoder.proprio_std": true,
+   "s1_5k.ema.encoder.proprio_mean": true,
+   "s2_5k.ema.encoder.proprio_mean": true,
+   "s3_5k.ema.encoder.proprio_mean": true,
+   "s4_5k.ema.encoder.proprio_mean": true,
+   "s5_5k.ema.encoder.proprio_mean": true,
+   "s1_5k.ema.encoder.proprio_std": true,
+   "s2_5k.ema.encoder.proprio_std": true,
+   "s3_5k.ema.encoder.proprio_std": true,
+   "s4_5k.ema.encoder.proprio_std": true,
+   "s5_5k.ema.encoder.proprio_std": true
+  },
+  "ema_last_equals_final_ema": true,
+  "ckpt_meta_s5_10k": {
+   "format": "ila-ckpt/1",
+   "arm": "bc_dagger",
+   "kind": "bc",
+   "obs_variant": "default",
+   "config": "dict",
+   "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "run_seed": 3,
+   "purpose": "train",
+   "sigma": null,
+   "stage": 5,
+   "stage_step": 10000,
+   "global_step": 50000,
+   "ema_updates": 80000,
+   "rng": "dict",
+   "labelled_episodes": 2000
+  },
+  "timeline_unix": {
+   "train_start": 1793297288.9458387,
+   "train_finished": 1793302663.844804,
+   "select_rows_mtime": {
+    "s5_step005000_rows.csv": 1793308539.5169256,
+    "s5_step010000_rows.csv": 1793308605.26564
+   },
+   "selection_json_mtime": 1793308605.26564,
+   "per_iteration_select_rows_mtime": {
+    "s4_step010000_rows.csv": 1793309953.397119,
+    "s1_step010000_rows.csv": 1793309726.424308,
+    "s2_step010000_rows.csv": 1793309801.2607613,
+    "s3_step010000_rows.csv": 1793309878.3366468
+   }
+  },
+  "wall": {
+   "wall_clock_s": 5054.450195827987,
+   "gpu_hours_field": 1.4040139432855518,
+   "loop_s_total": 4487.23195286197,
+   "data_load_s": [
+    110.96606282499852,
+    110.27561345798313,
+    110.80175918000168,
+    115.07792100001825,
+    119.14489497599425
+   ],
+   "timing_s_sum": 564.4249003360455,
+   "rollouts_s": 385.3829146900098,
+   "audit_s": 89.19652682897868,
+   "aggregate_load_s": 89.84545881705708,
+   "steps_per_s_loop": 11.142726858171406,
+   "gpu_mem_max_bytes": 2436786688
+  },
+  "selection_json": {
+   "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+   "weights": "ema",
+   "inference_path": "cpu_fp32_single_sample",
+   "render": "full",
+   "purpose": "train",
+   "candidates": [
+    "s5_step005000.pt",
+    "s5_step010000.pt"
+   ],
+   "wall_clock_s": 125.28198910300853
+  }
+ },
+ "s4": {
+  "problems": [],
+  "state": "done",
+  "status_state": "done",
+  "config_sha256": {
+   "configs/train/bc_dagger.yaml": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+   "configs/data/demos.yaml": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+  },
+  "init_from": {
+   "path_ok": true,
+   "sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+   "recomputed": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+   "bc_manifest_record": [
+    "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d"
+   ],
+   "bc_matched_init_from_sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d"
+  },
+  "ema_last_sha256": {
+   "recorded": [
+    "06c9afdcbdf137654a79cb314d3b11ecedbdf6c52bae0e503ee56eaff3ed676f"
+   ],
+   "recomputed": "06c9afdcbdf137654a79cb314d3b11ecedbdf6c52bae0e503ee56eaff3ed676f"
+  },
+  "checkpoints": {
+   "s1_step005000.pt": {
+    "sha256": "862a067fdb214245edefff87060342f34b9d75f64c075c1b09ca5e66da617d26",
+    "matches_manifest": true,
+    "global_step": 5000
+   },
+   "s1_step010000.pt": {
+    "sha256": "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95",
+    "matches_manifest": true,
+    "global_step": 10000
+   },
+   "s2_step005000.pt": {
+    "sha256": "44746b610b91d76c7fae1d5a1fb7eb33a4ab2519e5f953b6d8afc6891d7a9127",
+    "matches_manifest": true,
+    "global_step": 15000
+   },
+   "s2_step010000.pt": {
+    "sha256": "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223",
+    "matches_manifest": true,
+    "global_step": 20000
+   },
+   "s3_step005000.pt": {
+    "sha256": "2cd3ae36055319b64ffbe3bcb9bb46674982a36aee810066d938d6143cee91c3",
+    "matches_manifest": true,
+    "global_step": 25000
+   },
+   "s3_step010000.pt": {
+    "sha256": "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e",
+    "matches_manifest": true,
+    "global_step": 30000
+   },
+   "s4_step005000.pt": {
+    "sha256": "4695f9e4847d7cbe9bae962c0be2cd3f0ff5d94dca184b7e937ce9d665afe98a",
+    "matches_manifest": true,
+    "global_step": 35000
+   },
+   "s4_step010000.pt": {
+    "sha256": "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909",
+    "matches_manifest": true,
+    "global_step": 40000
+   },
+   "s5_step005000.pt": {
+    "sha256": "2d8b480e4feab55cbdfc87cb423a311400ed32972dce0a015ac9a97b44f1ba25",
+    "matches_manifest": true,
+    "global_step": 45000
+   },
+   "s5_step010000.pt": {
+    "sha256": "9ffe90643e55118e0fc059c85d54b127b697ddd81c9a043588ab25e87edee8b2",
+    "matches_manifest": true,
+    "global_step": 50000
+   }
+  },
+  "rollout_chain": [
+   {
+    "iteration": 1,
+    "beta": 0.5,
+    "expected_student": "bc/s4/checkpoints/s0_step030000.pt",
+    "expected_sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+    "manifest_rollout_student_sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+    "iter_json_sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+    "store_manifest_student": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+    "episode_attr_student_sha256": [
+     "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d"
+    ],
+    "store_sha256": "7e9a6da1d69cddbc08e445c28c28a9406734d85d77ad493d9d843a2319cb9246",
+    "store_sha256_recorded": "7e9a6da1d69cddbc08e445c28c28a9406734d85d77ad493d9d843a2319cb9246",
+    "sidecar_sha256": "2548e4e7a0d2f2ad7a7bddabf1850af9b0e02c27cf41885700acf6598e4d2170",
+    "demo_indices": [
+     1000,
+     1199
+    ],
+    "n_episodes": 200,
+    "frames": 12310,
+    "frames_recorded": 12310,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 15.177561654010788,
+     "audit": 18.835099605988944,
+     "rollouts": 76.12054795800941
+    },
+    "labelled_episodes_cum": 1200,
+    "aggregate_frames": 73828,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc/s4/checkpoints/s0_step030000.pt",
+     "sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+     "arm": "bc",
+     "run_seed": 4,
+     "stage": 0,
+     "stage_step": 30000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 2,
+    "beta": 0.25,
+    "expected_student": "bc_dagger/s4/checkpoints/s1_step010000.pt",
+    "expected_sha256": "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95",
+    "manifest_rollout_student_sha256": "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95",
+    "iter_json_sha256": "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95",
+    "store_manifest_student": "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95",
+    "episode_attr_student_sha256": [
+     "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95"
+    ],
+    "store_sha256": "cee2fdb6edf33280b99e67967896dbd20a3765e1bf79f4f33047345038691271",
+    "store_sha256_recorded": "cee2fdb6edf33280b99e67967896dbd20a3765e1bf79f4f33047345038691271",
+    "sidecar_sha256": "14f5c2ac702e19029f78b8ecb4e1e46560df41d733d14bc827db963b88e91e67",
+    "demo_indices": [
+     1200,
+     1399
+    ],
+    "n_episodes": 200,
+    "frames": 12323,
+    "frames_recorded": 12323,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 16.380391330982093,
+     "audit": 17.254405524989124,
+     "rollouts": 74.53218702599406
+    },
+    "labelled_episodes_cum": 1400,
+    "aggregate_frames": 86151,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/checkpoints/s1_step010000.pt",
+     "sha256": "23ce2211043943f31704e522ebfe6398e0a8ee633dbaa498ebabc041898c5c95",
+     "arm": "bc_dagger",
+     "run_seed": 4,
+     "stage": 1,
+     "stage_step": 10000,
+     "global_step": 10000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 3,
+    "beta": 0.125,
+    "expected_student": "bc_dagger/s4/checkpoints/s2_step010000.pt",
+    "expected_sha256": "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223",
+    "manifest_rollout_student_sha256": "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223",
+    "iter_json_sha256": "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223",
+    "store_manifest_student": "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223",
+    "episode_attr_student_sha256": [
+     "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223"
+    ],
+    "store_sha256": "33149e08508b0e0bf4a51bfae6d6b278cd003f5305319c547bb740ddf2f1562a",
+    "store_sha256_recorded": "33149e08508b0e0bf4a51bfae6d6b278cd003f5305319c547bb740ddf2f1562a",
+    "sidecar_sha256": "a667f554e019aab95d0c012d647c0b2895fa2a7c2a035491ff8896b9092e5304",
+    "demo_indices": [
+     1400,
+     1599
+    ],
+    "n_episodes": 200,
+    "frames": 12427,
+    "frames_recorded": 12427,
+    "outcomes": {
+     "success": 199,
+     "hard_landing": 1
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 17.992644827987533,
+     "audit": 18.312000824022107,
+     "rollouts": 78.83942655101418
+    },
+    "labelled_episodes_cum": 1600,
+    "aggregate_frames": 98578,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/checkpoints/s2_step010000.pt",
+     "sha256": "08fece8f6fa310b63bfbfda75dd01f9194afa8c1ae54fa98d0149616f72bf223",
+     "arm": "bc_dagger",
+     "run_seed": 4,
+     "stage": 2,
+     "stage_step": 10000,
+     "global_step": 20000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 4,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s4/checkpoints/s3_step010000.pt",
+    "expected_sha256": "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e",
+    "manifest_rollout_student_sha256": "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e",
+    "iter_json_sha256": "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e",
+    "store_manifest_student": "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e",
+    "episode_attr_student_sha256": [
+     "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e"
+    ],
+    "store_sha256": "98b10ee223cad28b2e394e18ab147ca23839c60b3a1bd7c9fa4e49d9c1106a2f",
+    "store_sha256_recorded": "98b10ee223cad28b2e394e18ab147ca23839c60b3a1bd7c9fa4e49d9c1106a2f",
+    "sidecar_sha256": "adf7862608b2584e49694b7b461de8aa657d6ef36982439edc14fe98c8198f9e",
+    "demo_indices": [
+     1600,
+     1799
+    ],
+    "n_episodes": 200,
+    "frames": 12337,
+    "frames_recorded": 12337,
+    "outcomes": {
+     "success": 196,
+     "hard_landing": 2,
+     "bounce": 2
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 19.39812109200284,
+     "audit": 18.336760329984827,
+     "rollouts": 76.30152044200804
+    },
+    "labelled_episodes_cum": 1800,
+    "aggregate_frames": 110915,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 0,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/checkpoints/s3_step010000.pt",
+     "sha256": "43426a44342e295d35c53641131300fdd0712f4425174f41c8e972ea82552a0e",
+     "arm": "bc_dagger",
+     "run_seed": 4,
+     "stage": 3,
+     "stage_step": 10000,
+     "global_step": 30000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   },
+   {
+    "iteration": 5,
+    "beta": 0.0,
+    "expected_student": "bc_dagger/s4/checkpoints/s4_step010000.pt",
+    "expected_sha256": "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909",
+    "manifest_rollout_student_sha256": "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909",
+    "iter_json_sha256": "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909",
+    "store_manifest_student": "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909",
+    "episode_attr_student_sha256": [
+     "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909"
+    ],
+    "store_sha256": "8435a03e5c92802d6a093fcc73bb1decfabce336a31f072891a0fa83661ef2fa",
+    "store_sha256_recorded": "8435a03e5c92802d6a093fcc73bb1decfabce336a31f072891a0fa83661ef2fa",
+    "sidecar_sha256": "e135e36640cf8416b29dad305105336f2d42ac5474a2bbc00ac2d2aaa3e4b374",
+    "demo_indices": [
+     1800,
+     1999
+    ],
+    "n_episodes": 200,
+    "frames": 12327,
+    "frames_recorded": 12327,
+    "outcomes": {
+     "success": 200
+    },
+    "starting_conditions_match_ppo_2000": true,
+    "t0_frame_and_obs_identical_to_ppo_2000": 200,
+    "audit_clean": true,
+    "relabel": 1000,
+    "replay_frames_identical": 20,
+    "store_ila_commit": [
+     "576447cb8a73c402a60588d9525cbd73274b1bc7"
+    ],
+    "timing_s": {
+     "aggregate": 20.56732339601149,
+     "audit": 17.577179929998238,
+     "rollouts": 77.06978717399761
+    },
+    "labelled_episodes_cum": 2000,
+    "aggregate_frames": 123242,
+    "heldout_overlap": 0,
+    "heldout_shared_starting_conditions": 50,
+    "ok": true,
+    "store_manifest_student_raw": {
+     "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s4/checkpoints/s4_step010000.pt",
+     "sha256": "b469661a11e5bfe761d2fd0adcc8bf992b29123a6850077880d5031224abe909",
+     "arm": "bc_dagger",
+     "run_seed": 4,
+     "stage": 4,
+     "stage_step": 10000,
+     "global_step": 40000,
+     "purpose": "train",
+     "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+     "weights": "ema",
+     "inference_path": "cpu_fp32_single_sample"
+    }
+   }
+  ],
+  "checkpoint_keys": [
+   "arm",
+   "config",
+   "config_sha256",
+   "ema",
+   "ema_updates",
+   "format",
+   "global_step",
+   "kind",
+   "labelled_episodes",
+   "model",
+   "obs_variant",
+   "optimizer",
+   "purpose",
+   "rng",
+   "run_seed",
+   "sigma",
+   "stage",
+   "stage_step"
+  ],
+  "normaliser_inherited_from_bc": {
+   "model.encoder.proprio_mean": true,
+   "model.encoder.proprio_std": true,
+   "ema.encoder.proprio_mean": true,
+   "ema.encoder.proprio_std": true,
+   "s1_5k.ema.encoder.proprio_mean": true,
+   "s2_5k.ema.encoder.proprio_mean": true,
+   "s3_5k.ema.encoder.proprio_mean": true,
+   "s4_5k.ema.encoder.proprio_mean": true,
+   "s5_5k.ema.encoder.proprio_mean": true,
+   "s1_5k.ema.encoder.proprio_std": true,
+   "s2_5k.ema.encoder.proprio_std": true,
+   "s3_5k.ema.encoder.proprio_std": true,
+   "s4_5k.ema.encoder.proprio_std": true,
+   "s5_5k.ema.encoder.proprio_std": true
+  },
+  "ema_last_equals_final_ema": true,
+  "ckpt_meta_s5_10k": {
+   "format": "ila-ckpt/1",
+   "arm": "bc_dagger",
+   "kind": "bc",
+   "obs_variant": "default",
+   "config": "dict",
+   "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+   "run_seed": 4,
+   "purpose": "train",
+   "sigma": null,
+   "stage": 5,
+   "stage_step": 10000,
+   "global_step": 50000,
+   "ema_updates": 80000,
+   "rng": "dict",
+   "labelled_episodes": 2000
+  },
+  "timeline_unix": {
+   "train_start": 1793302671.5861192,
+   "train_finished": 1793308058.503054,
+   "select_rows_mtime": {
+    "s5_step005000_rows.csv": 1793308670.917462,
+    "s5_step010000_rows.csv": 1793308736.1783943
+   },
+   "selection_json_mtime": 1793308736.1783943,
+   "per_iteration_select_rows_mtime": {
+    "s4_step010000_rows.csv": 1793310247.8799145,
+    "s1_step010000_rows.csv": 1793310033.963473,
+    "s2_step010000_rows.csv": 1793310107.0753431,
+    "s3_step010000_rows.csv": 1793310176.7897236
+   }
+  },
+  "wall": {
+   "wall_clock_s": 5040.688426123001,
+   "gpu_hours_field": 1.4001912294786114,
+   "loop_s_total": 4475.222067913011,
+   "data_load_s": [
+    110.52427651901962,
+    108.50506032799603,
+    115.49959907800076,
+    114.40193326800363,
+    115.58054028800689
+   ],
+   "timing_s_sum": 562.6949576670013,
+   "rollouts_s": 382.8634691510233,
+   "audit_s": 90.31544621498324,
+   "aggregate_load_s": 89.51604230099474,
+   "steps_per_s_loop": 11.172629925673643,
+   "gpu_mem_max_bytes": 2436786688
+  },
+  "selection_json": {
+   "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+   "weights": "ema",
+   "inference_path": "cpu_fp32_single_sample",
+   "render": "full",
+   "purpose": "train",
+   "candidates": [
+    "s5_step005000.pt",
+    "s5_step010000.pt"
+   ],
+   "wall_clock_s": 121.6623540520086
+  }
+ },
+ "bc_matched": {
+  "s0": {
+   "init_from_sha256": "40be7901bca1d47c6fd5a47e2870058b5effa518834388eacee6eb3e987d8d31",
+   "wall_clock_s": 5040.1543056859955,
+   "gpu_hours": 1.4000428626905543,
+   "steps_per_s_loop": 10.291591188384595,
+   "loop_s_total": 4858.335225793999,
+   "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4"
+  },
+  "s1": {
+   "init_from_sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+   "wall_clock_s": 4993.257303035993,
+   "gpu_hours": 1.3870159175099979,
+   "steps_per_s_loop": 10.306044067776535,
+   "loop_s_total": 4851.5220458190015,
+   "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4"
+  },
+  "s2": {
+   "init_from_sha256": "a1a5de39c93b11657b6c7e9a3627b983edfc37753dadff7b71b354e132eee37c",
+   "wall_clock_s": 5049.587250914003,
+   "gpu_hours": 1.4026631252538897,
+   "steps_per_s_loop": 10.192682702422353,
+   "loop_s_total": 4905.479887852998,
+   "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4"
+  },
+  "s3": {
+   "init_from_sha256": "10c937ebd655778ffff8a7ab13c6cd7ebabcf11cf7157f75a8fda59bf1a99684",
+   "wall_clock_s": 4967.807806725992,
+   "gpu_hours": 1.3799466129794422,
+   "steps_per_s_loop": 10.35914439781904,
+   "loop_s_total": 4826.653445484044,
+   "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4"
+  },
+  "s4": {
+   "init_from_sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+   "wall_clock_s": 4950.273969675996,
+   "gpu_hours": 1.3750761026877767,
+   "steps_per_s_loop": 10.394982024262525,
+   "loop_s_total": 4810.013127805025,
+   "ila_commit": "6d8517fa1fac5a7b61407b31e62a1b6b3a1a38e4"
+  }
+ }
+}

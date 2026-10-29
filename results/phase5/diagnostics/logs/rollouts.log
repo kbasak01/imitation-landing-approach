@@ -1,0 +1,33 @@
+s0 it1 b=0.500 oc={'success': 200} steps 61.6/68 l2 0.0309 copycat 0.0006 lag t/t-1 0.0020/0.0709 jerk s/l 0.2155/0.2148 sat s/l/x 0.0293/0.0335/0.0311 clear 0
+s0 it2 b=0.250 oc={'success': 199, 'hard_landing': 1} steps 61.4/75 l2 0.0429 copycat 0.0007 lag t/t-1 0.0038/0.0717 jerk s/l 0.2148/0.2132 sat s/l/x 0.0267/0.0304/0.0274 clear 0
+s0 it3 b=0.125 oc={'success': 200} steps 61.7/81 l2 0.0575 copycat 0.0008 lag t/t-1 0.0068/0.0741 jerk s/l 0.2152/0.2132 sat s/l/x 0.0284/0.0343/0.0290 clear 0
+s0 it4 b=0.000 oc={'success': 197, 'hard_landing': 3} steps 61.9/77 l2 0.0754 copycat 0.0007 lag t/t-1 0.0105/0.0779 jerk s/l 0.2151/0.2120 sat s/l/x 0.0255/0.0292/0.0255 clear 0
+s0 it5 b=0.000 oc={'success': 198, 'bounce': 1, 'hard_landing': 1} steps 61.9/87 l2 0.0710 copycat 0.0005 lag t/t-1 0.0091/0.0759 jerk s/l 0.2146/0.2112 sat s/l/x 0.0296/0.0299/0.0296 clear 0
+s1 it1 b=0.500 oc={'success': 200} steps 61.6/68 l2 0.0318 copycat 0.0009 lag t/t-1 0.0021/0.0701 jerk s/l 0.2139/0.2129 sat s/l/x 0.0292/0.0326/0.0299 clear 0
+s1 it2 b=0.250 oc={'success': 198, 'bounce': 1, 'hard_landing': 1} steps 61.5/70 l2 0.0431 copycat 0.0005 lag t/t-1 0.0041/0.0734 jerk s/l 0.2171/0.2158 sat s/l/x 0.0246/0.0298/0.0264 clear 0
+s1 it3 b=0.125 oc={'success': 197, 'hard_landing': 3} steps 60.7/76 l2 0.0579 copycat 0.0009 lag t/t-1 0.0072/0.0757 jerk s/l 0.2164/0.2142 sat s/l/x 0.0291/0.0341/0.0299 clear 0
+s1 it4 b=0.000 oc={'success': 199, 'hard_landing': 1} steps 61.9/84 l2 0.0768 copycat 0.0010 lag t/t-1 0.0108/0.0773 jerk s/l 0.2140/0.2101 sat s/l/x 0.0255/0.0274/0.0255 clear 0
+s1 it5 b=0.000 oc={'success': 200} steps 61.7/93 l2 0.0740 copycat 0.0005 lag t/t-1 0.0098/0.0757 jerk s/l 0.2141/0.2104 sat s/l/x 0.0276/0.0285/0.0276 clear 0
+s2 it1 b=0.500 oc={'success': 200} steps 61.6/71 l2 0.0310 copycat 0.0009 lag t/t-1 0.0020/0.0701 jerk s/l 0.2141/0.2131 sat s/l/x 0.0300/0.0330/0.0313 clear 0
+s2 it2 b=0.250 oc={'success': 200} steps 61.6/70 l2 0.0422 copycat 0.0007 lag t/t-1 0.0037/0.0714 jerk s/l 0.2143/0.2130 sat s/l/x 0.0269/0.0298/0.0280 clear 0
+s2 it3 b=0.125 oc={'success': 199, 'hard_landing': 1} steps 61.9/124 l2 0.0551 copycat 0.0009 lag t/t-1 0.0066/0.0746 jerk s/l 0.2155/0.2133 sat s/l/x 0.0277/0.0332/0.0284 clear 0
+s2 it4 b=0.000 oc={'success': 197, 'hard_landing': 3} steps 62.3/104 l2 0.0809 copycat 0.0009 lag t/t-1 0.0123/0.0789 jerk s/l 0.2137/0.2098 sat s/l/x 0.0273/0.0272/0.0273 clear 0
+s2 it5 b=0.000 oc={'success': 198, 'hard_landing': 2} steps 61.8/80 l2 0.0712 copycat 0.0005 lag t/t-1 0.0094/0.0756 jerk s/l 0.2140/0.2107 sat s/l/x 0.0254/0.0259/0.0254 clear 0
+s3 it1 b=0.500 oc={'success': 200} steps 61.5/67 l2 0.0314 copycat 0.0005 lag t/t-1 0.0020/0.0707 jerk s/l 0.2154/0.2142 sat s/l/x 0.0293/0.0343/0.0312 clear 0
+s3 it2 b=0.250 oc={'success': 199, 'hard_landing': 1} steps 61.4/81 l2 0.0425 copycat 0.0004 lag t/t-1 0.0039/0.0725 jerk s/l 0.2156/0.2140 sat s/l/x 0.0265/0.0292/0.0275 clear 0
+s3 it3 b=0.125 oc={'success': 197, 'bounce': 2, 'off_pad': 1} steps 61.1/74 l2 0.0571 copycat 0.0007 lag t/t-1 0.0068/0.0744 jerk s/l 0.2147/0.2122 sat s/l/x 0.0300/0.0355/0.0306 clear 0
+s3 it4 b=0.000 oc={'success': 196, 'hard_landing': 3, 'off_pad': 1} steps 62.0/99 l2 0.0737 copycat 0.0010 lag t/t-1 0.0102/0.0772 jerk s/l 0.2140/0.2106 sat s/l/x 0.0271/0.0262/0.0271 clear 0
+s3 it5 b=0.000 oc={'success': 199, 'hard_landing': 1} steps 62.6/107 l2 0.0696 copycat 0.0007 lag t/t-1 0.0091/0.0772 jerk s/l 0.2170/0.2138 sat s/l/x 0.0257/0.0276/0.0257 clear 0
+s4 it1 b=0.500 oc={'success': 200} steps 61.5/68 l2 0.0306 copycat 0.0007 lag t/t-1 0.0019/0.0698 jerk s/l 0.2139/0.2129 sat s/l/x 0.0314/0.0344/0.0331 clear 0
+s4 it2 b=0.250 oc={'success': 199, 'hard_landing': 1} steps 61.6/75 l2 0.0430 copycat 0.0007 lag t/t-1 0.0039/0.0726 jerk s/l 0.2160/0.2142 sat s/l/x 0.0282/0.0289/0.0280 clear 0
+s4 it3 b=0.125 oc={'success': 199, 'hard_landing': 1} steps 62.1/133 l2 0.0575 copycat 0.0002 lag t/t-1 0.0071/0.0751 jerk s/l 0.2157/0.2134 sat s/l/x 0.0299/0.0345/0.0307 clear 0
+s4 it4 b=0.000 oc={'success': 196, 'hard_landing': 2, 'bounce': 2} steps 61.7/110 l2 0.0768 copycat 0.0007 lag t/t-1 0.0109/0.0767 jerk s/l 0.2134/0.2088 sat s/l/x 0.0271/0.0271/0.0271 clear 0
+s4 it5 b=0.000 oc={'success': 200} steps 61.6/89 l2 0.0739 copycat 0.0005 lag t/t-1 0.0100/0.0764 jerk s/l 0.2142/0.2105 sat s/l/x 0.0249/0.0272/0.0249 clear 0
+teacher_demos_iter1_slice {'outcomes': {'success': 200}, 'frames': 12292, 'steps_mean': 61.46, 'steps_max': 67, 'label_step_change_mean': 0.21468334992666646, 'label_episode_jerk': 0.2146442710334919, 'sat_norm_ge_0p98_label': 0.033110966482264886}
+teacher_demos_iter2_slice {'outcomes': {'success': 200}, 'frames': 12262, 'steps_mean': 61.31, 'steps_max': 67, 'label_step_change_mean': 0.21587098233090826, 'label_episode_jerk': 0.21588385619941142, 'sat_norm_ge_0p98_label': 0.03058228673952047}
+teacher_demos_iter3_slice {'outcomes': {'success': 200}, 'frames': 12293, 'steps_mean': 61.465, 'steps_max': 68, 'label_step_change_mean': 0.21514161958350833, 'label_episode_jerk': 0.21507102439527576, 'sat_norm_ge_0p98_label': 0.03465386805499065}
+teacher_demos_iter4_slice {'outcomes': {'success': 200}, 'frames': 12252, 'steps_mean': 61.26, 'steps_max': 67, 'label_step_change_mean': 0.21403668414230564, 'label_episode_jerk': 0.21401731687317152, 'sat_norm_ge_0p98_label': 0.028077048645119163}
+teacher_demos_iter5_slice {'outcomes': {'success': 200}, 'frames': 12256, 'steps_mean': 61.28, 'steps_max': 68, 'label_step_change_mean': 0.21545884815409383, 'label_episode_jerk': 0.215457030613122, 'sat_norm_ge_0p98_label': 0.028883812010443863}
+teacher_demos_1000_1999_frames 61355
+teacher_demos_1000_1999_outcomes {'success': 1000}
+wrote results/phase5/diagnostics/logs/rollouts.json
