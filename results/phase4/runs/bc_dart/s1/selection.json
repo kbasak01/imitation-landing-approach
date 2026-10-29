@@ -1,0 +1,189 @@
+{
+  "arm": "bc_dart",
+  "candidates": [
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step005000.pt",
+        "global_step": 5000,
+        "sha256": "bbc125a6bea34079851162f81ca0447a15d93b7407ea5a899be9c6f39441e141",
+        "stage": 0,
+        "stage_step": 5000
+      },
+      "mean_steps": 61.18666666666667,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 0,
+        "crash": 0,
+        "hard_landing": 3,
+        "off_pad": 0,
+        "success": 147,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.4209314315235912,
+      "rows_file": "s0_step005000_rows.csv",
+      "success": 147,
+      "success_rate": 0.98
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step010000.pt",
+        "global_step": 10000,
+        "sha256": "80f34251d1c29ffa22cd63c3e84033bc64e5dc3c53a2697ad2712454c312431c",
+        "stage": 0,
+        "stage_step": 10000
+      },
+      "mean_steps": 61.74,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 0,
+        "crash": 0,
+        "hard_landing": 1,
+        "off_pad": 0,
+        "success": 149,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.35025350191670307,
+      "rows_file": "s0_step010000_rows.csv",
+      "success": 149,
+      "success_rate": 0.9933333333333333
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step015000.pt",
+        "global_step": 15000,
+        "sha256": "5348dfb69196022034ee5b70f9df37b7869d0ca8fa78a5fe5265029cad765090",
+        "stage": 0,
+        "stage_step": 15000
+      },
+      "mean_steps": 61.71333333333333,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 0,
+        "crash": 0,
+        "hard_landing": 1,
+        "off_pad": 0,
+        "success": 149,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.35419092125810514,
+      "rows_file": "s0_step015000_rows.csv",
+      "success": 149,
+      "success_rate": 0.9933333333333333
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step020000.pt",
+        "global_step": 20000,
+        "sha256": "f4c8a83f4eba109a6a3efb4c50d93ab305e14c46d2ce266df34438a35f7c7bd5",
+        "stage": 0,
+        "stage_step": 20000
+      },
+      "mean_steps": 61.35333333333333,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 1,
+        "crash": 0,
+        "hard_landing": 0,
+        "off_pad": 0,
+        "success": 149,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.3494533744643047,
+      "rows_file": "s0_step020000_rows.csv",
+      "success": 149,
+      "success_rate": 0.9933333333333333
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step025000.pt",
+        "global_step": 25000,
+        "sha256": "af32bfe6f9683148439f4e384d21a8c5e4c21d0fc6016e7f1cf235de9783d46a",
+        "stage": 0,
+        "stage_step": 25000
+      },
+      "mean_steps": 61.5,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 0,
+        "crash": 0,
+        "hard_landing": 2,
+        "off_pad": 0,
+        "success": 148,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.32619530089032006,
+      "rows_file": "s0_step025000_rows.csv",
+      "success": 148,
+      "success_rate": 0.9866666666666667
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step030000.pt",
+        "global_step": 30000,
+        "sha256": "f66d3cb15bf8eac2f6cfeb47d988c9f758e2e63fb8ad7d4be00143c146677610",
+        "stage": 0,
+        "stage_step": 30000
+      },
+      "mean_steps": 61.3,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 1,
+        "crash": 0,
+        "hard_landing": 1,
+        "off_pad": 0,
+        "success": 148,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.3339879877409902,
+      "rows_file": "s0_step030000_rows.csv",
+      "success": 148,
+      "success_rate": 0.9866666666666667
+    }
+  ],
+  "inference_path": "cpu_fp32_single_sample",
+  "list": {
+    "episodes": 150,
+    "file": "select.parquet",
+    "file_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+    "name": "select"
+  },
+  "purpose": "train",
+  "render": "full",
+  "rule": "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); then min global step (P3-D1 \u00a74)",
+  "run_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1",
+  "run_seed": 1,
+  "selected": {
+    "candidate": {
+      "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dart/s1/checkpoints/s0_step020000.pt",
+      "global_step": 20000,
+      "sha256": "f4c8a83f4eba109a6a3efb4c50d93ab305e14c46d2ce266df34438a35f7c7bd5",
+      "stage": 0,
+      "stage_step": 20000
+    },
+    "mean_steps": 61.35333333333333,
+    "n": 150,
+    "n_touchdown": 150,
+    "outcomes": {
+      "bounce": 1,
+      "crash": 0,
+      "hard_landing": 0,
+      "off_pad": 0,
+      "success": 149,
+      "timeout": 0
+    },
+    "p95_closing_speed_m_s": 0.3494533744643047,
+    "rows_file": "s0_step020000_rows.csv",
+    "success": 149,
+    "success_rate": 0.9933333333333333
+  },
+  "sigma": 0.1,
+  "wall_clock_s": 382.70228415197926,
+  "weights": "ema",
+  "workers": 16
+}

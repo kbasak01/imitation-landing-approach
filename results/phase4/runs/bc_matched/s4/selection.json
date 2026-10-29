@@ -1,0 +1,93 @@
+{
+  "arm": "bc_matched",
+  "candidates": [
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/checkpoints/s5_step005000.pt",
+        "global_step": 45000,
+        "sha256": "37eeb6a0f56ff2b2ccff9294870b5d0d56ea350de1970b79cd975574bc02d95f",
+        "stage": 5,
+        "stage_step": 5000
+      },
+      "mean_steps": 63.18666666666667,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 1,
+        "crash": 0,
+        "hard_landing": 3,
+        "off_pad": 0,
+        "success": 146,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.41541591752166923,
+      "rows_file": "s5_step005000_rows.csv",
+      "success": 146,
+      "success_rate": 0.9733333333333334
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/checkpoints/s5_step010000.pt",
+        "global_step": 50000,
+        "sha256": "e05cd5e9364793bf9b76bee2d7862fc1346bdfc92d0c1488dad0d85e3925b765",
+        "stage": 5,
+        "stage_step": 10000
+      },
+      "mean_steps": 64.8,
+      "n": 150,
+      "n_touchdown": 150,
+      "outcomes": {
+        "bounce": 1,
+        "crash": 0,
+        "hard_landing": 2,
+        "off_pad": 3,
+        "success": 144,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.3982597583668543,
+      "rows_file": "s5_step010000_rows.csv",
+      "success": 144,
+      "success_rate": 0.96
+    }
+  ],
+  "inference_path": "cpu_fp32_single_sample",
+  "list": {
+    "episodes": 150,
+    "file": "select.parquet",
+    "file_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+    "name": "select"
+  },
+  "purpose": "train",
+  "render": "full",
+  "rule": "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); then min global step (P3-D1 \u00a74)",
+  "run_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4",
+  "run_seed": 4,
+  "selected": {
+    "candidate": {
+      "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4/checkpoints/s5_step005000.pt",
+      "global_step": 45000,
+      "sha256": "37eeb6a0f56ff2b2ccff9294870b5d0d56ea350de1970b79cd975574bc02d95f",
+      "stage": 5,
+      "stage_step": 5000
+    },
+    "mean_steps": 63.18666666666667,
+    "n": 150,
+    "n_touchdown": 150,
+    "outcomes": {
+      "bounce": 1,
+      "crash": 0,
+      "hard_landing": 3,
+      "off_pad": 0,
+      "success": 146,
+      "timeout": 0
+    },
+    "p95_closing_speed_m_s": 0.41541591752166923,
+    "rows_file": "s5_step005000_rows.csv",
+    "success": 146,
+    "success_rate": 0.9733333333333334
+  },
+  "sigma": null,
+  "wall_clock_s": 141.22714984300546,
+  "weights": "ema",
+  "workers": 16
+}
