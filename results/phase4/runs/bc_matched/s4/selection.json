@@ -11,7 +11,9 @@
       },
       "mean_steps": 63.18666666666667,
       "n": 150,
+      "n_detectors_disagree": 0,
       "n_touchdown": 150,
+      "n_tunnelled": 1,
       "outcomes": {
         "bounce": 1,
         "crash": 0,
@@ -35,7 +37,9 @@
       },
       "mean_steps": 64.8,
       "n": 150,
+      "n_detectors_disagree": 0,
       "n_touchdown": 150,
+      "n_tunnelled": 0,
       "outcomes": {
         "bounce": 1,
         "crash": 0,
@@ -59,6 +63,24 @@
   },
   "purpose": "train",
   "render": "full",
+  "resummary": {
+    "added": [
+      "n_tunnelled",
+      "n_detectors_disagree"
+    ],
+    "flown": false,
+    "reproduced": [
+      "candidate",
+      "n",
+      "success",
+      "outcomes",
+      "n_touchdown",
+      "p95_closing_speed_m_s",
+      "mean_steps",
+      "rows_file"
+    ],
+    "source": "select/*_rows.csv"
+  },
   "rule": "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); then min global step (P3-D1 \u00a74)",
   "run_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_matched/s4",
   "run_seed": 4,
@@ -72,7 +94,9 @@
     },
     "mean_steps": 63.18666666666667,
     "n": 150,
+    "n_detectors_disagree": 0,
     "n_touchdown": 150,
+    "n_tunnelled": 1,
     "outcomes": {
       "bounce": 1,
       "crash": 0,

@@ -1584,3 +1584,107 @@ There is no cut and none is possible (P4-D2). Per-run values are in
   `results/phase4/runs_summary.csv`, committed at `9074803`.
 - The diagnostician's scripts and logs are session scratch, not committed. The figures above are
   quoted from its reports.
+
+### P4-D5 — Two user-approved readings, evidence committed, corrections to P4-D4 (2026-10-29)
+*Decision.* Both readings below were approved by the user on 2026-10-29, after the
+`results-skeptic` pre-gate review (no BLOCKING findings). Neither relaxes a threshold.
+1. **CAVEAT verdicts and the Gate 4 criterion** (interpretation). The plan says "TRUSTWORTHY on
+   each, or the run is excluded with a reason", and P3-D1 §4 says no run is excluded alone. Under
+   those rules, a CAVEAT verdict meets the gate only if all of the following hold:
+   - (i) it names no defect, so it is not a §4 bug;
+   - (ii) every caveat becomes a binding disclosure or reporting restriction;
+   - (iii) the reviewer's evidence is committed.
+
+   A caveat that implicates a code path is a §4 bug instead. That would mean fix and retrain,
+   including every arm that shares the path; for `bc_matched` this includes `bc_dagger`. The six
+   CAVEATs are `bc_matched` s0–s4 and `bc_dart` s0. Each is classified **not a bug**:
+   - `bc_matched` (a)–(e) are consequences of the design or observed behaviour (P4-D4);
+   - `bc_dart` s0's caveat is about provenance.
+2. **`bc_dart` s0 is the σ = 0.10 tuning trial** (deviation from P3-D1 §4).
+   - §4 says trials are "logged as tuning, not core seeds", and also "seed 0 included
+     (re-trained)" and "no seed … replaced or re-drawn". Because training turned out to be
+     deterministic (P4-D4 correction 1), these cannot all hold.
+   - **s0 is kept**, and seeds 0–4 stay as frozen.
+   - **Binding on Phase 8 and the README:**
+     - a footnote on every `bc_dart` row;
+     - a sensitivity row on seeds 1–4, labelled "post hoc: added after `select`, before any
+       frozen-list read". It gives the IQM and the H1 DART secondary contrast, printed beside the
+       5-seed result and never substituted for it.
+   - **H4's "best end-to-end" rule** (P3-D1 §6) uses all five seeds as frozen. The seeds 1–4 value
+     is printed beside it. This supersedes P4-D4's "s0's `select` number is never quoted"; that
+     restriction now applies only to quoting it as an estimate of performance. On the current
+     numbers, `bc_dart` ranks first either way: 149.8 on five seeds, 149.75 on seeds 1–4, against
+     146.6 for `bc` and for `bc_matched`.
+3. **P4-D1 item 3 is relabelled a deviation from the plan.** Held-out loss uses `train`
+   `ppo_2000` 1950–1999 instead of the plan's "held-out `tune` demos". P3-D1 §2 takes
+   precedence, so this is a deviation, not an open choice.
+4. **P4-D1 item 5, stated.** The constant 0.999 EMA leaves 0.999^5000 ≈ 0.7 % of the random-init
+   weights in every 5 k-step candidate. No `bc`, `bc_state` or `bc_dart` 5 k candidate was
+   selected. `bc_matched`'s 5 k candidates are iteration-5 checkpoints that started from
+   initialised weights, so this does not apply to them.
+
+*Evidence committed* (closes skeptic G1, S2, S3, S4).
+- **Diagnostics:** `results/phase4/diagnostics/`. It contains one JSON per run (verdict,
+  reasons, every quoted metric), `summary.json` (`dbc31be9…b7a84bed`, with arm-level figures and the SHA-256
+  of every script and input), the 19 scripts, and the logs they read. The scripts are kept as run, for audit. They read
+  session-scratch paths, so they are not a reproduction target.
+- **Teacher reference for copycat (S4):** the `ppo` s0 teacher's ∂a/∂last_action diagonal on the
+  same states (`inputs/teacher_jac.json` `b45c0b8a…64403447`). It was computed by central finite differences
+  (ε = 0.05, raw units), because P8's SB3 path is not differentiable here.
+
+  | Model | Diagonal (held-out `ppo_2000`) |
+  |---|---|
+  | Teacher | x 0.074, y 0.097, z 0.176 (dart_0.10 states: 0.066 / 0.090 / 0.161) |
+  | `bc_state` | x, y 0.09–0.11; z 0.25–0.29 |
+  | `bc_dart` | 0.13–0.16 |
+  | `bc` | **0.70–0.91** (about 4–10× the teacher) |
+  | `bc_matched`, end of iteration 5 | 0.78–0.96 |
+
+- **Tunnelling and detector disagreement (S2).** `selection.json` and `runs_summary.csv`
+  (`c1c0af76…0262c029`) now carry `n_tunnelled` and `n_detectors_disagree`.
+  - They were rebuilt from the stored rows by `scripts/select.py --resummarise`, with no flight.
+    Every selection reproduced exactly, `sigma_star.json` is byte-identical, and σ* is unchanged.
+  - Over all 118 candidates: 41 tunnelled, 6 disagreements. Over the 23 selected checkpoints:
+    10 tunnelled and 1 disagreement.
+  - Three flagged episodes are scored `success`, because P8 counts tunnelling without changing the
+    outcome class:
+    - tunnelled: σ = 0.05 trial, SS5 #16, and `bc_matched` s4, SS5 #16;
+    - detectors disagree: `bc_matched` s0.
+  - **P4-D4 (e) is amended:** `bc_matched` s1's 1.234 m/s off-pad touchdown (SS4 #35) also
+    tunnelled, with 15.8 mm penetration.
+  - Phase 8 prints `n_tunnelled` beside success (P8 rule).
+- **Timing manifests (S3):** `results/phase4/timing/{dp,bc,bc_state}_manifest.json`, the P4-D2
+  inputs.
+
+*Corrections to P4-D4.* Figures are reproduced from `results/phase4/diagnostics/summary.json` and
+`runs_summary.csv`.
+
+| P4-D4 said | Correct value |
+|---|---|
+| `bc` ∂a/∂last_action diagonal 0.75–0.91 | **0.70–0.91** |
+| `bc_matched` 10–15 % worse on DART states | **10–16 %** (+10.3 to +15.5 %) |
+| BC-family lengths "within 6 %" of 61.5 | `bc` is **+6.2 %** (65.29 against P2-D2's exact 61.47); `bc_state` +0.1 %, `bc_matched` +2.0 %, `bc_dart` +0.3 %. The central evaluation estimate stands for `bc_state`, `bc_matched` and `bc_dart`; `bc` runs about 6 % over it |
+| Budget: `bc` 3.96, `bc_matched` 6.95 GPU-h | **3.95** and **6.94** |
+| Phase 4 total +3.5 % | **+3.82 %** (17.498 against 16.855) |
+| `runs_summary.csv` SHA-256 | superseded by `c1c0af76…0262c029` above, which adds the two columns; every earlier field is byte-identical |
+
+- **Winner's curse** (selected minus the mean over each seed's candidates, averaged over seeds):
+
+  | Arm | Episodes |
+  |---|---|
+  | `bc` | +2.33 |
+  | `bc_state` | +0.7 |
+  | `bc_matched` | +1.2 |
+  | `bc_dart` | +1.07 |
+  | σ trials | +1.28 |
+
+- **Open-loop against closed-loop**, reported with H1's DART secondary. `bc_dart`'s open-loop MSE
+  on clean teacher states is 31–62 % above `bc`'s, yet it is better closed-loop on `select`.
+
+*Notes on the record.*
+- The 4 k-step smoke behind P4-D1's "3 % short" has no committed artifact; its file was overwritten.
+- `bc_matched` manifests record `init_from` and its SHA-256, but not the normaliser values. Those
+  are inherited bit-identically from `bc` s<n>'s manifest (verified by the diagnostician).
+- No teacher row on `select` is committed, so "at the `select` ceiling" is relative to 150/150,
+  not to the teacher.
+- `bc_matched`'s lowest-step tie-break uses run-local steps, which preserves the order.

@@ -45,6 +45,8 @@ from ila.train.config import sha256_file
 
 __all__ = [
     "OUTCOME_ORDER",
+    "SELECTION_RULE",
+    "ResummaryMismatchError",
     "P95",
     "SELECT_SPLIT",
     "Candidate",
@@ -54,6 +56,7 @@ __all__ = [
     "choose",
     "choose_sigma",
     "fly_checkpoint",
+    "resummarise_run",
     "select_run",
     "summarise_rows",
 ]
@@ -64,6 +67,12 @@ SELECT_SPLIT: Final[str] = data_episodes.SELECT_NAME
 #: The closing-speed quantile (P8's ``rld.eval.stats.P95_QUANTILE``, not re-exported by the
 #: adapter; P3-D1 §1 "relative p95"). The quantile itself is P8's ``quantile_linear``.
 P95: Final[float] = 0.95
+
+#: The rule's text in every ``selection.json``.
+SELECTION_RULE: Final[str] = (
+    "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); "
+    "then min global step (P3-D1 §4)"
+)
 
 #: P8's outcome classes, in P8's order (P3-D1 §1).
 OUTCOME_ORDER: Final[tuple[str, ...]] = (
@@ -126,6 +135,11 @@ class CandidateResult:
             (``inf`` without any touchdown).
         mean_steps: Mean control steps per episode (30 Hz, model scale).
         rows_file: Per-episode rows (CSV) next to ``selection.json``.
+        n_tunnelled: Episodes P8 flags ``tunnelled`` (the drone passed through the plate
+            between physics substeps), any outcome; ``None`` in records written before the
+            column was summarised.
+        n_detectors_disagree: Episodes whose contact and analytic touchdown detectors
+            disagree (P8's ``detectors_disagree``); ``None`` likewise.
     """
 
     candidate: Candidate
@@ -136,6 +150,8 @@ class CandidateResult:
     p95_closing_speed_m_s: float
     mean_steps: float
     rows_file: str
+    n_tunnelled: int | None = None
+    n_detectors_disagree: int | None = None
 
     @property
     def success_rate(self) -> float:
@@ -149,12 +165,15 @@ def summarise_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     Args:
         rows: Runner rows (P8 columns ``outcome``, ``closing_speed_normal_m_s``, ``steps``).
 
+    Rows may be live runner rows or rows read back from a ``*_rows.csv`` (string cells).
+
     Returns:
         ``n``, ``success``, ``outcomes`` (P8's order, zeros included), ``n_touchdown``,
-        ``p95_closing_speed_m_s`` (``inf`` without a touchdown), ``mean_steps``.
+        ``p95_closing_speed_m_s`` (``inf`` without a touchdown), ``mean_steps``,
+        ``n_tunnelled`` and ``n_detectors_disagree`` (P8's per-episode flags, any outcome).
 
     Raises:
-        ValueError: On an unknown outcome class.
+        ValueError: On an unknown outcome class or a flag that is not a boolean.
     """
     outcomes = dict.fromkeys(OUTCOME_ORDER, 0)
     for r in rows:
@@ -173,7 +192,39 @@ def summarise_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "n_touchdown": int(touched.size),
         "p95_closing_speed_m_s": p95,
         "mean_steps": float(np.mean(steps)) if steps else float("nan"),
+        "n_tunnelled": sum(_flag(r["tunnelled"]) for r in rows),
+        "n_detectors_disagree": sum(_flag(r["detectors_disagree"]) for r in rows),
     }
+
+
+def _flag(value: Any) -> int:
+    """Return a P8 boolean cell (``True``/``False``, or ``"True"``/``"False"`` from a CSV) as 0/1.
+
+    Raises:
+        ValueError: On anything else (NaN included: these flags are never missing).
+    """
+    if isinstance(value, str):
+        if value in ("True", "False"):
+            return int(value == "True")
+        raise ValueError(f"not a boolean cell: {value!r}")
+    if isinstance(value, bool | np.bool_):
+        return int(bool(value))
+    raise ValueError(f"not a boolean cell: {value!r}")
+
+
+def _result(c: Candidate, s: Mapping[str, Any], rows_file: str) -> CandidateResult:
+    return CandidateResult(
+        candidate=c,
+        n=s["n"],
+        success=s["success"],
+        outcomes=s["outcomes"],
+        n_touchdown=s["n_touchdown"],
+        p95_closing_speed_m_s=s["p95_closing_speed_m_s"],
+        mean_steps=s["mean_steps"],
+        rows_file=rows_file,
+        n_tunnelled=s["n_tunnelled"],
+        n_detectors_disagree=s["n_detectors_disagree"],
+    )
 
 
 def choose(results: Sequence[CandidateResult]) -> CandidateResult:
@@ -300,19 +351,7 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
         )
         rows_file = out_dir / f"{Path(c.file).stem}_rows.csv"
         _rows_csv(rows_file, rows)
-        s = summarise_rows(rows)
-        results.append(
-            CandidateResult(
-                candidate=c,
-                n=s["n"],
-                success=s["success"],
-                outcomes=s["outcomes"],
-                n_touchdown=s["n_touchdown"],
-                p95_closing_speed_m_s=s["p95_closing_speed_m_s"],
-                mean_steps=s["mean_steps"],
-                rows_file=rows_file.name,
-            )
-        )
+        results.append(_result(c, summarise_rows(rows), rows_file.name))
     best = choose(results)
     record = {
         "run_dir": str(run_dir),
@@ -326,8 +365,7 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
             "file_sha256": data_episodes.file_sha256(split),
             "episodes": len(rows_list),
         },
-        "rule": "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); "
-        "then min global step (P3-D1 §4)",
+        "rule": SELECTION_RULE,
         "weights": "ema",
         "inference_path": "cpu_fp32_single_sample",
         "render": "full",
@@ -365,7 +403,89 @@ def _from_record(rec: Mapping[str, Any]) -> CandidateResult:
         p95_closing_speed_m_s=math.inf if p95 is None else float(p95),
         mean_steps=float(rec["mean_steps"]),
         rows_file=str(rec["rows_file"]),
+        n_tunnelled=rec.get("n_tunnelled"),
+        n_detectors_disagree=rec.get("n_detectors_disagree"),
     )
+
+
+class ResummaryMismatchError(ValueError):
+    """Re-summarising stored rows would change a selection (refused; nothing is written)."""
+
+
+#: Fields of a candidate that a re-summary must reproduce exactly.
+_REPRODUCED: Final[tuple[str, ...]] = (
+    "candidate",
+    "n",
+    "success",
+    "outcomes",
+    "n_touchdown",
+    "p95_closing_speed_m_s",
+    "mean_steps",
+    "rows_file",
+)
+
+
+def _read_rows(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def resummarise_run(run_dir: Path, *, write: bool = True) -> dict[str, Any]:
+    """Rebuild ``selection.json`` from the stored ``select/*_rows.csv`` -- no flight.
+
+    Every candidate is re-summarised from its rows file (written when it was flown), the rule
+    is re-applied, and the result must reproduce the existing record: the same candidates in
+    the same order, each with the same success, outcomes, touchdowns, p95 and mean steps, and
+    the same selected checkpoint. Only then is the record rewritten, with every original field
+    kept (``wall_clock_s``, ``workers``, ... of the flight) and ``n_tunnelled`` /
+    ``n_detectors_disagree`` added per candidate and for the selected one.
+
+    Args:
+        run_dir: A run with ``selection.json`` and ``select/``.
+        write: Write the rebuilt record (``False``: check only).
+
+    Returns:
+        The rebuilt record.
+
+    Raises:
+        ResummaryMismatchError: If anything above differs, or a rows file does not hold the
+            ``select`` list's episodes in order.
+    """
+    old = mf.read_json(run_dir / "selection.json")
+    episodes = data_episodes.read_split(SELECT_SPLIT)
+    seeds = [str(e.episode_seed) for e in episodes]
+    results = []
+    for rec in old["candidates"]:
+        prev = _from_record(rec)
+        rows = _read_rows(run_dir / "select" / prev.rows_file)
+        if [r["episode_seed"] for r in rows] != seeds:
+            raise ResummaryMismatchError(f"{prev.rows_file}: not the select episodes in order")
+        if any(r["ckpt_sha256"] != prev.candidate.sha256 for r in rows):
+            raise ResummaryMismatchError(f"{prev.rows_file}: rows of another checkpoint")
+        results.append(_result(prev.candidate, summarise_rows(rows), prev.rows_file))
+    for rec, new in zip(old["candidates"], results, strict=True):
+        fresh = _result_record(new)
+        diff = [k for k in _REPRODUCED if fresh[k] != rec[k]]
+        if diff:
+            raise ResummaryMismatchError(f"{new.rows_file}: {diff} differ from selection.json")
+    best = choose(results)
+    sel = _result_record(best)
+    if any(sel[k] != old["selected"][k] for k in _REPRODUCED):
+        raise ResummaryMismatchError(f"{run_dir}: the selected candidate would change")
+    record = {
+        **old,
+        "candidates": [_result_record(r) for r in results],
+        "selected": sel,
+        "resummary": {
+            "flown": False,
+            "source": "select/*_rows.csv",
+            "reproduced": list(_REPRODUCED),
+            "added": ["n_tunnelled", "n_detectors_disagree"],
+        },
+    }
+    if write:
+        mf.write_json_atomic(run_dir / "selection.json", record)
+    return record
 
 
 def choose_sigma(selections: Mapping[float, Mapping[str, Any]]) -> dict[str, Any]:

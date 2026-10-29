@@ -1,0 +1,15 @@
+pybullet build time: Sep 21 2026 16:29:47
+heldout frames 1526 outcomes {'success': 25}
+sigma 0.05: train frames 2488 outcomes {'success': 40}
+  final ema done 81s
+  final raw done 109s
+  ckpts done 184s
+sigma 0.10: train frames 2415 outcomes {'bounce': 12, 'success': 28}
+  final ema done 253s
+  final raw done 275s
+  ckpts done 352s
+sigma 0.20: train frames 2300 outcomes {'bounce': 10, 'hard_landing': 10, 'off_pad': 12, 'crash': 2, 'success': 6}
+  final ema done 419s
+  final raw done 444s
+  ckpts done 517s
+wrote /tmp/claude-1000/-home-kbasak-projects-02-imitation-landing-approach/fe7dd47a-dc95-4581-b4a2-20a0afbc331d/scratchpad/diag.json

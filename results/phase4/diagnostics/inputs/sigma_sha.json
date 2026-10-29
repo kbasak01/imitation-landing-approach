@@ -1,0 +1,32 @@
+{
+ "0.05": {
+  "s0_step005000.pt": true,
+  "s0_step010000.pt": true,
+  "s0_step015000.pt": true,
+  "s0_step020000.pt": true,
+  "s0_step025000.pt": true,
+  "s0_step030000.pt": true,
+  "ema_last.pt": true,
+  "unlisted": []
+ },
+ "0.10": {
+  "s0_step005000.pt": true,
+  "s0_step010000.pt": true,
+  "s0_step015000.pt": true,
+  "s0_step020000.pt": true,
+  "s0_step025000.pt": true,
+  "s0_step030000.pt": true,
+  "ema_last.pt": true,
+  "unlisted": []
+ },
+ "0.20": {
+  "s0_step005000.pt": true,
+  "s0_step010000.pt": true,
+  "s0_step015000.pt": true,
+  "s0_step020000.pt": true,
+  "s0_step025000.pt": true,
+  "s0_step030000.pt": true,
+  "ema_last.pt": true,
+  "unlisted": []
+ }
+}

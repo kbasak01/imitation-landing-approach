@@ -87,11 +87,15 @@ def test_sigma_star_tie_goes_to_the_smaller_sigma() -> None:
         choose_sigma({0.05: _trial(0.10, 1, 0.1)})
 
 
+#: P8's two per-episode flags, both off (every runner row carries them).
+NO_FLAGS: dict[str, Any] = {"tunnelled": False, "detectors_disagree": False}
+
+
 def test_summarise_rows_pools_touched_down_closing_speeds() -> None:
     speeds = [0.2, float("nan"), 0.5, 0.3, float("nan")]
     outcomes = ["success", "timeout", "hard_landing", "success", "crash"]
     rows = [
-        {"outcome": o, "closing_speed_normal_m_s": v, "steps": 60}
+        {"outcome": o, "closing_speed_normal_m_s": v, "steps": 60, **NO_FLAGS}
         for o, v in zip(outcomes, speeds, strict=True)
     ]
     s = summarise_rows(rows)
@@ -105,11 +109,13 @@ def test_summarise_rows_pools_touched_down_closing_speeds() -> None:
         float(p8_adapter.stats.quantile_linear(np.array([0.2, 0.5, 0.3]), P95)),
     )
     none = summarise_rows(
-        [{"outcome": "crash", "closing_speed_normal_m_s": float("nan"), "steps": 9}]
+        [{"outcome": "crash", "closing_speed_normal_m_s": float("nan"), "steps": 9, **NO_FLAGS}]
     )
     assert none["p95_closing_speed_m_s"] == math.inf
     with pytest.raises(ValueError, match="unknown outcome"):
-        summarise_rows([{"outcome": "landed", "closing_speed_normal_m_s": 0.1, "steps": 1}])
+        summarise_rows(
+            [{"outcome": "landed", "closing_speed_normal_m_s": 0.1, "steps": 1, **NO_FLAGS}]
+        )
 
 
 def _fake_run(root: Path, purpose: str = "train", state: str = "done", stages: int = 1) -> Path:
@@ -294,3 +300,119 @@ def test_smoke_replay_matches_a_fresh_teacher_rollout() -> None:
     assert good["images_identical"] == good["proprio_identical"] == good["labels_identical"] == 4
     assert good["max_abs_label_diff"] == 0.0
     assert not bad["passed"]
+
+
+# --------------------------------------------------------------------------- re-summary (S2)
+
+
+def test_summarise_rows_counts_tunnelled_and_detector_disagreements() -> None:
+    def row(t: Any, d: Any) -> dict[str, Any]:
+        return {"outcome": "success", "closing_speed_normal_m_s": 0.3, "steps": 60,
+                "tunnelled": t, "detectors_disagree": d}  # fmt: skip
+
+    live = summarise_rows([row(True, False), row(False, True), row(np.bool_(True), False)])
+    assert (live["n_tunnelled"], live["n_detectors_disagree"]) == (2, 1)
+    stored = summarise_rows([row("True", "False"), row("False", "True"), row("True", "False")])
+    assert (stored["n_tunnelled"], stored["n_detectors_disagree"]) == (2, 1)
+    for bad in (float("nan"), "nan", "", 1):
+        with pytest.raises(ValueError, match="boolean"):
+            summarise_rows([row(bad, False)])
+
+
+def _select_rows(sha: str, success: int, tunnelled: int) -> list[dict[str, Any]]:
+    from ila.data import episodes as data_episodes
+
+    out = []
+    for i, e in enumerate(data_episodes.read_split(SELECT_SPLIT)):
+        ok = i < success
+        out.append(
+            {
+                "episode_seed": e.episode_seed,
+                "ckpt_sha256": sha,
+                "outcome": "success" if ok else "hard_landing",
+                "closing_speed_normal_m_s": 0.2 + 0.001 * i,
+                "steps": 60 + i % 3,
+                "tunnelled": i < tunnelled,
+                "detectors_disagree": i == 7,
+            }
+        )
+    return out
+
+
+def _write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
+    import csv
+
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+
+
+def _flown_run(root: Path) -> Path:
+    """A run as select_run left it before S2: rows CSVs and a record without the flag counts."""
+    from ila.train.select import _result, _result_record
+
+    (root / "select").mkdir(parents=True)
+    results = []
+    for step, success, tun in ((5000, 147, 2), (10000, 149, 1), (15000, 149, 3)):
+        c = Candidate(f"s0_step{step:06d}.pt", 0, step, step, f"sha{step}")
+        rows = _select_rows(c.sha256, success, tun)
+        _write_rows(root / "select" / f"s0_step{step:06d}_rows.csv", rows)
+        results.append(_result(c, summarise_rows(rows), f"s0_step{step:06d}_rows.csv"))
+    best = choose(results)
+
+    def old(r: CandidateResult) -> dict[str, Any]:
+        rec = _result_record(r)
+        del rec["n_tunnelled"], rec["n_detectors_disagree"]
+        return rec
+
+    record = {"arm": "bc", "workers": 24, "wall_clock_s": 12.5, "rule": "r",
+              "candidates": [old(r) for r in results], "selected": old(best)}  # fmt: skip
+    mf.write_json_atomic(root / "selection.json", record)
+    return root
+
+
+def test_resummarise_adds_counts_without_changing_the_selection(tmp_path: Path) -> None:
+    from ila.train.select import resummarise_run
+
+    run = _flown_run(tmp_path / "run")
+    before = mf.read_json(run / "selection.json")
+    new = resummarise_run(run)
+    assert mf.read_json(run / "selection.json") == new
+    assert new["selected"]["candidate"]["global_step"] == 10000  # same rule, same choice
+    assert new["selected"]["n_tunnelled"] == 1 and new["selected"]["n_detectors_disagree"] == 1
+    assert [c["n_tunnelled"] for c in new["candidates"]] == [2, 1, 3]
+    assert new["wall_clock_s"] == 12.5 and new["workers"] == 24  # the flight's fields kept
+    assert new["resummary"]["flown"] is False
+    strip = {"n_tunnelled", "n_detectors_disagree"}
+    assert [{k: v for k, v in c.items() if k not in strip} for c in new["candidates"]] == before[
+        "candidates"
+    ]
+    assert resummarise_run(run) == new  # idempotent
+
+
+@pytest.mark.parametrize("tamper", ["outcome", "order", "checkpoint", "selected"])
+def test_resummarise_refuses_any_change(tmp_path: Path, tamper: str) -> None:
+    import csv
+
+    from ila.train.select import ResummaryMismatchError, resummarise_run
+
+    run = _flown_run(tmp_path / "run")
+    rows_file = run / "select" / "s0_step010000_rows.csv"
+    with rows_file.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    if tamper == "outcome":
+        rows[0]["outcome"] = "crash"
+    elif tamper == "order":
+        rows[0], rows[1] = rows[1], rows[0]
+    elif tamper == "checkpoint":
+        rows[3]["ckpt_sha256"] = "other"
+    _write_rows(rows_file, rows)
+    if tamper == "selected":
+        rec = mf.read_json(run / "selection.json")
+        rec["selected"] = rec["candidates"][2]
+        mf.write_json_atomic(run / "selection.json", rec)
+    before = (run / "selection.json").read_bytes()
+    with pytest.raises(ResummaryMismatchError):
+        resummarise_run(run)
+    assert (run / "selection.json").read_bytes() == before  # nothing written

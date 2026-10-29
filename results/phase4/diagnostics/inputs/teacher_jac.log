@@ -1,0 +1,13 @@
+pybullet build time: Sep 21 2026 16:29:47
+frames 1526 2415
+teacher LearnedPolicy normalizer training = False norm_reward = False
+heldout_ppo_1950_1999_every2 sample512 diag [0.0737 0.0969 0.1756] tr/3 0.1154 label reproduction max err 0.0 12s
+heldout_ppo_1950_1999_every2 all_frames diag [0.0741 0.0952 0.1696] tr/3 0.113 label reproduction max err 0.0 16s
+dart_0.10_0_999_every25 sample512 diag [0.0657 0.0897 0.1611] tr/3 0.1055 label reproduction max err 0.0 17s
+dart_0.10_0_999_every25 all_frames diag [0.068  0.0881 0.1608] tr/3 0.1056 label reproduction max err 0.0 23s
+bc_state 0 {'selected_step': 15000, 'final_ema': {'diag_heldout': [0.0908, 0.1091, 0.2731], 'diag_dart': [0.0841, 0.1057, 0.2866], 'tr3_heldout': 0.1577, 'tr3_dart': 0.1588}, 'sel_ema': {'diag_heldout': [0.0942, 0.1118, 0.3007], 'diag_dart': [0.0883, 0.1103, 0.3144], 'tr3_heldout': 0.1689, 'tr3_dart': 0.171}}
+bc_state 1 {'selected_step': 20000, 'final_ema': {'diag_heldout': [0.0959, 0.1062, 0.2872], 'diag_dart': [0.0935, 0.1047, 0.2947], 'tr3_heldout': 0.1631, 'tr3_dart': 0.1643}, 'sel_ema': {'diag_heldout': [0.097, 0.1066, 0.2977], 'diag_dart': [0.095, 0.1062, 0.3042], 'tr3_heldout': 0.1671, 'tr3_dart': 0.1685}}
+bc_state 2 {'selected_step': 15000, 'final_ema': {'diag_heldout': [0.0916, 0.1081, 0.2547], 'diag_dart': [0.0929, 0.1047, 0.2707], 'tr3_heldout': 0.1515, 'tr3_dart': 0.1561}, 'sel_ema': {'diag_heldout': [0.0934, 0.1112, 0.2707], 'diag_dart': [0.0975, 0.1097, 0.2888], 'tr3_heldout': 0.1585, 'tr3_dart': 0.1653}}
+bc_state 3 {'selected_step': 25000, 'final_ema': {'diag_heldout': [0.0886, 0.1046, 0.2876], 'diag_dart': [0.0852, 0.1061, 0.2999], 'tr3_heldout': 0.1603, 'tr3_dart': 0.1637}, 'sel_ema': {'diag_heldout': [0.0891, 0.1048, 0.2889], 'diag_dart': [0.0857, 0.1064, 0.3014], 'tr3_heldout': 0.1609, 'tr3_dart': 0.1645}}
+bc_state 4 {'selected_step': 30000, 'final_ema': {'diag_heldout': [0.0993, 0.1106, 0.27], 'diag_dart': [0.0936, 0.1093, 0.286], 'tr3_heldout': 0.16, 'tr3_dart': 0.163}, 'sel_ema': {'diag_heldout': [0.0993, 0.1106, 0.27], 'diag_dart': [0.0936, 0.1093, 0.286], 'tr3_heldout': 0.16, 'tr3_dart': 0.163}}
+wrote /tmp/claude-1000/-home-kbasak-projects-02-imitation-landing-approach/fe7dd47a-dc95-4581-b4a2-20a0afbc331d/scratchpad/teacher_jac.json 23s
