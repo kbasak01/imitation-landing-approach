@@ -55,6 +55,7 @@ __all__ = [
     "AUDIT_SEED",
     "QUANTILES",
     "attr_audit",
+    "attr_checks",
     "load_runner_rows",
     "refly_audit",
     "relabel_audit",
@@ -105,6 +106,15 @@ def _collection(store: DemoStore) -> collect.Collection:
     return collect.load_collections()[name]
 
 
+def _split_rows(store: DemoStore) -> list[p8_adapter.ListedEpisode]:
+    """The split a store's episodes were drawn from (its ``split_file`` attribute).
+
+    For a demo store this is its collection's split; a DAgger rollout store
+    (``ila.data.dagger``) names ``demos_0-1999.parquet`` and has no demo collection.
+    """
+    return data_episodes.read_split(Path(str(store.file_attrs["split_file"])).stem)
+
+
 # --------------------------------------------------------------------------- re-flight
 
 
@@ -151,8 +161,7 @@ def replay_audit(path: Path, n_states: int = 20, seed: int = AUDIT_SEED) -> dict
         divergence, and ``passed``.
     """
     with DemoStore(path) as store:
-        collection = _collection(store)
-        rows = data_episodes.read_split(collection.split)
+        rows = _split_rows(store)
         picks = sample_steps(store, n_states, seed, "replay")
         names = sorted({e for e, _ in picks})
         metas = {e: store.meta(e) for e in names}
@@ -348,6 +357,35 @@ def attr_audit(path: Path) -> dict[str, Any]:
         collection = _collection(store)
         metas = [store.meta(e) for e in store.episodes()]
     rows = data_episodes.read_split(collection.split)
+    checks, identity = attr_checks(metas, rows)
+    checks["demo_index_not_prefix"] = int(
+        sorted(m.demo_index for m in metas) != list(range(len(metas)))
+    )
+    return {
+        "n_episodes": len(metas),
+        "split_file": f"splits/{collection.split}.parquet",
+        "frozen_lists_checked": sorted(p8_adapter.list_paths()),
+        "violations": checks,
+        "identity_mismatches": identity[:20],
+        "passed": not any(checks.values()),
+    }
+
+
+def attr_checks(
+    metas: Sequence[EpisodeMeta], rows: Sequence[p8_adapter.ListedEpisode]
+) -> tuple[dict[str, int], list[str]]:
+    """Count disjointness and split-identity violations of stored episodes (attributes only).
+
+    Shared by :func:`attr_audit` (demo stores) and ``ila.data.dagger.audit_iteration``
+    (DAgger rollouts, whose indices are not a prefix).
+
+    Args:
+        metas: The stored episodes' attributes.
+        rows: The split the episodes claim, indexed by global demo index.
+
+    Returns:
+        ``(violations per check, names of episodes not equal to their split row)``.
+    """
     train, tune = data_episodes.pool_keys(data_episodes.p8_episode_api())
     frozen = data_episodes.frozen_keys()
     keys = [_meta_key(m) for m in metas]
@@ -356,6 +394,9 @@ def attr_audit(path: Path) -> dict[str, Any]:
     )
     identity = []
     for m, k in zip(metas, keys, strict=True):
+        if not 0 <= m.demo_index < len(rows):
+            identity.append(f"ep_{m.demo_index:05d}")
+            continue
         r = rows[m.demo_index]
         claimed = (
             m.regime, m.ss, m.index, m.pad, m.vessel, m.heading_deg, m.speed_kn,
@@ -380,18 +421,8 @@ def attr_audit(path: Path) -> dict[str, Any]:
         - len({(k, m.episode_seed) for k, m in zip(keys, metas, strict=True)}),
         "realization_key_attr_mismatch": key_attr_mismatch,
         "split_identity_mismatch": len(identity),
-        "demo_index_not_prefix": int(
-            sorted(m.demo_index for m in metas) != list(range(len(metas)))
-        ),
     }
-    return {
-        "n_episodes": len(metas),
-        "split_file": f"splits/{collection.split}.parquet",
-        "frozen_lists_checked": sorted(frozen),
-        "violations": checks,
-        "identity_mismatches": identity[:20],
-        "passed": not any(checks.values()),
-    }
+    return checks, identity
 
 
 def split_audit(path: Path) -> dict[str, Any]:

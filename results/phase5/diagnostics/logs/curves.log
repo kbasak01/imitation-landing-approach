@@ -1,0 +1,35 @@
+s0 nonfinite dag=0 bcm=0 lr_err dag={'s': 0.0020000000000000486, 's-1': 1.8070036208091741e-16} n=500/50
+   bc 30k heldout ema 2.738e-04
+   st1 dag: train end 1.28e-04 late med 1.49e-04 spikes [] gmax 0.029@900 late 0.015 | ho ema 2.646e-04->2.570e-04 raw 2.585e-04 ema/raw 0.994 maxraw/ema 1.28 || bcm: train late 1.12e-04 spikes [] ho ema end 2.473e-04 ovl [0]
+   st2 dag: train end 1.76e-04 late med 1.97e-04 spikes [] gmax 0.028@500 late 0.017 | ho ema 2.556e-04->2.800e-04 raw 2.809e-04 ema/raw 0.997 maxraw/ema 1.31 || bcm: train late 9.66e-05 spikes [] ho ema end 2.396e-04 ovl [0]
+   st3 dag: train end 2.22e-04 late med 2.56e-04 spikes [] gmax 0.027@1500 late 0.017 | ho ema 2.798e-04->3.409e-04 raw 3.429e-04 ema/raw 0.994 maxraw/ema 1.40 || bcm: train late 8.49e-05 spikes [] ho ema end 2.345e-04 ovl [0]
+   st4 dag: train end 2.92e-04 late med 3.28e-04 spikes [] gmax 0.030@900 late 0.018 | ho ema 3.330e-04->4.140e-04 raw 4.165e-04 ema/raw 0.994 maxraw/ema 1.36 || bcm: train late 7.57e-05 spikes [] ho ema end 2.191e-04 ovl [0]
+   st5 dag: train end 2.91e-04 late med 3.43e-04 spikes [] gmax 0.027@600 late 0.018 | ho ema 3.773e-04->4.231e-04 raw 4.264e-04 ema/raw 0.992 maxraw/ema 1.30 || bcm: train late 7.20e-05 spikes [] ho ema end 6.116e-05 ovl [50]
+s1 nonfinite dag=0 bcm=0 lr_err dag={'s': 0.0020000000000000486, 's-1': 1.8070036208091741e-16} n=500/50
+   bc 30k heldout ema 2.861e-04
+   st1 dag: train end 1.26e-04 late med 1.50e-04 spikes [] gmax 0.025@600 late 0.015 | ho ema 2.768e-04->2.707e-04 raw 2.712e-04 ema/raw 0.998 maxraw/ema 1.33 || bcm: train late 1.09e-04 spikes [] ho ema end 2.592e-04 ovl [0]
+   st2 dag: train end 1.64e-04 late med 1.93e-04 spikes [] gmax 0.026@2000 late 0.013 | ho ema 2.685e-04->3.074e-04 raw 3.093e-04 ema/raw 0.994 maxraw/ema 1.44 || bcm: train late 9.30e-05 spikes [] ho ema end 2.451e-04 ovl [0]
+   st3 dag: train end 2.12e-04 late med 2.43e-04 spikes [] gmax 0.029@1400 late 0.016 | ho ema 3.016e-04->3.633e-04 raw 3.655e-04 ema/raw 0.994 maxraw/ema 1.32 || bcm: train late 7.93e-05 spikes [] ho ema end 2.404e-04 ovl [0]
+   st4 dag: train end 2.75e-04 late med 3.10e-04 spikes [] gmax 0.030@1200 late 0.019 | ho ema 3.606e-04->4.726e-04 raw 4.760e-04 ema/raw 0.993 maxraw/ema 1.34 || bcm: train late 7.29e-05 spikes [] ho ema end 2.315e-04 ovl [0]
+   st5 dag: train end 2.75e-04 late med 3.15e-04 spikes [] gmax 0.026@800 late 0.017 | ho ema 4.378e-04->4.897e-04 raw 4.919e-04 ema/raw 0.995 maxraw/ema 1.27 || bcm: train late 6.55e-05 spikes [] ho ema end 5.805e-05 ovl [50]
+s2 nonfinite dag=0 bcm=0 lr_err dag={'s': 0.0020000000000000486, 's-1': 1.8070036208091741e-16} n=500/50
+   bc 30k heldout ema 2.700e-04
+   st1 dag: train end 1.32e-04 late med 1.57e-04 spikes [] gmax 0.024@700 late 0.016 | ho ema 2.629e-04->2.531e-04 raw 2.538e-04 ema/raw 0.997 maxraw/ema 1.32 || bcm: train late 1.17e-04 spikes [] ho ema end 2.454e-04 ovl [0]
+   st2 dag: train end 1.75e-04 late med 2.04e-04 spikes [] gmax 0.027@500 late 0.017 | ho ema 2.503e-04->2.690e-04 raw 2.704e-04 ema/raw 0.995 maxraw/ema 1.38 || bcm: train late 1.01e-04 spikes [] ho ema end 2.324e-04 ovl [0]
+   st3 dag: train end 2.21e-04 late med 2.52e-04 spikes [] gmax 0.025@1500 late 0.015 | ho ema 2.653e-04->3.196e-04 raw 3.215e-04 ema/raw 0.994 maxraw/ema 1.39 || bcm: train late 8.66e-05 spikes [] ho ema end 2.243e-04 ovl [0]
+   st4 dag: train end 2.98e-04 late med 3.39e-04 spikes [] gmax 0.028@1200 late 0.017 | ho ema 3.153e-04->4.007e-04 raw 4.033e-04 ema/raw 0.994 maxraw/ema 1.44 || bcm: train late 7.77e-05 spikes [] ho ema end 2.189e-04 ovl [0]
+   st5 dag: train end 2.98e-04 late med 3.40e-04 spikes [] gmax 0.025@500 late 0.014 | ho ema 3.686e-04->4.286e-04 raw 4.308e-04 ema/raw 0.995 maxraw/ema 1.34 || bcm: train late 7.13e-05 spikes [] ho ema end 6.122e-05 ovl [50]
+s3 nonfinite dag=0 bcm=0 lr_err dag={'s': 0.0020000000000000486, 's-1': 1.8070036208091741e-16} n=500/50
+   bc 30k heldout ema 2.780e-04
+   st1 dag: train end 1.40e-04 late med 1.60e-04 spikes [] gmax 0.023@1400 late 0.014 | ho ema 2.717e-04->2.694e-04 raw 2.706e-04 ema/raw 0.996 maxraw/ema 1.46 || bcm: train late 1.22e-04 spikes [] ho ema end 2.544e-04 ovl [0]
+   st2 dag: train end 1.77e-04 late med 2.09e-04 spikes [] gmax 0.026@600 late 0.016 | ho ema 2.680e-04->3.170e-04 raw 3.192e-04 ema/raw 0.993 maxraw/ema 1.52 || bcm: train late 1.04e-04 spikes [] ho ema end 2.428e-04 ovl [0]
+   st3 dag: train end 2.28e-04 late med 2.64e-04 spikes [] gmax 0.024@1100 late 0.015 | ho ema 3.022e-04->3.648e-04 raw 3.667e-04 ema/raw 0.995 maxraw/ema 1.45 || bcm: train late 9.14e-05 spikes [] ho ema end 2.363e-04 ovl [0]
+   st4 dag: train end 3.00e-04 late med 3.37e-04 spikes [] gmax 0.029@1600 late 0.015 | ho ema 3.590e-04->4.337e-04 raw 4.355e-04 ema/raw 0.996 maxraw/ema 1.26 || bcm: train late 8.15e-05 spikes [] ho ema end 2.258e-04 ovl [0]
+   st5 dag: train end 2.96e-04 late med 3.45e-04 spikes [] gmax 0.026@3300 late 0.015 | ho ema 3.889e-04->4.129e-04 raw 4.163e-04 ema/raw 0.992 maxraw/ema 1.33 || bcm: train late 7.54e-05 spikes [] ho ema end 6.153e-05 ovl [50]
+s4 nonfinite dag=0 bcm=0 lr_err dag={'s': 0.0020000000000000486, 's-1': 1.8070036208091741e-16} n=500/50
+   bc 30k heldout ema 2.658e-04
+   st1 dag: train end 1.25e-04 late med 1.48e-04 spikes [] gmax 0.029@700 late 0.014 | ho ema 2.598e-04->2.651e-04 raw 2.667e-04 ema/raw 0.994 maxraw/ema 1.38 || bcm: train late 1.11e-04 spikes [] ho ema end 2.465e-04 ovl [0]
+   st2 dag: train end 1.73e-04 late med 1.98e-04 spikes [] gmax 0.027@700 late 0.016 | ho ema 2.601e-04->2.891e-04 raw 2.901e-04 ema/raw 0.996 maxraw/ema 1.38 || bcm: train late 9.49e-05 spikes [] ho ema end 2.431e-04 ovl [0]
+   st3 dag: train end 2.09e-04 late med 2.47e-04 spikes [] gmax 0.023@500 late 0.018 | ho ema 2.901e-04->3.411e-04 raw 3.435e-04 ema/raw 0.993 maxraw/ema 1.34 || bcm: train late 8.41e-05 spikes [] ho ema end 2.271e-04 ovl [0]
+   st4 dag: train end 2.66e-04 late med 3.05e-04 spikes [] gmax 0.027@800 late 0.016 | ho ema 3.327e-04->3.987e-04 raw 4.017e-04 ema/raw 0.993 maxraw/ema 1.31 || bcm: train late 7.52e-05 spikes [] ho ema end 2.178e-04 ovl [0]
+   st5 dag: train end 2.74e-04 late med 3.22e-04 spikes [] gmax 0.028@800 late 0.018 | ho ema 3.668e-04->4.220e-04 raw 4.256e-04 ema/raw 0.992 maxraw/ema 1.39 || bcm: train late 7.02e-05 spikes [] ho ema end 5.947e-05 ovl [50]

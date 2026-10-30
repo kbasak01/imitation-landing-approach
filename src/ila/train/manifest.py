@@ -55,7 +55,8 @@ RUNS_ROOT: Final[Path] = REPO_ROOT / "artifacts" / "runs"
 DEMOS_SUMMARY: Final[Path] = REPO_ROOT / "results" / "demos_summary.json"
 
 #: SHA-256 of every training config frozen by P3-D1 §3 (the protocol prints them truncated:
-#: ``tests/test_train_loop.py`` checks each against the truncated form in ``docs/protocol.md``).
+#: ``tests/test_train_loop.py`` checks each against the truncated form in ``docs/protocol.md``),
+#: plus ``configs/data/demos.yaml`` (P3-D1 §2, printed in full), which ``bc_dagger`` reads.
 FROZEN_CONFIG_SHA256: Final[Mapping[str, str]] = {
     "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
     "configs/train/bc_state.yaml": (
@@ -107,6 +108,9 @@ FROZEN_CONFIG_SHA256: Final[Mapping[str, str]] = {
     "configs/train/ablations/bc_plus_clock.yaml": (
         "505f3bef192125bf3882b84ac8a5387f96d58afdf67cbacde2998e91f11c9caa"
     ),
+    # Frozen by P3-D1 §2 (printed in full there); read by bc_dagger.yaml's
+    # ``dagger: {from: configs/data/demos.yaml#dagger}``, so it is part of that run's config.
+    "configs/data/demos.yaml": ("1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"),
 }
 
 

@@ -1,0 +1,1354 @@
+{
+  "kind": "dagger_rollouts",
+  "arm": "bc_dagger",
+  "run_seed": 0,
+  "iteration": 5,
+  "beta": 0.0,
+  "purpose": "train",
+  "limit": null,
+  "n_planned": 200,
+  "complete": true,
+  "full_iteration": true,
+  "collection": "bc_dagger_s0_iter5",
+  "episodes": {
+    "stream": "demos",
+    "split_file": "splits/demos_0-1999.parquet",
+    "split_file_sha256": "20940abcce53298c3ca26e4fb92103226116aac1a0f55b730b74381c0b5805ef",
+    "split_content_sha256": "5cf9a5a5ce01835897601abd18e8354304ac591f6126e037db3f67a96c401066",
+    "first_index": 1800,
+    "last_index": 1999,
+    "list": [
+      {
+        "demo_index": 1800,
+        "ss": "SS3",
+        "index": 600,
+        "episode_seed": 186703191
+      },
+      {
+        "demo_index": 1801,
+        "ss": "SS4",
+        "index": 600,
+        "episode_seed": 1679368427
+      },
+      {
+        "demo_index": 1802,
+        "ss": "SS5",
+        "index": 600,
+        "episode_seed": 184744990
+      },
+      {
+        "demo_index": 1803,
+        "ss": "SS3",
+        "index": 601,
+        "episode_seed": 400282451
+      },
+      {
+        "demo_index": 1804,
+        "ss": "SS4",
+        "index": 601,
+        "episode_seed": 1183473183
+      },
+      {
+        "demo_index": 1805,
+        "ss": "SS5",
+        "index": 601,
+        "episode_seed": 1757492232
+      },
+      {
+        "demo_index": 1806,
+        "ss": "SS3",
+        "index": 602,
+        "episode_seed": 1826506974
+      },
+      {
+        "demo_index": 1807,
+        "ss": "SS4",
+        "index": 602,
+        "episode_seed": 572662695
+      },
+      {
+        "demo_index": 1808,
+        "ss": "SS5",
+        "index": 602,
+        "episode_seed": 1685585244
+      },
+      {
+        "demo_index": 1809,
+        "ss": "SS3",
+        "index": 603,
+        "episode_seed": 369584630
+      },
+      {
+        "demo_index": 1810,
+        "ss": "SS4",
+        "index": 603,
+        "episode_seed": 2105981871
+      },
+      {
+        "demo_index": 1811,
+        "ss": "SS5",
+        "index": 603,
+        "episode_seed": 698675135
+      },
+      {
+        "demo_index": 1812,
+        "ss": "SS3",
+        "index": 604,
+        "episode_seed": 1677750936
+      },
+      {
+        "demo_index": 1813,
+        "ss": "SS4",
+        "index": 604,
+        "episode_seed": 398903723
+      },
+      {
+        "demo_index": 1814,
+        "ss": "SS5",
+        "index": 604,
+        "episode_seed": 1186430044
+      },
+      {
+        "demo_index": 1815,
+        "ss": "SS3",
+        "index": 605,
+        "episode_seed": 459815611
+      },
+      {
+        "demo_index": 1816,
+        "ss": "SS4",
+        "index": 605,
+        "episode_seed": 1600541597
+      },
+      {
+        "demo_index": 1817,
+        "ss": "SS5",
+        "index": 605,
+        "episode_seed": 812719944
+      },
+      {
+        "demo_index": 1818,
+        "ss": "SS3",
+        "index": 606,
+        "episode_seed": 1352914695
+      },
+      {
+        "demo_index": 1819,
+        "ss": "SS4",
+        "index": 606,
+        "episode_seed": 330630230
+      },
+      {
+        "demo_index": 1820,
+        "ss": "SS5",
+        "index": 606,
+        "episode_seed": 1677079486
+      },
+      {
+        "demo_index": 1821,
+        "ss": "SS3",
+        "index": 607,
+        "episode_seed": 196191888
+      },
+      {
+        "demo_index": 1822,
+        "ss": "SS4",
+        "index": 607,
+        "episode_seed": 625920055
+      },
+      {
+        "demo_index": 1823,
+        "ss": "SS5",
+        "index": 607,
+        "episode_seed": 717742927
+      },
+      {
+        "demo_index": 1824,
+        "ss": "SS3",
+        "index": 608,
+        "episode_seed": 1758267818
+      },
+      {
+        "demo_index": 1825,
+        "ss": "SS4",
+        "index": 608,
+        "episode_seed": 902838741
+      },
+      {
+        "demo_index": 1826,
+        "ss": "SS5",
+        "index": 608,
+        "episode_seed": 237844639
+      },
+      {
+        "demo_index": 1827,
+        "ss": "SS3",
+        "index": 609,
+        "episode_seed": 1627558467
+      },
+      {
+        "demo_index": 1828,
+        "ss": "SS4",
+        "index": 609,
+        "episode_seed": 829329290
+      },
+      {
+        "demo_index": 1829,
+        "ss": "SS5",
+        "index": 609,
+        "episode_seed": 765510740
+      },
+      {
+        "demo_index": 1830,
+        "ss": "SS3",
+        "index": 610,
+        "episode_seed": 1867773116
+      },
+      {
+        "demo_index": 1831,
+        "ss": "SS4",
+        "index": 610,
+        "episode_seed": 1862673722
+      },
+      {
+        "demo_index": 1832,
+        "ss": "SS5",
+        "index": 610,
+        "episode_seed": 1612675324
+      },
+      {
+        "demo_index": 1833,
+        "ss": "SS3",
+        "index": 611,
+        "episode_seed": 408191152
+      },
+      {
+        "demo_index": 1834,
+        "ss": "SS4",
+        "index": 611,
+        "episode_seed": 504049936
+      },
+      {
+        "demo_index": 1835,
+        "ss": "SS5",
+        "index": 611,
+        "episode_seed": 2055273408
+      },
+      {
+        "demo_index": 1836,
+        "ss": "SS3",
+        "index": 612,
+        "episode_seed": 1011002451
+      },
+      {
+        "demo_index": 1837,
+        "ss": "SS4",
+        "index": 612,
+        "episode_seed": 1305911518
+      },
+      {
+        "demo_index": 1838,
+        "ss": "SS5",
+        "index": 612,
+        "episode_seed": 368670994
+      },
+      {
+        "demo_index": 1839,
+        "ss": "SS3",
+        "index": 613,
+        "episode_seed": 355387211
+      },
+      {
+        "demo_index": 1840,
+        "ss": "SS4",
+        "index": 613,
+        "episode_seed": 1539518778
+      },
+      {
+        "demo_index": 1841,
+        "ss": "SS5",
+        "index": 613,
+        "episode_seed": 908144668
+      },
+      {
+        "demo_index": 1842,
+        "ss": "SS3",
+        "index": 614,
+        "episode_seed": 607757489
+      },
+      {
+        "demo_index": 1843,
+        "ss": "SS4",
+        "index": 614,
+        "episode_seed": 416847694
+      },
+      {
+        "demo_index": 1844,
+        "ss": "SS5",
+        "index": 614,
+        "episode_seed": 179671128
+      },
+      {
+        "demo_index": 1845,
+        "ss": "SS3",
+        "index": 615,
+        "episode_seed": 425330009
+      },
+      {
+        "demo_index": 1846,
+        "ss": "SS4",
+        "index": 615,
+        "episode_seed": 407274891
+      },
+      {
+        "demo_index": 1847,
+        "ss": "SS5",
+        "index": 615,
+        "episode_seed": 2050808311
+      },
+      {
+        "demo_index": 1848,
+        "ss": "SS3",
+        "index": 616,
+        "episode_seed": 1104072107
+      },
+      {
+        "demo_index": 1849,
+        "ss": "SS4",
+        "index": 616,
+        "episode_seed": 207534975
+      },
+      {
+        "demo_index": 1850,
+        "ss": "SS5",
+        "index": 616,
+        "episode_seed": 1753388183
+      },
+      {
+        "demo_index": 1851,
+        "ss": "SS3",
+        "index": 617,
+        "episode_seed": 521789082
+      },
+      {
+        "demo_index": 1852,
+        "ss": "SS4",
+        "index": 617,
+        "episode_seed": 178146776
+      },
+      {
+        "demo_index": 1853,
+        "ss": "SS5",
+        "index": 617,
+        "episode_seed": 1030025363
+      },
+      {
+        "demo_index": 1854,
+        "ss": "SS3",
+        "index": 618,
+        "episode_seed": 347071963
+      },
+      {
+        "demo_index": 1855,
+        "ss": "SS4",
+        "index": 618,
+        "episode_seed": 1595572527
+      },
+      {
+        "demo_index": 1856,
+        "ss": "SS5",
+        "index": 618,
+        "episode_seed": 722527770
+      },
+      {
+        "demo_index": 1857,
+        "ss": "SS3",
+        "index": 619,
+        "episode_seed": 2015293297
+      },
+      {
+        "demo_index": 1858,
+        "ss": "SS4",
+        "index": 619,
+        "episode_seed": 982919365
+      },
+      {
+        "demo_index": 1859,
+        "ss": "SS5",
+        "index": 619,
+        "episode_seed": 597270518
+      },
+      {
+        "demo_index": 1860,
+        "ss": "SS3",
+        "index": 620,
+        "episode_seed": 300989208
+      },
+      {
+        "demo_index": 1861,
+        "ss": "SS4",
+        "index": 620,
+        "episode_seed": 486281801
+      },
+      {
+        "demo_index": 1862,
+        "ss": "SS5",
+        "index": 620,
+        "episode_seed": 353242556
+      },
+      {
+        "demo_index": 1863,
+        "ss": "SS3",
+        "index": 621,
+        "episode_seed": 1938928887
+      },
+      {
+        "demo_index": 1864,
+        "ss": "SS4",
+        "index": 621,
+        "episode_seed": 1288900171
+      },
+      {
+        "demo_index": 1865,
+        "ss": "SS5",
+        "index": 621,
+        "episode_seed": 710361601
+      },
+      {
+        "demo_index": 1866,
+        "ss": "SS3",
+        "index": 622,
+        "episode_seed": 1438053500
+      },
+      {
+        "demo_index": 1867,
+        "ss": "SS4",
+        "index": 622,
+        "episode_seed": 2049153781
+      },
+      {
+        "demo_index": 1868,
+        "ss": "SS5",
+        "index": 622,
+        "episode_seed": 22755059
+      },
+      {
+        "demo_index": 1869,
+        "ss": "SS3",
+        "index": 623,
+        "episode_seed": 1995696617
+      },
+      {
+        "demo_index": 1870,
+        "ss": "SS4",
+        "index": 623,
+        "episode_seed": 44959096
+      },
+      {
+        "demo_index": 1871,
+        "ss": "SS5",
+        "index": 623,
+        "episode_seed": 1555818945
+      },
+      {
+        "demo_index": 1872,
+        "ss": "SS3",
+        "index": 624,
+        "episode_seed": 268885398
+      },
+      {
+        "demo_index": 1873,
+        "ss": "SS4",
+        "index": 624,
+        "episode_seed": 1478490579
+      },
+      {
+        "demo_index": 1874,
+        "ss": "SS5",
+        "index": 624,
+        "episode_seed": 2136283370
+      },
+      {
+        "demo_index": 1875,
+        "ss": "SS3",
+        "index": 625,
+        "episode_seed": 998406422
+      },
+      {
+        "demo_index": 1876,
+        "ss": "SS4",
+        "index": 625,
+        "episode_seed": 1745025049
+      },
+      {
+        "demo_index": 1877,
+        "ss": "SS5",
+        "index": 625,
+        "episode_seed": 2126425331
+      },
+      {
+        "demo_index": 1878,
+        "ss": "SS3",
+        "index": 626,
+        "episode_seed": 1036110865
+      },
+      {
+        "demo_index": 1879,
+        "ss": "SS4",
+        "index": 626,
+        "episode_seed": 25164975
+      },
+      {
+        "demo_index": 1880,
+        "ss": "SS5",
+        "index": 626,
+        "episode_seed": 1072801371
+      },
+      {
+        "demo_index": 1881,
+        "ss": "SS3",
+        "index": 627,
+        "episode_seed": 1862839970
+      },
+      {
+        "demo_index": 1882,
+        "ss": "SS4",
+        "index": 627,
+        "episode_seed": 475707649
+      },
+      {
+        "demo_index": 1883,
+        "ss": "SS5",
+        "index": 627,
+        "episode_seed": 519484895
+      },
+      {
+        "demo_index": 1884,
+        "ss": "SS3",
+        "index": 628,
+        "episode_seed": 1722846642
+      },
+      {
+        "demo_index": 1885,
+        "ss": "SS4",
+        "index": 628,
+        "episode_seed": 1233226708
+      },
+      {
+        "demo_index": 1886,
+        "ss": "SS5",
+        "index": 628,
+        "episode_seed": 2036777982
+      },
+      {
+        "demo_index": 1887,
+        "ss": "SS3",
+        "index": 629,
+        "episode_seed": 2100166392
+      },
+      {
+        "demo_index": 1888,
+        "ss": "SS4",
+        "index": 629,
+        "episode_seed": 492594842
+      },
+      {
+        "demo_index": 1889,
+        "ss": "SS5",
+        "index": 629,
+        "episode_seed": 53235869
+      },
+      {
+        "demo_index": 1890,
+        "ss": "SS3",
+        "index": 630,
+        "episode_seed": 1889493472
+      },
+      {
+        "demo_index": 1891,
+        "ss": "SS4",
+        "index": 630,
+        "episode_seed": 1102944182
+      },
+      {
+        "demo_index": 1892,
+        "ss": "SS5",
+        "index": 630,
+        "episode_seed": 1234954114
+      },
+      {
+        "demo_index": 1893,
+        "ss": "SS3",
+        "index": 631,
+        "episode_seed": 1815151999
+      },
+      {
+        "demo_index": 1894,
+        "ss": "SS4",
+        "index": 631,
+        "episode_seed": 1896566118
+      },
+      {
+        "demo_index": 1895,
+        "ss": "SS5",
+        "index": 631,
+        "episode_seed": 1884178443
+      },
+      {
+        "demo_index": 1896,
+        "ss": "SS3",
+        "index": 632,
+        "episode_seed": 1337920936
+      },
+      {
+        "demo_index": 1897,
+        "ss": "SS4",
+        "index": 632,
+        "episode_seed": 1990560667
+      },
+      {
+        "demo_index": 1898,
+        "ss": "SS5",
+        "index": 632,
+        "episode_seed": 244578066
+      },
+      {
+        "demo_index": 1899,
+        "ss": "SS3",
+        "index": 633,
+        "episode_seed": 575893903
+      },
+      {
+        "demo_index": 1900,
+        "ss": "SS4",
+        "index": 633,
+        "episode_seed": 781201307
+      },
+      {
+        "demo_index": 1901,
+        "ss": "SS5",
+        "index": 633,
+        "episode_seed": 598192204
+      },
+      {
+        "demo_index": 1902,
+        "ss": "SS3",
+        "index": 634,
+        "episode_seed": 767736366
+      },
+      {
+        "demo_index": 1903,
+        "ss": "SS4",
+        "index": 634,
+        "episode_seed": 1415032261
+      },
+      {
+        "demo_index": 1904,
+        "ss": "SS5",
+        "index": 634,
+        "episode_seed": 396519886
+      },
+      {
+        "demo_index": 1905,
+        "ss": "SS3",
+        "index": 635,
+        "episode_seed": 712567151
+      },
+      {
+        "demo_index": 1906,
+        "ss": "SS4",
+        "index": 635,
+        "episode_seed": 1091803479
+      },
+      {
+        "demo_index": 1907,
+        "ss": "SS5",
+        "index": 635,
+        "episode_seed": 966880375
+      },
+      {
+        "demo_index": 1908,
+        "ss": "SS3",
+        "index": 636,
+        "episode_seed": 219169724
+      },
+      {
+        "demo_index": 1909,
+        "ss": "SS4",
+        "index": 636,
+        "episode_seed": 550578514
+      },
+      {
+        "demo_index": 1910,
+        "ss": "SS5",
+        "index": 636,
+        "episode_seed": 203471624
+      },
+      {
+        "demo_index": 1911,
+        "ss": "SS3",
+        "index": 637,
+        "episode_seed": 744788344
+      },
+      {
+        "demo_index": 1912,
+        "ss": "SS4",
+        "index": 637,
+        "episode_seed": 368568453
+      },
+      {
+        "demo_index": 1913,
+        "ss": "SS5",
+        "index": 637,
+        "episode_seed": 260649038
+      },
+      {
+        "demo_index": 1914,
+        "ss": "SS3",
+        "index": 638,
+        "episode_seed": 880029468
+      },
+      {
+        "demo_index": 1915,
+        "ss": "SS4",
+        "index": 638,
+        "episode_seed": 1181454376
+      },
+      {
+        "demo_index": 1916,
+        "ss": "SS5",
+        "index": 638,
+        "episode_seed": 879441512
+      },
+      {
+        "demo_index": 1917,
+        "ss": "SS3",
+        "index": 639,
+        "episode_seed": 1981023514
+      },
+      {
+        "demo_index": 1918,
+        "ss": "SS4",
+        "index": 639,
+        "episode_seed": 82814298
+      },
+      {
+        "demo_index": 1919,
+        "ss": "SS5",
+        "index": 639,
+        "episode_seed": 159148928
+      },
+      {
+        "demo_index": 1920,
+        "ss": "SS3",
+        "index": 640,
+        "episode_seed": 1528215168
+      },
+      {
+        "demo_index": 1921,
+        "ss": "SS4",
+        "index": 640,
+        "episode_seed": 952851684
+      },
+      {
+        "demo_index": 1922,
+        "ss": "SS5",
+        "index": 640,
+        "episode_seed": 667844497
+      },
+      {
+        "demo_index": 1923,
+        "ss": "SS3",
+        "index": 641,
+        "episode_seed": 1131766682
+      },
+      {
+        "demo_index": 1924,
+        "ss": "SS4",
+        "index": 641,
+        "episode_seed": 671996018
+      },
+      {
+        "demo_index": 1925,
+        "ss": "SS5",
+        "index": 641,
+        "episode_seed": 1575696261
+      },
+      {
+        "demo_index": 1926,
+        "ss": "SS3",
+        "index": 642,
+        "episode_seed": 2139253204
+      },
+      {
+        "demo_index": 1927,
+        "ss": "SS4",
+        "index": 642,
+        "episode_seed": 383921610
+      },
+      {
+        "demo_index": 1928,
+        "ss": "SS5",
+        "index": 642,
+        "episode_seed": 279353566
+      },
+      {
+        "demo_index": 1929,
+        "ss": "SS3",
+        "index": 643,
+        "episode_seed": 1762537031
+      },
+      {
+        "demo_index": 1930,
+        "ss": "SS4",
+        "index": 643,
+        "episode_seed": 2055918388
+      },
+      {
+        "demo_index": 1931,
+        "ss": "SS5",
+        "index": 643,
+        "episode_seed": 2007129886
+      },
+      {
+        "demo_index": 1932,
+        "ss": "SS3",
+        "index": 644,
+        "episode_seed": 681574016
+      },
+      {
+        "demo_index": 1933,
+        "ss": "SS4",
+        "index": 644,
+        "episode_seed": 707953261
+      },
+      {
+        "demo_index": 1934,
+        "ss": "SS5",
+        "index": 644,
+        "episode_seed": 2087850804
+      },
+      {
+        "demo_index": 1935,
+        "ss": "SS3",
+        "index": 645,
+        "episode_seed": 1381565282
+      },
+      {
+        "demo_index": 1936,
+        "ss": "SS4",
+        "index": 645,
+        "episode_seed": 1809726069
+      },
+      {
+        "demo_index": 1937,
+        "ss": "SS5",
+        "index": 645,
+        "episode_seed": 1321518645
+      },
+      {
+        "demo_index": 1938,
+        "ss": "SS3",
+        "index": 646,
+        "episode_seed": 1755133230
+      },
+      {
+        "demo_index": 1939,
+        "ss": "SS4",
+        "index": 646,
+        "episode_seed": 1098743844
+      },
+      {
+        "demo_index": 1940,
+        "ss": "SS5",
+        "index": 646,
+        "episode_seed": 228560380
+      },
+      {
+        "demo_index": 1941,
+        "ss": "SS3",
+        "index": 647,
+        "episode_seed": 969447661
+      },
+      {
+        "demo_index": 1942,
+        "ss": "SS4",
+        "index": 647,
+        "episode_seed": 2013711561
+      },
+      {
+        "demo_index": 1943,
+        "ss": "SS5",
+        "index": 647,
+        "episode_seed": 925549243
+      },
+      {
+        "demo_index": 1944,
+        "ss": "SS3",
+        "index": 648,
+        "episode_seed": 1512183760
+      },
+      {
+        "demo_index": 1945,
+        "ss": "SS4",
+        "index": 648,
+        "episode_seed": 2055806873
+      },
+      {
+        "demo_index": 1946,
+        "ss": "SS5",
+        "index": 648,
+        "episode_seed": 510570774
+      },
+      {
+        "demo_index": 1947,
+        "ss": "SS3",
+        "index": 649,
+        "episode_seed": 1363342421
+      },
+      {
+        "demo_index": 1948,
+        "ss": "SS4",
+        "index": 649,
+        "episode_seed": 349224685
+      },
+      {
+        "demo_index": 1949,
+        "ss": "SS5",
+        "index": 649,
+        "episode_seed": 593414246
+      },
+      {
+        "demo_index": 1950,
+        "ss": "SS3",
+        "index": 650,
+        "episode_seed": 204034658
+      },
+      {
+        "demo_index": 1951,
+        "ss": "SS4",
+        "index": 650,
+        "episode_seed": 1160087440
+      },
+      {
+        "demo_index": 1952,
+        "ss": "SS5",
+        "index": 650,
+        "episode_seed": 2111079036
+      },
+      {
+        "demo_index": 1953,
+        "ss": "SS3",
+        "index": 651,
+        "episode_seed": 1029193835
+      },
+      {
+        "demo_index": 1954,
+        "ss": "SS4",
+        "index": 651,
+        "episode_seed": 1350161792
+      },
+      {
+        "demo_index": 1955,
+        "ss": "SS5",
+        "index": 651,
+        "episode_seed": 420120474
+      },
+      {
+        "demo_index": 1956,
+        "ss": "SS3",
+        "index": 652,
+        "episode_seed": 383446758
+      },
+      {
+        "demo_index": 1957,
+        "ss": "SS4",
+        "index": 652,
+        "episode_seed": 941492054
+      },
+      {
+        "demo_index": 1958,
+        "ss": "SS5",
+        "index": 652,
+        "episode_seed": 210756605
+      },
+      {
+        "demo_index": 1959,
+        "ss": "SS3",
+        "index": 653,
+        "episode_seed": 2036010351
+      },
+      {
+        "demo_index": 1960,
+        "ss": "SS4",
+        "index": 653,
+        "episode_seed": 225449268
+      },
+      {
+        "demo_index": 1961,
+        "ss": "SS5",
+        "index": 653,
+        "episode_seed": 167461308
+      },
+      {
+        "demo_index": 1962,
+        "ss": "SS3",
+        "index": 654,
+        "episode_seed": 666737529
+      },
+      {
+        "demo_index": 1963,
+        "ss": "SS4",
+        "index": 654,
+        "episode_seed": 897798418
+      },
+      {
+        "demo_index": 1964,
+        "ss": "SS5",
+        "index": 654,
+        "episode_seed": 1017979322
+      },
+      {
+        "demo_index": 1965,
+        "ss": "SS3",
+        "index": 655,
+        "episode_seed": 1516843868
+      },
+      {
+        "demo_index": 1966,
+        "ss": "SS4",
+        "index": 655,
+        "episode_seed": 674188299
+      },
+      {
+        "demo_index": 1967,
+        "ss": "SS5",
+        "index": 655,
+        "episode_seed": 445599431
+      },
+      {
+        "demo_index": 1968,
+        "ss": "SS3",
+        "index": 656,
+        "episode_seed": 1690703806
+      },
+      {
+        "demo_index": 1969,
+        "ss": "SS4",
+        "index": 656,
+        "episode_seed": 779098597
+      },
+      {
+        "demo_index": 1970,
+        "ss": "SS5",
+        "index": 656,
+        "episode_seed": 1078337930
+      },
+      {
+        "demo_index": 1971,
+        "ss": "SS3",
+        "index": 657,
+        "episode_seed": 1514900844
+      },
+      {
+        "demo_index": 1972,
+        "ss": "SS4",
+        "index": 657,
+        "episode_seed": 1526246064
+      },
+      {
+        "demo_index": 1973,
+        "ss": "SS5",
+        "index": 657,
+        "episode_seed": 2133563896
+      },
+      {
+        "demo_index": 1974,
+        "ss": "SS3",
+        "index": 658,
+        "episode_seed": 1302104172
+      },
+      {
+        "demo_index": 1975,
+        "ss": "SS4",
+        "index": 658,
+        "episode_seed": 1659494781
+      },
+      {
+        "demo_index": 1976,
+        "ss": "SS5",
+        "index": 658,
+        "episode_seed": 1623465398
+      },
+      {
+        "demo_index": 1977,
+        "ss": "SS3",
+        "index": 659,
+        "episode_seed": 1758426338
+      },
+      {
+        "demo_index": 1978,
+        "ss": "SS4",
+        "index": 659,
+        "episode_seed": 323940595
+      },
+      {
+        "demo_index": 1979,
+        "ss": "SS5",
+        "index": 659,
+        "episode_seed": 653064441
+      },
+      {
+        "demo_index": 1980,
+        "ss": "SS3",
+        "index": 660,
+        "episode_seed": 352669279
+      },
+      {
+        "demo_index": 1981,
+        "ss": "SS4",
+        "index": 660,
+        "episode_seed": 1998019769
+      },
+      {
+        "demo_index": 1982,
+        "ss": "SS5",
+        "index": 660,
+        "episode_seed": 1149356797
+      },
+      {
+        "demo_index": 1983,
+        "ss": "SS3",
+        "index": 661,
+        "episode_seed": 68281496
+      },
+      {
+        "demo_index": 1984,
+        "ss": "SS4",
+        "index": 661,
+        "episode_seed": 1531265923
+      },
+      {
+        "demo_index": 1985,
+        "ss": "SS5",
+        "index": 661,
+        "episode_seed": 154693467
+      },
+      {
+        "demo_index": 1986,
+        "ss": "SS3",
+        "index": 662,
+        "episode_seed": 1145229810
+      },
+      {
+        "demo_index": 1987,
+        "ss": "SS4",
+        "index": 662,
+        "episode_seed": 1930073832
+      },
+      {
+        "demo_index": 1988,
+        "ss": "SS5",
+        "index": 662,
+        "episode_seed": 1103070387
+      },
+      {
+        "demo_index": 1989,
+        "ss": "SS3",
+        "index": 663,
+        "episode_seed": 1034854898
+      },
+      {
+        "demo_index": 1990,
+        "ss": "SS4",
+        "index": 663,
+        "episode_seed": 697284646
+      },
+      {
+        "demo_index": 1991,
+        "ss": "SS5",
+        "index": 663,
+        "episode_seed": 827906602
+      },
+      {
+        "demo_index": 1992,
+        "ss": "SS3",
+        "index": 664,
+        "episode_seed": 2013206530
+      },
+      {
+        "demo_index": 1993,
+        "ss": "SS4",
+        "index": 664,
+        "episode_seed": 1350115760
+      },
+      {
+        "demo_index": 1994,
+        "ss": "SS5",
+        "index": 664,
+        "episode_seed": 1298855716
+      },
+      {
+        "demo_index": 1995,
+        "ss": "SS3",
+        "index": 665,
+        "episode_seed": 2061454619
+      },
+      {
+        "demo_index": 1996,
+        "ss": "SS4",
+        "index": 665,
+        "episode_seed": 1774793628
+      },
+      {
+        "demo_index": 1997,
+        "ss": "SS5",
+        "index": 665,
+        "episode_seed": 1554930305
+      },
+      {
+        "demo_index": 1998,
+        "ss": "SS3",
+        "index": 666,
+        "episode_seed": 1843815848
+      },
+      {
+        "demo_index": 1999,
+        "ss": "SS4",
+        "index": 666,
+        "episode_seed": 498106520
+      }
+    ]
+  },
+  "student": {
+    "ckpt": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/bc_dagger/s0/checkpoints/s4_step010000.pt",
+    "sha256": "723431d01c8e18e731ebf57d5a6dbc957e36e49da327452daff3bb71d02c5528",
+    "arm": "bc_dagger",
+    "run_seed": 0,
+    "stage": 4,
+    "stage_step": 10000,
+    "global_step": 40000,
+    "purpose": "train",
+    "config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+    "weights": "ema",
+    "inference_path": "cpu_fp32_single_sample"
+  },
+  "teacher": {
+    "id": "T_ppo",
+    "policy": "ppo",
+    "label_path": "sb3",
+    "ppo_model_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+    "shadowing": "reset per episode; act on every visited obs, in order"
+  },
+  "beta_coin": {
+    "entropy": "[run_seed, H('dagger_beta'), iteration, episode_seed]",
+    "rule": "one u ~ U[0,1) per control step whatever beta; the teacher label is executed iff u < beta"
+  },
+  "executed_action": "ila.data.collect.executable (clip, float32 before env.step)",
+  "outcomes": {
+    "crash": 0,
+    "off_pad": 0,
+    "hard_landing": 1,
+    "bounce": 1,
+    "success": 198,
+    "timeout": 0
+  },
+  "outcome_order": [
+    "crash",
+    "off_pad",
+    "hard_landing",
+    "bounce",
+    "success",
+    "timeout"
+  ],
+  "success": 198,
+  "labelled_episodes": 200,
+  "labelled_frames": 12389,
+  "teacher_executed_frames": 0,
+  "student_executed_frames": 12389,
+  "teacher_executed_fraction": 0.0,
+  "teacher_agreement": {
+    "metric": "l2(student proposal - teacher label), normalised action units",
+    "all": {
+      "frames": 12389,
+      "mean_l2": 0.07099209430118295,
+      "median_l2": 0.05381316628661482,
+      "p90_l2": 0.15539717113901874,
+      "max_l2": 0.5723319522476905,
+      "mse_per_component": 0.003011906587179223
+    },
+    "student_executed": {
+      "frames": 12389,
+      "mean_l2": 0.07099209430118295,
+      "median_l2": 0.05381316628661482,
+      "p90_l2": 0.15539717113901874,
+      "max_l2": 0.5723319522476905,
+      "mse_per_component": 0.003011906587179223
+    },
+    "teacher_executed": {
+      "frames": 0
+    }
+  },
+  "by_ss": {
+    "SS3": 67,
+    "SS4": 67,
+    "SS5": 66
+  },
+  "success_by_ss": {
+    "SS3": 67,
+    "SS4": 65,
+    "SS5": 66
+  },
+  "by_heading_deg": {
+    "135": 76,
+    "180": 59,
+    "45": 65
+  },
+  "by_speed_kn": {
+    "0": 76,
+    "12": 73,
+    "6": 51
+  },
+  "steps_mean": 61.945,
+  "steps_max": 87,
+  "clear_frac_max": 0.0,
+  "clear_frames": 0,
+  "success_filtered": false,
+  "store": {
+    "path": "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter5.h5",
+    "sha256": "da42d231398bedf9b32753ffbac6d4756a8fb7bc895579d40a4e7c5686c73e50",
+    "bytes": 24506834
+  },
+  "sidecar": {
+    "path": "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter5.sidecar.npz",
+    "sha256": "54252568381238219d01b4fbb476692781fe32ba520951347812a2c170907cde",
+    "bytes": 267073,
+    "keys": [
+      "beta",
+      "demo_index",
+      "episode_seed",
+      "iteration",
+      "offsets",
+      "proposed",
+      "run_seed",
+      "teacher_exec",
+      "u"
+    ]
+  },
+  "rows_csv": {
+    "path": "/home/kbasak/data/ila/dagger/bc_dagger/s0/iter5.episodes.csv",
+    "sha256": "14e19e91984c10b3b302b3cb1bb68f48eba8525501808b3377aaac4543cb11eb"
+  },
+  "h5py": "3.16.0",
+  "hdf5": "2.0.0",
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "576447cb8a73c402a60588d9525cbd73274b1bc7",
+  "ila_dirty_paths": [],
+  "camera_cfg_sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380",
+  "render": "full",
+  "appearance_shift": null,
+  "workers": 24,
+  "chunk": 10,
+  "wall_s": 78.73718559299596,
+  "wall_s_per_episode": 0.3936859279649798
+}

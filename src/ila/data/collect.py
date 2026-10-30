@@ -420,8 +420,24 @@ class DemoRecorder:
 
 
 def _record(
-    collection: Collection, buf: _Buffer, row: Mapping[str, Any], prov: Mapping[str, Any]
+    collection: Collection,
+    buf: _Buffer,
+    row: Mapping[str, Any],
+    prov: Mapping[str, Any],
+    *,
+    beta: float = 1.0,
+    dagger_iteration: int = 0,
+    student_ckpt_sha256: str = "",
 ) -> EpisodeRecord:
+    """Pair one recorded episode with its runner row and build the validated record.
+
+    Teacher demos keep the defaults (beta 1.0, iteration 0, no student). DAgger rollouts
+    (:mod:`ila.data.dagger`) pass their iteration's beta, the iteration and the rolled-out
+    student checkpoint's SHA-256; nothing else differs.
+
+    Raises:
+        RuntimeError: If the row does not pair with the episode or the step counts differ.
+    """
     listed = buf.listed
     ident = (row["ss"], int(row["index"]), int(row["episode_seed"]))
     if ident != (listed.ss, int(listed.index), int(listed.episode_seed)):
@@ -453,11 +469,11 @@ def _record(
         t0_model_s=float(listed.t0_model_s),
         teacher=collection.teacher,
         episode_teacher=buf.policy,
-        beta=1.0,
+        beta=float(beta),
         dart_sigma=0.0 if collection.dart_sigma is None else float(collection.dart_sigma),
         noise_seed=buf.noise_seed,
-        dagger_iteration=0,
-        student_ckpt_sha256="",
+        dagger_iteration=int(dagger_iteration),
+        student_ckpt_sha256=str(student_ckpt_sha256),
         outcome=str(row["outcome"]),
         termination_reason=str(row["termination_reason"]),
         success=str(row["outcome"]) == "success",

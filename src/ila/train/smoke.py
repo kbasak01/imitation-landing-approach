@@ -18,6 +18,23 @@ problem (il-conventions, "can't land" checklist). Only the step count differs fr
 runs; it is recorded as ``steps_override`` with purpose ``smoke``, which can never be selected.
 The run lives in ``artifacts/runs/smoke/<arm>/`` (replaced each time); the summary goes to
 ``results/phase4/smoke_<arm>.json``.
+
+``bc_dagger`` (Phase 5, :func:`run_dagger_smoke`; ``results/phase5/smoke_bc_dagger.json``) has
+the ``bc`` architecture, whose smoke passed in Phase 4; what is new is the loop and the
+on-policy data. Its smoke therefore checks:
+
+A. **the loop**: 2 iterations x 4 rollout episodes from the real ``bc`` s0 ``s0_step030000.pt``
+   (purpose ``smoke``, a smoke-only step count): rollouts flown by the right checkpoints
+   (iteration 1: the ``bc`` file; iteration 2: this run's iteration-1 last step), audits clean,
+   1 000 + 4 i labelled episodes, held-out overlap 0; then a **resume between stages** (the
+   iteration-2 checkpoints removed, the run restarted) must reuse iteration 2's rollouts;
+B. **the on-policy data's alignment**: the ``bc`` architecture overfit on those 8 rollout
+   episodes (labels = teacher, actions executed by the beta-mixture) to action MSE < 1e-4, then
+   flown closed loop from their 8 starting conditions: >= 7/8 ``success``. A student that cannot
+   land states it memorised the teacher's labels on points at the rollout store's alignment.
+
+Rollouts go to a scratch data root (``artifacts/runs/smoke/bc_dagger/data``, whose ``demos``
+links to the real ``${data_root}/demos``), never to the real ``${data_root}/dagger/``.
 """
 
 from __future__ import annotations
@@ -34,7 +51,7 @@ from ila import p8_adapter
 from ila.data import episodes as data_episodes
 from ila.data.store import DemoStore
 from ila.obs.split import load_contract
-from ila.policies.registry import REGISTRY, REPO_ROOT, load_student
+from ila.policies.registry import REGISTRY, REPO_ROOT, load_student, read_checkpoint
 from ila.policies.state_mlp import StateMLPStudent
 from ila.train import loop
 from ila.train import manifest as mf
@@ -45,12 +62,16 @@ from ila.train.select import OUTCOME_ORDER, fly_checkpoint, summarise_rows
 from ila.train.state_dataset import StateFrames
 
 __all__ = [
+    "DAGGER_SMOKE_ITERATIONS",
+    "DAGGER_SMOKE_ROLLOUTS",
+    "DAGGER_SMOKE_STEPS",
     "MIN_LANDED",
     "MSE_THRESHOLD",
     "REPLAY_STEPS",
     "SMOKE_EPISODES",
     "SMOKE_STEPS",
     "replay_check",
+    "run_dagger_smoke",
     "run_smoke",
 ]
 
@@ -75,6 +96,11 @@ SMOKE_STEPS: Final[dict[str, int]] = {"bc": 8000, "bc_state": 10000}
 
 #: The demo split whose rows are the smoke episodes' listed starting conditions.
 SMOKE_SPLIT: Final[str] = "demos_0-1999"
+
+#: ``bc_dagger`` smoke: iterations, rollout episodes per iteration, steps per iteration.
+DAGGER_SMOKE_ITERATIONS: Final[int] = 2
+DAGGER_SMOKE_ROLLOUTS: Final[int] = 4
+DAGGER_SMOKE_STEPS: Final[int] = 200
 
 
 class _TeacherRecorder:
@@ -206,7 +232,18 @@ def run_smoke(
     entry = REGISTRY[arm]
     if entry.kind == "dp":
         raise ValueError("the dp smoke (closed loop at Ta = 8, K = 10) is Phase 6's")
+    if arm == "bc_dagger":
+        return run_dagger_smoke(
+            steps=steps,
+            device=device,
+            workers=workers,
+            run_root=run_root,
+            out_json=out_json,
+            data_root=data_root,
+        )
     cfg = TrainConfig.load(entry.config)
+    if cfg.iterations is not None:
+        raise ValueError(f"{arm} is the bc architecture on bc's iteration 0; its smoke is bc's")
     root = p8_adapter.load_paths()["data_root"] if data_root is None else data_root
     run_dir = run_root / "smoke" / arm
     shutil.rmtree(run_dir, ignore_errors=True)
@@ -343,3 +380,270 @@ def _repo_relative(path: Path) -> str:
         return path.resolve().relative_to(REPO_ROOT).as_posix()
     except ValueError:
         return path.resolve().as_posix()
+
+
+# --------------------------------------------------------------------------- bc_dagger
+
+
+def _scratch_data_root(root: Path, real: Path) -> Path:
+    """A data root whose ``demos`` is the real one (read only) and whose ``dagger/`` is new."""
+    root.mkdir(parents=True, exist_ok=True)
+    link = root / "demos"
+    if not link.exists():
+        link.symlink_to((real / "demos").resolve(), target_is_directory=True)
+    return root
+
+
+def _rollout_bundle(
+    cfg: TrainConfig, stores: list[tuple[Path, int, int]], hash_store: bool
+) -> loop.DataBundle:
+    """The 8 smoke rollout episodes, unfiltered, as one bc training set (part B)."""
+    del hash_store
+    tables = []
+    choices = []
+    for path, start, n in stores:
+        with DemoStore(path) as store:
+            choice = choose_episodes(store, n, False, start=start)
+            tables.append(FrameTable.from_store(store, choice.names, cfg.obs_variant))
+            choices.append(choice)
+    table = FrameTable.concat(tables)
+    train = BCWindowDataset(table, load_contract(variant=cfg.obs_variant).n_obs_steps)
+    return loop.DataBundle(
+        train=train,
+        heldout=None,
+        choices=choices,
+        labelled_episodes=sum(c.attempted for c in choices),
+        stores=[{"path": str(p), "start": a, "n": n} for p, a, n in stores],
+    )
+
+
+def run_dagger_smoke(
+    *,
+    steps: int | None = None,
+    overfit_steps: int | None = None,
+    device: str = "cuda",
+    workers: int = 8,
+    run_root: Path = mf.RUNS_ROOT,
+    out_json: Path | None = None,
+    data_root: Path | None = None,
+    init_from: Path | None = None,
+    batch_size: int | None = None,
+) -> dict[str, Any]:
+    """The ``bc_dagger`` smoke (module docstring, parts A and B); writes its summary JSON.
+
+    Args:
+        steps: Steps per DAgger iteration (default :data:`DAGGER_SMOKE_STEPS`).
+        overfit_steps: Part B's steps (default ``SMOKE_STEPS["bc"]``).
+        device: Training device.
+        workers: Rollout and closed-loop processes (rows do not depend on it).
+        run_root: Runs root (the smoke lives in ``<run_root>/smoke/bc_dagger``).
+        out_json: Summary path (default ``results/phase5/smoke_bc_dagger.json``).
+        data_root: The real ``${data_root}`` (only its ``demos/`` is read).
+        init_from: Iteration 0 (default: ``bc`` s0's ``s0_step030000.pt`` under ``run_root``).
+        batch_size: Tests only: a smaller batch than the frozen 256 (recorded).
+
+    Returns:
+        The summary (``passed`` iff every check of A and B holds).
+    """
+    import dataclasses
+
+    import torch
+
+    cfg = TrainConfig.load(REGISTRY["bc_dagger"].config)
+    if batch_size is not None:
+        cfg = dataclasses.replace(cfg, batch_size=batch_size)
+    real_root = p8_adapter.load_paths()["data_root"] if data_root is None else data_root
+    base = run_root / "smoke" / "bc_dagger"
+    shutil.rmtree(base, ignore_errors=True)
+    scratch = _scratch_data_root(base / "data", Path(real_root))
+    bc_steps = TrainConfig.load(REGISTRY["bc"].config).steps
+    if init_from is None:
+        init_from = mf.run_dir("bc", 0, root=run_root) / "checkpoints" / f"s0_step{bc_steps:06d}.pt"
+    n_steps = DAGGER_SMOKE_STEPS if steps is None else steps
+    run_dir = base / "run"
+    spec = loop.RunSpec(
+        cfg=cfg,
+        run_seed=0,
+        run_dir=run_dir,
+        data_root=scratch,
+        device=device,
+        purpose="smoke",
+        steps_override=n_steps,
+        checkpoint_every_override=n_steps,
+        rollout_limit=DAGGER_SMOKE_ROLLOUTS,
+        iterations_override=DAGGER_SMOKE_ITERATIONS,
+        rollout_workers=workers,
+        init_from=init_from,
+        allow_dirty=True,
+    )
+    checks: dict[str, bool] = {}
+    t0 = time.perf_counter()
+    result = loop.train_run(spec, loop.build_stages(spec))
+    loop_s = time.perf_counter() - t0
+    man = mf.read_json(run_dir / "manifest.json")
+    recs = {i: man["data"][str(i)]["dagger"] for i in range(1, DAGGER_SMOKE_ITERATIONS + 1)}
+    last1 = run_dir / "checkpoints" / f"s1_step{n_steps:06d}.pt"
+    checks["loop_done"] = result.state == "done" and result.global_step == 2 * n_steps
+    checks["iteration1_flies_bc_last_step"] = recs[1]["rollout_student"]["sha256"] == sha256_file(
+        init_from
+    )
+    checks["iteration2_flies_iteration1_last_step"] = recs[2]["rollout_student"][
+        "sha256"
+    ] == sha256_file(last1)
+    checks["labelled_episodes_1000_plus_4i"] = all(
+        recs[i]["labelled_episodes"] == cfg.first_n + DAGGER_SMOKE_ROLLOUTS * i for i in recs
+    )
+    checks["audits_clean"] = all(recs[i]["audit"]["clean"] is True for i in recs)
+    checks["heldout_overlap_0"] = all(recs[i]["heldout_overlap_episodes"] == 0 for i in recs)
+    checks["normaliser_inherited"] = "normaliser" not in man
+
+    # A, resume between stages: drop iteration 2's checkpoints, rerun; rollouts must be reused.
+    final = run_dir / "checkpoints" / f"s2_step{n_steps:06d}.pt"
+    before = read_checkpoint(final)
+    final.unlink()
+    (run_dir / "ema_last.pt").unlink()
+    loop.train_run(spec, loop.build_stages(spec))
+    after = read_checkpoint(final)
+    man = mf.read_json(run_dir / "manifest.json")
+    resumed = man["data"]["2"]["dagger"]
+    checks["resume_reuses_rollouts"] = resumed["rollout"]["reused"] is True and (
+        resumed["rollout"]["store_sha256"] == recs[2]["rollout"]["store_sha256"]
+    )
+    ema_identical = all(torch.equal(before["ema"][k], after["ema"][k]) for k in before["ema"])
+
+    # B, overfit the 8 rollout episodes and land them.
+    from ila.data import dagger
+
+    stores = [
+        (
+            dagger.rollout_store_path(scratch, 0, i),
+            cfg.iterations.added_range(i).start if cfg.iterations else 0,
+            DAGGER_SMOKE_ROLLOUTS,
+        )
+        for i in range(1, DAGGER_SMOKE_ITERATIONS + 1)
+    ]
+    bc_cfg = TrainConfig.load(REGISTRY["bc"].config)
+    if batch_size is not None:
+        bc_cfg = dataclasses.replace(bc_cfg, batch_size=batch_size)
+    o_steps = SMOKE_STEPS["bc"] if overfit_steps is None else overfit_steps
+    o_dir = base / "overfit"
+    o_spec = loop.RunSpec(
+        cfg=bc_cfg,
+        run_seed=0,
+        run_dir=o_dir,
+        data_root=scratch,
+        device=device,
+        purpose="smoke",
+        steps_override=o_steps,
+        checkpoint_every_override=o_steps,
+        heldout=None,
+        allow_dirty=True,
+    )
+    stage = loop.Stage(
+        index=0,
+        steps=o_steps,
+        warmup=bc_cfg.optim.warmup_steps,
+        checkpoint_every=o_steps,
+        data=functools.partial(_rollout_bundle, bc_cfg, stores),
+    )
+    t1 = time.perf_counter()
+    loop.train_run(o_spec, [stage])
+    overfit_s = time.perf_counter() - t1
+    ckpt = o_dir / "ema_last.pt"
+    data = _rollout_bundle(bc_cfg, stores, False).train
+    assert isinstance(data, BCWindowDataset)
+    student = load_student(ckpt, "cpu", weights="ema")
+    torch.set_num_threads(1)
+    assert not isinstance(student, StateMLPStudent)
+    pred = loop.numpy_actions(student.net, data, torch.device("cpu"))
+    target = data.batch(np.arange(len(data), dtype=np.int64))["target"]
+    mse = float(((pred.astype(np.float64) - target.astype(np.float64)) ** 2).mean())
+    rows_all = data_episodes.read_split(SMOKE_SPLIT)
+    indices = [start + k for _, start, n in stores for k in range(n)]
+    t2 = time.perf_counter()
+    rows = fly_checkpoint(
+        ckpt,
+        [rows_all[i] for i in indices],
+        arm="smoke:bc_dagger",
+        run_seed=0,
+        sha256=sha256_file(ckpt),
+        workers=workers,
+        chunk=1,
+    )
+    fly_s = time.perf_counter() - t2
+    summary = summarise_rows(rows)
+    checks["overfit_mse_below_threshold"] = mse < MSE_THRESHOLD
+    checks["overfit_lands_7_of_8"] = summary["success"] >= MIN_LANDED
+    record: dict[str, Any] = {
+        "arm": "bc_dagger",
+        "what": "A: 2 DAgger iterations x 4 rollout episodes from bc s0's last step, then a "
+        "resume between stages; B: the bc architecture overfit on those 8 rollout episodes, "
+        "flown closed loop from their starting conditions (CPU fp32 single-sample path, EMA)",
+        "config": man["config"],
+        "frozen_hyperparameters_unchanged": batch_size is None,
+        "overrides": {
+            "steps_per_iteration": n_steps,
+            "iterations": DAGGER_SMOKE_ITERATIONS,
+            "rollout_limit": DAGGER_SMOKE_ROLLOUTS,
+            "overfit_steps": o_steps,
+            "batch_size": batch_size,
+            "purpose": "smoke",
+        },
+        "init_from": {"file": _repo_relative(init_from), "sha256": sha256_file(init_from)},
+        "loop": {
+            "state": result.state,
+            "steps": result.global_step,
+            "wall_s": loop_s,
+            "device": device,
+            "iterations": {
+                str(i): {
+                    "beta": recs[i]["beta"],
+                    "rollout_student": recs[i]["rollout_student"],
+                    "rollout_outcomes": recs[i]["rollout"]["outcomes"],
+                    "labelled_episodes": recs[i]["labelled_episodes"],
+                    "labelled_frames_rollouts": recs[i]["labelled_frames_rollouts"],
+                    "aggregate_frames": recs[i]["aggregate_frames"],
+                    "audit_clean": recs[i]["audit"]["clean"],
+                    "heldout_shared_starting_conditions": recs[i][
+                        "heldout_shared_starting_conditions"
+                    ],
+                }
+                for i in recs
+            },
+            "resume": {
+                "rollouts_reused": resumed["rollout"]["reused"],
+                "final_ema_identical_after_resume": ema_identical,
+                "note": "identity is informational: GPU training is not guaranteed "
+                "bit-reproducible (P4-D4 correction 1)",
+            },
+        },
+        "overfit": {
+            "episodes": [{"store": str(p), "start": a, "n": n} for p, a, n in stores],
+            "mse": {"value": mse, "threshold": MSE_THRESHOLD, "frames": len(data)},
+            "wall_s": overfit_s,
+        },
+        "closed_loop": {
+            **summary,
+            "outcome_order": list(OUTCOME_ORDER),
+            "required_success": MIN_LANDED,
+            "wall_s": fly_s,
+            "workers": workers,
+            "per_episode": [
+                {
+                    "demo_index": i,
+                    "ss": r["ss"],
+                    "outcome": r["outcome"],
+                    "steps": r["steps"],
+                    "closing_speed_normal_m_s": r["closing_speed_normal_m_s"],
+                }
+                for i, r in zip(indices, rows, strict=True)
+            ],
+        },
+        "checkpoint": {"file": _repo_relative(ckpt), "sha256": sha256_file(ckpt)},
+        "checks": checks,
+        "git": man["git"],
+    }
+    record["passed"] = all(checks.values())
+    out = Path("results") / "phase5" / "smoke_bc_dagger.json" if out_json is None else out_json
+    mf.write_json_atomic(out if out.is_absolute() else REPO_ROOT / out, record)
+    return record

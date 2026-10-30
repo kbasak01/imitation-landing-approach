@@ -7,6 +7,12 @@
 single-sample path). Example::
 
     python scripts/train_smoke.py bc --steps 4000 --workers 8
+
+``make train-smoke ARM=bc_dagger`` (Phase 5, about 30 min: CPU rollouts, two 1 000-demo
+aggregates, an 8 000-step overfit) runs :func:`ila.train.smoke.run_dagger_smoke` instead: two
+DAgger iterations of 4 rollouts from ``bc`` s0's last step plus a resume, then an overfit of those
+8 rollout episodes flown closed loop. It writes ``results/phase5/smoke_bc_dagger.json``.
+``--steps`` is then the steps per DAgger iteration.
 """
 
 from __future__ import annotations
@@ -32,15 +38,17 @@ def main() -> int:
         args.arm, steps=args.steps, device=args.device, workers=args.workers, out_json=args.out
     )
     cl = record["closed_loop"]
+    mse = record["mse"] if "mse" in record else record["overfit"]["mse"]
     print(
         json.dumps(
             {
                 "arm": record["arm"],
-                "mse": record["mse"]["value"],
+                "checks": record.get("checks"),
+                "mse": mse["value"],
                 "landed": f"{cl['success']}/{cl['n']}",
                 "outcomes": cl["outcomes"],
-                "train_steps_per_s": record["train"]["steps_per_s"],
-                "train_wall_s": record["train"]["wall_s"],
+                "train_steps_per_s": record.get("train", {}).get("steps_per_s"),
+                "train_wall_s": record.get("train", record.get("loop", {})).get("wall_s"),
                 "fly_wall_s": cl["wall_s"],
                 "passed": record["passed"],
             },

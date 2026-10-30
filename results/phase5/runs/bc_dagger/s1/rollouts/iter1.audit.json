@@ -1,0 +1,81 @@
+{
+  "arm": "bc_dagger",
+  "run_seed": 1,
+  "iteration": 1,
+  "beta": 0.5,
+  "manifest": "/home/kbasak/data/ila/dagger/bc_dagger/s1/iter1.manifest.json",
+  "hashes_match_manifest": {
+    "store": true,
+    "sidecar": true
+  },
+  "student_ckpt_matches": true,
+  "relabel": {
+    "n_steps": 1000,
+    "n_episodes": 200,
+    "identical": 1000,
+    "max_abs_diff": 0.0,
+    "by_teacher": {
+      "ppo": 1000
+    },
+    "passed": true
+  },
+  "replay": {
+    "n_states": 20,
+    "n_episodes": 20,
+    "frames_identical": 20,
+    "teacher_obs_identical": 20,
+    "max_abs_obs_diff_at_sampled": 0.0,
+    "max_differing_pixels_at_sampled": 0,
+    "episodes_diverging": {},
+    "passed": true
+  },
+  "attributes": {
+    "violations": {
+      "outside_train_pool": 0,
+      "in_tune_pool": 0,
+      "in_frozen_id": 0,
+      "in_frozen_unseen_seastate": 0,
+      "in_frozen_unseen_heading": 0,
+      "in_frozen_unseen_vessel": 0,
+      "in_frozen_static": 0,
+      "ss6": 0,
+      "heading_90": 0,
+      "repeated_key_seed": 0,
+      "realization_key_attr_mismatch": 0,
+      "split_identity_mismatch": 0,
+      "in_select_key": 0,
+      "in_select_episode": 0,
+      "demo_indices_not_dagger_slice": 0,
+      "beta_attr_wrong": 0,
+      "dagger_iteration_attr_wrong": 0,
+      "student_sha_attr_wrong": 0,
+      "teacher_attr_wrong": 0,
+      "dart_sigma_nonzero": 0,
+      "collection_attr_wrong": 0
+    },
+    "identity_mismatches": []
+  },
+  "validate_failures": [],
+  "n_validate_failures": 0,
+  "last_action_mismatch_episodes": 0,
+  "sidecar": {
+    "length_mismatch_episodes": 0,
+    "coin_mismatch_episodes": 0,
+    "executed_action_mismatch_episodes": 0
+  },
+  "count": {
+    "episodes": 200,
+    "expected": 200,
+    "frames": 12328,
+    "ok": true
+  },
+  "outcomes": {
+    "crash": 0,
+    "off_pad": 0,
+    "hard_landing": 0,
+    "bounce": 0,
+    "success": 200,
+    "timeout": 0
+  },
+  "clean": true
+}
