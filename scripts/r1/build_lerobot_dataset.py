@@ -237,10 +237,10 @@ def main() -> int:
     src = data_root / "lerobot" / INTERMEDIATE
     root = data_root / "lerobot" / DATASET
     record_path = data_root / "lerobot" / f"{DATASET}.build.json"
-    manifest_path = src / "manifest.json"
-    manifest = json.loads(manifest_path.read_text("utf-8"))
+    intermediate_manifest = src / "manifest.json"
+    manifest = json.loads(intermediate_manifest.read_text("utf-8"))
     if manifest["format"] != INTERMEDIATE_FORMAT:
-        sys.exit(f"{manifest_path}: format {manifest['format']!r}")
+        sys.exit(f"{intermediate_manifest}: format {manifest['format']!r}")
     for e in manifest["episodes"]:
         if sha256_file(src / e["file"]) != e["file_sha256"]:
             sys.exit(f"{src / e['file']}: SHA-256 differs from the intermediate manifest")
@@ -265,7 +265,7 @@ def main() -> int:
         "dataset_root": str(root),
         "repo_id": REPO_ID,
         "intermediate": str(src),
-        "intermediate_manifest_sha256": sha256_file(manifest_path),
+        "intermediate_manifest_sha256": sha256_file(intermediate_manifest),
         "dp_config": manifest["dp_config"],
         "store": manifest["store"],
         "kept": manifest["kept"],

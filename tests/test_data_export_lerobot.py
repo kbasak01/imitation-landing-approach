@@ -198,6 +198,13 @@ FORBIDDEN = frozenset(
         "priv",
         "t_model_s",
         "action_exec",
+        # P8 frozen-list accessors (leak audit R3; ``tests/test_render_access.py``
+        # FROZEN_LIST_NAMES): the export reads ``splits/`` rows only, never a frozen list.
+        "read_list",
+        "list_path",
+        "list_paths",
+        "list_names",
+        "manifest_path",
     }
 )
 

@@ -19,6 +19,12 @@ training steps, then CPU sampling and flight) overfits the first 8 ``ppo_2000`` 
 requires the sampled executed-chunk MSE (one K = 10 DDIM sample per frame, EMA weights, CPU
 fp32, executed indices at Ta = 8 against the labels) below 1e-3 and >= 7/8 ``success`` flown
 at Ta = 8, K = 10 on the CPU fp32 single-sample path. It writes ``results/phase6/smoke_dp.json``.
+
+``make train-smoke ARM=R1_lerobot_dp`` (Phase 6, P6-D3; background) runs
+:func:`ila.train.smoke.run_r1_smoke`: LeRobot trains R1 10 000 steps on LeRobotDataset episodes
+0-7 in ``.venv-lerobot``, ``scripts/r1/export_onnx.py`` exports it, parity runs, and the 8
+episodes fly through ``OnnxDPStudent`` at Ta = 8, K = 10 (>= 7/8 required). It writes
+``results/phase6/smoke_R1_lerobot_dp.json``.
 """
 
 from __future__ import annotations

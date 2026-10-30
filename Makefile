@@ -27,7 +27,7 @@ REPORT  ?=
 SWEEP   ?= --arm dp --seeds 0 1 2 3 4
 DIAG    ?= --arm dp --seeds 0 1 2 3 4
 
-.PHONY: r1-export r1-dataset lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
+.PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval bench report figures gifs all
 
 # --- implemented ------------------------------------------------------------------
@@ -66,6 +66,10 @@ collect: ; mkdir -p artifacts/runs/collect/$(COLLECTION) && $(PY) scripts/collec
 # ARM=dp (Phase 6, P6-D1, about 16 min): 10 000 steps on 8 episodes; sampled executed-chunk MSE
 # < 1e-3 and >= 7/8 landed at Ta = 8, K = 10 -> results/phase6/smoke_dp.json. Background job:
 #   mkdir -p artifacts/runs/smoke && nohup make train-smoke ARM=dp > artifacts/runs/smoke/dp.log 2>&1 &
+# ARM=R1_lerobot_dp (Phase 6, P6-D3, ~20-25 min at 12 loader workers): LeRobot trains
+# 10 000 steps on dataset episodes 0-7 (.venv-lerobot), ONNX export + parity, then >= 7/8 landed
+# through OnnxDPStudent at Ta = 8, K = 10 -> results/phase6/smoke_R1_lerobot_dp.json. Background job:
+#   mkdir -p artifacts/runs/smoke && nohup make train-smoke ARM=R1_lerobot_dp > artifacts/runs/smoke/R1_lerobot_dp.log 2>&1 &
 train-smoke: ; $(PY) scripts/train_smoke.py $(ARM)
 # Phase 4 training (background; prepare with /train-job). Run dir artifacts/runs/<arm>/s<seed>/
 # (status.json, manifest.json, train_log.jsonl, checkpoints/); an existing run dir resumes.
@@ -103,6 +107,18 @@ dp-diagnostics: ; $(PY) scripts/dp_diagnostics.py $(DIAG)
 # intermediate in .venv (~40 s), then build the lossless LeRobotDataset v3 in .venv-lerobot (~4 min).
 r1-export:  ; $(PY) scripts/r1/export_dataset.py $(if $(OVERWRITE),--overwrite,)
 r1-dataset: ; .venv-lerobot/bin/python scripts/r1/build_lerobot_dataset.py
+# Phase 6 R1 training (P6-D3; .venv-lerobot; background, prepare with /train-job): LeRobot 0.6.1's
+# DiffusionPolicy on the dataset above, configs/train/r1_lerobot_dp.yaml (SHA in
+# ila.train.manifest), 100 000 steps, checkpoints every 10 000 -> artifacts/runs/R1_lerobot_dp/s<SEED>/
+# (status.json, manifest.json, train_log.jsonl, checkpoints/). An existing run dir resumes from its
+# last checkpoint with RNG state. Refuses a dirty tree. 12 loader workers (P6-D3): ~9.8 steps/s,
+# ~2.8 h per run.
+#   mkdir -p artifacts/runs/R1_lerobot_dp/s0 && nohup make r1-train SEED=0 > artifacts/runs/R1_lerobot_dp/s0/train.log 2>&1 &
+# Then export + parity (CPU) before selection:
+#   .venv-lerobot/bin/python scripts/r1/export_onnx.py export --run artifacts/runs/R1_lerobot_dp/s0
+#   .venv/bin/python scripts/r1/parity.py --run artifacts/runs/R1_lerobot_dp/s0
+# R1 smoke: make train-smoke ARM=R1_lerobot_dp (background; see the train-smoke comment).
+r1-train: ; .venv-lerobot/bin/python scripts/r1/train_r1.py --seed $(SEED) $(ARGS)
 
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.

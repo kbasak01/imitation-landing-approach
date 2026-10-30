@@ -2197,3 +2197,201 @@ the venvs.
 
 *Consequence.* P0-D1's freeze hash is superseded for `.venv-lerobot` only. No `ila` code pins
 it.
+
+### P6-D3 — R1 configuration and pipeline (2026-10-30)
+*Status: draft, written before any R1 training run (seeds 0–2), the R1 smoke or any R1 number on
+`select`. Only `test`-tagged dev runs (≤ 300 steps, never selectable) exist.*
+
+*Decision.* `R1_lerobot_dp` (P3-D1 §3: reference row, tag `reference_external`, 3 seeds, `id`
+SS3–SS6, the same selection rule at `Ta` = 8, K = 10) is configured, trained, exported and flown
+as follows. Everything is simulation only. Times are model scale (one control step = 1/30 s model
+scale, 1/6 s full scale).
+1. **Config.** `configs/train/r1_lerobot_dp.yaml`, SHA-256
+   `a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720`, entered in
+   `ila.train.manifest.FROZEN_CONFIG_SHA256` (P3-D1 §3: "hashed at its creation").
+   `scripts/r1/train_r1.py` parses that table without importing `ila` and refuses a `train` run
+   whose config differs from it, a dirty tree, or any step, episode, cadence or loader override.
+   - **Set explicitly, matched to `dp.yaml`.** LeRobot `DiffusionConfig`: `n_obs_steps` 2,
+     `horizon` 16, `n_action_steps` 8; `crop_shape` [88, 88], `crop_is_random` true (centre crop
+     in eval mode); `resnet18`, `pretrained_backbone_weights` null, `use_group_norm` true;
+     `spatial_softmax_num_keypoints` 32; `down_dims` [128, 256, 512], `kernel_size` 5,
+     `diffusion_step_embed_dim` 128; DDPM 100 train steps, `squaredcos_cap_v2`, epsilon,
+     `clip_sample` true with range 1.0. `TrainPipelineConfig`: 100 000 steps, batch 128,
+     `save_freq` 10 000, wandb off; seeds 0, 1, 2. `push_to_hub` false (infrastructure).
+   - **Set explicitly, infrastructure: `num_workers` 12** (LeRobot's default is 4; that default
+     is still asserted, under `lerobot_defaults_overridden`). Item 7 gives the reason and the
+     rates.
+   - **Kept at LeRobot 0.6.1's defaults** (recorded in the config's `lerobot_defaults_kept`;
+     `train_r1.py` asserts each against the installed source before any step):
+     - normalisation VISUAL MEAN_STD, STATE MIN_MAX, ACTION MIN_MAX;
+     - `drop_n_last_frames` 7 (the last 7 frames of each episode are never sampled as
+       anchors);
+     - `n_groups` 8 (U-Net GroupNorm); `use_film_scale_modulation` true;
+     - `use_separate_rgb_encoder_per_camera` true; `resize_shape` null; `crop_ratio` 1.0;
+     - `noise_scheduler_type` DDPM; `beta_start` / `beta_end` 1e-4 / 0.02 (unused by
+       `squaredcos_cap_v2`); `num_inference_steps` null;
+     - `do_mask_loss_for_padding` false; `compile_model` false; `gradient_checkpointing` false;
+     - `use_amp` false, so R1 trains in **fp32** (`dp` trains in bf16);
+     - optimiser preset: **Adam** (`torch.optim.Adam`, coupled L2 weight decay), lr 1e-4,
+       betas (0.95, 0.999), eps 1e-8, weight decay 1e-6, gradient-norm clip 10; cosine with
+       500 warm-up steps (diffusers `get_scheduler`). `dp` uses AdamW, betas (0.9, 0.999) and
+       no clipping (P4-D1 item 2);
+     - loader: prefetch 4, persistent, `spawn`; `cudnn_deterministic` false (cuDNN
+       benchmark on, TF32 matmul allowed, as `lerobot_train` sets them); `log_freq` 200;
+     - dataset: `use_imagenet_stats` true (VISUAL MEAN_STD uses ImageNet mean and std, not the
+       data's); image transforms off; `eval_split` 0.
+   - **EMA: none.** LeRobot 0.6.1 has no EMA for diffusion. There is no `EMAModel` in
+     `policies/diffusion` or `scripts/lerobot_train.py`, and `train_r1.py` asserts this. R1
+     saves and flies **raw** weights; `dp` flies its EMA. This difference is stated with every
+     R1-vs-`dp` comparison.
+2. **Training code.** `scripts/r1/train_r1.py` runs in `.venv-lerobot` only, with the standard
+   library, yaml, torch and lerobot; it never imports `ila`. Its loop is `lerobot_train.train`
+   step for step, built from LeRobot's own functions: `make_train_eval_datasets`, `make_policy`,
+   `make_pre_post_processors`, `make_optimizer_and_scheduler`, `EpisodeAwareSampler`,
+   `update_policy`, `save_checkpoint`, `load_training_state`, `compute_sampler_state`.
+   `HF_HUB_OFFLINE=1`. Around it is `ila`'s bookkeeping:
+   - Run dir `artifacts/runs/R1_lerobot_dp/s<seed>/`. It holds `status.json`, `train_log.jsonl`
+     and `manifest.json`. The manifest records the config SHA-256 against the frozen table, the
+     dataset path, its `.build.json` SHA-256 (every file it lists is re-hashed), the `ila` and
+     P8 commits with the clean-tree flag, lerobot and torch versions, host, GPU and thread
+     variables, wall clock and GPU-hours.
+   - Checkpoints every 10 000 steps go to `checkpoints/<NNNNNN>/` in LeRobot's layout: weights,
+     processors, optimizer, scheduler, step, and the python / numpy / torch / CUDA RNG states.
+     Each is written to a temporary directory and renamed. The checkpoint SHA-256 is
+     `model.safetensors`'s, and every file is hashed.
+   - **Resume** (P3-D1 §4) restarts from the last complete checkpoint: weights, optimizer,
+     scheduler and RNG state, plus the data order (`compute_sampler_state`). The resume is
+     logged. It is not claimed bit-identical on the GPU (P4-D1 item 8). It was exercised on the
+     CPU (step 4 to 6) and on the GPU (step 200 to 300).
+   - **Leak audit R1, asserted after `make_policy`.** The policy's inputs are exactly
+     `observation.image` [3, 96, 96] and `observation.state` [13], and its output is `action`.
+     There is no `environment_state`, and the parquet's `timestamp`, `frame_index` and `index`
+     never become inputs.
+3. **Differences from `dp`.** These are LeRobot's recipe, reported, not tuned.
+   - *Normalisation.* `dp` uses identity actions and standardised proprio through a 2 × 64
+     MLP. R1 uses:
+     - ACTION MIN_MAX, which maps each axis's training-label [min, max] to [−1, 1]. With
+       `clip_sample` R1 can therefore only command vx ∈ [−0.558, 0.629], vy ∈ [−0.444, 0.564]
+       and vz ∈ [−1.0, 0.265] (normalised; × 1.5 m/s model scale). These are the checkpoint
+       postprocessor's statistics, equal to the extremes of the 61 518 training labels.
+     - STATE MIN_MAX without clipping. The normalised state enters the conditioning raw, with
+       no proprio MLP.
+     - Images use ImageNet MEAN_STD.
+   - *Encoder and conditioning.* GroupNorm with `num_features // 16` groups (`dp`: 16 groups).
+     Spatial softmax is followed by Linear(64, 64) and ReLU per frame. `global_cond` = flatten
+     over `To` of [state (13), image feature (64)], so C = **154** (`dp`: 256).
+   - *Sampling of training data.* `drop_n_last_frames` 7; edge padding with no loss mask.
+   - *Randomness in training.* The random crop (torchvision `RandomCrop`, one crop per batch)
+     and the DDPM ε and k draw from the global torch RNG, seeded by `set_seed(run_seed)`. This
+     is LeRobot's, not the data-loading generator of il-conventions. It affects training only;
+     no flight noise comes from it.
+   - *Inference.* LeRobot's native eval would sample DDPM-100 with the global RNG. R1 is flown
+     by `ila` instead, with the same trailing DDIM, K = 10 and per-episode noise
+     `(run_seed, episode_seed, t)` as `dp` (item 4).
+4. **Interface contract** (fixed with `deploy-benchmarker`). Each checkpoint at step N is
+   exported by `scripts/r1/export_onnx.py` (`.venv-lerobot`, CPU) to
+   `<run>/onnx/step<N>/`:
+   - `encoder.onnx`: `image` uint8[B, 2, 96, 96, 3] (HWC, oldest first) and `state`
+     float32[B, 2, 13] (raw proprio) → `global_cond` float32[B, C]. LeRobot's input
+     normalisation and the eval centre crop are inside the graph.
+   - `denoiser.onnx`: `sample` float32[B, 16, 3] (normalised), `timestep` int64[B] and
+     `global_cond` → `eps` float32[B, 16, 3]. Opset 17. No RNG op: `OnnxDPStudent` refuses a
+     graph that holds one.
+   - `meta.json` (`ila-r1-onnx/1`): horizons, C, both schedulers, the MIN_MAX statistics, and
+     the source checkpoint's and graphs' SHA-256 and versions.
+   - `reference.npz`: the torch reference for parity.
+
+   `ila.policies.onnx_dp.OnnxDPStudent` (registry `R1_lerobot_dp`, kind `onnx_dp`, tag
+   `reference_external`) runs ORT CPU with one thread, sequentially, through
+   `ila.deploy.r1_parity`'s helpers. Its sampler is `ddim_sample` with `dp`'s trailing DDIM at
+   K, initial noise `initial_noise((run_seed, episode_seed, t))`, then the final clip to
+   [−1, 1] in normalised space, LeRobot's float32 MIN_MAX inverse, and a second clip to [−1, 1]
+   (the action bound). Chunk execution, replanning and ensembling are `dp`'s own code: the
+   executor moved, unchanged, into `ChunkedDiffusionStudent`, shared by `DPStudent` and
+   `OnnxDPStudent`. `dp` stays bit-identical, checked against `efbf359`'s `policy.py` on a
+   dummy `dp` at (`Ta` 8, K 10), (`Ta` 4, ensembling) and (`Ta` 1, K 2) over 17 steps.
+5. **Selection.** The same rule (P3-D1 §4), at `Ta` = 8, K = 10, no ensembling, on the 150
+   `select` episodes, through `select_run`. An R1 run's config sets `selection.candidates:
+   onnx_exports`.
+   - The candidates are its exports `onnx/step<N>/`, one per manifest checkpoint. Each export's
+     `meta.json` must name that checkpoint's `model.safetensors` SHA-256.
+   - A candidate's SHA-256 (the rows' `ckpt_sha256`) is `meta.json`'s. Both graphs are
+     re-verified against it before flying.
+   - **Parity gate.** Every export must carry a `parity.json` (`scripts/r1/parity.py`) written
+     for its exact `meta.json` and graphs. A run with an unchecked export is refused. A failed
+     parity bars that checkpoint: it is never flown and is listed under `excluded_by_parity`.
+   - `selection.json` keeps the same format, with `weights: raw_no_ema` and
+     `inference_path: ort_cpu_fp32_single_sample`.
+6. **R1 smoke** (`make train-smoke ARM=R1_lerobot_dp` → `results/phase6/smoke_R1_lerobot_dp.json`).
+   LeRobot trains 10 000 steps (the `dp` smoke's count, P6-D1 item 2) on LeRobotDataset
+   episodes 0–7, with every other setting from the R1 config. The run is then exported, parity
+   is run, and the episodes are flown through `OnnxDPStudent` at `Ta` = 8, K = 10. It passes iff:
+   - (0) the replay check holds (P6-D1);
+   - (1) LeRobot episodes 0–7 are the store's first 8 kept episodes, the `dp` smoke's, by group
+     and demo index;
+   - (2) the export's parity passed;
+   - (3) at least 7 of 8 land `success`. Outcome classes are printed.
+
+   `dp`'s sampled executed-chunk MSE is reported through the ONNX student but **not judged**.
+   It is given over all frames and over the frames LeRobot samples as anchors (t ≤ T − 8):
+   with `drop_n_last_frames` = 7, the last 7 frames of each episode are never trained as
+   anchors, so the all-frame figure is not an overfit measure. `dp`'s 1e-3 is printed beside it
+   as a reference.
+7. **Loader workers, measured rate and projection** (P3-D1 §5 proxy check; dev runs tagged
+   `test`, RTX A4000, full dataset, real schedule; `artifacts/runs/R1_lerobot_dp_test/`).
+   - **At LeRobot's default 4 workers**, the steady rate is **3.7–3.9 steps/s** (3.88 and 3.73
+     in the two segments of a 300-step run; 3.68 with `OMP_NUM_THREADS` unset). The rate over
+     all steps, warm-up included, is 3.36. Training is bound by PNG decoding in the loader:
+     data loading takes 0.175–0.19 s per step against 0.10–0.14 s for the fp32 update. GPU
+     memory peaks at 1.39 GiB. Projection: ≈ 7.3 h per run, ≈ 21.9 GPU-h for 3.
+   - **At 12 workers** (a 140-step `test` run), the steady rate is **9.82 steps/s**, with data
+     loading at 0.05 s per step.
+   - **Decision: 12 workers.** It was decided by the Phase 6 coordinator on 2026-10-30, before
+     any R1 train run and before the config was hashed for training. It is recorded here for
+     the user's confirmation at the gate; it was not received as a user message.
+     - It is infrastructure. The worker count changes neither the data order
+       (`EpisodeAwareSampler` is a pure function of seed and epoch) nor any sample, because no
+       randomness runs in the workers: image transforms are off, and the crop and the DDPM
+       noise run in the main process.
+     - It departs from "every other setting at LeRobot's default" in this one place.
+   - **Projection at 12 workers:** 100 000 / 9.8 ≈ 10 200 s ≈ 2.8 h per run, so **≈ 8.5 GPU-h
+     for 3 runs, against P4-D2's 6.5 GPU-h proxy (+2.0 GPU-h)**. P4-D2's 91.6 h becomes about
+     93.6 h, under the 120 h limit. Under P3-D1 §5 any overrun is reported, not cut. The first
+     train run's own rate is compared with this projection.
+
+*Reason.* R1 tests whether `dp`'s numbers depend on `ila`'s implementation. It must be
+LeRobot's recipe at the matched hyper-parameters, trained by LeRobot's code and flown by the same
+runner, sampler, noise keys and selection as `dp`. Items 1–3 write down every place where it
+nevertheless differs, before any number exists. The parity gate keeps an export that does not
+match its torch weights out of selection.
+
+*Evidence.*
+- Code:
+  - `configs/train/r1_lerobot_dp.yaml`;
+  - `scripts/r1/train_r1.py`;
+  - `src/ila/policies/{onnx_dp,registry}.py`, `src/ila/policies/dp/policy.py`
+    (`ChunkedDiffusionStudent`);
+  - `src/ila/train/{select,smoke,manifest}.py`;
+  - `Makefile` (`r1-train`).
+- Tests:
+  - `tests/test_student_onnx_dp.py` (synthetic ONNX pair exported in-test): contract, torch
+    reference, execution indices and noise keys, determinism, the MIN_MAX inverse, the
+    `meta.json`, hash, RNG-op and graph guards, the registry, ONNX candidates, the parity gate,
+    and a runner flight independent of the worker count;
+  - `tests/test_step_guard.py`: the executor's clock sites; no clock read in `onnx_dp.py`; ORT
+    session inputs invariant to the episode seed and step, with and without ensembling;
+    ensembling invariance for `dp` (leak audit R2);
+  - `tests/test_render_access.py` and `tests/test_data_export_lerobot.py`: the frozen-list scan
+    covers R1's pathway (leak audit R3).
+- Dev runs:
+  - CPU, 8 episodes, 4 + 2 steps with a resume;
+  - GPU, full data, 200 + 100 steps with a resume, plus 140-step loader measurements at 4
+    workers (`OMP_NUM_THREADS` unset) and at 12 workers.
+
+  None is selectable.
+
+*Consequence.*
+- R1 s0–s2 are queued only after the R1 smoke passes (rule 4).
+- Each finished run is exported (≈ 46 s per checkpoint on the CPU), and parity is run on every
+  export before `make select-bg SELECT="--arm R1_lerobot_dp --seeds 0 1 2"`.
+- R1 is never mixed into core tables.

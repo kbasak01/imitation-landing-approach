@@ -5,7 +5,11 @@ Phase 2 builds the **real architectures with random initialisation** (user decis
 (:mod:`ila.policies.state_mlp`, P8's 25-d observation, privileged by design and never a vision
 row), the ``bc_matched`` / ``bc_dart`` entries (the ``bc`` architecture; Phase 5 adds
 ``bc_dagger``, ``base: bc.yaml``) and trained-checkpoint
-loading (:func:`load_student`) on the same modules. Every builder:
+loading (:func:`load_student`) on the same modules. Phase 6 adds ``R1_lerobot_dp`` (kind
+``onnx_dp``, tag ``reference_external``): LeRobot's DiffusionPolicy trained in
+``.venv-lerobot``; ``ila`` has no network for it and flies its ONNX export through
+:class:`ila.policies.onnx_dp.OnnxDPStudent` (:func:`ila.policies.onnx_dp.load_onnx_student`).
+Every builder of an ``ila`` network:
 
 * reads the arm's ``configs/train/<arm>.yaml``, the camera config (input 96 px, crop 88 px) and
   the observation contract (proprio width and ``To``, selected by P8 field name in
@@ -62,13 +66,15 @@ CAMERA_CONFIG: Final[Path] = REPO_ROOT / "configs" / "render" / "camera.yaml"
 #: Format tag of every training checkpoint (written by ``ila.train.loop``).
 CHECKPOINT_FORMAT: Final[str] = "ila-ckpt/1"
 
-#: Architecture families: vision BC, Diffusion Policy, and the 25-d state MLP (``bc_state``).
-type Kind = Literal["bc", "dp", "state"]
+#: Architecture families: vision BC, Diffusion Policy, the 25-d state MLP (``bc_state``), and an
+#: external diffusion policy flown from its ONNX export (``R1_lerobot_dp``; no ``ila`` network).
+type Kind = Literal["bc", "dp", "state", "onnx_dp"]
 
 #: Any network an arm builds.
 type Net = BCNet | DiffusionPolicyNet | StateMLP
 
-#: Any student wrapper (P8 ``EvalPolicy`` shape).
+#: Any student wrapper built from an ``ila`` checkpoint (P8 ``EvalPolicy`` shape). An ``onnx_dp``
+#: arm's student is :class:`ila.policies.onnx_dp.OnnxDPStudent`, loaded from its export.
 type Student = BCStudent | DPStudent | StateMLPStudent
 
 
@@ -79,19 +85,27 @@ class StudentEntry:
     Attributes:
         name: Arm name.
         config: Its ``configs/train/<arm>.yaml``.
-        kind: Architecture family (``"bc"``, ``"dp"`` or ``"state"``).
+        kind: Architecture family (``"bc"``, ``"dp"``, ``"state"`` or ``"onnx_dp"``).
         obs_variant: Observation-contract variant (``ila.obs.split.VARIANTS``).
+        tag: Row tag (``core``; ``reference_external`` for R1, P3-D1 §3, never mixed into core
+            tables).
     """
 
     name: str
     config: Path
     kind: Kind
     obs_variant: str = "default"
+    tag: str = "core"
 
     @property
     def is_vision(self) -> bool:
         """Whether the arm is a vision student (``act_vision``); ``bc_state`` is not."""
         return self.kind != "state"
+
+    @property
+    def has_ila_network(self) -> bool:
+        """Whether ``ila`` builds the network (:func:`build_net`); ``onnx_dp`` arms do not."""
+        return self.kind != "onnx_dp"
 
 
 def _entry(name: str, kind: Kind) -> StudentEntry:
@@ -108,6 +122,13 @@ REGISTRY: Final[Mapping[str, StudentEntry]] = MappingProxyType(
         "bc_dart": _entry("bc_dart", "bc"),
         "bc_state": _entry("bc_state", "state"),
         "dp": _entry("dp", "dp"),
+        # P3-D1 §3 reference row (P6-D3): LeRobot 0.6.1 DiffusionPolicy, flown from ONNX.
+        "R1_lerobot_dp": StudentEntry(
+            "R1_lerobot_dp",
+            REPO_ROOT / "configs" / "train" / "r1_lerobot_dp.yaml",
+            "onnx_dp",
+            tag="reference_external",
+        ),
     }
 )
 
@@ -181,7 +202,12 @@ def build_net_from_config(
 
     Returns:
         The network (training mode, CPU).
+
+    Raises:
+        ValueError: For ``onnx_dp`` (no ``ila`` network: load the export instead).
     """
+    if kind == "onnx_dp":
+        raise ValueError("an onnx_dp arm has no ila network; use onnx_dp.load_onnx_student")
     if kind == "state":
         from ila.obs.split import load_contract  # lazy: the contract loads P8's field layout
 
@@ -206,6 +232,8 @@ def build_net(arm: str, seed: int) -> Net:
         The network (training mode, CPU).
     """
     entry = REGISTRY[arm]
+    if not entry.has_ila_network:
+        raise ValueError(f"{arm!r} has no ila network; use onnx_dp.load_onnx_student")
     return build_net_from_config(entry.kind, load_train_config(arm), seed, entry.obs_variant)
 
 
@@ -259,10 +287,12 @@ def build_dummy(
 
     Raises:
         ValueError: If DP-only arguments are given for a non-diffusion arm, or the arm is not
-            a vision student.
+            a vision student with an ``ila`` network.
     """
     if not REGISTRY[arm].is_vision:
         raise ValueError(f"{arm!r} is not a vision student")
+    if not REGISTRY[arm].has_ila_network:
+        raise ValueError(f"{arm!r} has no ila network to initialise; load its ONNX export")
     student = _wrap(
         build_net(arm, seed),
         seed,

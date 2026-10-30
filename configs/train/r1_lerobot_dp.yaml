@@ -1,0 +1,93 @@
+# R1_lerobot_dp (P3-D1 §3; P6-D3): LeRobot 0.6.1's DiffusionPolicy, trained by LeRobot's own
+# training building blocks on dp's exact 1 000 ppo_2000 episodes (999 kept by the success filter),
+# exported to ONNX and flown by ila's runner. A reference row, tag reference_external, not gating.
+# Read only by scripts/r1/train_r1.py (.venv-lerobot); hashed in ila.train.manifest.
+# Times: 1 control step = 1/30 s model scale (lambda = 1/25; 1/6 s full scale).
+arm: R1_lerobot_dp
+tag: reference_external
+framework: {name: lerobot, version: 0.6.1, venv: .venv-lerobot, entry: lerobot.scripts.lerobot_train building blocks}
+data:
+  dataset: r1_ppo_2000_first1000_lerobot_v3     # ${data_root}/lerobot/<dataset>, with <dataset>.build.json beside it
+  repo_id: ila/r1_ppo_2000_first1000
+  episodes: all                                  # 999 = dp's first 1 000 ppo_2000 episodes, success-filtered at export
+  # Leak audit R1: after make_policy the input features must be exactly these two (no timestamp,
+  # frame_index, index or environment_state); asserted by train_r1.py.
+  input_features: [observation.image, observation.state]
+  output_features: [action]
+# Set explicitly, matched to dp.yaml (P3-D1 §3). Keys are lerobot DiffusionConfig field names.
+policy:
+  type: diffusion
+  n_obs_steps: 2                    # To
+  horizon: 16                       # Tp
+  n_action_steps: 8                 # Ta (LeRobot's field; ila's runner executes Ta = 8 at selection)
+  crop_shape: [88, 88]              # 96 -> 88 px
+  crop_is_random: true              # random at train; LeRobot always centre-crops in eval mode
+  vision_backbone: resnet18
+  pretrained_backbone_weights: null # no pretrained weights
+  use_group_norm: true              # LeRobot: GroupNorm(num_features // 16 groups); dp: 16 groups
+  spatial_softmax_num_keypoints: 32
+  down_dims: [128, 256, 512]
+  kernel_size: 5
+  diffusion_step_embed_dim: 128
+  num_train_timesteps: 100          # DDPM training
+  beta_schedule: squaredcos_cap_v2
+  prediction_type: epsilon
+  clip_sample: true
+  clip_sample_range: 1.0
+  push_to_hub: false                # infrastructure, not a hyper-parameter (no Hub access)
+# Set explicitly. Keys are lerobot TrainPipelineConfig field names.
+train:
+  steps: 100000
+  batch_size: 128
+  save_freq: 10000
+  wandb: {enable: false}
+  # LeRobot 0.6.1's default is 4 (asserted below). 12 is infrastructure (P6-D3): training is
+  # PNG-decode bound at 4 (3.7-3.9 steps/s) vs 9.82 steps/s at 12; the EpisodeAwareSampler order is
+  # a function of (seed, epoch) and no randomness runs in the workers, so no sample or order changes.
+  num_workers: 12
+# LeRobot 0.6.1 defaults KEPT (not set above). Recorded here and asserted by train_r1.py against
+# the installed source before any step: a different lerobot or default refuses to train.
+lerobot_defaults_kept:
+  policy:
+    normalization_mapping: {VISUAL: MEAN_STD, STATE: MIN_MAX, ACTION: MIN_MAX}
+    drop_n_last_frames: 7           # = Tp - Ta - To + 1 here; the last 7 frames are never anchors
+    resize_shape: null
+    crop_ratio: 1.0
+    use_separate_rgb_encoder_per_camera: true
+    n_groups: 8                     # U-Net GroupNorm groups
+    use_film_scale_modulation: true
+    gradient_checkpointing: false
+    noise_scheduler_type: DDPM
+    beta_start: 0.0001              # unused by squaredcos_cap_v2
+    beta_end: 0.02                  # unused by squaredcos_cap_v2
+    num_inference_steps: null       # LeRobot's own sampler (never used here) would run 100 DDPM steps
+    compile_model: false
+    do_mask_loss_for_padding: false
+    use_amp: false                  # fp32 training (dp trains bf16)
+    optimizer_lr: 1.0e-4
+    optimizer_betas: [0.95, 0.999]
+    optimizer_eps: 1.0e-8
+    optimizer_weight_decay: 1.0e-6
+    scheduler_name: cosine          # diffusers get_scheduler, linear warm-up
+    scheduler_warmup_steps: 500
+  optimizer_preset: {type: adam, grad_clip_norm: 10.0}   # torch.optim.Adam (coupled L2 decay), clip 10
+  train:
+    seed_default: 1000              # replaced by the run seed (0, 1, 2)
+    prefetch_factor: 4
+    persistent_workers: true
+    dataloader_multiprocessing_context: spawn
+    cudnn_deterministic: false      # lerobot_train: cudnn.benchmark True, TF32 matmul allowed
+    use_policy_training_preset: true
+    log_freq: 200
+  dataset:
+    use_imagenet_stats: true        # VISUAL MEAN_STD uses ImageNet mean/std, not the data's
+    image_transforms_enable: false
+    eval_split: 0.0
+  ema: none                         # lerobot 0.6.1 has no EMA for diffusion; raw weights are saved and flown
+# LeRobot 0.6.1 defaults OVERRIDDEN by the explicit blocks above (infrastructure only), asserted.
+lerobot_defaults_overridden:
+  train: {num_workers: 4}
+# Inference is ila's (OnnxDPStudent): the same sampler and seeding as dp.
+inference: {path: onnx, provider: ort_cpu_fp32_1_thread, sampler: ddim, num_inference_steps: 10, timestep_spacing: trailing, noise: per_episode_generator}
+selection: {list: select, metric: success, tie_break: [p95_closing_speed, lowest_step], at: {Ta: 8, K: 10}, candidates: onnx_exports}
+seeds: [0, 1, 2]

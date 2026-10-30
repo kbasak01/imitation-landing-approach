@@ -16,6 +16,17 @@
   ``bc_dagger``: iteration 5's 5 k and 10 k) or that has more than one stage. The rule reads the
   run's manifest (its resolved config and stages), never the arm name.
   ``ema_last.pt`` duplicates the last checkpoint's EMA and is not a separate candidate.
+  A run whose config says ``selection.candidates: onnx_exports`` (``R1_lerobot_dp``, P6-D3) is
+  selected among its ONNX exports ``<run>/onnx/step<N>/``, one per manifest checkpoint (every
+  10 k steps), each export's ``meta.json`` naming that checkpoint's ``model.safetensors``
+  SHA-256. Such a run has no EMA (LeRobot 0.6.1 has none): the exported raw weights fly through
+  :class:`ila.policies.onnx_dp.OnnxDPStudent` on ONNX Runtime's CPU path (one thread), at the
+  same ``Ta = 8``, ``K = 10``, with the same sampler and noise keys as ``dp``. Its candidate
+  SHA-256 is ``meta.json``'s (which records both graphs' and the source checkpoint's).
+  **Parity gate** (P6-D3): every export must carry a ``parity.json``
+  (``scripts/r1/parity.py``) written for its exact files; selection refuses a run with any
+  export unchecked, and a failed parity bars that checkpoint (listed under
+  ``excluded_by_parity`` in ``selection.json``, never flown).
 * **Rule.** Highest ``success`` count; ties by the lower pooled p95 closing speed
   (``closing_speed_normal_m_s``, m/s model scale, over touched-down episodes only, P8's
   ``quantile_linear`` at 0.95; no touchdown ranks as +inf); then the lowest step.
@@ -42,6 +53,14 @@ import numpy as np
 from ila import p8_adapter
 from ila.data import episodes as data_episodes
 from ila.eval import runner
+from ila.policies.onnx_dp import (
+    OnnxDPMeta,
+    bundle_sha256,
+    export_dirs,
+    load_onnx_student,
+    parity_passed,
+    read_meta,
+)
 from ila.policies.registry import Student, load_student, read_checkpoint
 from ila.train import manifest as mf
 from ila.train.config import sha256_file
@@ -49,14 +68,18 @@ from ila.train.config import sha256_file
 __all__ = [
     "OUTCOME_ORDER",
     "FINAL_ITERATION",
+    "ONNX_EXPORTS",
     "SELECTION_RULE",
     "ResummaryMismatchError",
     "P95",
     "SELECT_SPLIT",
     "Candidate",
     "CandidateResult",
+    "candidate_sha256",
     "candidates",
     "checkpoint_policy",
+    "onnx_checkpoint_policy",
+    "onnx_parity_exclusions",
     "choose",
     "choose_sigma",
     "fly_checkpoint",
@@ -75,6 +98,9 @@ P95: Final[float] = 0.95
 
 #: ``selection.candidates`` of the iterated arms' configs (P3-D1 §3).
 FINAL_ITERATION: Final[str] = "final_iteration_checkpoints"
+
+#: ``selection.candidates`` of an externally trained arm flown from ONNX (``R1_lerobot_dp``).
+ONNX_EXPORTS: Final[str] = "onnx_exports"
 
 #: The rule's text in every ``selection.json``.
 SELECTION_RULE: Final[str] = (
@@ -127,6 +153,47 @@ def checkpoint_policy(
         temporal_ensembling=temporal_ensembling,
     )
     return student
+
+
+def onnx_checkpoint_policy(
+    path: str,
+    run_seed: int,
+    cfgs: p8_adapter.EvalConfigs,
+    *,
+    n_action_steps: int | None = None,
+    num_inference_steps: int | None = None,
+    temporal_ensembling: bool = False,
+) -> Any:
+    """Picklable ``PolicySpec.build``: an ONNX export's student on ORT's CPU path (one thread).
+
+    Args:
+        path: The export directory ``<run>/onnx/step<N>/``.
+        run_seed: The training run's seed (first element of every noise key).
+        cfgs: P8's configs (unused).
+        n_action_steps: ``Ta`` (8 when ``None``).
+        num_inference_steps: ``K`` (10 when ``None``).
+        temporal_ensembling: Off for selection (P6-D1).
+
+    Returns:
+        The :class:`ila.policies.onnx_dp.OnnxDPStudent`.
+    """
+    del cfgs
+    return load_onnx_student(
+        Path(path),
+        run_seed,
+        n_action_steps=n_action_steps,
+        num_inference_steps=num_inference_steps,
+        temporal_ensembling=temporal_ensembling,
+    )
+
+
+def candidate_sha256(path: Path) -> str:
+    """A candidate's SHA-256: the checkpoint file's, or an ONNX export's ``meta.json``'s.
+
+    For an export directory both graphs are verified against ``meta.json`` first
+    (:func:`ila.policies.onnx_dp.bundle_sha256`).
+    """
+    return bundle_sha256(path) if Path(path).is_dir() else sha256_file(Path(path))
 
 
 @dataclass(frozen=True)
@@ -285,8 +352,10 @@ def candidates(run_dir: Path) -> list[Candidate]:
         raise ValueError(f"{run_dir}: no checkpoints")
     stages = [s["index"] for s in man["stages"]]
     rule = man.get("config_resolved", {}).get("selection", {}).get("candidates")
-    if rule not in (None, FINAL_ITERATION):
+    if rule not in (None, FINAL_ITERATION, ONNX_EXPORTS):
         raise ValueError(f"{run_dir}: unknown candidate rule {rule!r}")
+    if rule == ONNX_EXPORTS:
+        return _onnx_candidates(run_dir, full)
     if rule == FINAL_ITERATION or len(stages) > 1:  # iterated arms: the final iteration only
         full = [c for c in full if c["stage"] == stages[-1]]
     out = []
@@ -295,6 +364,50 @@ def candidates(run_dir: Path) -> list[Candidate]:
         if not path.is_file():
             raise ValueError(f"{path} missing")
         out.append(Candidate(str(path), c["stage"], c["stage_step"], c["global_step"], c["sha256"]))
+    return out
+
+
+def onnx_parity_exclusions(run_dir: Path) -> list[dict[str, Any]]:
+    """Exports of a run whose ``parity.json`` failed (barred from selection; P6-D3).
+
+    Raises:
+        ValueError: If an export has no ``parity.json``, or one written for other files.
+    """
+    out = []
+    for step, bundle in sorted(export_dirs(run_dir).items()):
+        passed, reason = parity_passed(bundle)
+        if not passed and reason != "parity failed":
+            raise ValueError(f"{bundle}: {reason}")
+        if not passed:
+            out.append({"step": step, "export": str(bundle), "reason": reason})
+    return out
+
+
+def _onnx_candidates(run_dir: Path, full: Sequence[Mapping[str, Any]]) -> list[Candidate]:
+    """One ONNX export per manifest checkpoint, lowest step first, parity-passed only.
+
+    Raises:
+        ValueError: If a checkpoint has no export, an export has no checkpoint, an export's
+            ``meta.json`` names another checkpoint's weights, an export has no valid
+            ``parity.json``, or none passed parity.
+    """
+    exports = export_dirs(run_dir)
+    by_step = {int(c["global_step"]): c for c in full}
+    if set(exports) != set(by_step):
+        raise ValueError(
+            f"{run_dir}: exports at steps {sorted(exports)} != checkpoints {sorted(by_step)}"
+        )
+    barred = {e["step"] for e in onnx_parity_exclusions(run_dir)}
+    out = []
+    for step in sorted(by_step):
+        c, bundle = by_step[step], exports[step]
+        if OnnxDPMeta.from_mapping(read_meta(bundle)).source_sha256 != c["sha256"]:
+            raise ValueError(f"{bundle}: exported from another checkpoint than {c['file']}")
+        if step in barred:
+            continue
+        out.append(Candidate(str(bundle), c["stage"], c["stage_step"], step, bundle_sha256(bundle)))
+    if not out:
+        raise ValueError(f"{run_dir}: no export passed parity")
     return out
 
 
@@ -312,7 +425,8 @@ def fly_checkpoint(
     """Fly one checkpoint's EMA student on listed episodes (CPU fp32 single-sample path).
 
     Args:
-        path: The checkpoint.
+        path: The checkpoint, or an ONNX export directory (``R1_lerobot_dp``: ORT CPU, one
+            thread, the default observation contract).
         episodes: Listed episodes, in order.
         arm: Arm label for the rows.
         run_seed: The run seed (``dp``: first element of every noise key).
@@ -326,14 +440,19 @@ def fly_checkpoint(
     Returns:
         Runner rows, in episode order.
     """
+    onnx = Path(path).is_dir()
+    base = (
+        functools.partial(onnx_checkpoint_policy, str(path), int(run_seed))
+        if onnx
+        else functools.partial(checkpoint_policy, str(path))
+    )
     if inference is None:
-        build = functools.partial(checkpoint_policy, str(path))
+        build = base
         tags = runner.RowTags(arm=arm, teacher="T_ppo", student_seed=run_seed, ckpt_sha256=sha256)
     else:
         ta, k, ensemble = inference
         build = functools.partial(
-            checkpoint_policy,
-            str(path),
+            base,
             n_action_steps=int(ta),
             num_inference_steps=int(k),
             temporal_ensembling=bool(ensemble),
@@ -348,7 +467,8 @@ def fly_checkpoint(
             ckpt_sha256=sha256,
         )
     spec = p8_adapter.callable_spec(arm, build, run_seed=run_seed)
-    variant = str(read_checkpoint(path)["obs_variant"])  # the contract it was trained on
+    # The contract it was trained on (an ONNX export: the default contract, 13-d proprio).
+    variant = "default" if onnx else str(read_checkpoint(path)["obs_variant"])
     return runner.run_list_vision(
         episodes,
         spec,
@@ -396,8 +516,9 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
     out_dir = run_dir / "select"
     out_dir.mkdir(exist_ok=True)
     results: list[CandidateResult] = []
+    onnx = man.get("config_resolved", {}).get("selection", {}).get("candidates") == ONNX_EXPORTS
     for c in cands:
-        if sha256_file(Path(c.file)) != c.sha256:
+        if candidate_sha256(Path(c.file)) != c.sha256:
             raise ValueError(f"{c.file}: SHA-256 differs from the manifest")
         rows = fly_checkpoint(
             Path(c.file),
@@ -407,7 +528,7 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
             sha256=c.sha256,
             workers=workers,
         )
-        rows_file = out_dir / f"{Path(c.file).stem}_rows.csv"
+        rows_file = out_dir / f"{Path(c.file).name if onnx else Path(c.file).stem}_rows.csv"
         write_rows_csv(rows_file, rows)
         results.append(_result(c, summarise_rows(rows), rows_file.name))
     best = choose(results)
@@ -424,8 +545,11 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
             "episodes": len(rows_list),
         },
         "rule": SELECTION_RULE,
-        "weights": "ema",
-        "inference_path": "cpu_fp32_single_sample",
+        "weights": "raw_no_ema (lerobot 0.6.1 has no EMA)" if onnx else "ema",
+        "inference_path": "ort_cpu_fp32_single_sample" if onnx else "cpu_fp32_single_sample",
+        "candidate_kind": ONNX_EXPORTS if onnx else "checkpoint",
+        **({"excluded_by_parity": onnx_parity_exclusions(run_dir)} if onnx else {}),
+        "tag": man.get("tag", "core"),
         "render": "full",
         "workers": workers,
         "candidates": [_result_record(r) for r in results],
