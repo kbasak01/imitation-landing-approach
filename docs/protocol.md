@@ -1999,8 +1999,9 @@ reproduction gate was not re-run, because Phase 5 changed nothing under `ila/ren
   selection to be decided by the p95 tie-break and say so.
 
 ### P6-D1 — Diffusion Policy implementation choices P3-D1 leaves open (2026-10-30)
-*Status: draft, written before the `dp` smoke, any `dp` training run or any `dp` number on
-`select`.*
+*Status: frozen 2026-10-30. Written and frozen before the `dp` smoke result, any `dp` training run
+or any `dp` number on `select` was read. Item 1 defines the ensembling that H3's curve uses, so it
+is not revised after `select` sweep numbers exist (leak audit NOTE 1).*
 
 *Decision.* The settings below are not fixed by `dp.yaml` (`c8f90c35…6913`, unchanged) or
 P3-D1. They are implementation choices within the frozen protocol, not deviations.
