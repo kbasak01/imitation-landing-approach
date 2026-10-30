@@ -13,6 +13,17 @@ count, and require
    path** through :func:`ila.eval.runner.run_list_vision` from the saved ``ema_last.pt``, with
    the outcome classes printed.
 
+``dp`` (Phase 6; ``results/phase6/smoke_dp.json``; P6-D1) replaces criterion 1, since a
+diffusion student has no deterministic action, by the **sampled executed-chunk MSE**: at every
+frame ``t`` of the 8 episodes, one chunk sampled from the EMA weights on the CPU in fp32 (eval
+mode, centre crop) with DDIM ``K = 10`` (trailing) and the flight's noise key
+``(run_seed = 0, episode_seed, t)``; its executed indices at ``Ta = 8``
+(:func:`ila.policies.dp.chunking.executed_slice`: ``To-1 ... To+6``, steps ``t ... t+7``)
+against ``label`` at those steps (edge-repeated past the end, :class:`DPChunkDataset`); the
+mean over frames, steps and the 3 axes must be below :data:`DP_MSE_THRESHOLD` (normalised
+action units squared). Criterion 2 flies at the selection setting ``Ta = 8``, ``K = 10``,
+no ensembling. Criterion 0 is unchanged.
+
 A student that cannot land the episodes it memorised has an alignment bug, not a capacity
 problem (il-conventions, "can't land" checklist). Only the step count differs from the real
 runs; it is recorded as ``steps_override`` with purpose ``smoke``, which can never be selected.
@@ -51,12 +62,13 @@ from ila import p8_adapter
 from ila.data import episodes as data_episodes
 from ila.data.store import DemoStore
 from ila.obs.split import load_contract
+from ila.policies.dp.policy import DPStudent
 from ila.policies.registry import REGISTRY, REPO_ROOT, load_student, read_checkpoint
 from ila.policies.state_mlp import StateMLPStudent
 from ila.train import loop
 from ila.train import manifest as mf
 from ila.train.config import TrainConfig, sha256_file
-from ila.train.dataset import BCWindowDataset, FrameTable
+from ila.train.dataset import BCWindowDataset, DPChunkDataset, FrameTable
 from ila.train.sampling import choose_episodes
 from ila.train.select import OUTCOME_ORDER, fly_checkpoint, summarise_rows
 from ila.train.state_dataset import StateFrames
@@ -65,11 +77,15 @@ __all__ = [
     "DAGGER_SMOKE_ITERATIONS",
     "DAGGER_SMOKE_ROLLOUTS",
     "DAGGER_SMOKE_STEPS",
+    "DP_MSE_THRESHOLD",
+    "DP_SMOKE_K",
+    "DP_SMOKE_TA",
     "MIN_LANDED",
     "MSE_THRESHOLD",
     "REPLAY_STEPS",
     "SMOKE_EPISODES",
     "SMOKE_STEPS",
+    "dp_sampled_mse",
     "replay_check",
     "run_dagger_smoke",
     "run_smoke",
@@ -92,7 +108,22 @@ MIN_LANDED: Final[int] = 7
 #: weighs ``0.999^n``: 1.8 % at 4 000 steps (measured: EMA action MSE 5.1e-5 and actions 3 %
 #: short, against 3.1e-6 for the raw weights), 3.4e-4 at 8 000, 1e-13 at the real 30 000. The
 #: smoke runs long enough for that to vanish, so it tests the weights that will fly.
-SMOKE_STEPS: Final[dict[str, int]] = {"bc": 8000, "bc_state": 10000}
+#: ``dp`` (P6-D1): 10 000 steps at the frozen batch 128 is about 2 600 passes over the ~490
+#: frames of 8 episodes (13 min at the timing run's 12.79 steps/s). Its power-law EMA (0.75)
+#: has no init bias to wait out: after 10 000 updates its decay is 0.999, a window of about
+#: 1 000 steps at the tail of the cosine schedule, where the weights barely move.
+SMOKE_STEPS: Final[dict[str, int]] = {"bc": 8000, "bc_state": 10000, "dp": 10000}
+
+#: ``dp`` overfit criterion (P6-D1): sampled executed-chunk MSE, normalised action units
+#: squared (RMS 0.032 = 0.047 m/s model scale per axis at v_max = 1.5 m/s). Ten times the BC
+#: threshold, because a K = 10 DDIM sample adds the sampler's error (the last step's x0 estimate
+#: carries sqrt(1 - abar_9) = 0.15 times the epsilon error) to the fit, and it is scored over 8
+#: steps of open-loop prediction, not one.
+DP_MSE_THRESHOLD: Final[float] = 1e-3
+
+#: ``dp`` smoke inference setting: the selection setting (P3-D1 §4).
+DP_SMOKE_TA: Final[int] = 8
+DP_SMOKE_K: Final[int] = 10
 
 #: The demo split whose rows are the smoke episodes' listed starting conditions.
 SMOKE_SPLIT: Final[str] = "demos_0-1999"
@@ -202,6 +233,70 @@ def replay_check(
     }
 
 
+def dp_sampled_mse(
+    student: Any,
+    data: DPChunkDataset,
+    episode_seeds: list[int],
+    *,
+    n_action_steps: int = DP_SMOKE_TA,
+    num_inference_steps: int = DP_SMOKE_K,
+    batch: int = 64,
+) -> dict[str, Any]:
+    """Sampled executed-chunk MSE of a ``DPStudent`` over every frame of a chunk dataset.
+
+    Frame ``t`` of episode ``e`` is sampled with the flight's noise key
+    ``(student.run_seed, episode_seeds[e], t)`` (:func:`ila.policies.dp.policy.initial_noise`),
+    so the chunk is the one the policy would plan if it replanned at ``t``. Batched on the
+    student's device (CPU fp32 here); a slot's noise does not depend on the batch.
+
+    Args:
+        student: A ``DPStudent`` (EMA weights, eval mode).
+        data: The episodes' samples (targets ``label`` at :func:`chunking.target_steps`).
+        episode_seeds: P8 episode seed of each episode of ``data.table``, in order.
+        n_action_steps: ``Ta`` whose executed slice is scored.
+        num_inference_steps: ``K``.
+        batch: Samples per call (memory only).
+
+    Returns:
+        ``value`` (mean over frames, executed steps and axes; normalised action units
+        squared), ``first_step`` (index ``To-1`` only, the action at ``t``), ``per_episode``,
+        ``frames``, ``Ta``, ``K``.
+    """
+    from ila.policies.dp import chunking
+
+    table = data.table
+    if len(episode_seeds) != table.n_episodes:
+        raise ValueError(f"{len(episode_seeds)} seeds for {table.n_episodes} episodes")
+    keys: list[tuple[int, int, int]] = []
+    for e in range(table.n_episodes):
+        keys += [(student.run_seed, int(episode_seeds[e]), t) for t in range(table.episode_len[e])]
+    ex = chunking.executed_slice(data.n_obs_steps, data.horizon, n_action_steps)
+    errs = []
+    for start in range(0, len(data), batch):
+        idx = np.arange(start, min(len(data), start + batch), dtype=np.int64)
+        b = data.batch(idx)
+        chunk = student.sample_batch(
+            b["images"], b["proprio"], keys[start : start + len(idx)], num_inference_steps
+        )
+        diff = chunk[:, ex].astype(np.float64) - np.asarray(b["target"])[:, ex].astype(np.float64)
+        errs.append(diff**2)
+    err = np.concatenate(errs)  # [N, Ta, 3]
+    per_episode = []
+    start = 0
+    for t_len in table.episode_len:
+        per_episode.append(float(err[start : start + int(t_len)].mean()))
+        start += int(t_len)
+    return {
+        "value": float(err.mean()),
+        "first_step": float(err[:, 0].mean()),
+        "per_episode": per_episode,
+        "frames": len(data),
+        "Ta": n_action_steps,
+        "K": num_inference_steps,
+        "noise_key": "(run_seed, episode_seed, t)",
+    }
+
+
 def run_smoke(
     arm: str,
     *,
@@ -215,12 +310,13 @@ def run_smoke(
     """Run the smoke for one arm and write its summary JSON.
 
     Args:
-        arm: ``bc`` or ``bc_state`` (``dp``'s smoke is Phase 6: Ta = 8, K = 10).
+        arm: ``bc``, ``bc_state``, ``dp`` (Phase 6: Ta = 8, K = 10) or ``bc_dagger``.
         steps: Smoke steps (default :data:`SMOKE_STEPS`).
         device: Training device.
         workers: Closed-loop rollout processes (rows do not depend on it).
         run_root: Runs root (the run goes to ``<run_root>/smoke/<arm>``).
-        out_json: Summary path (default ``results/phase4/smoke_<arm>.json``).
+        out_json: Summary path (default ``results/phase4/smoke_<arm>.json``; ``dp``:
+            ``results/phase6/smoke_dp.json``).
         data_root: ``${data_root}`` (default from ``configs/paths.local.yaml``).
 
     Returns:
@@ -230,8 +326,6 @@ def run_smoke(
         ValueError: For an arm without a smoke here.
     """
     entry = REGISTRY[arm]
-    if entry.kind == "dp":
-        raise ValueError("the dp smoke (closed loop at Ta = 8, K = 10) is Phase 6's")
     if arm == "bc_dagger":
         return run_dagger_smoke(
             steps=steps,
@@ -276,32 +370,58 @@ def run_smoke(
             rows_all[choice.demo_indices[0]],
             store.meta(first).episode_teacher,  # reporting/selection use of meta only
         )
+        n_obs = load_contract(variant=cfg.obs_variant).n_obs_steps
         if entry.kind == "state":
             data: Any = StateFrames(store, choice.names)
+        elif entry.kind == "dp":
+            data = DPChunkDataset(
+                FrameTable.from_store(store, choice.names, cfg.obs_variant),
+                n_obs,
+                int(cfg.raw["horizons"]["horizon"]),
+            )
         else:
             data = BCWindowDataset(
-                FrameTable.from_store(store, choice.names, cfg.obs_variant),
-                load_contract(variant=cfg.obs_variant).n_obs_steps,
+                FrameTable.from_store(store, choice.names, cfg.obs_variant), n_obs
             )
     student = load_student(ckpt, "cpu", weights="ema")
     import torch
 
     torch.set_num_threads(1)
-    if isinstance(student, StateMLPStudent):
-        pred = student.act_batch(data.obs)
-    else:
-        pred = loop.numpy_actions(student.net, data, torch.device("cpu"))
-    target = data.batch(np.arange(len(data), dtype=np.int64))["target"]
-    err = (pred.astype(np.float64) - target.astype(np.float64)) ** 2
-    mse = float(err.mean())
-    per_episode_mse = []
-    start = 0
-    lengths = data.episode_len if entry.kind == "state" else data.table.episode_len
-    for t_len in lengths:
-        per_episode_mse.append(float(err[start : start + int(t_len)].mean()))
-        start += int(t_len)
-
     listed = [rows_all[i] for i in choice.demo_indices]
+    inference: dict[str, Any] | None = None
+    if isinstance(student, DPStudent):
+        dp_mse = dp_sampled_mse(student, data, [e.episode_seed for e in listed])
+        mse, per_episode_mse = dp_mse["value"], dp_mse["per_episode"]
+        threshold = DP_MSE_THRESHOLD
+        # The flight's student (select.checkpoint_policy) is built at the config defaults.
+        inference = {
+            "Ta": student.chunk_spec.n_action_steps,
+            "K": student.num_inference_steps,
+            "ensemble": student.temporal_ensembling,
+            "timestep_spacing": student.dp_cfg.timestep_spacing,
+        }
+        if (inference["Ta"], inference["K"], inference["ensemble"]) != (
+            DP_SMOKE_TA,
+            DP_SMOKE_K,
+            False,
+        ):
+            raise ValueError(f"dp smoke must fly Ta = 8, K = 10, no ensembling: {inference}")
+    else:
+        if isinstance(student, StateMLPStudent):
+            pred = student.act_batch(data.obs)
+        else:
+            pred = loop.numpy_actions(student.net, data, torch.device("cpu"))
+        target = data.batch(np.arange(len(data), dtype=np.int64))["target"]
+        err = (pred.astype(np.float64) - target.astype(np.float64)) ** 2
+        mse = float(err.mean())
+        threshold = MSE_THRESHOLD
+        per_episode_mse = []
+        start = 0
+        lengths = data.episode_len if entry.kind == "state" else data.table.episode_len
+        for t_len in lengths:
+            per_episode_mse.append(float(err[start : start + int(t_len)].mean()))
+            start += int(t_len)
+
     t1 = time.perf_counter()
     rows = fly_checkpoint(
         ckpt,
@@ -337,13 +457,26 @@ def run_smoke(
         },
         "mse": {
             "value": mse,
-            "threshold": MSE_THRESHOLD,
-            "passed": mse < MSE_THRESHOLD,
+            "threshold": threshold,
+            "passed": mse < threshold,
             "per_episode": per_episode_mse,
             "frames": len(data),
             "weights": "ema",
             "path": "cpu fp32 eval mode (centre crop)",
+            **(
+                {
+                    "what": "sampled executed-chunk MSE (one DDIM sample per frame, flight "
+                    "noise key; executed indices To-1 ... To+6 vs label; P6-D1)",
+                    "first_step": dp_mse["first_step"],
+                    "Ta": dp_mse["Ta"],
+                    "K": dp_mse["K"],
+                    "noise_key": dp_mse["noise_key"],
+                }
+                if inference is not None
+                else {}
+            ),
         },
+        "inference": inference,
         "closed_loop": {
             **summary,
             "outcome_order": list(OUTCOME_ORDER),
@@ -369,7 +502,8 @@ def run_smoke(
     record["passed"] = (
         record["mse"]["passed"] and record["closed_loop"]["passed"] and replay["passed"]
     )
-    out = Path("results") / "phase4" / f"smoke_{arm}.json" if out_json is None else out_json
+    phase = "phase6" if entry.kind == "dp" else "phase4"
+    out = Path("results") / phase / f"smoke_{arm}.json" if out_json is None else out_json
     mf.write_json_atomic(out if out.is_absolute() else REPO_ROOT / out, record)
     return record
 

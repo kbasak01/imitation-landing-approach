@@ -7,6 +7,8 @@ One control step = 1/30 s model scale.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pytest
 
@@ -16,6 +18,7 @@ from ila.policies.dp import chunking as ch
 EXECUTED_TABLE = [
     (1, 16, 1, (0,)),
     (1, 16, 8, (0, 1, 2, 3, 4, 5, 6, 7)),
+    (1, 16, 15, (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)),
     (1, 16, 16, tuple(range(16))),
     (2, 16, 1, (1,)),
     (2, 16, 8, (1, 2, 3, 4, 5, 6, 7, 8)),
@@ -156,6 +159,22 @@ def test_target_steps_table(t: int, big_t: int, expected: tuple[int, ...]) -> No
     assert ch.target_steps(t, 2, 4, big_t) == expected
 
 
+# (t, T) -> target steps, To = 1, Tp = 4: the chunk starts at t itself, so there is no
+# first-step padding; only the end repeats label[T-1].
+TARGET_TABLE_TO1 = [
+    (0, 10, (0, 1, 2, 3)),
+    (1, 10, (1, 2, 3, 4)),
+    (7, 10, (7, 8, 9, 9)),
+    (9, 10, (9, 9, 9, 9)),
+    (0, 1, (0, 0, 0, 0)),
+]
+
+
+@pytest.mark.parametrize(("t", "big_t", "expected"), TARGET_TABLE_TO1)
+def test_target_steps_table_to1(t: int, big_t: int, expected: tuple[int, ...]) -> None:
+    assert ch.target_steps(t, 1, 4, big_t) == expected
+
+
 def test_target_steps_default_horizon_padding() -> None:
     steps = ch.target_steps(0, 2, 16, 375)
     assert steps[:3] == (0, 0, 1) and steps[-1] == 14
@@ -180,3 +199,90 @@ def test_ensemble_weights() -> None:
     assert w[0] > w[1] > w[2]  # i = 0 is the oldest and weighs most
     with pytest.raises(ValueError):
         ch.ensemble_weights(0)
+
+
+# --------------------------------------------------------------------------- ensembling sources
+# (To, Ta, t) -> ((replan step s, chunk index j), ...), oldest first, Tp = 16. Step t averages
+# the replans s in [max(0, t - Ta + 1), t], each at chunk index To - 1 + (t - s). Rows with
+# t < Ta - 1 are the start-of-episode truncation (fewer than Ta predictions exist).
+ENSEMBLE_TABLE = [
+    # To = 1
+    (1, 1, 0, ((0, 0),)),
+    (1, 1, 5, ((5, 0),)),
+    (1, 8, 0, ((0, 0),)),
+    (1, 8, 3, ((0, 3), (1, 2), (2, 1), (3, 0))),
+    (1, 8, 7, ((0, 7), (1, 6), (2, 5), (3, 4), (4, 3), (5, 2), (6, 1), (7, 0))),
+    (1, 8, 20, ((13, 7), (14, 6), (15, 5), (16, 4), (17, 3), (18, 2), (19, 1), (20, 0))),
+    (1, 15, 0, ((0, 0),)),
+    (1, 15, 2, ((0, 2), (1, 1), (2, 0))),
+    (1, 15, 14, ((0, 14), (1, 13), (2, 12), (3, 11), (4, 10), (5, 9), (6, 8), (7, 7), (8, 6),
+                 (9, 5), (10, 4), (11, 3), (12, 2), (13, 1), (14, 0))),
+    (1, 15, 30, ((16, 14), (17, 13), (18, 12), (19, 11), (20, 10), (21, 9), (22, 8), (23, 7),
+                 (24, 6), (25, 5), (26, 4), (27, 3), (28, 2), (29, 1), (30, 0))),
+    # To = 2
+    (2, 1, 0, ((0, 1),)),
+    (2, 1, 9, ((9, 1),)),
+    (2, 8, 0, ((0, 1),)),
+    (2, 8, 1, ((0, 2), (1, 1))),
+    (2, 8, 3, ((0, 4), (1, 3), (2, 2), (3, 1))),
+    (2, 8, 7, ((0, 8), (1, 7), (2, 6), (3, 5), (4, 4), (5, 3), (6, 2), (7, 1))),
+    (2, 8, 20, ((13, 8), (14, 7), (15, 6), (16, 5), (17, 4), (18, 3), (19, 2), (20, 1))),
+    (2, 15, 0, ((0, 1),)),
+    (2, 15, 1, ((0, 2), (1, 1))),
+    (2, 15, 14, ((0, 15), (1, 14), (2, 13), (3, 12), (4, 11), (5, 10), (6, 9), (7, 8), (8, 7),
+                 (9, 6), (10, 5), (11, 4), (12, 3), (13, 2), (14, 1))),
+    (2, 15, 40, ((26, 15), (27, 14), (28, 13), (29, 12), (30, 11), (31, 10), (32, 9), (33, 8),
+                 (34, 7), (35, 6), (36, 5), (37, 4), (38, 3), (39, 2), (40, 1))),
+]  # fmt: skip
+
+
+@pytest.mark.parametrize(("to", "ta", "t", "expected"), ENSEMBLE_TABLE)
+def test_ensemble_sources_table(
+    to: int, ta: int, t: int, expected: tuple[tuple[int, int], ...]
+) -> None:
+    sources = ch.ensemble_sources(t, to, 16, ta)
+    assert sources == expected
+    w = ch.ensemble_weights(len(sources))
+    assert len(w) == len(sources) and math.fsum(w) == pytest.approx(1.0, abs=1e-15)
+
+
+@pytest.mark.parametrize(("to", "ta"), [(1, 1), (1, 8), (1, 15), (2, 1), (2, 8), (2, 15)])
+def test_ensemble_sources_point_at_step_t_inside_the_executed_window(to: int, ta: int) -> None:
+    idx = ch.executed_indices(to, 16, ta)
+    for t in range(40):
+        sources = ch.ensemble_sources(t, to, 16, ta)
+        assert len(sources) == min(t + 1, ta)
+        assert [s for s, _ in sources] == sorted(s for s, _ in sources)  # oldest first
+        for s, j in sources:
+            assert ch.chunk_steps(s, to, 16)[j] == t  # the prediction made for step t
+            assert j in idx  # ... and one that chunk would have executed without ensembling
+
+
+@pytest.mark.parametrize("to", [1, 2])
+def test_ensembling_with_ta_1_is_no_ensembling(to: int) -> None:
+    # Ta = 1: one source, the replan at t itself, read at the executed index To - 1, weight 1.
+    first = ch.executed_indices(to, 16, 1)[0]
+    for t in range(20):
+        assert ch.ensemble_sources(t, to, 16, 1) == ((ch.replan_step(t, 1), first),)
+    np.testing.assert_array_equal(ch.ensemble_weights(1), [1.0])
+
+
+def test_ensemble_sources_refuse_inadmissible_ta() -> None:
+    with pytest.raises(ValueError, match="Ta must satisfy"):
+        ch.ensemble_sources(0, 2, 16, 16)  # Ta > Tp - To + 1 = 15
+    with pytest.raises(ValueError, match="Ta must satisfy"):
+        ch.ensemble_sources(0, 1, 16, 17)
+    with pytest.raises(ValueError):
+        ch.ensemble_sources(0, 2, 16, 0)
+    with pytest.raises(ValueError):
+        ch.ensemble_sources(-1, 2, 16, 8)
+
+
+@pytest.mark.parametrize("n", [1, 2, 4, 8, 12, 15])
+def test_ensemble_weights_sum_to_one_oldest_heaviest(n: int) -> None:
+    w = ch.ensemble_weights(n)
+    assert math.fsum(w) == pytest.approx(1.0, abs=1e-15)
+    assert np.all(np.diff(w) < 0) or n == 1
+    # w_i / w_0 = exp(-m i), m = 0.01 (the config's m).
+    np.testing.assert_allclose(w / w[0], np.exp(-0.01 * np.arange(n)), rtol=1e-15)
+    assert ch.ENSEMBLE_DECAY == 0.01

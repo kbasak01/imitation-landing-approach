@@ -216,6 +216,7 @@ def _wrap(
     n_action_steps: int | None,
     num_inference_steps: int | None,
     arm: str,
+    temporal_ensembling: bool = False,
 ) -> Student:
     if isinstance(net, DiffusionPolicyNet):
         return DPStudent(
@@ -224,9 +225,10 @@ def _wrap(
             device=device,
             n_action_steps=n_action_steps,
             num_inference_steps=num_inference_steps,
+            temporal_ensembling=temporal_ensembling,
         )
-    if n_action_steps is not None or num_inference_steps is not None:
-        raise ValueError(f"{arm!r} is not a diffusion arm; Ta/K do not apply")
+    if n_action_steps is not None or num_inference_steps is not None or temporal_ensembling:
+        raise ValueError(f"{arm!r} is not a diffusion arm; Ta/K/ensembling do not apply")
     if isinstance(net, StateMLP):
         return StateMLPStudent(net, device)
     return BCStudent(net, device)
@@ -239,6 +241,7 @@ def build_dummy(
     *,
     n_action_steps: int | None = None,
     num_inference_steps: int | None = None,
+    temporal_ensembling: bool = False,
 ) -> BCStudent | DPStudent:
     """Build a randomly initialised vision student (Phase 2 throughput and determinism studies).
 
@@ -249,6 +252,7 @@ def build_dummy(
         device: Torch device for inference.
         n_action_steps: ``dp`` only: ``Ta`` (config default 8 when ``None``).
         num_inference_steps: ``dp`` only: ``K`` (config default 10 when ``None``).
+        temporal_ensembling: ``dp`` only: replan every step and average (P6-D1).
 
     Returns:
         A student in eval mode on ``device``.
@@ -259,7 +263,15 @@ def build_dummy(
     """
     if not REGISTRY[arm].is_vision:
         raise ValueError(f"{arm!r} is not a vision student")
-    student = _wrap(build_net(arm, seed), seed, device, n_action_steps, num_inference_steps, arm)
+    student = _wrap(
+        build_net(arm, seed),
+        seed,
+        device,
+        n_action_steps,
+        num_inference_steps,
+        arm,
+        temporal_ensembling,
+    )
     assert isinstance(student, BCStudent | DPStudent)
     return student
 
@@ -290,6 +302,7 @@ def load_student(
     weights: Literal["ema", "raw"] = "ema",
     n_action_steps: int | None = None,
     num_inference_steps: int | None = None,
+    temporal_ensembling: bool = False,
 ) -> Student:
     """Build a trained student from a checkpoint (EMA weights by default: always evaluated).
 
@@ -302,6 +315,7 @@ def load_student(
         weights: ``"ema"`` (default; P3-D1 §4) or ``"raw"`` (diagnostics only).
         n_action_steps: ``dp`` only: ``Ta``.
         num_inference_steps: ``dp`` only: ``K``.
+        temporal_ensembling: ``dp`` only: replan every step and average (P6-D1).
 
     Returns:
         The student in eval mode on ``device``.
@@ -317,5 +331,11 @@ def load_student(
     )
     net.load_state_dict(ckpt[weights])
     return _wrap(
-        net, int(ckpt["run_seed"]), device, n_action_steps, num_inference_steps, str(ckpt["arm"])
+        net,
+        int(ckpt["run_seed"]),
+        device,
+        n_action_steps,
+        num_inference_steps,
+        str(ckpt["arm"]),
+        temporal_ensembling,
     )

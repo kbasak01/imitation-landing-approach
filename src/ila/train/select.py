@@ -63,6 +63,7 @@ __all__ = [
     "resummarise_run",
     "select_run",
     "summarise_rows",
+    "write_rows_csv",
 ]
 
 #: The only list selection flies.
@@ -92,20 +93,39 @@ OUTCOME_ORDER: Final[tuple[str, ...]] = (
 )
 
 
-def checkpoint_policy(path: str, cfgs: p8_adapter.EvalConfigs) -> Any:
+def checkpoint_policy(
+    path: str,
+    cfgs: p8_adapter.EvalConfigs,
+    *,
+    n_action_steps: int | None = None,
+    num_inference_steps: int | None = None,
+    temporal_ensembling: bool = False,
+) -> Any:
     """Picklable ``PolicySpec.build``: a checkpoint's EMA student on the CPU, fp32.
 
     Args:
         path: The checkpoint file.
         cfgs: P8's configs (P8's ``build(cfgs)`` shape; unused).
+        n_action_steps: ``dp`` only: ``Ta`` (config default 8 when ``None``; the inference
+            sweeps, :mod:`ila.train.dp_sweeps`, set it).
+        num_inference_steps: ``dp`` only: ``K`` (config default 10 when ``None``).
+        temporal_ensembling: ``dp`` only (P6-D1).
 
     Returns:
         The :data:`ila.policies.registry.Student` (``dp``: config defaults ``Ta = 8``,
-        ``K = 10``), typed ``Any`` as P8's ``PolicySpec.build`` result (vision students satisfy
-        P8's ``EvalPolicy`` shape through ``reset``/``act``; the runner calls ``act_vision``).
+        ``K = 10`` for selection), typed ``Any`` as P8's ``PolicySpec.build`` result (vision
+        students satisfy P8's ``EvalPolicy`` shape through ``reset``/``act``; the runner calls
+        ``act_vision``).
     """
     del cfgs
-    student: Student = load_student(Path(path), "cpu", weights="ema")
+    student: Student = load_student(
+        Path(path),
+        "cpu",
+        weights="ema",
+        n_action_steps=n_action_steps,
+        num_inference_steps=num_inference_steps,
+        temporal_ensembling=temporal_ensembling,
+    )
     return student
 
 
@@ -287,6 +307,7 @@ def fly_checkpoint(
     sha256: str,
     workers: int,
     chunk: int = 10,
+    inference: tuple[int, int, bool] | None = None,
 ) -> list[dict[str, Any]]:
     """Fly one checkpoint's EMA student on listed episodes (CPU fp32 single-sample path).
 
@@ -298,14 +319,35 @@ def fly_checkpoint(
         sha256: Checkpoint SHA-256 (row column).
         workers: Processes (rows do not depend on it).
         chunk: Episodes per task (rows do not depend on it).
+        inference: ``dp`` only: ``(Ta, K, temporal_ensembling)``, also written to the rows'
+            ``Ta``/``K``/``ensemble`` columns (the inference sweeps). ``None`` (selection):
+            the config defaults, columns empty.
 
     Returns:
         Runner rows, in episode order.
     """
-    spec = p8_adapter.callable_spec(
-        arm, functools.partial(checkpoint_policy, str(path)), run_seed=run_seed
-    )
-    tags = runner.RowTags(arm=arm, teacher="T_ppo", student_seed=run_seed, ckpt_sha256=sha256)
+    if inference is None:
+        build = functools.partial(checkpoint_policy, str(path))
+        tags = runner.RowTags(arm=arm, teacher="T_ppo", student_seed=run_seed, ckpt_sha256=sha256)
+    else:
+        ta, k, ensemble = inference
+        build = functools.partial(
+            checkpoint_policy,
+            str(path),
+            n_action_steps=int(ta),
+            num_inference_steps=int(k),
+            temporal_ensembling=bool(ensemble),
+        )
+        tags = runner.RowTags(
+            arm=arm,
+            teacher="T_ppo",
+            student_seed=run_seed,
+            Ta=int(ta),
+            K=int(k),
+            ensemble=bool(ensemble),
+            ckpt_sha256=sha256,
+        )
+    spec = p8_adapter.callable_spec(arm, build, run_seed=run_seed)
     variant = str(read_checkpoint(path)["obs_variant"])  # the contract it was trained on
     return runner.run_list_vision(
         episodes,
@@ -319,7 +361,13 @@ def fly_checkpoint(
     )
 
 
-def _rows_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+def write_rows_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+    """Write runner rows to ``path`` (:data:`runner.VISION_EPISODE_COLUMNS`; selection's format).
+
+    Args:
+        path: The CSV file (overwritten).
+        rows: Runner rows.
+    """
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=list(runner.VISION_EPISODE_COLUMNS))
     writer.writeheader()
@@ -360,7 +408,7 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
             workers=workers,
         )
         rows_file = out_dir / f"{Path(c.file).stem}_rows.csv"
-        _rows_csv(rows_file, rows)
+        write_rows_csv(rows_file, rows)
         results.append(_result(c, summarise_rows(rows), rows_file.name))
     best = choose(results)
     record = {

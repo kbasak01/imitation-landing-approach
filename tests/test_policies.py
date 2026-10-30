@@ -400,6 +400,75 @@ def test_dp_act_before_reset_raises() -> None:
         student.act_vision(img, prop)
 
 
+def test_dp_ensembling_with_ta_1_is_bit_identical_to_no_ensembling() -> None:
+    # P6-D1: one source (the replan at t, index To - 1), weight 1.0.
+    off = registry.build_dummy("dp", 3, n_action_steps=1, num_inference_steps=2)
+    on = registry.build_dummy(
+        "dp", 3, n_action_steps=1, num_inference_steps=2, temporal_ensembling=True
+    )
+    assert isinstance(off, DPStudent) and isinstance(on, DPStudent)
+    assert on.temporal_ensembling and not off.temporal_ensembling
+    off.reset(55)
+    on.reset(55)
+    for t in range(5):
+        img, prop = _window(seed=t)
+        np.testing.assert_array_equal(on.act_vision(img, prop), off.act_vision(img, prop))
+
+
+def test_dp_ensembling_averages_the_window_and_replans_every_step() -> None:
+    ta, run_seed, episode = 4, 5, 77
+    student = registry.build_dummy(
+        "dp", run_seed, n_action_steps=ta, num_inference_steps=2, temporal_ensembling=True
+    )
+    assert isinstance(student, DPStudent)
+    windows = [_window(seed=10 + t) for t in range(7)]
+    student.reset(episode)
+    actions = [student.act_vision(img, prop) for img, prop in windows]
+    # Expected: a chunk planned at every step t with noise (run_seed, episode, t) on that
+    # step's window; step t mixes the chunks chunking.ensemble_sources names.
+    chunks = [
+        student.sample_batch(img[None], prop[None], [(run_seed, episode, t)])[0]
+        for t, (img, prop) in enumerate(windows)
+    ]
+    for t, a in enumerate(actions):
+        sources = chunking.ensemble_sources(t, 2, 16, ta)
+        assert len(sources) == min(t + 1, ta)
+        w = chunking.ensemble_weights(len(sources))
+        expected = sum(w[i] * chunks[s][j].astype(np.float64) for i, (s, j) in enumerate(sources))
+        np.testing.assert_array_equal(a, np.asarray(expected).astype(np.float32))
+        assert a.dtype == np.float32 and np.all(np.abs(a) <= 1.0)
+    assert sorted(student._chunks) == [3, 4, 5, 6]  # older chunks dropped
+    # The ensembled action differs from the plain executed index once two chunks overlap.
+    assert not np.array_equal(actions[1], chunks[1][1])
+    # reset clears the buffer: the episode replays bit for bit.
+    student.reset(episode)
+    again = [student.act_vision(img, prop) for img, prop in windows]
+    np.testing.assert_array_equal(np.stack(again), np.stack(actions))
+
+
+def test_ensembling_refused_for_a_non_diffusion_arm() -> None:
+    with pytest.raises(ValueError, match="not a diffusion arm"):
+        registry.build_dummy("bc", 0, temporal_ensembling=True)
+
+
+def test_ddim_sample_is_the_policy_sampler(dp: DPStudent) -> None:
+    # The module-level DDIM loop is what DiffusionPolicyNet.sample runs (same bits).
+    from ila.policies.dp.policy import ddim_sample, ddim_scheduler
+
+    img, prop = _window(seed=4, b=2)
+    seeds = [(0, 3, 0), (0, 4, 8)]
+    chunk = dp.sample_batch(img, prop, seeds, num_inference_steps=3)
+    net = dp.net
+    with torch.inference_mode():
+        cond = net.encoder(torch.from_numpy(img), torch.from_numpy(prop))
+        out = ddim_sample(
+            lambda x, k: net.predict_noise(x, k, cond),
+            initial_noise(seeds, 16, 3),
+            ddim_scheduler(net.cfg, 3),
+        )
+    np.testing.assert_array_equal(out.numpy(), chunk)
+
+
 def test_ddim_timesteps_and_k(dp: DPStudent) -> None:
     # P3-D1: trailing spacing, so every K starts at k = 99 (leading gives [0] at K = 1).
     assert dp.net.cfg.timestep_spacing == "trailing"

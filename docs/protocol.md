@@ -1997,3 +1997,200 @@ reproduction gate was not re-run, because Phase 5 changed nothing under `ila/ren
   and `bc_dart`. Read `dp`'s held-out curves as diagnostics only.
 - **`select` is decided by a few episodes** (SS5 #16 and #49 recur across arms). Expect `dp`'s
   selection to be decided by the p95 tie-break and say so.
+
+### P6-D1 — Diffusion Policy implementation choices P3-D1 leaves open (2026-10-30)
+*Status: draft, written before the `dp` smoke, any `dp` training run or any `dp` number on
+`select`.*
+
+*Decision.* The settings below are not fixed by `dp.yaml` (`c8f90c35…6913`, unchanged) or
+P3-D1. They are implementation choices within the frozen protocol, not deviations.
+1. **Temporal ensembling: which predictions are averaged.** P3-D1 §3 crosses `Ta` with
+   ensembling and fixes the weights (`w_i = exp(−m i)`, m = 0.01, i = 0 the oldest), but not
+   which past chunks count. Reading adopted: with ensembling the policy replans at **every**
+   step; step t averages the chunks planned at s ∈ [max(0, t − Ta + 1), t], the chunk planned at
+   s read at index To − 1 + (t − s) (`chunking.ensemble_sources`, oldest first). So `Ta` is the
+   ensemble window, and each chunk contributes to exactly the steps it would have executed
+   without ensembling.
+   - At the start of an episode there are t + 1 < Ta predictions. The weights are renormalised
+     over those.
+   - `Ta` = 1 with ensembling is the same policy as `Ta` = 1 without: one source, weight 1.0.
+     The actions are bit-identical (`tests/test_policies.py`).
+   - Noise for the chunk planned at t is keyed (run_seed, episode_seed, t), as without
+     ensembling. The weighted sum is taken in float64 and returned as float32.
+   - Code: `DPStudent(temporal_ensembling=True)`, threaded through `registry.build_dummy` and
+     `load_student`. The default stays off, and the default path is bit-identical to before
+     (item 5).
+2. **`dp` smoke** (`make train-smoke ARM=dp` → `results/phase6/smoke_dp.json`). It overfits the
+   first 8 `ppo_2000` `train` episodes (success-filtered, as `dp.yaml` says) for **10 000
+   steps**. Every other hyper-parameter is `dp.yaml`'s: batch 128, bf16, lr 1e-4, cosine with
+   500 warm-up steps, EMA power 0.75. The checkpoint cadence equals the step count, and the
+   purpose is `smoke`, so it can never be selected. It passes iff all three hold:
+   - **0. Replay.** Stored steps 0–3 of the first episode are byte-identical to a fresh teacher
+     rollout (as in Phase 4).
+   - **1. Overfit.** Sampled executed-chunk MSE < **1e-3** (normalised action units squared;
+     RMS 0.032 = 0.047 m/s model scale per axis).
+     - At every frame t of the 8 episodes, one chunk is sampled from the EMA weights. Settings:
+       CPU, fp32, eval mode (centre crop), DDIM K = 10 (trailing), the flight's noise key
+       (0, episode_seed, t).
+     - The executed indices at `Ta` = 8 (To − 1 … To + 6, steps t … t + 7) are compared with
+       `label` at those steps, edge-repeated past the episode end.
+     - The mean is taken over frames, steps and axes. The action at t alone is reported beside
+       it.
+   - **2. Closed loop.** ≥ 7/8 `success` flying the saved `ema_last.pt` at `Ta` = 8, K = 10,
+     no ensembling, on the CPU fp32 single-sample path (`select.fly_checkpoint`, the selection
+     path). Outcome classes are printed.
+3. **Inference sweeps on `select`** (plan Phase 6 item 4; `make dp-sweeps` →
+   `results/phase6/sweeps/<arm>/s<n>/<cell>_rows.csv` and `results/dp_sweeps.json`).
+   - **Checkpoint.** For each run, the checkpoint P3-D1 §4 selected at `Ta` = 8, K = 10, read
+     from `selection.json`. Its SHA-256 is re-checked. Nothing is re-selected.
+   - **Path.** The selection path: EMA weights, CPU fp32 single-sample, render `full`, 150
+     `select` episodes.
+   - **Cells.** Taken from `dp.yaml`'s `inference_sweeps`:
+     - `Ta` ∈ {1, 2, 4, 8, 12} × ensembling {off, on}, at K = 10;
+     - K ∈ {1, 2, 5, 10, 25, 100}, at `Ta` = 8, off.
+     That is 15 distinct settings. `Ta` = 1 on is recorded as an alias of `Ta` = 1 off (item 1),
+     so 14 are flown.
+   - **K = 1 and 2** are labelled `schedule_limited` (P3-D1 §3).
+   - **Per cell:** success, outcome classes, p95 closing speed, mean steps, `n_tunnelled`,
+     `n_detectors_disagree`. Rows carry the cell in their `Ta`/`K`/`ensemble` columns.
+   - **Determinism check.** The `Ta` = 8 / K = 10 / off cell is flown first. It must equal the
+     stored selection rows text for text in every column except those three; otherwise the job
+     stops.
+   - **Resumable per cell**, as P5-D1's iterations: a cell is reused only if its rows file
+     holds the 150 `select` episodes in order, flown by this checkpoint at this setting.
+   - **Recorded in the summary:** config SHA-256, checkpoint SHA-256, the training commit and
+     the sweep's commit.
+   - **Scope.** These are not P3-D1 §3's sweeps. Those fly the same cells on `id` SS4–SS6
+     (`Ta`) and `id` SS5 (K) in Phase 8 (`configs/eval/matrix.yaml` `sweeps`), and H3 is scored
+     there. The `select` sweep is reported only. It feeds no choice, and no frozen list is
+     read.
+4. **Diagnostics** (`make dp-diagnostics` → `results/phase6/diagnostics/<arm>/s<n>.json`;
+   definitions in `ila.train.dp_diagnostics`). All are measured on the selected checkpoint's EMA
+   weights, CPU fp32, eval mode, at `Ta` = 8, K = 10. Actions are normalised (× 1.5 m/s model
+   scale), and one control step is 1/30 s model scale.
+   - **Spread.** For each state, 16 chunks are sampled. Sample j of state i is keyed
+     (run_seed, −1, 16 i + j). The episode slot is negative, so it never collides with a flight
+     key. Two figures are reported:
+     - the per-element standard deviation (ddof 1), averaged over the executed slice (8 steps ×
+       3 axes);
+     - the same at index To − 1 alone.
+     The teacher is deterministic per state, so all spread is the student's own sampling.
+   - **Clip fraction.** The fraction of sampled elements with |a| ≥ 1 − 1e-6. With
+     `clip_sample` and `set_alpha_to_one`, the last DDIM step returns the clipped x̂₀, so these
+     elements are exactly ±1. Reported beside it: the labels' fraction (held-out set) and the
+     executed actions' fraction (closed loop).
+   - **Chunk-boundary vs within-chunk jerk** of the executed actions, replanning at
+     `chunking.is_replan_step(t, 8)`:
+     - **First difference** |a_t − a_{t−1}| (× 45 m/s² model scale per unit). It is a boundary
+       difference when t is a replanning step.
+     - **Second difference** |a_t − 2a_{t−1} + a_{t−2}| (× 1 350 m/s³ model scale per unit). It
+       is a boundary difference when t or t − 1 is a replanning step.
+     - Reported for each class: mean, median, p95, n, and the ratio of the means.
+   - **States.**
+     - **P4-D5's held-out set** (`ppo_2000` 1950–1999, every second episode). Spread and clip
+       are measured on 512 frames drawn by `default_rng(0)`. Jerk is measured **open loop**:
+       each episode's recorded windows are fed in order, with noise keyed
+       (run_seed, −2 − e, t). The labels' differences at the same steps are the reference.
+     - **`select`, closed loop.** The selected checkpoint is re-flown through the runner with
+       an actor that records executed actions and the replan-step inputs. Two checks must
+       hold: its rows equal the stored selection rows, and its per-episode mean first
+       difference equals P8's `action_jerk_mean` column. Jerk is measured on the executed
+       actions; spread and clip on up to 512 recorded replan-step inputs (`default_rng(0)`).
+     - The stored rows have no per-step actions, which is why `select` is re-flown.
+   - The denoising loss by k-bucket is already logged by the training loop (held-out, raw and
+     EMA).
+5. **Sampler refactor, bit-identity kept.**
+   - The DDIM loop is now the module function `ddim_sample(eps_fn, noise, scheduler)`, with the
+     final clip to [−1, 1]. The schedulers are built by `ddim_scheduler(cfg, K)` and
+     `ddpm_scheduler(cfg)`. `DiffusionPolicyNet.sample` calls these.
+   - `ddpm_sample` is DDPM ancestral sampling with every step's noise an explicit input. It is
+     tested equal to diffusers' `DDPMScheduler.step` loop given the same draws. It is used only
+     by the toy test.
+   - The refactored sampler was compared with the pre-refactor `policy.py` (git HEAD
+     `b891e05`) on a dummy `dp`: chunks bit-identical at K ∈ {1, 2, 10, 100}, and a 17-step
+     episode of actions bit-identical. All existing `tests/test_policies.py` tests pass
+     unchanged.
+6. **Toy test** (`tests/test_dp_toy.py`, CPU, about 11 s).
+   - **Setup.** A 1-D mixture ½ N(−0.6, 0.08²) + ½ N(0.6, 0.08²) under a constant
+     observation. A 3 × 128 Mish MLP ε-net is trained with the schedulers built from `dp.yaml`
+     through `DPConfig`.
+   - **(a)** DDIM at K = 100 matches DDPM ancestral sampling. Mode fractions agree within
+     0.06, mode means within 0.05, and mode standard deviations within 0.03.
+   - **(b)** Both modes are recovered at K = 10 and 100: each holds 30–70 % of samples, and
+     fewer than 5 % fall between.
+   - **(c)** MSE-BC on the same data lands at the data mean, in the gap.
+   - **Sanity check.** Reversing the DDIM timesteps fails (a): mode mean −0.456 against
+     −0.598. At K = 1 every sample saturates near ±1, which is the schedule-limited regime.
+
+*Reason.*
+- Item 1: the frozen sweep crosses `Ta` with ensembling, so `Ta` must mean something when
+  ensembling is on. Two other readings were rejected:
+  - averaging every prediction any earlier replan made for t (up to Tp − To + 1 = 15) makes
+    the `Ta` axis empty under ensembling;
+  - taking the window from the last replan only is not ensembling.
+- Item 2: a diffusion student has no deterministic action, so Phase 4's action-MSE < 1e-4
+  cannot apply as written. Two reasons for the threshold:
+  - A K = 10 sample adds the sampler's error to the fit. The last DDIM step's x̂₀ carries
+    √(1 − ᾱ₉) ≈ 0.15 times the ε error.
+  - The comparison spans 8 steps of open-loop prediction, not one.
+  1e-3 is ten times the BC threshold, and closed-loop landing remains the binding check.
+- Item 2, step count:
+  - 10 000 steps at batch 128 is about 2 600 passes over the ~490 frames.
+  - At the timing run's 12.79 steps/s that is 13 min.
+  - The power-law EMA has no init bias to wait out. Unlike BC's constant 0.999, after 10 000
+    updates its decay is 0.999, a window of about 1 000 steps at the tail of the cosine
+    schedule.
+- Item 3: the approved Phase 6 plan (Step 1, item 6) specifies re-flying the selected
+  checkpoint on `select`. The determinism check costs nothing extra, because the reference cell
+  has to be flown anyway.
+
+*Evidence.* Code:
+- `src/ila/policies/dp/{chunking,policy}.py`, `src/ila/policies/registry.py`;
+- `src/ila/train/{smoke,select,dp_sweeps,dp_diagnostics}.py`;
+- `scripts/{train_smoke,dp_sweeps,dp_diagnostics}.py`, `Makefile`.
+
+Tests:
+- `tests/test_dp_chunking.py`: `ensemble_sources` tables for To ∈ {1, 2} × `Ta` ∈ {1, 8, 15},
+  with start-of-episode truncation; the To = 1 executed and target tables;
+- `tests/test_policies.py`: ensembling, `Ta` = 1 equivalence, `ddim_sample` identity;
+- `tests/test_dp_toy.py`;
+- `tests/test_dp_jobs.py`: smoke MSE keys; sweep cells; reproduction of the selection rows on a
+  real flight; a tampered row caught; resume; diagnostics end to end.
+
+*Consequence.*
+- The `dp` smoke runs first, in the background (about 16 min). `dp` s0 is queued only after
+  it passes.
+- Sweeps and diagnostics run after selection. Each takes the selected checkpoint and never
+  chooses one.
+- Wall clock per seed, from P2-D2's 170 ms per K = 10 call on one CPU thread, at 24 workers:
+  - sweeps: 15–25 min at teacher-length episodes (61.5 steps), up to about 6 × that if
+    episodes time out;
+  - diagnostics: a few minutes.
+- **Conventions amended** (item 1). `il-conventions` and its mirror `docs/CONVENTIONS.md` said
+  "average all predictions made for t by earlier replans". Both now state the `Ta`-window reading
+  above, and stay identical (`tests/test_conventions_mirror.py`).
+
+### P6-D2 — Deviation: `.venv-lerobot` gains lerobot's dataset, diffusion and training extras (2026-10-30)
+*Decision.* R1 could not run in `.venv-lerobot` as P0-D1 froze it. That env was a bare
+`pip install lerobot==0.6.1` with no extras, so it was missing three things:
+- `import lerobot.datasets` raised `ImportError` (no `datasets`);
+- `DiffusionPolicy` needs `diffusers`;
+- `lerobot_train` needs `accelerate`.
+
+The extras `lerobot[dataset,diffusion,training]==0.6.1` were installed with torch 2.11.0,
+torchvision 0.26.0, numpy 2.2.6 and gymnasium 1.4.0 held as constraints.
+
+*Reason.* R1 (plan Phase 6 item 6) needs those three packages to build its LeRobotDataset and to
+train. P8's `.venv` is untouched, and only ONNX files and the neutral intermediate cross between
+the venvs.
+
+*Evidence.*
+- A `pip install --dry-run` first: it changed none of the held packages.
+- The installed set: datasets 4.8.5, diffusers 0.39.0, accelerate 1.15.0, pandas, pyarrow, av,
+  torchcodec, wandb, plus their dependencies.
+- `results/env/pip_freeze_lerobot.txt` was regenerated. Its SHA-256 goes from `c00401da…` (P0-D1)
+  to `cf2dfe5e030ca23a4a7aaee137511952b9869b96767a3c0d87204cd614e42fc3`, and the torch,
+  torchvision, numpy, gymnasium and lerobot lines are unchanged.
+
+*Consequence.* P0-D1's freeze hash is superseded for `.venv-lerobot` only. No `ila` code pins
+it.

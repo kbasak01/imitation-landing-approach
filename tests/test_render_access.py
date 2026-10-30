@@ -327,8 +327,16 @@ FROZEN_LIST_NAMES = frozenset(
 )
 
 
-#: The Phase 4 training scripts (argparse wrappers over ``ila/train``).
-TRAIN_SCRIPTS: tuple[str, ...] = ("train.py", "train_smoke.py", "select.py", "budget.py")
+#: The training scripts (argparse wrappers over ``ila/train``; Phase 6 adds the dp sweeps and
+#: diagnostics).
+TRAIN_SCRIPTS: tuple[str, ...] = (
+    "train.py",
+    "train_smoke.py",
+    "select.py",
+    "budget.py",
+    "dp_sweeps.py",
+    "dp_diagnostics.py",
+)
 
 
 def test_training_code_reads_no_frozen_list() -> None:

@@ -486,9 +486,12 @@ def test_dp_student_clock_is_read_only_at_permitted_sites() -> None:
         ("DPStudent.act_vision", "_episode_seed", "tuple"),
         # ``if self._episode_seed is None: raise`` (reset-before-act check).
         ("DPStudent.act_vision", "_episode_seed", "compare"),
+        # Temporal ensembling (P6-D1 item 1): chunking's ensembling indices, P2-D3 item 4 (b).
+        ("DPStudent.act_vision", "_t", "call:ensemble_sources"),
     }
     assert set(sites) <= allowed, sorted(set(sites) - allowed)
     assert sites[("DPStudent.act_vision", "_t", "call:is_replan_step")] == 1
+    assert sites[("DPStudent.act_vision", "_t", "call:ensemble_sources")] == 1
     assert sites[("DPStudent.act_vision", "_t", "tuple")] == 1
     # Writes (reset to 0, += 1) are bookkeeping; only these two methods may write the clock.
     tree = ast.parse(Path(dpp.__file__).read_text(encoding="utf-8"))
