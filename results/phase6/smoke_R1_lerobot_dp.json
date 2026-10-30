@@ -1,0 +1,236 @@
+{
+  "arm": "R1_lerobot_dp",
+  "checks": {
+    "closed_loop_7_of_8": false,
+    "lerobot_episodes_are_dp_smoke_episodes": true,
+    "parity_passed": true,
+    "replay": true
+  },
+  "closed_loop": {
+    "mean_steps": 64.625,
+    "n": 8,
+    "n_detectors_disagree": 0,
+    "n_touchdown": 8,
+    "n_tunnelled": 0,
+    "outcome_order": [
+      "crash",
+      "off_pad",
+      "hard_landing",
+      "bounce",
+      "success",
+      "timeout"
+    ],
+    "outcomes": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 0,
+      "off_pad": 2,
+      "success": 6,
+      "timeout": 0
+    },
+    "p95_closing_speed_m_s": 0.44788010387209737,
+    "passed": false,
+    "per_episode": [
+      {
+        "closing_speed_normal_m_s": 0.27601879319584416,
+        "demo_index": 0,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 75
+      },
+      {
+        "closing_speed_normal_m_s": 0.2051268582150132,
+        "demo_index": 1,
+        "outcome": "off_pad",
+        "ss": "SS4",
+        "steps": 61
+      },
+      {
+        "closing_speed_normal_m_s": 0.4909944859231815,
+        "demo_index": 2,
+        "outcome": "success",
+        "ss": "SS5",
+        "steps": 75
+      },
+      {
+        "closing_speed_normal_m_s": 0.2580502502632872,
+        "demo_index": 3,
+        "outcome": "off_pad",
+        "ss": "SS3",
+        "steps": 63
+      },
+      {
+        "closing_speed_normal_m_s": 0.3271880488487289,
+        "demo_index": 4,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 57
+      },
+      {
+        "closing_speed_normal_m_s": 0.27973665905249695,
+        "demo_index": 5,
+        "outcome": "success",
+        "ss": "SS5",
+        "steps": 61
+      },
+      {
+        "closing_speed_normal_m_s": 0.11621617835968003,
+        "demo_index": 6,
+        "outcome": "success",
+        "ss": "SS3",
+        "steps": 65
+      },
+      {
+        "closing_speed_normal_m_s": 0.3678105372057984,
+        "demo_index": 7,
+        "outcome": "success",
+        "ss": "SS4",
+        "steps": 60
+      }
+    ],
+    "required_success": 7,
+    "success": 6,
+    "wall_s": 8.356540867011063,
+    "workers": 8
+  },
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720",
+        "matches": true,
+        "path": "configs/train/r1_lerobot_dp.yaml",
+        "sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720"
+      }
+    ],
+    "sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720"
+  },
+  "episodes": {
+    "attempted": 8,
+    "demo_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "first_kept": 0,
+    "kept": 8,
+    "kept_fraction": 1.0,
+    "last_kept": 7,
+    "lerobot_episode_index": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "outcomes": {
+      "success": 8
+    },
+    "start": 0,
+    "store": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+    "store_groups": [
+      "ep_00000",
+      "ep_00001",
+      "ep_00002",
+      "ep_00003",
+      "ep_00004",
+      "ep_00005",
+      "ep_00006",
+      "ep_00007"
+    ],
+    "success_filter": true
+  },
+  "export": {
+    "bundle": "artifacts/runs/smoke/R1_lerobot_dp/onnx/step10000",
+    "meta_sha256": "a41a3e1a944fb8e5c9efd347f5085bffbebb899202c8228111f24dbeba7e143b",
+    "wall_s": 49.2134232299868
+  },
+  "frozen_hyperparameters_unchanged": true,
+  "git": {
+    "ila_commit": "4ae5e3b190a9ce84ba7f23dfb688c1a906a2ec31",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "inference": {
+    "K": 10,
+    "Ta": 8,
+    "ensemble": false,
+    "path": "ort_cpu_fp32_single_sample",
+    "timestep_spacing": "trailing"
+  },
+  "mse": {
+    "K": 10,
+    "Ta": 8,
+    "anchored_frames": 444,
+    "anchored_frames_value": 3.1735146033664165e-05,
+    "first_step": 6.276835255306705e-05,
+    "frames": 500,
+    "judged": false,
+    "per_episode": [
+      3.439133101685074e-05,
+      7.314320913308867e-05,
+      6.707934487408792e-05,
+      4.603343789088728e-05,
+      3.991047353516713e-05,
+      6.444076174997564e-05,
+      2.9555205578306447e-05,
+      0.00013552396018791173
+    ],
+    "reference_threshold_dp": 0.001,
+    "value": 6.139748771564646e-05,
+    "what": "sampled executed-chunk MSE through OnnxDPStudent (dp's P6-D1 definition, env action units); anchored = frames with t <= T - 8 (drop_n_last_frames = 7)"
+  },
+  "overrides": {
+    "episodes": "0-7",
+    "purpose": "smoke",
+    "save_freq": 10000,
+    "steps": 10000
+  },
+  "parity": {
+    "judged": {
+      "files_match_meta": true,
+      "graphs_opset17_no_rng": true,
+      "lerobot_path_check": true,
+      "per_step_eps_le_tol": true,
+      "probe_eps_le_tol": true,
+      "sampler_replay_le_tol": true,
+      "scheduler_match": true,
+      "unnormalise_replay_le_tol": true
+    },
+    "pass": true,
+    "wall_s": 39.201029410993215
+  },
+  "passed": false,
+  "replay": {
+    "episode": "ep_00000",
+    "images_identical": 4,
+    "labels_identical": 4,
+    "max_abs_label_diff": 0.0,
+    "passed": true,
+    "proprio_identical": 4,
+    "steps": 4,
+    "teacher": "ppo"
+  },
+  "train": {
+    "batch_size": 128,
+    "device": "cuda",
+    "gpu": "NVIDIA RTX A4000",
+    "precision": "fp32 (use_amp false)",
+    "run_dir": "artifacts/runs/smoke/R1_lerobot_dp",
+    "state": "done",
+    "steps": 10000,
+    "steps_per_s": 2.9330188006395526,
+    "steps_per_s_after_warmup": 2.942114667848109,
+    "wall_s": 3417.0040987570246
+  },
+  "what": "LeRobot trains R1 on LeRobotDataset episodes 0-7 (= the dp smoke's 8 episodes), export to ONNX, parity, then fly them closed loop through OnnxDPStudent (ORT CPU, one thread, Ta = 8, K = 10, DDIM trailing, noise key (0, episode_seed, t); raw weights: lerobot 0.6.1 has no EMA)"
+}
