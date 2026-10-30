@@ -1,0 +1,161 @@
+=== full_cycle_w12 17:58:01 load: 1.10 1.06 1.15
+gpu util (dp training): 85 %
+{
+ "episodes": "all",
+ "mode": "cycle",
+ "num_workers": 12,
+ "prefetch_factor": 4,
+ "persistent_workers": true,
+ "mp_context": "spawn",
+ "batch_size": 128,
+ "dataset_frames": 61518,
+ "dataset_episodes": 999,
+ "sampler_len": 54525,
+ "batches_per_epoch": 426,
+ "dataset_build_s": 0.541489455034025,
+ "first_batch_s": 5.851467594970018,
+ "discard": 100,
+ "timed": 400,
+ "steady_batches_per_s": 9.031435694979088,
+ "first100_batches_per_s": 9.660635221199952,
+ "dt_median_s": 0.0035320069873705506,
+ "dt_p90_s": 0.33814831471536316,
+ "dt_max_s": 2.021347664995119,
+ "partial_batches_in_timed": 1,
+ "cpu_count": 36,
+ "omp_num_threads": "1",
+ "loadavg_end": [
+  8.943359375,
+  3.36181640625,
+  1.939453125
+ ]
+}
+=== full_continuous_w12 17:59:14 load: 8.39 3.34 1.94
+gpu util (dp training): 84 %
+{
+ "episodes": "all",
+ "mode": "continuous",
+ "num_workers": 12,
+ "prefetch_factor": 4,
+ "persistent_workers": true,
+ "mp_context": "spawn",
+ "batch_size": 128,
+ "dataset_frames": 61518,
+ "dataset_episodes": 999,
+ "sampler_len": 54525,
+ "batches_per_epoch": 426,
+ "dataset_build_s": 0.21363755100173876,
+ "first_batch_s": 6.234379413013812,
+ "discard": 100,
+ "timed": 400,
+ "steady_batches_per_s": 8.783172545246147,
+ "first100_batches_per_s": 9.224495706032526,
+ "dt_median_s": 0.0034920180041808635,
+ "dt_p90_s": 0.14008849916863256,
+ "dt_max_s": 1.884777357976418,
+ "partial_batches_in_timed": 0,
+ "cpu_count": 36,
+ "omp_num_threads": "1",
+ "loadavg_end": [
+  11.232421875,
+  5.1123046875,
+  2.6455078125
+ ]
+}
+=== ep8_cycle_w12 18:00:26 load: 10.97 5.16 2.67
+gpu util (dp training): 79 %
+{
+ "episodes": "0-7",
+ "mode": "cycle",
+ "num_workers": 12,
+ "prefetch_factor": 4,
+ "persistent_workers": true,
+ "mp_context": "spawn",
+ "batch_size": 128,
+ "dataset_frames": 500,
+ "dataset_episodes": 8,
+ "sampler_len": 444,
+ "batches_per_epoch": 4,
+ "dataset_build_s": 0.2008236320107244,
+ "first_batch_s": 5.350061423028819,
+ "discard": 100,
+ "timed": 400,
+ "steady_batches_per_s": 3.8465033962637456,
+ "first100_batches_per_s": 4.005756057385647,
+ "dt_median_s": 0.002114125498337671,
+ "dt_p90_s": 1.022741170314839,
+ "dt_max_s": 1.2126172919524834,
+ "partial_batches_in_timed": 100,
+ "cpu_count": 36,
+ "omp_num_threads": "1",
+ "loadavg_end": [
+  5.42431640625,
+  5.01611328125,
+  2.96484375
+ ]
+}
+=== ep8_continuous_w12 18:02:50 load: 6.11 5.17 3.02
+gpu util (dp training): 81 %
+{
+ "episodes": "0-7",
+ "mode": "continuous",
+ "num_workers": 12,
+ "prefetch_factor": 4,
+ "persistent_workers": true,
+ "mp_context": "spawn",
+ "batch_size": 128,
+ "dataset_frames": 500,
+ "dataset_episodes": 8,
+ "sampler_len": 444,
+ "batches_per_epoch": 4,
+ "dataset_build_s": 0.19117679499322549,
+ "first_batch_s": 5.543426547956187,
+ "discard": 100,
+ "timed": 400,
+ "steady_batches_per_s": 9.158350791075028,
+ "first100_batches_per_s": 10.023376833158164,
+ "dt_median_s": 0.0034881485044024885,
+ "dt_p90_s": 0.42962199210305707,
+ "dt_max_s": 1.6343303869944066,
+ "partial_batches_in_timed": 0,
+ "cpu_count": 36,
+ "omp_num_threads": "1",
+ "loadavg_end": [
+  10.388671875,
+  6.5654296875,
+  3.65087890625
+ ]
+}
+=== full_cycle_w4 18:03:59 load: 10.39 6.57 3.65
+gpu util (dp training): 83 %
+{
+ "episodes": "all",
+ "mode": "cycle",
+ "num_workers": 4,
+ "prefetch_factor": 4,
+ "persistent_workers": true,
+ "mp_context": "spawn",
+ "batch_size": 128,
+ "dataset_frames": 61518,
+ "dataset_episodes": 999,
+ "sampler_len": 54525,
+ "batches_per_epoch": 426,
+ "dataset_build_s": 0.21228668495314196,
+ "first_batch_s": 4.763411195017397,
+ "discard": 100,
+ "timed": 400,
+ "steady_batches_per_s": 3.9103349062702746,
+ "first100_batches_per_s": 4.1067879853102145,
+ "dt_median_s": 0.020292888511903584,
+ "dt_p90_s": 0.6836294020118658,
+ "dt_max_s": 1.0328248289879411,
+ "partial_batches_in_timed": 1,
+ "cpu_count": 36,
+ "omp_num_threads": "1",
+ "loadavg_end": [
+  5.748046875,
+  6.0458984375,
+  3.87060546875
+ ]
+}
+=== done 18:06:22

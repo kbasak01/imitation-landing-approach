@@ -1,0 +1,30 @@
+{
+ "episodes": "0-7",
+ "mode": "continuous",
+ "num_workers": 12,
+ "prefetch_factor": 4,
+ "persistent_workers": true,
+ "mp_context": "spawn",
+ "batch_size": 128,
+ "dataset_frames": 500,
+ "dataset_episodes": 8,
+ "sampler_len": 444,
+ "batches_per_epoch": 4,
+ "dataset_build_s": 0.19117679499322549,
+ "first_batch_s": 5.543426547956187,
+ "discard": 100,
+ "timed": 400,
+ "steady_batches_per_s": 9.158350791075028,
+ "first100_batches_per_s": 10.023376833158164,
+ "dt_median_s": 0.0034881485044024885,
+ "dt_p90_s": 0.42962199210305707,
+ "dt_max_s": 1.6343303869944066,
+ "partial_batches_in_timed": 0,
+ "cpu_count": 36,
+ "omp_num_threads": "1",
+ "loadavg_end": [
+  10.388671875,
+  6.5654296875,
+  3.65087890625
+ ]
+}

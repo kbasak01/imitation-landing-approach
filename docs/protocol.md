@@ -2395,3 +2395,76 @@ match its torch weights out of selection.
 - Each finished run is exported (≈ 46 s per checkpoint on the CPU), and parity is run on every
   export before `make select-bg SELECT="--arm R1_lerobot_dp --seeds 0 1 2"`.
 - R1 is never mixed into core tables.
+
+### P6-D4 — Deviation: R1 trains despite its smoke failing; what the smoke can and cannot show (2026-10-30)
+*Decision* (approved by the user on 2026-10-30). R1 s0–s2 train as configured (P6-D3, config
+`a55e2fa0…6720`), although `results/phase6/smoke_R1_lerobot_dp.json` failed the ≥ 7/8 closed-loop
+rule (6/8, 2 `off_pad`). The overfit, parity, replay and episode-match checks passed. Nothing in
+R1's recipe changes.
+
+*Reason.* On one noise key, a ≥ 7/8 smoke cannot tell a diffusion student apart from a bug. The
+investigation re-flew both smoke checkpoints on the same 8 `train` episodes (`ppo_2000` 0–7) at
+run_seed 0–9 (`Ta` = 8, K = 10, CPU). Episodes and physics were unchanged; only the noise keys
+moved. No `select` episode and no frozen list was flown. Each re-fly at run_seed 0 reproduced
+its smoke JSON exactly.
+
+| Student | Success per run_seed 0–9 | Pooled | run_seeds at ≥ 7/8 |
+|---|---|---|---|
+| R1 (ONNX, raw weights) | 6 5 3 4 6 6 6 4 4 5 | 49/80 | 0 |
+| `dp` smoke, EMA | 7 4 5 6 4 5 7 6 6 7 | 57/80 | 3 |
+| `dp` smoke, raw weights | 5 3 6 5 5 5 4 5 6 6 | 50/80 | 0 |
+
+- **Contrasts** (bootstrap over seeds and episodes):
+  - R1 − `dp` EMA = −0.10 [−0.31, +0.10];
+  - `dp` raw − `dp` EMA = −0.09 [−0.30, +0.10].
+
+  Neither excludes 0.
+- **`dp`'s own smoke pass (P6-D1 item 2) was a favourable draw.** Its per-episode rates give a
+  0.26 chance that one 8-episode flight passes. The `dp` runs are not affected: the smoke is a
+  pre-flight check, and selection flies 150 `select` episodes.
+- **No bug signature:**
+  - The first chunk follows the demo to under 1 mm.
+  - Labels shifted by ±1 step raise the open-loop MSE about 850×, so the alignment is right.
+  - ONNX parity passes.
+  - R1 sits at its MIN_MAX action bounds on 0.16 % of executed steps, so that is not a factor.
+- **Where the failures come from.** All three students drift from the demo after the first
+  replan, from 4–5 mm at t 8–15 to about 8 cm at touchdown. They land 0.078–0.085 m from the pad
+  centre on average, against the teacher's 0.010 m.
+- **`drop_n_last_frames` = 7** makes R1 about 12× worse than `dp` open loop on each episode's last
+  7 frames. Those frames are 8–15 steps after first contact (the dwell), so this cannot cause
+  `off_pad`, which is decided at first contact.
+- **Training rate.** P6-D3's 9.82 steps/s was measured inside the 48-batch prefetch buffer of a
+  140-step test run, so it overstates the rate.
+  - The loader alone, built as `train_r1.py` builds it (12 workers, full dataset), gives 9.03
+    batches/s steady. With 4 workers it gives 3.91.
+  - R1 is data-bound at about 8.5–9 steps/s: 3.1–3.3 h per run, **9.3–9.8 GPU-h for 3 runs**,
+    against P6-D3's 8.5. P4-D2's total becomes about 94.4–94.9 h of 120. This is reported, not
+    cut.
+  - The smoke's 2.93 steps/s is an artefact of 8 episodes (the pipeline restarts every 4
+    batches).
+
+*Evidence.*
+- Summaries: `results/phase6/r1_investigation/`
+  - `analysis_flights.json` (SHA-256 `211cdf03…f717`)
+  - `divergence.json` (`731283c8…3087`)
+  - `analysis_openloop.json` (`b3d7557b…458f`)
+  - `analysis_ta1.json` (`12d77538…67e3`)
+  - `loader_*.json`
+- Scripts: `results/phase6/r1_investigation/scripts/`.
+- Per-step flight pickles were not committed.
+
+*Consequence and caveats.*
+- **A diagnostic only, never used for a choice.** At `Ta` = 1 on the same 8 `train` episodes:
+  - `dp` EMA lands 72/80, against 57/80 at `Ta` = 8;
+  - R1 lands 59/80, against 49/80, with 5 hard landings.
+
+  These are overfit-8 models. The core row's `Ta` stays 8 (P3-D1 §4), and H3 is scored only in
+  Phase 8 on `id` SS6. The result is recorded because H3 is about exactly this mechanism.
+- **R1 is a reference with a recorded recipe gap.** It has no EMA, MIN_MAX normalisation and raw
+  state conditioning. Under per-step feedback it is weaker than `dp` (−0.16 [−0.41, +0.06] at
+  `Ta` = 1, not significant). That is a caveat to any R1 vs `dp` comparison, not a bug.
+- **Side finding.** `registry.load_student(weights="raw")` reads `ckpt["raw"]`, but
+  `loop.py` saves raw weights under `"model"`. This is a diagnostics-only path; no selection or
+  flight uses it. It is fixed after the Phase 6 queue, because the trainers refuse a dirty tree.
+- R1 s0–s2 train after `dp` s4. Each is exported, passes parity, then is selected by the P3-D1 §4
+  rule at `Ta` = 8, K = 10.
