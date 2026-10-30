@@ -2187,9 +2187,11 @@ the venvs.
 *Evidence.*
 - A `pip install --dry-run` first: it changed none of the held packages.
 - The installed set: datasets 4.8.5, diffusers 0.39.0, accelerate 1.15.0, pandas, pyarrow, av,
-  torchcodec, wandb, plus their dependencies.
+  torchcodec, wandb, plus their dependencies. For R1's ONNX export, onnx 1.23.2 and onnxscript
+  0.7.2 were added under the same constraints. ORT is not installed there: parity and every
+  flight run ORT in `.venv`.
 - `results/env/pip_freeze_lerobot.txt` was regenerated. Its SHA-256 goes from `c00401da…` (P0-D1)
-  to `cf2dfe5e030ca23a4a7aaee137511952b9869b96767a3c0d87204cd614e42fc3`, and the torch,
+  to `d9a49039d22091a8e1d7e8dd9db3419a093d54f82bdee637e9c19b853d854d69`, and the torch,
   torchvision, numpy, gymnasium and lerobot lines are unchanged.
 
 *Consequence.* P0-D1's freeze hash is superseded for `.venv-lerobot` only. No `ila` code pins
