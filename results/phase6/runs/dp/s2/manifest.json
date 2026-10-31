@@ -1,0 +1,415 @@
+{
+  "arm": "dp",
+  "batch_size": 128,
+  "checkpoint_every_override": null,
+  "checkpoints": [
+    {
+      "bytes": 469978687,
+      "file": "s0_step010000.pt",
+      "global_step": 10000,
+      "kind": "full",
+      "sha256": "7c3175f0ccf57286e23542dea48db2eb0af22604e4d7dc1fc44e947312f96a63",
+      "stage": 0,
+      "stage_step": 10000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step020000.pt",
+      "global_step": 20000,
+      "kind": "full",
+      "sha256": "59952a3df1d65ae8427c86e41d20aa14ddd7b3e8f6f3f9703a185a5e668c3d5c",
+      "stage": 0,
+      "stage_step": 20000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step030000.pt",
+      "global_step": 30000,
+      "kind": "full",
+      "sha256": "be71580adfb2c80d86a1860d13baa244537ab8322f7f10de5b87c96826445b7a",
+      "stage": 0,
+      "stage_step": 30000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step040000.pt",
+      "global_step": 40000,
+      "kind": "full",
+      "sha256": "e5fc2ed31099db758d5fe969199890ff74d8d2fbf18aa623e0a400ef752e9c04",
+      "stage": 0,
+      "stage_step": 40000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step050000.pt",
+      "global_step": 50000,
+      "kind": "full",
+      "sha256": "97586029e83a83abcc01873c4c4759ed079b061498a4d6e984ceded1d491dc3f",
+      "stage": 0,
+      "stage_step": 50000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step060000.pt",
+      "global_step": 60000,
+      "kind": "full",
+      "sha256": "40c71347f4dc3e166d33ac4f13676d876d0e080947e23f20835e388d6038f3a7",
+      "stage": 0,
+      "stage_step": 60000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step070000.pt",
+      "global_step": 70000,
+      "kind": "full",
+      "sha256": "33d5c2fcc46426ebdc5e18f37744b4ad0357f411384480092c08a80d380c7f1e",
+      "stage": 0,
+      "stage_step": 70000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step080000.pt",
+      "global_step": 80000,
+      "kind": "full",
+      "sha256": "01eeb3dc6ec8cf2ad72a98d8dd55f81f213c4d2f1b1d84ea95c2f007c8cb3883",
+      "stage": 0,
+      "stage_step": 80000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step090000.pt",
+      "global_step": 90000,
+      "kind": "full",
+      "sha256": "059c0a134d6140417f1bb49d9b0a071afe89434a8e0f69db8d5273a19a0f1e7b",
+      "stage": 0,
+      "stage_step": 90000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step100000.pt",
+      "global_step": 100000,
+      "kind": "full",
+      "sha256": "b1ba02e6419aabfc1418b08aee8b356c62720c42c0247fda7cf48e6d3f514dea",
+      "stage": 0,
+      "stage_step": 100000
+    },
+    {
+      "bytes": 117482413,
+      "file": "ema_last.pt",
+      "global_step": 100000,
+      "kind": "ema_last",
+      "sha256": "398a20b8896209f37b174e0c41af49f866e5842f6f45559bdfb8e25e4a8aadb3",
+      "stage": 0,
+      "stage_step": 100000
+    }
+  ],
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913",
+        "matches": true,
+        "path": "configs/train/dp.yaml",
+        "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+      }
+    ]
+  },
+  "config_resolved": {
+    "action_normalisation": "identity",
+    "arm": "dp",
+    "augment": {
+      "crop": {
+        "eval": "center",
+        "size": 88,
+        "train": "random"
+      }
+    },
+    "batch_size": 128,
+    "checkpoint_every": 10000,
+    "data": {
+      "collection": "ppo_2000",
+      "first_n": 1000
+    },
+    "ema": {
+      "max_value": 0.9999,
+      "power": 0.75
+    },
+    "encoder": {
+      "groups": 16,
+      "norm": "groupnorm",
+      "pretrained": false,
+      "spatial_softmax_keypoints": 32,
+      "trunk": "resnet18"
+    },
+    "horizons": {
+      "horizon": 16,
+      "n_action_steps": 8,
+      "n_obs_steps": 2
+    },
+    "inference": {
+      "noise": "per_episode_generator",
+      "num_inference_steps": 10,
+      "sampler": "ddim",
+      "timestep_spacing": "trailing"
+    },
+    "inference_sweeps": {
+      "K": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        100
+      ],
+      "Ta": [
+        1,
+        2,
+        4,
+        8,
+        12
+      ],
+      "temporal_ensembling": {
+        "m": 0.01
+      }
+    },
+    "noise_scheduler": {
+      "beta_schedule": "squaredcos_cap_v2",
+      "clip_sample": true,
+      "num_train_timesteps": 100,
+      "prediction_type": "epsilon",
+      "train": "ddpm"
+    },
+    "optim": {
+      "lr": 0.0001,
+      "name": "adamw",
+      "schedule": "cosine",
+      "warmup_steps": 500,
+      "weight_decay": 1e-06
+    },
+    "precision": "bf16",
+    "proprio_mlp": [
+      64,
+      64
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "selection": {
+      "at": {
+        "K": 10,
+        "Ta": 8
+      },
+      "list": "select",
+      "metric": "success",
+      "tie_break": [
+        "p95_closing_speed",
+        "lowest_step"
+      ]
+    },
+    "steps": 100000,
+    "success_filter": true,
+    "unet": {
+      "cond": "film",
+      "diffusion_step_embed_dim": 128,
+      "down_dims": [
+        128,
+        256,
+        512
+      ],
+      "kernel_size": 5
+    }
+  },
+  "data": {
+    "0": {
+      "choices": [
+        {
+          "attempted": 1000,
+          "first_kept": 0,
+          "kept": 999,
+          "kept_fraction": 0.999,
+          "last_kept": 999,
+          "outcomes": {
+            "bounce": 1,
+            "success": 999
+          },
+          "start": 0,
+          "store": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+          "success_filter": true
+        }
+      ],
+      "data_load_s": 13.81776574003743,
+      "heldout_frames": 3067,
+      "heldout_overlap_episodes": 0,
+      "kept_episodes": 999,
+      "labelled_episodes": 1000,
+      "labelled_episodes_total": 1000,
+      "stage": 0,
+      "stores": [
+        {
+          "collection": "ppo_2000",
+          "expected_sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+          "matches": true,
+          "path": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+          "sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd"
+        }
+      ],
+      "train_frames": 61518
+    }
+  },
+  "ema": {
+    "decay": 0.0,
+    "inv_gamma": 1.0,
+    "kind": "power",
+    "max_value": 0.9999,
+    "min_value": 0.0,
+    "power": 0.75
+  },
+  "finished_unix": 1793405521.5881486,
+  "first_n_override": null,
+  "git": {
+    "ila_commit": "b9129420656ecdbe791bd4479c72513bcc54017e",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "global_step": 100000,
+  "gpu_hours": 2.216035863136672,
+  "gpu_mem_max_bytes": 2594509312,
+  "heldout": {
+    "collection": "ppo_2000",
+    "n": 50,
+    "start": 1950
+  },
+  "host": {
+    "cpu": "x86_64",
+    "cpu_count": 36,
+    "cuda": "13.0",
+    "device": "cuda",
+    "gpu": "NVIDIA RTX A4000",
+    "gpu_memory_bytes": 17170956288,
+    "hostname": "DATTA-BASAK",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130"
+  },
+  "init_from": null,
+  "invocations": [
+    {
+      "git": {
+        "ila_commit": "b9129420656ecdbe791bd4479c72513bcc54017e",
+        "ila_dirty": false,
+        "ila_dirty_paths": [],
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+      },
+      "host": {
+        "cpu": "x86_64",
+        "cpu_count": 36,
+        "cuda": "13.0",
+        "device": "cuda",
+        "gpu": "NVIDIA RTX A4000",
+        "gpu_memory_bytes": 17170956288,
+        "hostname": "DATTA-BASAK",
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130"
+      },
+      "numerics": {
+        "cudnn_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": false,
+        "device": "cuda",
+        "float32_matmul_precision": "highest",
+        "matmul_allow_tf32": false
+      },
+      "unix": 1793397324.466282
+    }
+  ],
+  "kind": "dp",
+  "loop_s_total": 7963.211019171984,
+  "max_steps": null,
+  "normaliser": {
+    "proprio_mean": [
+      -0.00045443931594491005,
+      -0.004102175589650869,
+      0.004225312732160091,
+      -0.0026923753321170807,
+      0.0012681576190516353,
+      0.007813193835318089,
+      0.0054476140066981316,
+      -0.004207276273518801,
+      -0.38515138626098633,
+      -0.011942277662456036,
+      0.04635746031999588,
+      -0.29577216506004333,
+      0.24181540310382843
+    ],
+    "proprio_std": [
+      0.06262826174497604,
+      0.08223596215248108,
+      0.02875525876879692,
+      0.7872264385223389,
+      0.8682489395141602,
+      0.7403295040130615,
+      0.1955074816942215,
+      0.15459880232810974,
+      0.4309946894645691,
+      0.18497730791568756,
+      0.19788919389247894,
+      0.28502902388572693,
+      0.42818304896354675
+    ]
+  },
+  "numerics": {
+    "cudnn_allow_tf32": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": false,
+    "device": "cuda",
+    "float32_matmul_precision": "highest",
+    "matmul_allow_tf32": false
+  },
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "grad_clip": null,
+    "lr": 0.0001,
+    "name": "adamw",
+    "schedule": "cosine (diffusers), linear warm-up from 0",
+    "weight_decay": 1e-06
+  },
+  "precision": "bf16",
+  "purpose": "train",
+  "resumes": [],
+  "run_seed": 2,
+  "segments": [
+    {
+      "first_step": 0,
+      "loader_wait_s": 0.8301539371022955,
+      "loop_s": 7963.211019171984,
+      "stage": 0,
+      "steps": 100000
+    }
+  ],
+  "selectable": true,
+  "sigma": null,
+  "stages": [
+    {
+      "checkpoint_every": 10000,
+      "index": 0,
+      "steps": 100000,
+      "warmup": 500
+    }
+  ],
+  "state": "done",
+  "steps_override": null,
+  "steps_per_s_loop": 12.557748345390202,
+  "steps_timed_total": 100000,
+  "total_steps": 100000,
+  "wall_clock_s": 7977.72910729202
+}

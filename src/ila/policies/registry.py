@@ -354,12 +354,15 @@ def load_student(
         KeyError: If the checkpoint lacks the requested weights.
     """
     ckpt = read_checkpoint(Path(path))
-    if weights not in ckpt or ckpt[weights] is None:
+    # The training loop saves the raw weights under "model" and the EMA under "ema"
+    # (ila.train.loop); ema_last.pt holds the EMA only.
+    key = {"ema": "ema", "raw": "model"}[weights]
+    if key not in ckpt or ckpt[key] is None:
         raise KeyError(f"{path}: no {weights!r} weights")
     net = build_net_from_config(
         ckpt["kind"], ckpt["config"], int(ckpt["run_seed"]), str(ckpt["obs_variant"])
     )
-    net.load_state_dict(ckpt[weights])
+    net.load_state_dict(ckpt[key])
     return _wrap(
         net,
         int(ckpt["run_seed"]),

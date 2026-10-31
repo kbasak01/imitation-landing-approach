@@ -106,6 +106,18 @@ def one_select_episode(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(data_episodes, "read_split", first)
 
 
+def test_load_student_raw_weights_are_the_model_key(dp_run: dict[str, Any]) -> None:
+    # P6-D4 side finding: "raw" must read the checkpoint's "model" entry, not a "raw" key.
+    ckpt = torch.load(dp_run["ckpt"], map_location="cpu", weights_only=False)
+    raw = registry.load_student(dp_run["ckpt"], "cpu", weights="raw")
+    ema = registry.load_student(dp_run["ckpt"], "cpu")
+    assert isinstance(raw, DPStudent) and isinstance(ema, DPStudent)
+    for k, v in raw.net.state_dict().items():
+        assert torch.equal(v, ckpt["model"][k])
+    for k, v in ema.net.state_dict().items():
+        assert torch.equal(v, ckpt["ema"][k])
+
+
 # --------------------------------------------------------------------------- smoke criterion
 
 

@@ -1,0 +1,767 @@
+{
+  "arm": "R1_lerobot_dp",
+  "batch_size": 128,
+  "checkpoint_every_override": null,
+  "checkpoints": [
+    {
+      "file": "010000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "8cd5a3326156fe4760ecfc3e4fa0acf9c8b70e21e0bcf78411ffa06cfc1209b8",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 10000,
+      "kind": "full",
+      "sha256": "8cd5a3326156fe4760ecfc3e4fa0acf9c8b70e21e0bcf78411ffa06cfc1209b8",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 10000,
+      "unix": 1793433844.5741484,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "020000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "cb57ac5b2eae28427db7f62439866b801e4d9023e3eb6836ceb4a5be5e733aa0",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 20000,
+      "kind": "full",
+      "sha256": "cb57ac5b2eae28427db7f62439866b801e4d9023e3eb6836ceb4a5be5e733aa0",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 20000,
+      "unix": 1793435006.1687112,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "030000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "f4aa25762b5a2019419f2ebe2aeaec192ca1348a896eace22ff26fe092a5cc6b",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 30000,
+      "kind": "full",
+      "sha256": "f4aa25762b5a2019419f2ebe2aeaec192ca1348a896eace22ff26fe092a5cc6b",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 30000,
+      "unix": 1793436101.2160141,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "040000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "6451ded357d14c470755493c79c803a08ee12bfee49cb5392f0972878fb05a48",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 40000,
+      "kind": "full",
+      "sha256": "6451ded357d14c470755493c79c803a08ee12bfee49cb5392f0972878fb05a48",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 40000,
+      "unix": 1793437187.1711159,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "050000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "d5a0d39b320bf7805dd4e078175434514e4fa40042063990b8acdb381ac74da4",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 50000,
+      "kind": "full",
+      "sha256": "d5a0d39b320bf7805dd4e078175434514e4fa40042063990b8acdb381ac74da4",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 50000,
+      "unix": 1793438277.2370384,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "060000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "08ec7b4f219add6fd6a20c0d036ca307755755a24fbbb13af6ff5d9e00bdecfd",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 60000,
+      "kind": "full",
+      "sha256": "08ec7b4f219add6fd6a20c0d036ca307755755a24fbbb13af6ff5d9e00bdecfd",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 60000,
+      "unix": 1793439365.8581455,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "070000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "a091c1c6e0210742b1a6663f38a85b47b63647a2ee0b3c2743b4b499b3a4d3ce",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 70000,
+      "kind": "full",
+      "sha256": "a091c1c6e0210742b1a6663f38a85b47b63647a2ee0b3c2743b4b499b3a4d3ce",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 70000,
+      "unix": 1793440450.0523129,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "080000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "35dacecc53d647c0982f407018a7c85e47071afc9954523662f0d378d8aba76e",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 80000,
+      "kind": "full",
+      "sha256": "35dacecc53d647c0982f407018a7c85e47071afc9954523662f0d378d8aba76e",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 80000,
+      "unix": 1793441549.6863704,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "090000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "a5ddeee5302c4dc40088009b258b92b58840d710913e80331e0ff6805d2388f4",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 90000,
+      "kind": "full",
+      "sha256": "a5ddeee5302c4dc40088009b258b92b58840d710913e80331e0ff6805d2388f4",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 90000,
+      "unix": 1793442639.701056,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    },
+    {
+      "file": "100000",
+      "files": {
+        "pretrained_model/config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+        "pretrained_model/model.safetensors": "5c7a1b96a57abce3ccc7972dec3da44f565620ab1fd885fcaabdf4924c71d0a3",
+        "pretrained_model/policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+        "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+        "pretrained_model/policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+        "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+        "pretrained_model/train_config.json": "9dc13181e8916eac197d98594022141acf92976e4bc1c74a2b11deed67cb4b4c"
+      },
+      "global_step": 100000,
+      "kind": "full",
+      "sha256": "5c7a1b96a57abce3ccc7972dec3da44f565620ab1fd885fcaabdf4924c71d0a3",
+      "sha256_of": "pretrained_model/model.safetensors",
+      "stage": 0,
+      "stage_step": 100000,
+      "unix": 1793443738.6323874,
+      "weights": "raw (lerobot 0.6.1 has no EMA)"
+    }
+  ],
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720",
+        "matches": true,
+        "path": "configs/train/r1_lerobot_dp.yaml",
+        "sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720"
+      }
+    ],
+    "sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720"
+  },
+  "config_resolved": {
+    "arm": "R1_lerobot_dp",
+    "data": {
+      "dataset": "r1_ppo_2000_first1000_lerobot_v3",
+      "episodes": "all",
+      "input_features": [
+        "observation.image",
+        "observation.state"
+      ],
+      "output_features": [
+        "action"
+      ],
+      "repo_id": "ila/r1_ppo_2000_first1000"
+    },
+    "framework": {
+      "entry": "lerobot.scripts.lerobot_train building blocks",
+      "name": "lerobot",
+      "venv": ".venv-lerobot",
+      "version": "0.6.1"
+    },
+    "inference": {
+      "noise": "per_episode_generator",
+      "num_inference_steps": 10,
+      "path": "onnx",
+      "provider": "ort_cpu_fp32_1_thread",
+      "sampler": "ddim",
+      "timestep_spacing": "trailing"
+    },
+    "lerobot_defaults_kept": {
+      "dataset": {
+        "eval_split": 0.0,
+        "image_transforms_enable": false,
+        "use_imagenet_stats": true
+      },
+      "ema": "none",
+      "optimizer_preset": {
+        "grad_clip_norm": 10.0,
+        "type": "adam"
+      },
+      "policy": {
+        "beta_end": 0.02,
+        "beta_start": 0.0001,
+        "compile_model": false,
+        "crop_ratio": 1.0,
+        "do_mask_loss_for_padding": false,
+        "drop_n_last_frames": 7,
+        "gradient_checkpointing": false,
+        "n_groups": 8,
+        "noise_scheduler_type": "DDPM",
+        "normalization_mapping": {
+          "ACTION": "MIN_MAX",
+          "STATE": "MIN_MAX",
+          "VISUAL": "MEAN_STD"
+        },
+        "num_inference_steps": null,
+        "optimizer_betas": [
+          0.95,
+          0.999
+        ],
+        "optimizer_eps": 1e-08,
+        "optimizer_lr": 0.0001,
+        "optimizer_weight_decay": 1e-06,
+        "resize_shape": null,
+        "scheduler_name": "cosine",
+        "scheduler_warmup_steps": 500,
+        "use_amp": false,
+        "use_film_scale_modulation": true,
+        "use_separate_rgb_encoder_per_camera": true
+      },
+      "train": {
+        "cudnn_deterministic": false,
+        "dataloader_multiprocessing_context": "spawn",
+        "log_freq": 200,
+        "persistent_workers": true,
+        "prefetch_factor": 4,
+        "seed_default": 1000,
+        "use_policy_training_preset": true
+      }
+    },
+    "lerobot_defaults_overridden": {
+      "train": {
+        "num_workers": 4
+      }
+    },
+    "policy": {
+      "beta_schedule": "squaredcos_cap_v2",
+      "clip_sample": true,
+      "clip_sample_range": 1.0,
+      "crop_is_random": true,
+      "crop_shape": [
+        88,
+        88
+      ],
+      "diffusion_step_embed_dim": 128,
+      "down_dims": [
+        128,
+        256,
+        512
+      ],
+      "horizon": 16,
+      "kernel_size": 5,
+      "n_action_steps": 8,
+      "n_obs_steps": 2,
+      "num_train_timesteps": 100,
+      "prediction_type": "epsilon",
+      "pretrained_backbone_weights": null,
+      "push_to_hub": false,
+      "spatial_softmax_num_keypoints": 32,
+      "type": "diffusion",
+      "use_group_norm": true,
+      "vision_backbone": "resnet18"
+    },
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "selection": {
+      "at": {
+        "K": 10,
+        "Ta": 8
+      },
+      "candidates": "onnx_exports",
+      "list": "select",
+      "metric": "success",
+      "tie_break": [
+        "p95_closing_speed",
+        "lowest_step"
+      ]
+    },
+    "tag": "reference_external",
+    "train": {
+      "batch_size": 128,
+      "num_workers": 12,
+      "save_freq": 10000,
+      "steps": 100000,
+      "wandb": {
+        "enable": false
+      }
+    }
+  },
+  "data": {
+    "build_json": "/home/kbasak/data/ila/lerobot/r1_ppo_2000_first1000_lerobot_v3.build.json",
+    "build_json_sha256": "dd9bbdea6cbee73eb6c5801b3460355cc4d99909658f24f64bf9f1a5e3ddd543",
+    "dp_config_sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913",
+    "episodes_in_dataset": 999,
+    "files_verified": [
+      "data/chunk-000/file-000.parquet",
+      "meta/episodes/chunk-000/file-000.parquet",
+      "meta/info.json",
+      "meta/stats.json",
+      "meta/tasks.parquet"
+    ],
+    "frames_in_dataset": 61518,
+    "path": "/home/kbasak/data/ila/lerobot/r1_ppo_2000_first1000_lerobot_v3",
+    "store_sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd"
+  },
+  "dataset_episodes_used": 999,
+  "dataset_frames_used": 61518,
+  "ema": null,
+  "episodes_override": null,
+  "finished_unix": 1793443738.6338165,
+  "git": {
+    "ila_commit": "f9659fa8217b63f55c3bcd617c4a24eadecede0b",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "global_step": 100000,
+  "gpu_hours": 2.9548438989941657,
+  "gpu_mem_max_bytes": 1501486080,
+  "host": {
+    "cpu": "x86_64",
+    "cpu_count": 36,
+    "cuda": "13.0",
+    "device": "cuda",
+    "env": {
+      "CUDA_VISIBLE_DEVICES": null,
+      "HF_HUB_OFFLINE": "1",
+      "MKL_NUM_THREADS": null,
+      "OMP_NUM_THREADS": "1"
+    },
+    "gpu": "NVIDIA RTX A4000",
+    "gpu_memory_bytes": 17170956288,
+    "hostname": "DATTA-BASAK",
+    "lerobot": "0.6.1",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "torch": "2.11.0+cu130",
+    "venv": "/home/kbasak/projects_02/imitation-landing-approach/.venv-lerobot"
+  },
+  "input_features": {
+    "observation.image": [
+      3,
+      96,
+      96
+    ],
+    "observation.state": [
+      13
+    ]
+  },
+  "invocations": [
+    {
+      "git": {
+        "ila_commit": "f9659fa8217b63f55c3bcd617c4a24eadecede0b",
+        "ila_dirty": false,
+        "ila_dirty_paths": [],
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+      },
+      "host": {
+        "cpu": "x86_64",
+        "cpu_count": 36,
+        "cuda": "13.0",
+        "device": "cuda",
+        "env": {
+          "CUDA_VISIBLE_DEVICES": null,
+          "HF_HUB_OFFLINE": "1",
+          "MKL_NUM_THREADS": null,
+          "OMP_NUM_THREADS": "1"
+        },
+        "gpu": "NVIDIA RTX A4000",
+        "gpu_memory_bytes": 17170956288,
+        "hostname": "DATTA-BASAK",
+        "lerobot": "0.6.1",
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "python": "3.12.3",
+        "torch": "2.11.0+cu130",
+        "venv": "/home/kbasak/projects_02/imitation-landing-approach/.venv-lerobot"
+      },
+      "unix": 1793432687.8093245
+    }
+  ],
+  "kind": "onnx_dp",
+  "lerobot_defaults_verified": {
+    "DatasetConfig.eval_split": 0.0,
+    "DatasetConfig.use_imagenet_stats": true,
+    "DiffusionConfig.beta_end": 0.02,
+    "DiffusionConfig.beta_start": 0.0001,
+    "DiffusionConfig.compile_model": false,
+    "DiffusionConfig.crop_ratio": 1.0,
+    "DiffusionConfig.do_mask_loss_for_padding": false,
+    "DiffusionConfig.drop_n_last_frames": 7,
+    "DiffusionConfig.gradient_checkpointing": false,
+    "DiffusionConfig.n_groups": 8,
+    "DiffusionConfig.noise_scheduler_type": "DDPM",
+    "DiffusionConfig.normalization_mapping": {
+      "ACTION": "MIN_MAX",
+      "STATE": "MIN_MAX",
+      "VISUAL": "MEAN_STD"
+    },
+    "DiffusionConfig.num_inference_steps": null,
+    "DiffusionConfig.optimizer_betas": [
+      0.95,
+      0.999
+    ],
+    "DiffusionConfig.optimizer_eps": 1e-08,
+    "DiffusionConfig.optimizer_lr": 0.0001,
+    "DiffusionConfig.optimizer_weight_decay": 1e-06,
+    "DiffusionConfig.resize_shape": null,
+    "DiffusionConfig.scheduler_name": "cosine",
+    "DiffusionConfig.scheduler_warmup_steps": 500,
+    "DiffusionConfig.use_amp": false,
+    "DiffusionConfig.use_film_scale_modulation": true,
+    "DiffusionConfig.use_separate_rgb_encoder_per_camera": true,
+    "ImageTransformsConfig.enable": false,
+    "TrainPipelineConfig.cudnn_deterministic": false,
+    "TrainPipelineConfig.dataloader_multiprocessing_context": "spawn",
+    "TrainPipelineConfig.log_freq": 200,
+    "TrainPipelineConfig.num_workers (overridden)": 4,
+    "TrainPipelineConfig.persistent_workers": true,
+    "TrainPipelineConfig.prefetch_factor": 4,
+    "TrainPipelineConfig.seed": 1000,
+    "TrainPipelineConfig.use_policy_training_preset": true,
+    "ema_in_lerobot_diffusion_or_train": "none",
+    "lerobot.__version__": "0.6.1",
+    "optimizer_preset.grad_clip_norm": 10.0,
+    "optimizer_preset.type": "adam"
+  },
+  "lerobot_train_config": {
+    "batch_size": 128,
+    "checkpoint_path": null,
+    "cudnn_deterministic": false,
+    "dataloader_multiprocessing_context": "spawn",
+    "dataset": {
+      "depth_output_unit": "mm",
+      "episodes": null,
+      "eval_split": 0.0,
+      "image_transforms": {
+        "enable": false,
+        "max_num_transforms": 3,
+        "random_order": false,
+        "tfs": {
+          "affine": {
+            "kwargs": {
+              "degrees": [
+                -5.0,
+                5.0
+              ],
+              "translate": [
+                0.05,
+                0.05
+              ]
+            },
+            "type": "RandomAffine",
+            "weight": 1.0
+          },
+          "brightness": {
+            "kwargs": {
+              "brightness": [
+                0.8,
+                1.2
+              ]
+            },
+            "type": "ColorJitter",
+            "weight": 1.0
+          },
+          "contrast": {
+            "kwargs": {
+              "contrast": [
+                0.8,
+                1.2
+              ]
+            },
+            "type": "ColorJitter",
+            "weight": 1.0
+          },
+          "hue": {
+            "kwargs": {
+              "hue": [
+                -0.05,
+                0.05
+              ]
+            },
+            "type": "ColorJitter",
+            "weight": 1.0
+          },
+          "saturation": {
+            "kwargs": {
+              "saturation": [
+                0.5,
+                1.5
+              ]
+            },
+            "type": "ColorJitter",
+            "weight": 1.0
+          },
+          "sharpness": {
+            "kwargs": {
+              "sharpness": [
+                0.5,
+                1.5
+              ]
+            },
+            "type": "SharpnessJitter",
+            "weight": 1.0
+          }
+        }
+      },
+      "repo_id": "ila/r1_ppo_2000_first1000",
+      "repo_type": "dataset",
+      "return_uint8": false,
+      "revision": null,
+      "root": "/home/kbasak/data/ila/lerobot/r1_ppo_2000_first1000_lerobot_v3",
+      "streaming": false,
+      "use_imagenet_stats": true,
+      "video_backend": "torchcodec"
+    },
+    "env": null,
+    "env_eval_freq": 20000,
+    "eval": {
+      "batch_size": 25,
+      "n_episodes": 50,
+      "recording": false,
+      "recording_private": false,
+      "recording_repo_id": null,
+      "use_async_envs": true
+    },
+    "eval_steps": 0,
+    "job": {
+      "detach": false,
+      "image": "huggingface/lerobot-gpu:latest",
+      "tags": [],
+      "target": null,
+      "timeout": "2d"
+    },
+    "job_name": "diffusion",
+    "log_freq": 200,
+    "max_eval_samples": 0,
+    "num_workers": 12,
+    "optimizer": {
+      "betas": [
+        0.95,
+        0.999
+      ],
+      "eps": 1e-08,
+      "grad_clip_norm": 10.0,
+      "lr": 0.0001,
+      "type": "adam",
+      "weight_decay": 1e-06
+    },
+    "output_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/R1_lerobot_dp/s1",
+    "peft": null,
+    "persistent_workers": true,
+    "policy": {
+      "beta_end": 0.02,
+      "beta_schedule": "squaredcos_cap_v2",
+      "beta_start": 0.0001,
+      "clip_sample": true,
+      "clip_sample_range": 1.0,
+      "compile_mode": "reduce-overhead",
+      "compile_model": false,
+      "crop_is_random": true,
+      "crop_ratio": 1.0,
+      "crop_shape": [
+        88,
+        88
+      ],
+      "device": "cuda",
+      "diffusion_step_embed_dim": 128,
+      "do_mask_loss_for_padding": false,
+      "down_dims": [
+        128,
+        256,
+        512
+      ],
+      "drop_n_last_frames": 7,
+      "gradient_checkpointing": false,
+      "horizon": 16,
+      "input_features": {},
+      "kernel_size": 5,
+      "license": null,
+      "n_action_steps": 8,
+      "n_groups": 8,
+      "n_obs_steps": 2,
+      "noise_scheduler_type": "DDPM",
+      "normalization_mapping": {
+        "ACTION": "MIN_MAX",
+        "STATE": "MIN_MAX",
+        "VISUAL": "MEAN_STD"
+      },
+      "num_inference_steps": null,
+      "num_train_timesteps": 100,
+      "optimizer_betas": [
+        0.95,
+        0.999
+      ],
+      "optimizer_eps": 1e-08,
+      "optimizer_lr": 0.0001,
+      "optimizer_weight_decay": 1e-06,
+      "output_features": {},
+      "prediction_type": "epsilon",
+      "pretrained_backbone_weights": null,
+      "pretrained_path": null,
+      "pretrained_revision": null,
+      "private": null,
+      "push_to_hub": false,
+      "repo_id": null,
+      "resize_shape": null,
+      "scheduler_name": "cosine",
+      "scheduler_warmup_steps": 500,
+      "spatial_softmax_num_keypoints": 32,
+      "tags": null,
+      "type": "diffusion",
+      "use_amp": false,
+      "use_film_scale_modulation": true,
+      "use_group_norm": true,
+      "use_peft": false,
+      "use_separate_rgb_encoder_per_camera": true,
+      "vision_backbone": "resnet18"
+    },
+    "prefetch_factor": 4,
+    "rename_map": {},
+    "resume": false,
+    "reward_model": null,
+    "sample_weighting": null,
+    "save_checkpoint": true,
+    "save_checkpoint_to_hub": false,
+    "save_freq": 10000,
+    "scheduler": {
+      "name": "cosine",
+      "num_warmup_steps": 500,
+      "type": "diffuser"
+    },
+    "seed": 1,
+    "steps": 100000,
+    "tolerance_s": 0.0001,
+    "use_policy_training_preset": true,
+    "wandb": {
+      "add_tags": true,
+      "disable_artifact": false,
+      "enable": false,
+      "entity": null,
+      "mode": null,
+      "notes": null,
+      "project": "lerobot",
+      "run_id": null
+    }
+  },
+  "loop_s_total": 10629.677576196962,
+  "max_steps": null,
+  "num_workers_override": null,
+  "optimizer": {
+    "betas": [
+      0.95,
+      0.999
+    ],
+    "eps": 1e-08,
+    "grad_clip_norm": 10.0,
+    "lr": 0.0001,
+    "name": "adam (lerobot DiffusionConfig preset; torch.optim.Adam, coupled L2)",
+    "schedule": "cosine (diffusers get_scheduler), 500 warm-up steps",
+    "weight_decay": 1e-06
+  },
+  "precision": "fp32 (use_amp false)",
+  "purpose": "train",
+  "resumes": [],
+  "run_seed": 1,
+  "sampler_len": 54525,
+  "segments": [
+    {
+      "dataloading_s_mean": 0.021064948205045658,
+      "first_step": 0,
+      "loop_s": 10629.677576196962,
+      "num_workers": 12,
+      "steps": 100000,
+      "steps_per_s": 9.407623070706304,
+      "steps_per_s_after_warmup": 9.4171362152039,
+      "update_s_mean": 0.08428647814969241,
+      "warmup_steps_excluded": 20
+    }
+  ],
+  "selectable": true,
+  "sigma": null,
+  "stages": [
+    {
+      "checkpoint_every": 10000,
+      "index": 0,
+      "steps": 100000,
+      "warmup": 500
+    }
+  ],
+  "state": "done",
+  "steps_override": null,
+  "steps_per_s_loop": 9.407623070706304,
+  "steps_timed_total": 100000,
+  "tag": "reference_external",
+  "total_steps": 100000,
+  "wall_clock_s": 10637.438036378997
+}

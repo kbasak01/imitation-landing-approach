@@ -1,0 +1,460 @@
+{
+  "C": 154,
+  "action_dim": 3,
+  "action_unnormalisation": {
+    "eps": 1e-08,
+    "formula": "float32: d = max - min; d = where(d == 0, eps, d); a = (x + 1) / 2 * d + min (LeRobot UnnormalizerProcessorStep); no clip",
+    "max": [
+      0.6294874548912048,
+      0.563503086566925,
+      0.26473870873451233
+    ],
+    "min": [
+      -0.55811607837677,
+      -0.4439578056335449,
+      -1.0
+    ],
+    "mode": "MIN_MAX"
+  },
+  "crop_shape": [
+    88,
+    88
+  ],
+  "exporter": "torch.onnx.export(dynamo=True, opset_version=17, external_data=False): torch 2.11 builds the graph at its native opset (18) and down-converts to 17 with the onnx C API version converter (onnxscript's converter declines); aten::mish is translated to Mul(x, Tanh(Softplus(x))) because ai.onnx Mish exists only from opset 18. Opset, IR, RNG ops and the I/O contract are checked after export",
+  "format": "ila-r1-onnx/1",
+  "graph_contract": {
+    "denoiser.onnx": {
+      "inputs": {
+        "global_cond": {
+          "elem_type": 1,
+          "shape": [
+            "batch",
+            154
+          ]
+        },
+        "sample": {
+          "elem_type": 1,
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        },
+        "timestep": {
+          "elem_type": 7,
+          "shape": [
+            "batch"
+          ]
+        }
+      },
+      "ir_version": 10,
+      "n_nodes": 363,
+      "op_types": [
+        "Add",
+        "Cast",
+        "Concat",
+        "Conv",
+        "ConvTranspose",
+        "Cos",
+        "Gemm",
+        "InstanceNormalization",
+        "Mul",
+        "Reshape",
+        "Shape",
+        "Sin",
+        "Slice",
+        "Softplus",
+        "Tanh",
+        "Transpose",
+        "Unsqueeze"
+      ],
+      "opset": 17,
+      "outputs": {
+        "eps": {
+          "elem_type": 1,
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      },
+      "rng_ops": []
+    },
+    "encoder.onnx": {
+      "inputs": {
+        "image": {
+          "elem_type": 2,
+          "shape": [
+            "batch",
+            2,
+            96,
+            96,
+            3
+          ]
+        },
+        "state": {
+          "elem_type": 1,
+          "shape": [
+            "batch",
+            2,
+            13
+          ]
+        }
+      },
+      "ir_version": 10,
+      "n_nodes": 194,
+      "op_types": [
+        "Add",
+        "Cast",
+        "Concat",
+        "Conv",
+        "Div",
+        "Gemm",
+        "InstanceNormalization",
+        "MatMul",
+        "MaxPool",
+        "Mul",
+        "Relu",
+        "Reshape",
+        "Shape",
+        "Slice",
+        "Softmax",
+        "Squeeze",
+        "Sub",
+        "Transpose",
+        "Unsqueeze"
+      ],
+      "opset": 17,
+      "outputs": {
+        "global_cond": {
+          "elem_type": 1,
+          "shape": [
+            "batch",
+            154
+          ]
+        }
+      },
+      "rng_ops": []
+    },
+    "global_cond_layout": "flatten over To of [state_norm (D), image feature] per step",
+    "image": "uint8 HWC, frames oldest first; /255, CHW, MEAN_STD, eval centre crop all inside the graph",
+    "state": "raw float32 student proprio; MIN_MAX inside the graph"
+  },
+  "horizon": 16,
+  "ila_commit": "f9659fa8217b63f55c3bcd617c4a24eadecede0b",
+  "image_key": "observation.image",
+  "image_shape_hwc": [
+    96,
+    96,
+    3
+  ],
+  "lerobot_path_check": {
+    "bit_identical": true,
+    "executed_slice": [
+      1,
+      9
+    ],
+    "max_abs": 0.0,
+    "method": "preprocess_observation -> checkpoint preprocessor -> DiffusionPolicy.select_action (own observation/action queues, t=1 windows: frame 0 queued first, then the action queue cleared so frame 1 replans) -> checkpoint postprocessor; batch 1; same noise argument; LeRobot's noise_scheduler replaced by ila's DDIM-trailing K=10 for this check only",
+    "n": 64,
+    "tolerance": 1e-06
+  },
+  "machine": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39"
+  },
+  "n_action_steps": 8,
+  "n_obs_steps": 2,
+  "normalisation": {
+    "action_post": {
+      "max": [
+        0.6294874548912048,
+        0.563503086566925,
+        0.26473870873451233
+      ],
+      "min": [
+        -0.55811607837677,
+        -0.4439578056335449,
+        -1.0
+      ]
+    },
+    "action_pre": {
+      "max": [
+        0.6294874548912048,
+        0.563503086566925,
+        0.26473870873451233
+      ],
+      "min": [
+        -0.55811607837677,
+        -0.4439578056335449,
+        -1.0
+      ]
+    },
+    "action_pre_equals_post": true,
+    "dataset_stats_json_sha256": "5e067e591c11a3226a382c260cd602e94ff1aec28f235a60d49110c5345b217e",
+    "eps": 1e-08,
+    "equals_dataset_stats_json": {
+      "action_min_max": true,
+      "image_mean_std": false,
+      "state_min_max": true
+    },
+    "image": {
+      "key": "observation.image",
+      "mean": [
+        0.48500001430511475,
+        0.4560000002384186,
+        0.4059999883174896
+      ],
+      "std": [
+        0.2290000021457672,
+        0.2240000069141388,
+        0.22499999403953552
+      ]
+    },
+    "location": "lerobot 0.6.1 keeps no statistics in the policy (model.safetensors holds weights only): inputs are normalised by the preprocessor's NormalizerProcessorStep (policy_preprocessor.json + policy_preprocessor_step_*_normalizer_processor.safetensors), actions unnormalised by the postprocessor's UnnormalizerProcessorStep (policy_postprocessor_step_*_unnormalizer_processor.safetensors)",
+    "norm_map": {
+      "ACTION": "MIN_MAX",
+      "STATE": "MIN_MAX",
+      "VISUAL": "MEAN_STD"
+    },
+    "state": {
+      "max": [
+        0.33795657753944397,
+        0.4431730806827545,
+        0.1589447408914566,
+        5.9567060470581055,
+        7.378702640533447,
+        3.3217287063598633,
+        1.1770027875900269,
+        0.9242249727249146,
+        0.6878190636634827,
+        0.6294874548912048,
+        0.563503086566925,
+        0.26473870873451233,
+        1.0
+      ],
+      "min": [
+        -0.3868538439273834,
+        -0.45792657136917114,
+        -0.26124119758605957,
+        -7.789066791534424,
+        -5.455087184906006,
+        -2.816500425338745,
+        -0.47510936856269836,
+        -0.807421088218689,
+        -1.5889257192611694,
+        -0.55811607837677,
+        -0.4439578056335449,
+        -1.0,
+        0.0
+      ]
+    }
+  },
+  "onnx_sha256": {
+    "denoiser.onnx": "cd512f6c2c93be359030653e1ffdad891614c1c38aa87c77d97ed225e6c9b116",
+    "encoder.onnx": "2d4704de8d2c21b20c64bcc242e8af4d94da63755e4e00191df5d77e206d803c"
+  },
+  "prediction_type": "epsilon",
+  "reference": {
+    "dataset_build_json_sha256": "dd9bbdea6cbee73eb6c5801b3460355cc4d99909658f24f64bf9f1a5e3ddd543",
+    "dataset_episodes_frames": [
+      999,
+      61518
+    ],
+    "dataset_root": "/home/kbasak/data/ila/lerobot/r1_ppo_2000_first1000_lerobot_v3",
+    "ddim_k": 10,
+    "eps_sample_seed": 20261031,
+    "eps_timesteps": [
+      99,
+      89,
+      49,
+      9,
+      0
+    ],
+    "n": 64,
+    "noise_seed": 20261030,
+    "selection": "first windows: anchors t = 0 (frame 0 repeated) and t = 1 of episodes 0 .. n/2 - 1, in that order",
+    "torch_path": "torch fp32 CPU, batch 1 per input, eval mode"
+  },
+  "reference_sha256": "c816de7936d069091f37686432078bfe5a865f66b59a0541b1cddde0995f7941",
+  "scheduler": {
+    "ila_inference": {
+      "alphas_cumprod": [
+        0.9993687272071838,
+        0.9982525110244751,
+        0.9966524243354797,
+        0.9945700168609619,
+        0.992007315158844,
+        0.9889668226242065,
+        0.9854514598846436,
+        0.9814646244049072,
+        0.9770103096961975,
+        0.9720926880836487,
+        0.9667166471481323,
+        0.9608874320983887,
+        0.9546105861663818,
+        0.9478922486305237,
+        0.9407390356063843,
+        0.933157742023468,
+        0.9251558184623718,
+        0.9167410135269165,
+        0.907921552658081,
+        0.8987058997154236,
+        0.88910311460495,
+        0.8791224360466003,
+        0.8687736392021179,
+        0.858066737651825,
+        0.8470121026039124,
+        0.8356205224990845,
+        0.8239030241966248,
+        0.8118710517883301,
+        0.7995361685752869,
+        0.7869104743003845,
+        0.774006187915802,
+        0.7608358263969421,
+        0.7474122047424316,
+        0.7337483167648315,
+        0.7198575139045715,
+        0.7057532072067261,
+        0.6914491653442383,
+        0.676959216594696,
+        0.6622974276542664,
+        0.6474781632423401,
+        0.6325156688690186,
+        0.6174246072769165,
+        0.6022195219993591,
+        0.5869152545928955,
+        0.5715266466140747,
+        0.5560685992240906,
+        0.5405561923980713,
+        0.5250044465065002,
+        0.5094285011291504,
+        0.49384352564811707,
+        0.47826457023620605,
+        0.4627067744731903,
+        0.44718530774116516,
+        0.4317152202129364,
+        0.41631150245666504,
+        0.4009891748428345,
+        0.38576310873031616,
+        0.37064802646636963,
+        0.3556586802005768,
+        0.3408096134662628,
+        0.326115220785141,
+        0.311589777469635,
+        0.29724743962287903,
+        0.2831021249294281,
+        0.2691675126552582,
+        0.25545719265937805,
+        0.24198445677757263,
+        0.2287624180316925,
+        0.21580387651920319,
+        0.20312146842479706,
+        0.19072747230529785,
+        0.1786339432001114,
+        0.16685262322425842,
+        0.15539497137069702,
+        0.1442720890045166,
+        0.1334948092699051,
+        0.12307357043027878,
+        0.11301850527524948,
+        0.10333938151597977,
+        0.09404560923576355,
+        0.08514619618654251,
+        0.07664980739355087,
+        0.06856467574834824,
+        0.06089867278933525,
+        0.05365923047065735,
+        0.046853382140398026,
+        0.04048774391412735,
+        0.03456849604845047,
+        0.029101382941007614,
+        0.024091722443699837,
+        0.01954437419772148,
+        0.015463759191334248,
+        0.0118538374081254,
+        0.008718117140233517,
+        0.006059643812477589,
+        0.003880999283865094,
+        0.0021842997521162033,
+        0.0009711928432807326,
+        0.00024285720428451896,
+        2.4285407107527135e-07
+      ],
+      "beta_schedule": "squaredcos_cap_v2",
+      "clip_sample": true,
+      "default_num_inference_steps": 10,
+      "eta": 0.0,
+      "final_clip": [
+        -1.0,
+        1.0
+      ],
+      "num_train_timesteps": 100,
+      "prediction_type": "epsilon",
+      "sampler": "ddim",
+      "set_alpha_to_one": true,
+      "steps_offset": 0,
+      "timestep_spacing": "trailing",
+      "timesteps_at_default_k": [
+        99,
+        89,
+        79,
+        69,
+        59,
+        49,
+        39,
+        29,
+        19,
+        9
+      ]
+    },
+    "lerobot_native": {
+      "beta_end": 0.02,
+      "beta_schedule": "squaredcos_cap_v2",
+      "beta_start": 0.0001,
+      "clip_sample": true,
+      "clip_sample_range": 1.0,
+      "note": "training schedule; LeRobot's own select_action samples with it",
+      "num_inference_steps": null,
+      "num_train_timesteps": 100,
+      "prediction_type": "epsilon",
+      "type": "DDPM"
+    }
+  },
+  "source": {
+    "checkpoint_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/R1_lerobot_dp/s0/checkpoints/050000/pretrained_model",
+    "checkpoint_sha256": "ca42931a43bf736473aa8e0beb09a0dd2d0e13f320a95144c2cebdc2825d974d",
+    "checkpoint_sha256_of": "model.safetensors",
+    "files": {
+      "config.json": "9d7d06098e5cff3362c5db5d4e2985c8156c340d97cca2e0e645fc4a9f08a6f6",
+      "model.safetensors": "ca42931a43bf736473aa8e0beb09a0dd2d0e13f320a95144c2cebdc2825d974d",
+      "policy_postprocessor.json": "339b568f946d0dd3368d50adf19faec7ba68e13172807b6c9f5dc3fe1e8ec4d8",
+      "policy_postprocessor_step_0_unnormalizer_processor.safetensors": "7d3fae3c6cd45abc436e1a5486b1c093a5583ebdc189ecedb5fde724af944092",
+      "policy_preprocessor.json": "8e3a8770b939e5c0fefc4e6d61f468ed577dd935bbd177e4860dfc9cfdf4c34d",
+      "policy_preprocessor_step_3_normalizer_processor.safetensors": "bfa90375d457d32e12478a8b11a4f4ab74eda7edb79bd2a419d9541bc9581152",
+      "train_config.json": "d13dcdda9675df2ea408d297b61dbef2a82564e1324548eec9df258687c628cb"
+    }
+  },
+  "state_dim": 13,
+  "step": 50000,
+  "timing_s": {
+    "export_denoiser": 5.759791470016353,
+    "export_encoder": 3.78991216304712,
+    "load": 0.23384278500452638,
+    "reference": 33.5146752599976,
+    "total": 43.71595004701521
+  },
+  "torch_threads": 1,
+  "versions": {
+    "diffusers": "0.39.0",
+    "ir_version": 10,
+    "lerobot": "0.6.1",
+    "numpy": "2.2.6",
+    "onnx": "1.23.2",
+    "onnxscript": "0.7.2",
+    "opset": 17,
+    "python": "3.12.3",
+    "torch": "2.11.0+cu130"
+  }
+}

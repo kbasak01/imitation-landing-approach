@@ -1,0 +1,251 @@
+{
+  "arm": "dp",
+  "checkpoint": {
+    "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step100000.pt",
+    "global_step": 100000,
+    "sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581"
+  },
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913",
+        "matches": true,
+        "path": "configs/train/dp.yaml",
+        "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+      }
+    ]
+  },
+  "definitions": "ila.train.dp_diagnostics module docstring; actions normalised (x v_max = 1.5 m/s model scale), one control step = 1/30 s model scale",
+  "diagnostics_git": {
+    "ila_commit": "f9659fa8217b63f55c3bcd617c4a24eadecede0b",
+    "ila_dirty": true,
+    "ila_dirty_paths": [
+      "?? results/dp_sweeps.json",
+      "?? results/phase6/sweeps/"
+    ],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "heldout": {
+    "bias_executed": {
+      "max": 0.2034491513076508,
+      "mean": 0.0773074574468833,
+      "median": 0.0805316982455261,
+      "n": 512,
+      "p90": 0.13943287281993622,
+      "p95": 0.15484976779896423,
+      "p99": 0.17788186265961886
+    },
+    "clip_chunk": 0.0003712972005208333,
+    "clip_executed": 0.0006663004557291666,
+    "episodes": 25,
+    "frames": 1526,
+    "label_clip_executed": 0.001953125,
+    "open_loop_jerk": {
+      "d1_boundary": {
+        "max": 0.572589597598328,
+        "mean": 0.22348611193910473,
+        "median": 0.21684156641248256,
+        "n": 175,
+        "p90": 0.42850073291459884,
+        "p95": 0.4603251118459621,
+        "p99": 0.5341975199943445
+      },
+      "d1_ratio_boundary_over_within": 1.1616492660686057,
+      "d1_within": {
+        "max": 0.5894266101438332,
+        "mean": 0.19238690925657234,
+        "median": 0.19330001913258307,
+        "n": 1326,
+        "p90": 0.3934412473619141,
+        "p95": 0.4334181576709539,
+        "p99": 0.4890813214462213
+      },
+      "d2_boundary": {
+        "max": 0.9966711859966252,
+        "mean": 0.3673711991427483,
+        "median": 0.36898271501912205,
+        "n": 348,
+        "p90": 0.6987471465385936,
+        "p95": 0.7791517458928812,
+        "p99": 0.9173899343362674
+      },
+      "d2_ratio_boundary_over_within": 1.203022736945147,
+      "d2_within": {
+        "max": 0.9887977448061762,
+        "mean": 0.30537344628715773,
+        "median": 0.28675696156470887,
+        "n": 1128,
+        "p90": 0.6450626322550914,
+        "p95": 0.758148566473953,
+        "p99": 0.8615161579132133
+      },
+      "units": "d1: normalised action per control step (x 45 m/s^2 model scale); d2: per control step squared (x 1350 m/s^3 model scale)"
+    },
+    "spread_executed": {
+      "max": 0.04014650945105531,
+      "mean": 0.014996183320466797,
+      "median": 0.014454815917794435,
+      "n": 512,
+      "p90": 0.026366468218608795,
+      "p95": 0.029820261833987213,
+      "p99": 0.03576105055735262
+    },
+    "spread_first": {
+      "max": 0.029624540830811025,
+      "mean": 0.005436913321617893,
+      "median": 0.005113257207234075,
+      "n": 512,
+      "p90": 0.008328197009891188,
+      "p95": 0.010014567412241835,
+      "p99": 0.014510911381945152
+    },
+    "spread_states": 512,
+    "states": "ppo_2000 stream indices 1950-1999, every second episode (25)",
+    "teacher_label_jerk": {
+      "d1_boundary": {
+        "max": 0.5707194311478065,
+        "mean": 0.23015485743901967,
+        "median": 0.2550682770674527,
+        "n": 175,
+        "p90": 0.40864485289606606,
+        "p95": 0.46614889840868234,
+        "p99": 0.5489127265523598
+      },
+      "d1_ratio_boundary_over_within": 1.0929346631487697,
+      "d1_within": {
+        "max": 0.631140398891382,
+        "mean": 0.21058427845626038,
+        "median": 0.22715139874037762,
+        "n": 1326,
+        "p90": 0.40515528867269973,
+        "p95": 0.4428214686621716,
+        "p99": 0.5131120986440992
+      },
+      "d2_boundary": {
+        "max": 0.990982062396259,
+        "mean": 0.37067814451351544,
+        "median": 0.3973707973535876,
+        "n": 348,
+        "p90": 0.6671211667617875,
+        "p95": 0.7346690521646476,
+        "p99": 0.8463619285929954
+      },
+      "d2_ratio_boundary_over_within": 1.1109481143711497,
+      "d2_within": {
+        "max": 1.192347127156769,
+        "mean": 0.33365927689911706,
+        "median": 0.3435717342252319,
+        "n": 1128,
+        "p90": 0.6889079478936069,
+        "p95": 0.7716965831752713,
+        "p99": 0.8693485650230806
+      },
+      "units": "d1: normalised action per control step (x 45 m/s^2 model scale); d2: per control step squared (x 1350 m/s^3 model scale)"
+    }
+  },
+  "run_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0",
+  "run_seed": 0,
+  "select": {
+    "action_jerk_mean_matches_rows": true,
+    "action_jerk_mean_rows": {
+      "max": 0.2550553816375014,
+      "mean": 0.19615178640287378,
+      "median": 0.19576178717170087,
+      "n": 150,
+      "p90": 0.22320269221501055,
+      "p95": 0.22986698755580431,
+      "p99": 0.24348022524181032
+    },
+    "clip_chunk": 0.000335693359375,
+    "clip_executed": 0.0005289713541666666,
+    "closed_loop_jerk": {
+      "d1_boundary": {
+        "max": 0.8282813132040817,
+        "mean": 0.2588568923786395,
+        "median": 0.25218507945664304,
+        "n": 1053,
+        "p90": 0.44256953992180414,
+        "p95": 0.48388026802262135,
+        "p99": 0.5856056385185296
+      },
+      "d1_ratio_boundary_over_within": 1.36288483997723,
+      "d1_within": {
+        "max": 0.7668836102494057,
+        "mean": 0.18993306315078265,
+        "median": 0.1820719799594091,
+        "n": 7918,
+        "p90": 0.36181067554412555,
+        "p95": 0.40813812970195695,
+        "p99": 0.48903691891844125
+      },
+      "d2_boundary": {
+        "max": 1.4796241296778645,
+        "mean": 0.3792601761094289,
+        "median": 0.37158677891502206,
+        "n": 2083,
+        "p90": 0.6599568719833688,
+        "p95": 0.7417552743098464,
+        "p99": 0.8937569410815033
+      },
+      "d2_ratio_boundary_over_within": 1.265738968909045,
+      "d2_within": {
+        "max": 1.0596534381014338,
+        "mean": 0.29963537935180873,
+        "median": 0.28450532749076585,
+        "n": 6738,
+        "p90": 0.6040499918101461,
+        "p95": 0.6739822497471797,
+        "p99": 0.7991402926488886
+      },
+      "units": "d1: normalised action per control step (x 45 m/s^2 model scale); d2: per control step squared (x 1350 m/s^3 model scale)"
+    },
+    "episodes": 150,
+    "executed_at_bound": 0.0006212769067719183,
+    "list": "select",
+    "replan_states": 1203,
+    "rows_file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/diagnostics/select_recorded_rows.csv",
+    "rows_match_selection": true,
+    "spread_executed": {
+      "max": 0.04723733870628094,
+      "mean": 0.01658339604299787,
+      "median": 0.015492533883987147,
+      "n": 512,
+      "p90": 0.027625394422354187,
+      "p95": 0.03168219887975094,
+      "p99": 0.03759408104360308
+    },
+    "spread_first": {
+      "max": 0.04024974528273658,
+      "mean": 0.009491855149813697,
+      "median": 0.006884075863847477,
+      "n": 512,
+      "p90": 0.020363677705602285,
+      "p95": 0.027343172091467288,
+      "p99": 0.03769419089757842
+    },
+    "spread_states": 512,
+    "workers": 24
+  },
+  "settings": {
+    "K": 10,
+    "Ta": 8,
+    "clip_bound": "|a| >= 1 - 1e-06",
+    "ensemble": false,
+    "open_loop_noise_key": "(run_seed, -2 - e, t)",
+    "path": "cpu fp32 eval mode (centre crop)",
+    "samples_per_state": 16,
+    "spread_noise_key": "(run_seed, -1, 16 i + j)",
+    "state_draw": "numpy default_rng(0), P4-D5",
+    "states": 512,
+    "weights": "ema"
+  },
+  "torch_threads": 1,
+  "train_git": {
+    "ila_commit": "b9129420656ecdbe791bd4479c72513bcc54017e",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "wall_clock_s": 376.2482061240007
+}
