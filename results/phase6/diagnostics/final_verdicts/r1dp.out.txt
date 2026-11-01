@@ -1,0 +1,6 @@
+R1-dp selected success rate diff -0.0702 [-0.1449  0.0067]
+candidate-mean success dp 55.92 R1 44.833333333333336 diff pts -7.391111111111111
+dp selected [63, 66, 68, 67, 62] cand mean [56.  55.6 55.7 60.3 52. ] selected-minus-mean [ 7.  10.4 12.3  6.7 10. ] cand sd [4.2 7.1 9.6 4.9 6.1]
+R1 selected [54, 57, 53] cand mean [45.4 44.7 44.4] selected-minus-mean [ 8.6 12.3  8.6] cand sd [5.9 9.  6.9]
+E[max of 10 Bin(150,0.373)] = 65.1 (mean 56.0)
+E[max of 10 Bin(150,0.299)] = 53.6 (mean 44.9)

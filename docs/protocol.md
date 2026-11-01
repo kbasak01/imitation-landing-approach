@@ -2468,3 +2468,149 @@ its smoke JSON exactly.
   flight uses it. It is fixed after the Phase 6 queue, because the trainers refuse a dirty tree.
 - R1 s0–s2 train after `dp` s4. Each is exported, passes parity, then is selected by the P3-D1 §4
   rule at `Ta` = 8, K = 10.
+
+### P6-D5 — `dp` and R1 run verdicts, selection, the chunking finding, budget (2026-11-01)
+*Decision.* All 8 Phase 6 runs are kept: no exclusions, no re-selection, nothing tuned. Final
+verdicts from the `training-run-diagnostician`:
+
+| Run | Verdict | Selected step | `select` success | Main reasons |
+|---|---|---|---|---|
+| `dp` s0 | TRUSTWORTHY | 100 k | 63/150 | |
+| `dp` s1 | TRUSTWORTHY | 50 k | 66/150 | |
+| `dp` s2 | TRUSTWORTHY | 60 k | 68/150 | |
+| `dp` s3 | TRUSTWORTHY | 100 k | 67/150 | |
+| `dp` s4 | TRUSTWORTHY | 100 k | 62/150 | |
+| `R1_lerobot_dp` s0 | CAVEAT | 100 k | 54/150 | no EMA; over-trains past 40 k; LeRobot recipe gap; reference only |
+| `R1_lerobot_dp` s1 | CAVEAT | 40 k | 57/150 | same |
+| `R1_lerobot_dp` s2 | CAVEAT | 50 k | 53/150 | same |
+
+Source: `results/phase6/runs_summary.csv` and `results/phase6/runs/<arm>/s<n>/`.
+
+*Findings.* All are simulation results at model scale, on the 150 `select` episodes only. No
+frozen list was flown.
+
+1. **Provenance.**
+   - Configs: `dp.yaml` `c8f90c35…6913`, `r1_lerobot_dp.yaml` `a55e2fa0…6720`. Data: `ppo_2000`
+     `35b70cbd…7cfd`, first 1 000 episodes, 999 kept, 61 518 frames.
+   - Every tree was clean. `dp` s0–s2 ran at `b912942`; `dp` s3–s4 and every R1 run at `f9659fa`.
+     The two commits differ only in protocol and results files, with no code change.
+   - No resumes. Every checkpoint SHA-256 was recomputed and matches.
+   - R1's `selected_ckpt_sha256` is the SHA-256 of the export bundle's `meta.json`. That file
+     records the `model.safetensors` SHA-256, which equals the manifest's.
+2. **Selection followed P3-D1 §4 in all 8 runs**, and was decided by success alone. The p95
+   tie-break was never used, so the Phase 6 note's expectation did not happen.
+   - Winning margins were 1–5 episodes.
+   - Differences between the 10 checkpoints of a run are mostly binomial noise: Cochran's Q is
+     not significant in 6 of 8 runs (exceptions: `dp` s2 p = 0.002, R1 s1 p = 0.004).
+   - The selected scores are what taking the maximum of 10 noisy draws predicts. Candidate means
+     are `dp` 55.9 and R1 44.8; the expected maxima are 65.1 and 53.6; the selected means are 65.2
+     and 54.7. **Phase 8 should expect lower numbers than the selected `select` scores.**
+   - Source: `results/phase6/diagnostics/final_verdicts/{sel,pool}.out.txt`.
+3. **Held-out denoising loss is not a selection proxy.**
+   - Every `dp` seed reaches its held-out EMA minimum at 41–45 k, then rises 53–70 % by 100 k;
+     about 90 % of the rise is in k 0–24. R1's offline reconstruction has its minimum at 40 k in
+     3 of 3 seeds, then rises 55–72 % (`results/phase6/diagnostics/R1_lerobot_dp/heldout_reconstruction/`).
+   - Yet `dp` success *rises* late. Mean success by step is 51.6 / 51.4 / 50.8 / 51.8 at 10–40 k
+     and 56.4 / 59.2 / 61.0 / 61.6 at 70–100 k. 100 k minus 40 k is positive in 5 of 5 seeds;
+     pooled, p = 0.011 at episode level, which ignores clustering by seed.
+   - The diagnostician had predicted more `off_pad` and `hard_landing` late. `off_pad` did rise
+     (44.0 % vs 40.4 %), but `hard_landing` fell (10.2 % vs 17.5 %), so the prediction was
+     falsified.
+   - Source: `results/phase6/diagnostics/final_verdicts/{pool,late}.out.txt`.
+4. **`dp` at its frozen setting (`Ta` = 8, K = 10) lands far below the BC family.**
+   - `dp` 62–68/150, mostly `off_pad`, against 145–150/150 for `bc`, `bc_matched`, `bc_dart`,
+     `bc_dagger` and `bc_state` (`results/phase4/runs_summary.csv`, `results/phase5/runs_summary.csv`).
+   - The median lateral touchdown offset is 0.092 m, against an `off_pad` boundary of 0.10 m
+     (success maximum 0.100 m, `off_pad` minimum 0.100 m). At `Ta` = 8, outcomes sit on the
+     threshold, which is why selection is noise-dominated.
+   - Tunnelled episodes: 13–26 per run, against 0–2 for the BC family. They close faster: median
+     0.559 m/s against 0.385 m/s overall. 17 tunnelled `dp` episodes are scored `success` under
+     P8's rule.
+   - Across the 5 runs there was 1 timeout (s1 SS5 #22) and 1 crash (s3 SS5 #48, tilt).
+     Detectors disagreed 0 times.
+   - Source: `results/phase6/diagnostics/final_verdicts/tun.out.txt`.
+5. **Inference sweeps on `select`** (`results/dp_sweeps.json`; reported only; unscored; nothing
+   re-selected). Success per seed s0–s4 and mean:
+
+   | Cell | Success, s0–s4 | Mean | With ensembling (mean) |
+   |---|---|---|---|
+   | `Ta` 1 | 143 129 137 141 145 | 139.0 | (same policy) |
+   | `Ta` 2 | 130 113 122 130 127 | 124.4 | 135.2 |
+   | `Ta` 4 | 75 84 93 83 91 | 85.2 | 117.0 |
+   | `Ta` 8 | 63 66 68 67 62 | 65.2 | 112.6 |
+   | `Ta` 12 | 53 64 69 51 55 | 58.4 | 123.0 |
+
+   - Every seed's reference cell reproduced its selection rows text for text.
+   - The `Ta` = 8 / K = 10 cell is the selection cell and carries the selection optimism of
+     item 2. Every other cell is free of it.
+   - Ensembling beats no ensembling in all 20 seed × `Ta` comparisons and recovers 59–80 % of the
+     gap to `Ta` = 1. With ensembling, success is not monotone in `Ta`: `Ta` 12 beats `Ta` 8 in 5
+     of 5 seeds.
+   - **K.** K 5 / 25 / 100 give means of 59.8 / 56.8 / 54.2. Corrected for selection bias, K = 10
+     is about 56, so they cannot be told apart. "K = 10 beats K = 25 or 100" must not be claimed.
+     K = 1 and 2 (0/150 and 23–36/150) are labelled `schedule_limited`.
+   - At `Ta` = 1 the leading failure is `hard_landing` (38 of 750), not `off_pad` (14 of 750).
+   - Source: `results/phase6/diagnostics/final_verdicts/sweeps.out.txt`.
+   - **Reading.** The `dp` network itself is close to BC when it replans every step. The loss at
+     `Ta` = 8 comes from executing 8-step chunks (0.27 s model scale, 1.33 s full scale) open
+     loop while the pad moves. This is the H3 mechanism. H3 is scored only in Phase 8, on `id`
+     SS6, from the same checkpoints.
+6. **No execution bug.** Five pieces of evidence:
+   - (a) Shifting labels by ±1 step makes open-loop MSE 506× worse for `dp` and 850× worse for R1.
+     *Correction to P6-D4:* its "about 850×" is R1's figure.
+   - (b) In closed loop the first chunk stays within 0.007–0.009 of the same-step label, with
+     ≤ 1 mm xy drift through t = 7.
+   - (c) All 30 R1 parity files show LeRobot's own `select_action` matching the executed slice
+     To − 1 … To + 6.
+   - (d) `Ta` = 1 lands 139/150.
+   - (e) Degradation grows with `Ta` and is mostly `off_pad`.
+   - Sources: `results/phase6/r1_investigation/{analysis_openloop,divergence}.json` and the R1
+     `parity.json` files.
+7. **DP diagnostics** (`results/phase6/diagnostics/dp/s<n>.json`; normalised actions,
+   × 1.5 m/s model scale).
+   - **Spread.** Over the executed slice, the spread of 16 samples is 0.015–0.033. The
+     sample-mean RMS error is 0.071–0.077, so samples are under-dispersed but not collapsed.
+   - **Clipping.** Executed actions at ±1 occur in 0.03–0.11 % of steps, against 0.195 % in the
+     labels.
+   - **Jerk.** First-difference ratio at chunk boundaries vs within chunks: 1.35–1.47 in closed
+     loop, 1.15–1.25 open loop, 1.09 for the teacher's labels. The closed-loop re-fly reproduced
+     the selection rows and P8's `action_jerk_mean` in all 5 seeds.
+8. **R1 vs `dp` at `Ta` = 8** (descriptive; 3 vs 5 seeds).
+   - Selected: −7.0 points, bootstrap 95 % CI [−14.5, +0.7]. Candidate means: −7.4 points.
+   - Same failure profile: lateral offset median 0.099 m, `off_pad`-dominated.
+   - The gap has the size of P6-D4's `dp` raw − EMA effect, and its CI includes 0. It is not
+     "large" in the sense of plan Phase 6 item 6, so no further investigation is needed before
+     Phase 8.
+   - R1 reproduces the main result (`Ta` = 8 far below BC) with independent training code,
+     dataset indexing and normalisation. It shares ila's executor, sampler and runner, which (c)
+     covers.
+   - Source: `results/phase6/diagnostics/final_verdicts/r1dp.out.txt`.
+9. **Budget** (wall-clock GPU-h).
+   - `dp`: 2.2095 / 2.2142 / 2.2160 / 2.1889 / 2.1715 = **11.000**, against 10.9 (+0.9 %).
+   - R1: 2.9248 / 2.9548 / 2.9424 = **8.822**, against P4-D2's 6.5 proxy (+2.32 h). About 0.07 h
+     of that came from diagnostics sharing the CPU with s1 and s2.
+   - Cumulative training through Phase 6: 17.50 + 7.11 + 19.82 = **44.43 GPU-h**, against 40.9
+     projected through Phase 6.
+   - Projected total if `modular` and the ablations run at projection: about 95 of 120 h.
+   - No cut (P4-D2).
+   - Sweeps took 30–34 min per seed, against P6-D1's 15–25 min estimate.
+
+*Evidence.*
+- `results/phase6/runs_summary.csv`.
+- `results/phase6/runs/<arm>/s<n>/{manifest.json, selection.json, select/*_rows.csv}`, plus R1's
+  `onnx/step*/{parity,meta}.json`.
+- `results/dp_sweeps.json` and `results/phase6/sweeps/`.
+- `results/phase6/diagnostics/{dp, R1_lerobot_dp, final_verdicts}/`. The scripts read
+  `artifacts/` paths; the same rows are committed under `results/phase6/runs/`.
+
+*Consequence.*
+- **The README must state:**
+  - that `dp` at its frozen `Ta` = 8 lands far below BC on `select`, and that this is a chunking
+    effect, not a weaker network (`Ta` = 1: 139/150);
+  - that selection is noise-dominated and the selected scores are optimistic;
+  - that held-out loss runs opposite to success.
+- **Phase 8, GPU acceptance.** The binding GPU-acceptance test for `dp` (≤ 3 of 150 flips, P3-D1
+  §3) has not been run. Outcomes at `Ta` = 8 sit on the 0.10 m threshold, so a failure is likely.
+  Plan the CPU-path budget now:
+  - 170 ms per K = 10 call;
+  - the `Ta` = 1 and ensembling cells replan every step.

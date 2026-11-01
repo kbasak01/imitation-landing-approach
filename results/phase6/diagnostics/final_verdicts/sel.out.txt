@@ -1,0 +1,88 @@
+== dp/s0 selected 100000 succ range 49-63 mean 56.0 sd 4.2; always-success eps 0, never 9; rho(succ,heldout)=(np.float64(0.628), np.float64(0.052))
+   10000 S= 58 p95=0.600 off=50 hard=18 bnc=22 cr=1 to=1 tun=17 dd=0 ho=0.0411 ss={'SS3': 17, 'SS4': 18, 'SS5': 23} sel-only/cand-only=35/30 p=0.62
+   20000 S= 49 p95=0.721 off=63 hard=24 bnc=13 cr=1 to=0 tun=33 dd=0 ho=0.0375 ss={'SS3': 19, 'SS4': 12, 'SS5': 18} sel-only/cand-only=39/25 p=0.103
+   30000 S= 57 p95=0.735 off=48 hard=31 bnc=13 cr=1 to=0 tun=31 dd=0 ho=0.0358 ss={'SS3': 23, 'SS4': 17, 'SS5': 17} sel-only/cand-only=39/33 p=0.556
+   40000 S= 56 p95=0.720 off=63 hard=22 bnc= 9 cr=0 to=0 tun=35 dd=0 ho=0.0351 ss={'SS3': 24, 'SS4': 15, 'SS5': 17} sel-only/cand-only=41/34 p=0.489
+   50000 S= 50 p95=0.708 off=62 hard=30 bnc= 6 cr=2 to=0 tun=26 dd=1 ho=0.0355 ss={'SS3': 21, 'SS4': 14, 'SS5': 15} sel-only/cand-only=43/30 p=0.16
+   60000 S= 56 p95=0.680 off=65 hard=18 bnc=11 cr=0 to=0 tun=32 dd=0 ho=0.0383 ss={'SS3': 15, 'SS4': 20, 'SS5': 21} sel-only/cand-only=40/33 p=0.483
+   70000 S= 54 p95=0.677 off=73 hard=18 bnc= 4 cr=1 to=0 tun=32 dd=0 ho=0.0433 ss={'SS3': 20, 'SS4': 18, 'SS5': 16} sel-only/cand-only=37/28 p=0.321
+   80000 S= 60 p95=0.645 off=72 hard=14 bnc= 4 cr=0 to=0 tun=11 dd=0 ho=0.0500 ss={'SS3': 21, 'SS4': 20, 'SS5': 19} sel-only/cand-only=40/37 p=0.82
+   90000 S= 57 p95=0.706 off=67 hard=20 bnc= 6 cr=0 to=0 tun=27 dd=0 ho=0.0561 ss={'SS3': 22, 'SS4': 25, 'SS5': 10} sel-only/cand-only=34/28 p=0.526
+  100000 S= 63 p95=0.656 off=71 hard=10 bnc= 6 cr=0 to=0 tun=19 dd=0 ho=0.0593 ss={'SS3': 21, 'SS4': 21, 'SS5': 21} sel-only/cand-only=0/0 p=1.0
+== dp/s1 selected 50000 succ range 46-66 mean 55.6 sd 7.1; always-success eps 0, never 9; rho(succ,heldout)=(np.float64(-0.067), np.float64(0.854))
+   10000 S= 46 p95=0.629 off=67 hard=17 bnc=16 cr=2 to=2 tun=14 dd=1 ho=0.0428 ss={'SS3': 18, 'SS4': 15, 'SS5': 13} sel-only/cand-only=37/17 p=0.009
+   20000 S= 51 p95=0.707 off=53 hard=35 bnc=11 cr=0 to=0 tun=26 dd=0 ho=0.0390 ss={'SS3': 21, 'SS4': 15, 'SS5': 15} sel-only/cand-only=42/27 p=0.091
+   30000 S= 53 p95=0.710 off=58 hard=28 bnc=11 cr=0 to=0 tun=27 dd=0 ho=0.0370 ss={'SS3': 20, 'SS4': 15, 'SS5': 18} sel-only/cand-only=43/30 p=0.16
+   40000 S= 49 p95=0.763 off=66 hard=22 bnc=13 cr=0 to=0 tun=31 dd=0 ho=0.0362 ss={'SS3': 21, 'SS4': 12, 'SS5': 16} sel-only/cand-only=42/25 p=0.05
+   50000 S= 66 p95=0.669 off=57 hard=21 bnc= 5 cr=0 to=1 tun=26 dd=0 ho=0.0367 ss={'SS3': 22, 'SS4': 26, 'SS5': 18} sel-only/cand-only=0/0 p=1.0
+   60000 S= 64 p95=0.653 off=56 hard=25 bnc= 5 cr=0 to=0 tun=21 dd=0 ho=0.0388 ss={'SS3': 24, 'SS4': 25, 'SS5': 15} sel-only/cand-only=30/28 p=0.896
+   70000 S= 52 p95=0.645 off=63 hard=23 bnc=11 cr=1 to=0 tun=21 dd=0 ho=0.0432 ss={'SS3': 20, 'SS4': 24, 'SS5': 8} sel-only/cand-only=42/28 p=0.12
+   80000 S= 62 p95=0.610 off=63 hard=17 bnc= 8 cr=0 to=0 tun=18 dd=0 ho=0.0489 ss={'SS3': 24, 'SS4': 19, 'SS5': 19} sel-only/cand-only=42/38 p=0.738
+   90000 S= 62 p95=0.617 off=59 hard=11 bnc=16 cr=2 to=0 tun=17 dd=1 ho=0.0539 ss={'SS3': 24, 'SS4': 21, 'SS5': 17} sel-only/cand-only=38/34 p=0.724
+  100000 S= 51 p95=0.639 off=70 hard=20 bnc= 9 cr=0 to=0 tun=29 dd=0 ho=0.0565 ss={'SS3': 19, 'SS4': 17, 'SS5': 15} sel-only/cand-only=48/33 p=0.119
+== dp/s2 selected 60000 succ range 39-68 mean 55.7 sd 9.6; always-success eps 0, never 8; rho(succ,heldout)=(np.float64(0.576), np.float64(0.082))
+   10000 S= 43 p95=0.684 off=69 hard=20 bnc=17 cr=1 to=0 tun=21 dd=0 ho=0.0455 ss={'SS3': 17, 'SS4': 14, 'SS5': 12} sel-only/cand-only=51/26 p=0.006
+   20000 S= 48 p95=0.755 off=57 hard=31 bnc=13 cr=1 to=0 tun=37 dd=0 ho=0.0416 ss={'SS3': 21, 'SS4': 14, 'SS5': 13} sel-only/cand-only=44/24 p=0.021
+   30000 S= 39 p95=0.758 off=72 hard=30 bnc= 9 cr=0 to=0 tun=34 dd=0 ho=0.0398 ss={'SS3': 15, 'SS4': 14, 'SS5': 10} sel-only/cand-only=48/19 p=0.001
+   40000 S= 55 p95=0.753 off=58 hard=27 bnc=10 cr=0 to=0 tun=37 dd=1 ho=0.0391 ss={'SS3': 23, 'SS4': 20, 'SS5': 12} sel-only/cand-only=36/23 p=0.117
+   50000 S= 56 p95=0.711 off=59 hard=28 bnc= 7 cr=0 to=0 tun=32 dd=1 ho=0.0396 ss={'SS3': 20, 'SS4': 18, 'SS5': 18} sel-only/cand-only=39/27 p=0.175
+   60000 S= 68 p95=0.686 off=64 hard=13 bnc= 5 cr=0 to=0 tun=24 dd=0 ho=0.0423 ss={'SS3': 22, 'SS4': 25, 'SS5': 21} sel-only/cand-only=0/0 p=1.0
+   70000 S= 59 p95=0.627 off=65 hard=18 bnc= 8 cr=0 to=0 tun=23 dd=0 ho=0.0468 ss={'SS3': 23, 'SS4': 21, 'SS5': 15} sel-only/cand-only=41/32 p=0.349
+   80000 S= 64 p95=0.633 off=62 hard=13 bnc=10 cr=1 to=0 tun=23 dd=1 ho=0.0525 ss={'SS3': 27, 'SS4': 23, 'SS5': 14} sel-only/cand-only=38/34 p=0.724
+   90000 S= 60 p95=0.578 off=58 hard=20 bnc=12 cr=0 to=0 tun=24 dd=0 ho=0.0574 ss={'SS3': 23, 'SS4': 20, 'SS5': 17} sel-only/cand-only=37/29 p=0.389
+  100000 S= 65 p95=0.545 off=67 hard=12 bnc= 6 cr=0 to=0 tun=12 dd=0 ho=0.0599 ss={'SS3': 27, 'SS4': 19, 'SS5': 19} sel-only/cand-only=41/38 p=0.822
+== dp/s3 selected 100000 succ range 51-67 mean 60.3 sd 4.9; always-success eps 0, never 6; rho(succ,heldout)=(np.float64(0.523), np.float64(0.121))
+   10000 S= 56 p95=0.595 off=52 hard=18 bnc=22 cr=2 to=0 tun=19 dd=1 ho=0.0410 ss={'SS3': 19, 'SS4': 20, 'SS5': 17} sel-only/cand-only=39/28 p=0.222
+   20000 S= 63 p95=0.684 off=50 hard=18 bnc=18 cr=0 to=1 tun=21 dd=1 ho=0.0374 ss={'SS3': 26, 'SS4': 21, 'SS5': 16} sel-only/cand-only=39/35 p=0.728
+   30000 S= 58 p95=0.688 off=62 hard=27 bnc= 3 cr=0 to=0 tun=24 dd=0 ho=0.0356 ss={'SS3': 14, 'SS4': 20, 'SS5': 24} sel-only/cand-only=37/28 p=0.321
+   40000 S= 51 p95=0.662 off=54 hard=36 bnc= 9 cr=0 to=0 tun=23 dd=0 ho=0.0348 ss={'SS3': 25, 'SS4': 8, 'SS5': 18} sel-only/cand-only=41/25 p=0.064
+   50000 S= 63 p95=0.657 off=58 hard=23 bnc= 6 cr=0 to=0 tun=18 dd=0 ho=0.0352 ss={'SS3': 18, 'SS4': 21, 'SS5': 24} sel-only/cand-only=34/30 p=0.708
+   60000 S= 61 p95=0.634 off=59 hard=20 bnc= 9 cr=1 to=0 tun=18 dd=0 ho=0.0378 ss={'SS3': 26, 'SS4': 24, 'SS5': 11} sel-only/cand-only=33/27 p=0.519
+   70000 S= 63 p95=0.645 off=61 hard=12 bnc=14 cr=0 to=0 tun=16 dd=0 ho=0.0424 ss={'SS3': 26, 'SS4': 14, 'SS5': 23} sel-only/cand-only=36/32 p=0.716
+   80000 S= 56 p95=0.668 off=63 hard=17 bnc=14 cr=0 to=0 tun=17 dd=1 ho=0.0479 ss={'SS3': 19, 'SS4': 17, 'SS5': 20} sel-only/cand-only=42/31 p=0.242
+   90000 S= 65 p95=0.592 off=64 hard=14 bnc= 6 cr=1 to=0 tun=17 dd=0 ho=0.0524 ss={'SS3': 24, 'SS4': 25, 'SS5': 16} sel-only/cand-only=29/27 p=0.894
+  100000 S= 67 p95=0.629 off=65 hard= 8 bnc= 9 cr=1 to=0 tun=13 dd=0 ho=0.0547 ss={'SS3': 28, 'SS4': 22, 'SS5': 17} sel-only/cand-only=0/0 p=1.0
+== dp/s4 selected 100000 succ range 46-62 mean 52.0 sd 6.1; always-success eps 0, never 5; rho(succ,heldout)=(np.float64(0.783), np.float64(0.007))
+   10000 S= 55 p95=0.578 off=57 hard=14 bnc=22 cr=1 to=1 tun=16 dd=0 ho=0.0467 ss={'SS3': 20, 'SS4': 16, 'SS5': 19} sel-only/cand-only=37/30 p=0.464
+   20000 S= 46 p95=0.698 off=58 hard=27 bnc=17 cr=1 to=1 tun=22 dd=0 ho=0.0422 ss={'SS3': 18, 'SS4': 15, 'SS5': 13} sel-only/cand-only=39/23 p=0.056
+   30000 S= 47 p95=0.708 off=54 hard=32 bnc=16 cr=0 to=1 tun=33 dd=0 ho=0.0400 ss={'SS3': 20, 'SS4': 12, 'SS5': 15} sel-only/cand-only=40/25 p=0.082
+   40000 S= 48 p95=0.746 off=61 hard=26 bnc=15 cr=0 to=0 tun=31 dd=0 ho=0.0392 ss={'SS3': 12, 'SS4': 18, 'SS5': 18} sel-only/cand-only=44/30 p=0.13
+   50000 S= 46 p95=0.725 off=68 hard=27 bnc= 8 cr=1 to=0 tun=33 dd=0 ho=0.0395 ss={'SS3': 15, 'SS4': 15, 'SS5': 16} sel-only/cand-only=41/25 p=0.064
+   60000 S= 47 p95=0.686 off=68 hard=26 bnc= 9 cr=0 to=0 tun=33 dd=0 ho=0.0420 ss={'SS3': 16, 'SS4': 23, 'SS5': 8} sel-only/cand-only=39/24 p=0.077
+   70000 S= 54 p95=0.699 off=73 hard=16 bnc= 7 cr=0 to=0 tun=21 dd=0 ho=0.0467 ss={'SS3': 18, 'SS4': 21, 'SS5': 15} sel-only/cand-only=37/29 p=0.389
+   80000 S= 54 p95=0.685 off=71 hard=16 bnc= 9 cr=0 to=0 tun=27 dd=0 ho=0.0526 ss={'SS3': 22, 'SS4': 16, 'SS5': 16} sel-only/cand-only=32/24 p=0.35
+   90000 S= 61 p95=0.664 off=62 hard=17 bnc=10 cr=0 to=0 tun=19 dd=0 ho=0.0583 ss={'SS3': 22, 'SS4': 21, 'SS5': 18} sel-only/cand-only=34/33 p=1.0
+  100000 S= 62 p95=0.609 off=72 hard=10 bnc= 6 cr=0 to=0 tun=17 dd=0 ho=0.0613 ss={'SS3': 20, 'SS4': 22, 'SS5': 20} sel-only/cand-only=0/0 p=1.0
+== R1_lerobot_dp/s0 selected 100000 succ range 33-54 mean 45.4 sd 5.9; always-success eps 0, never 7; rho(succ,heldout)=(np.float64(0.632), np.float64(0.05))
+   10000 S= 48 p95=0.641 off=75 hard=12 bnc=14 cr=0 to=1 tun=23 dd=1 ho=0.0916 ss={'SS3': 19, 'SS4': 17, 'SS5': 12} sel-only/cand-only=40/34 p=0.561
+   20000 S= 38 p95=0.726 off=72 hard=28 bnc=12 cr=0 to=0 tun=34 dd=0 ho=0.0832 ss={'SS3': 12, 'SS4': 13, 'SS5': 13} sel-only/cand-only=39/23 p=0.056
+   30000 S= 33 p95=0.715 off=83 hard=22 bnc=10 cr=2 to=0 tun=33 dd=1 ho=0.0784 ss={'SS3': 12, 'SS4': 13, 'SS5': 8} sel-only/cand-only=43/22 p=0.013
+   40000 S= 45 p95=0.664 off=81 hard=10 bnc=10 cr=3 to=1 tun=21 dd=1 ho=0.0766 ss={'SS3': 17, 'SS4': 16, 'SS5': 12} sel-only/cand-only=35/26 p=0.306
+   50000 S= 47 p95=0.660 off=82 hard=13 bnc= 6 cr=2 to=0 tun=31 dd=0 ho=0.0783 ss={'SS3': 16, 'SS4': 20, 'SS5': 11} sel-only/cand-only=37/30 p=0.464
+   60000 S= 47 p95=0.598 off=88 hard= 7 bnc= 6 cr=2 to=0 tun=15 dd=0 ho=0.0841 ss={'SS3': 21, 'SS4': 12, 'SS5': 14} sel-only/cand-only=36/29 p=0.457
+   70000 S= 47 p95=0.622 off=76 hard=16 bnc= 6 cr=5 to=0 tun=20 dd=2 ho=0.0938 ss={'SS3': 17, 'SS4': 18, 'SS5': 12} sel-only/cand-only=38/31 p=0.47
+   80000 S= 49 p95=0.558 off=88 hard= 5 bnc= 5 cr=3 to=0 tun=12 dd=2 ho=0.1056 ss={'SS3': 16, 'SS4': 21, 'SS5': 12} sel-only/cand-only=39/34 p=0.64
+   90000 S= 46 p95=0.594 off=81 hard= 6 bnc= 9 cr=8 to=0 tun=22 dd=2 ho=0.1166 ss={'SS3': 14, 'SS4': 20, 'SS5': 12} sel-only/cand-only=37/29 p=0.389
+  100000 S= 54 p95=0.613 off=77 hard=11 bnc= 6 cr=2 to=0 tun=17 dd=0 ho=0.1188 ss={'SS3': 24, 'SS4': 15, 'SS5': 15} sel-only/cand-only=0/0 p=1.0
+== R1_lerobot_dp/s1 selected 40000 succ range 30-57 mean 44.7 sd 9.0; always-success eps 0, never 9; rho(succ,heldout)=(np.float64(0.079), np.float64(0.829))
+   10000 S= 35 p95=0.633 off=93 hard= 7 bnc= 9 cr=6 to=0 tun=29 dd=1 ho=0.0917 ss={'SS3': 13, 'SS4': 11, 'SS5': 11} sel-only/cand-only=43/21 p=0.008
+   20000 S= 54 p95=0.701 off=70 hard=18 bnc= 7 cr=1 to=0 tun=29 dd=0 ho=0.0838 ss={'SS3': 19, 'SS4': 16, 'SS5': 19} sel-only/cand-only=31/28 p=0.795
+   30000 S= 30 p95=0.826 off=94 hard=18 bnc= 7 cr=1 to=0 tun=44 dd=2 ho=0.0801 ss={'SS3': 11, 'SS4': 14, 'SS5': 5} sel-only/cand-only=42/15 p=0.0
+   40000 S= 57 p95=0.736 off=66 hard=19 bnc= 8 cr=0 to=0 tun=33 dd=0 ho=0.0783 ss={'SS3': 23, 'SS4': 20, 'SS5': 14} sel-only/cand-only=0/0 p=1.0
+   50000 S= 39 p95=0.734 off=90 hard=14 bnc= 5 cr=2 to=0 tun=28 dd=0 ho=0.0797 ss={'SS3': 14, 'SS4': 12, 'SS5': 13} sel-only/cand-only=39/21 p=0.027
+   60000 S= 41 p95=0.733 off=83 hard=17 bnc= 9 cr=0 to=0 tun=34 dd=0 ho=0.0856 ss={'SS3': 12, 'SS4': 19, 'SS5': 10} sel-only/cand-only=40/24 p=0.06
+   70000 S= 55 p95=0.630 off=75 hard=10 bnc= 7 cr=3 to=0 tun=22 dd=0 ho=0.0980 ss={'SS3': 19, 'SS4': 21, 'SS5': 15} sel-only/cand-only=33/31 p=0.901
+   80000 S= 43 p95=0.695 off=85 hard=12 bnc= 7 cr=3 to=0 tun=29 dd=1 ho=0.1138 ss={'SS3': 16, 'SS4': 17, 'SS5': 10} sel-only/cand-only=41/27 p=0.114
+   90000 S= 49 p95=0.615 off=82 hard=12 bnc= 6 cr=1 to=0 tun=22 dd=0 ho=0.1242 ss={'SS3': 15, 'SS4': 17, 'SS5': 17} sel-only/cand-only=38/30 p=0.396
+  100000 S= 44 p95=0.649 off=89 hard=13 bnc= 3 cr=1 to=0 tun=17 dd=1 ho=0.1267 ss={'SS3': 18, 'SS4': 15, 'SS5': 11} sel-only/cand-only=40/27 p=0.142
+== R1_lerobot_dp/s2 selected 50000 succ range 35-53 mean 44.4 sd 6.9; always-success eps 0, never 10; rho(succ,heldout)=(np.float64(-0.517), np.float64(0.126))
+   10000 S= 37 p95=0.634 off=72 hard=22 bnc=14 cr=5 to=0 tun=17 dd=2 ho=0.0923 ss={'SS3': 15, 'SS4': 11, 'SS5': 11} sel-only/cand-only=41/25 p=0.064
+   20000 S= 50 p95=0.661 off=71 hard=11 bnc=15 cr=3 to=0 tun=20 dd=2 ho=0.0830 ss={'SS3': 18, 'SS4': 14, 'SS5': 18} sel-only/cand-only=34/31 p=0.804
+   30000 S= 42 p95=0.704 off=79 hard=16 bnc=12 cr=1 to=0 tun=33 dd=2 ho=0.0805 ss={'SS3': 17, 'SS4': 13, 'SS5': 12} sel-only/cand-only=30/19 p=0.152
+   40000 S= 52 p95=0.731 off=81 hard=13 bnc= 3 cr=1 to=0 tun=26 dd=1 ho=0.0785 ss={'SS3': 19, 'SS4': 17, 'SS5': 16} sel-only/cand-only=28/27 p=1.0
+   50000 S= 53 p95=0.702 off=77 hard=11 bnc= 8 cr=1 to=0 tun=26 dd=0 ho=0.0814 ss={'SS3': 22, 'SS4': 15, 'SS5': 16} sel-only/cand-only=0/0 p=1.0
+   60000 S= 38 p95=0.681 off=84 hard=15 bnc=11 cr=2 to=0 tun=28 dd=1 ho=0.0899 ss={'SS3': 10, 'SS4': 17, 'SS5': 11} sel-only/cand-only=38/23 p=0.072
+   70000 S= 52 p95=0.634 off=77 hard=15 bnc= 6 cr=0 to=0 tun=18 dd=0 ho=0.1026 ss={'SS3': 21, 'SS4': 22, 'SS5': 9} sel-only/cand-only=35/34 p=1.0
+   80000 S= 44 p95=0.662 off=89 hard=11 bnc= 4 cr=2 to=0 tun=21 dd=0 ho=0.1187 ss={'SS3': 11, 'SS4': 19, 'SS5': 14} sel-only/cand-only=37/28 p=0.321
+   90000 S= 35 p95=0.678 off=94 hard=10 bnc=10 cr=1 to=0 tun=19 dd=0 ho=0.1316 ss={'SS3': 17, 'SS4': 9, 'SS5': 9} sel-only/cand-only=45/27 p=0.044
+  100000 S= 41 p95=0.723 off=85 hard=14 bnc= 8 cr=2 to=0 tun=22 dd=0 ho=0.1351 ss={'SS3': 21, 'SS4': 10, 'SS5': 10} sel-only/cand-only=36/24 p=0.155
