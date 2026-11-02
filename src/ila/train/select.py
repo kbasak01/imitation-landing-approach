@@ -495,6 +495,24 @@ def write_rows_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     path.write_text(buf.getvalue(), encoding="utf-8")
 
 
+def inference_settings(man: Mapping[str, Any]) -> dict[str, Any] | None:
+    """The diffusion inference settings selection flies (config defaults; P3-D1 §4).
+
+    Args:
+        man: A run manifest.
+
+    Returns:
+        ``{"Ta", "K", "temporal_ensembling"}`` for a diffusion arm (``dp`` family or the ONNX R1
+        arm), ``None`` otherwise. Selection never ensembles.
+    """
+    cfg = man.get("config_resolved", {})
+    ta = cfg.get("horizons", {}).get("n_action_steps", cfg.get("policy", {}).get("n_action_steps"))
+    k = cfg.get("inference", {}).get("num_inference_steps")
+    if ta is None or k is None:
+        return None
+    return {"Ta": int(ta), "K": int(k), "temporal_ensembling": False}
+
+
 def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
     """Select a run's checkpoint on ``select`` and write ``selection.json``.
 
@@ -548,6 +566,7 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
         "weights": "raw_no_ema (lerobot 0.6.1 has no EMA)" if onnx else "ema",
         "inference_path": "ort_cpu_fp32_single_sample" if onnx else "cpu_fp32_single_sample",
         "candidate_kind": ONNX_EXPORTS if onnx else "checkpoint",
+        "inference": inference_settings(man),
         **({"excluded_by_parity": onnx_parity_exclusions(run_dir)} if onnx else {}),
         "tag": man.get("tag", "core"),
         "render": "full",

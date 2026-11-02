@@ -2156,7 +2156,7 @@ Tests:
 - `tests/test_policies.py`: ensembling, `Ta` = 1 equivalence, `ddim_sample` identity;
 - `tests/test_dp_toy.py`;
 - `tests/test_dp_jobs.py`: smoke MSE keys; sweep cells; reproduction of the selection rows on a
-  real flight; a tampered row caught; resume; diagnostics end to end.
+  full simulated flight; a tampered row caught; resume; diagnostics end to end.
 
 *Consequence.*
 - The `dp` smoke runs first, in the background (about 16 min). `dp` s0 is queued only after
@@ -2428,8 +2428,8 @@ its smoke JSON exactly.
   - ONNX parity passes.
   - R1 sits at its MIN_MAX action bounds on 0.16 % of executed steps, so that is not a factor.
 - **Where the failures come from.** All three students drift from the demo after the first
-  replan, from 4–5 mm at t 8–15 to about 8 cm at touchdown. They land 0.078–0.085 m from the pad
-  centre on average, against the teacher's 0.010 m.
+  replan, from 4–5 mm at t 8–15 to about 8 cm at touchdown (model scale). They land
+  0.078–0.085 m (model scale) from the pad centre on average, against the teacher's 0.010 m.
 - **`drop_n_last_frames` = 7** makes R1 about 12× worse than `dp` open loop on each episode's last
   7 frames. Those frames are 8–15 steps after first contact (the dwell), so this cannot cause
   `off_pad`, which is decided at first contact.
@@ -2469,7 +2469,7 @@ its smoke JSON exactly.
 - R1 s0–s2 train after `dp` s4. Each is exported, passes parity, then is selected by the P3-D1 §4
   rule at `Ta` = 8, K = 10.
 
-### P6-D5 — `dp` and R1 run verdicts, selection, the chunking finding, budget (2026-11-01)
+### P6-D5 — `dp` and R1 run verdicts, selection, the chunking finding, budget (2026-10-31; revised 2026-11-02 after the results-skeptic review)
 *Decision.* All 8 Phase 6 runs are kept: no exclusions, no re-selection, nothing tuned. Final
 verdicts from the `training-run-diagnostician`:
 
@@ -2508,11 +2508,16 @@ frozen list was flown.
    - Source: `results/phase6/diagnostics/final_verdicts/{sel,pool}.out.txt`.
 3. **Held-out denoising loss is not a selection proxy.**
    - Every `dp` seed reaches its held-out EMA minimum at 41–45 k, then rises 53–70 % by 100 k;
-     about 90 % of the rise is in k 0–24. R1's offline reconstruction has its minimum at 40 k in
+     89–90 % of the rise is in k 0–24 (`results/phase6/diagnostics/dp/heldout_curves.json`, EMA and
+     raw by k-bucket at every evaluation). R1's offline reconstruction has its minimum at 40 k in
      3 of 3 seeds, then rises 55–72 % (`results/phase6/diagnostics/R1_lerobot_dp/heldout_reconstruction/`).
    - Yet `dp` success *rises* late. Mean success by step is 51.6 / 51.4 / 50.8 / 51.8 at 10–40 k
-     and 56.4 / 59.2 / 61.0 / 61.6 at 70–100 k. 100 k minus 40 k is positive in 5 of 5 seeds;
-     pooled, p = 0.011 at episode level, which ignores clustering by seed.
+     and 56.4 / 59.2 / 61.0 / 61.6 at 70–100 k.
+   - Two contrasts were tested (post hoc). 100 k − 40 k is positive in 5 of 5 seeds (+7, +2, +10,
+     +16, +14): sign test p = 0.0625. 100 k − 50 k is +13, −15, +9, +4, +16: sign test p = 0.375.
+     The episode-level McNemar values (p = 0.011 and 0.163) ignore clustering by seed and are not
+     relied on. So success does not *follow* held-out loss; a late rise is suggestive only, and
+     it sits within item 2's noise.
    - The diagnostician had predicted more `off_pad` and `hard_landing` late. `off_pad` did rise
      (44.0 % vs 40.4 %), but `hard_landing` fell (10.2 % vs 17.5 %), so the prediction was
      falsified.
@@ -2541,28 +2546,44 @@ frozen list was flown.
    | `Ta` 12 | 53 64 69 51 55 | 58.4 | 123.0 |
 
    - Every seed's reference cell reproduced its selection rows text for text.
-   - The `Ta` = 8 / K = 10 cell is the selection cell and carries the selection optimism of
-     item 2. Every other cell is free of it.
+   - The `Ta` = 8 / K = 10 cell is the selection cell and carries the full selection optimism of
+     item 2. Every other cell flies the same checkpoint and carries part of it (`Ta` = 12 off
+     executes the same first chunk).
    - Ensembling beats no ensembling in all 20 seed × `Ta` comparisons and recovers 59–80 % of the
      gap to `Ta` = 1. With ensembling, success is not monotone in `Ta`: `Ta` 12 beats `Ta` 8 in 5
      of 5 seeds.
-   - **K.** K 5 / 25 / 100 give means of 59.8 / 56.8 / 54.2. Corrected for selection bias, K = 10
-     is about 56, so they cannot be told apart. "K = 10 beats K = 25 or 100" must not be claimed.
+   - **K.** K 5 / 25 / 100 give means of 59.8 / 56.8 / 54.2, against 65.2 for K = 10 in the
+     selection cell (the candidate mean at K = 10 is 55.9). All carry some optimism, and they
+     cannot be told apart. "K = 10 beats K = 25 or 100" must not be claimed.
      K = 1 and 2 (0/150 and 23–36/150) are labelled `schedule_limited`.
    - At `Ta` = 1 the leading failure is `hard_landing` (38 of 750), not `off_pad` (14 of 750).
    - Source: `results/phase6/diagnostics/final_verdicts/sweeps.out.txt`.
-   - **Reading.** The `dp` network itself is close to BC when it replans every step. The loss at
-     `Ta` = 8 comes from executing 8-step chunks (0.27 s model scale, 1.33 s full scale) open
-     loop while the pad moves. This is the H3 mechanism. H3 is scored only in Phase 8, on `id`
-     SS6, from the same checkpoints.
-6. **No execution bug.** Five pieces of evidence:
+   - **Reading (revised after review, S1 and S2).** The loss at `Ta` = 8 is mostly a chunking
+     effect: executing 8-step chunks (0.27 s model scale, 1.33 s full scale) open loop.
+     - **It does not grow with deck motion.** Pooled over 5 seeds, `Ta` 1 → 8 goes 245 → 113 of
+       250 at SS3, 235 → 116 at SS4 and 215 → 97 at SS5 (−52.8, −47.6, −47.2 points). In the
+       calmest slice, SS3 at 0 kn, it goes 94 → 40 of 95, and the median lateral offset goes from
+       0.020 to 0.096 m (model scale).
+     - Together with the under-dispersed, biased chunk predictions of item 7, this points to
+       multi-step prediction error that does not depend on sea state, not to deck bandwidth. A
+       `Ta` contrast therefore cannot attribute the loss to deck motion. H3's verdict in Phase 8
+       (`id` SS6, same checkpoints; wording and threshold as frozen) is reported with this
+       caveat.
+     - **`dp` at `Ta` = 1 is still below `bc`.** It lands mean 139.0/150 (129–145) against
+       `bc`'s selected 145–149, below `bc` in every seed, with 38 hard landings in 750 against
+       `bc`'s 7. This is an unpaired reading: different checkpoints and selection settings.
+     - Source: `results/phase6/diagnostics/final_verdicts/review_fixes.out.txt`.
+6. **No execution (index) bug.** The discriminating evidence is (a) and (c). (a) and (b) come
+   from the overfit-8 smoke checkpoints on `train` episodes 0–7, not from the selected runs. (d)
+   and (e) are the observations being explained, so they are consistency checks, not
+   independent evidence.
    - (a) Shifting labels by ±1 step makes open-loop MSE 506× worse for `dp` and 850× worse for R1.
      *Correction to P6-D4:* its "about 850×" is R1's figure.
-   - (b) In closed loop the first chunk stays within 0.007–0.009 of the same-step label, with
-     ≤ 1 mm xy drift through t = 7.
+   - (b) In closed loop the first chunk stays within 0.007–0.009 (`dp`; R1 0.004–0.007) of the
+     same-step label, with ≤ 1 mm xy drift (model scale) through t = 7.
    - (c) All 30 R1 parity files show LeRobot's own `select_action` matching the executed slice
      To − 1 … To + 6.
-   - (d) `Ta` = 1 lands 139/150.
+   - (d) `Ta` = 1 lands mean 139.0/150 over 5 seeds.
    - (e) Degradation grows with `Ta` and is mostly `off_pad`.
    - Sources: `results/phase6/r1_investigation/{analysis_openloop,divergence}.json` and the R1
      `parity.json` files.
@@ -2570,17 +2591,20 @@ frozen list was flown.
    × 1.5 m/s model scale).
    - **Spread.** Over the executed slice, the spread of 16 samples is 0.015–0.033. The
      sample-mean RMS error is 0.071–0.077, so samples are under-dispersed but not collapsed.
-   - **Clipping.** Executed actions at ±1 occur in 0.03–0.11 % of steps, against 0.195 % in the
-     labels.
+   - **Clipping.** In closed loop on `select`, executed actions at ±1 occur in 0.027–0.096 % of
+     steps (`select.executed_at_bound`), against 0.195 % in the labels.
    - **Jerk.** First-difference ratio at chunk boundaries vs within chunks: 1.35–1.47 in closed
      loop, 1.15–1.25 open loop, 1.09 for the teacher's labels. The closed-loop re-fly reproduced
      the selection rows and P8's `action_jerk_mean` in all 5 seeds.
 8. **R1 vs `dp` at `Ta` = 8** (descriptive; 3 vs 5 seeds).
-   - Selected: −7.0 points, bootstrap 95 % CI [−14.5, +0.7]. Candidate means: −7.4 points.
+   - Selected: −7.0 points, 95 % CI [−14.5, +0.7]. This is an ad hoc bootstrap (rng seed 0,
+     20 000 replicates, `final_verdicts/scripts/r1dp.py`), not P8's `paired_bootstrap`, and it is
+     descriptive only. Candidate means: −7.4 points (no CI computed).
    - Same failure profile: lateral offset median 0.099 m, `off_pad`-dominated.
-   - The gap has the size of P6-D4's `dp` raw − EMA effect, and its CI includes 0. It is not
-     "large" in the sense of plan Phase 6 item 6, so no further investigation is needed before
-     Phase 8.
+   - The gap is in the direction the recorded recipe gaps predict: no EMA, MIN_MAX
+     normalisation, fp32 Adam (P6-D3). It has the size of P6-D4's `dp` raw − EMA effect on the
+     smoke models. Judged not large enough to need further investigation before Phase 8 (plan
+     Phase 6 item 6), on weak support: the CI only just includes 0.
    - R1 reproduces the main result (`Ta` = 8 far below BC) with independent training code,
      dataset indexing and normalisation. It shares ila's executor, sampler and runner, which (c)
      covers.
@@ -2605,12 +2629,33 @@ frozen list was flown.
 
 *Consequence.*
 - **The README must state:**
-  - that `dp` at its frozen `Ta` = 8 lands far below BC on `select`, and that this is a chunking
-    effect, not a weaker network (`Ta` = 1: 139/150);
+  - that `dp` at its frozen `Ta` = 8 lands far below BC on `select`, and that this is mostly a
+    chunking effect that does not depend on sea state (item 5). At `Ta` = 1, `dp` (distilled from
+    P8 `ppo` s0) lands mean 139.0/150 (129–145), still below `bc`'s 145–149 in every seed
+    (unpaired);
   - that selection is noise-dominated and the selected scores are optimistic;
-  - that held-out loss runs opposite to success.
+  - that held-out loss is not a selection proxy: success does not follow it (item 3).
 - **Phase 8, GPU acceptance.** The binding GPU-acceptance test for `dp` (≤ 3 of 150 flips, P3-D1
   §3) has not been run. Outcomes at `Ta` = 8 sit on the 0.10 m threshold, so a failure is likely.
   Plan the CPU-path budget now:
   - 170 ms per K = 10 call;
   - the `Ta` = 1 and ensembling cells replan every step.
+
+*Review response (results-skeptic, 2026-11-02; no BLOCKER).*
+- **S1.** The deck-motion reading was withdrawn. The per-sea-state and 0 kn breakdown is in item 5.
+- **S2.** "Not a weaker network" was replaced by the `dp` vs `bc` comparison at `Ta` = 1 (item 5
+  and the README requirement).
+- **M1.** The scope of each piece of item 6's evidence is now stated.
+- **M2.** Item 5 now says the other cells share the selected checkpoint and part of its
+  optimism.
+- **M3.** Item 3 now reports both contrasts and the seed-level sign tests.
+- **M4.** Held-out curves are committed in `results/phase6/diagnostics/dp/heldout_curves.json`,
+  and the clip range comes from one source.
+- **M6.** Item 8 now labels its bootstrap ad hoc and descriptive.
+- **M7.** Wording fixed in P6-D1 ("full simulated flight") and model scale added in P6-D4; P6-D5
+  is now dated to its commit.
+- **M8.** `select.py` now writes `inference: {Ta, K, temporal_ensembling}` into
+  `selection.json` (`ila.train.select.inference_settings`). The Phase 6 selections predate this.
+  For them, `Ta` = 8, K = 10 is shown by the sweep determinism check: each reference cell flown
+  at `Ta` = 8, K = 10 reproduced the selection rows text for text.
+- **M5.** P6-D3's 12-worker decision awaits the user's confirmation at Gate 6.
