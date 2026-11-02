@@ -2659,3 +2659,48 @@ frozen list was flown.
   For them, `Ta` = 8, K = 10 is shown by the sweep determinism check: each reference cell flown
   at `Ta` = 8, K = 10 reproduced the selection rows text for text.
 - **M5.** The user confirmed P6-D3's 12-worker decision on 2026-11-02, and P6-D3 is frozen.
+
+### Gate 6 passed (2026-11-02)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| CPU tests green | `make lint` clean (ruff, format, mypy --strict, 67 files). `make test`: 786 passed (11 min 48 s, GPU and slow included) at `a898704`. CI green on `phase-6` (run 41253888633, `c83019c`) | PASS |
+| 5 seeds trained | `results/phase6/runs/dp/s0–s4/manifest.json`: `done`, 100 000 steps each, clean trees (`b912942` ×3, `f9659fa` ×2; no code difference between them), no resumes, `dp.yaml` `c8f90c35…6913` | PASS |
+| 5 seeds selected | `results/phase6/runs/dp/s*/selection.json`: 10 EMA candidates each on `select` (`07ecf049…`), CPU fp32 path, at `Ta` = 8, K = 10 (shown by the sweep reference cells). Selected 63/66/68/67/62 of 150 (`runs_summary.csv`). The rule was recomputed independently from the committed rows by the diagnostician and the skeptic | PASS |
+| Diagnostician TRUSTWORTHY | `dp` s0–s4 TRUSTWORTHY (P6-D5). R1 s0–s2 CAVEAT (a reference arm, not gating) | PASS |
+| Sweep JSON committed | `results/dp_sweeps.json` with rows in `results/phase6/sweeps/dp/`; `reproduces_selection_rows: true` for all 5 seeds | PASS |
+
+*Reviewers.*
+- `privileged-leak-auditor` (Phase 6 code and the R1 data path): no LEAK. Three RISKs were fixed
+  with guard tests (P6-D3).
+- `training-run-diagnostician`, every run: `dp` TRUSTWORTHY ×5, R1 CAVEAT ×3 (P6-D5).
+- `results-skeptic`: no BLOCKER. Two SERIOUS (the withdrawn deck-motion reading; `dp` vs `bc` at
+  `Ta` = 1) and eight MINOR, all addressed in P6-D5's review response.
+
+*Deviations this phase.*
+- P6-D2: `.venv-lerobot` extras.
+- P6-D4: R1 trained despite its smoke failing (user-approved).
+- P6-D3's 12-worker decision was confirmed by the user.
+
+No threshold was changed.
+
+## Phase 7
+
+*Before you start (from Phase 6).*
+- **Budget.** Training so far is 44.43 GPU-h of wall clock against 40.9 projected through Phase 6
+  (P6-D5 item 9). `modular` and the ablations at projection bring the total to about 95 of 120 h.
+  - The five `dp` ablations (`dp_mix`, `dp_pid`, `dp_n100`, `dp_n300`, `dp_minus_last_action`)
+    are 3 seeds each at about 2.2 GPU-h per run.
+- **`dp` ablations inherit Phase 6's selection noise.** At `Ta` = 8, outcomes sit on the 0.10 m
+  `off_pad` boundary, so per-checkpoint differences are mostly binomial noise and selected
+  `select` scores run about 6 points above the candidate mean. Read `dp`-ablation selections the
+  same way.
+- **H2's touchdown-time plots** (plan Phase 7 item 3) use `dp`-mix at the frozen `Ta` = 8. `dp`'s
+  failures there are lateral (`off_pad`) and do not depend on sea state, so do not read them as
+  multimodality effects without checking.
+- **Phase 8 risks, to plan now.**
+  - The binding GPU-acceptance test for `dp` (≤ 3/150 flips) is likely to fail. Budget the CPU
+    path: 170 ms per K = 10 call, and the `Ta` = 1 and ensembling cells replan every step.
+  - Sweeps ran 30–34 min per seed on `select`, against an estimate of 15–25.
+- **`load_student(weights="raw")`** now works (`c83019c`); it is used for diagnostics only.
+  `selection.json` now records `inference`.
