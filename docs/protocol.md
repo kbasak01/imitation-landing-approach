@@ -2199,8 +2199,8 @@ the venvs.
 it.
 
 ### P6-D3 — R1 configuration and pipeline (2026-10-30)
-*Status: draft, written before any R1 training run (seeds 0–2), the R1 smoke or any R1 number on
-`select`. Only `test`-tagged dev runs (≤ 300 steps, never selectable) exist.*
+*Status: frozen 2026-11-02 at Gate 6 (written before any R1 training run; the 12-worker decision
+confirmed by the user).*
 
 *Decision.* `R1_lerobot_dp` (P3-D1 §3: reference row, tag `reference_external`, 3 seeds, `id`
 SS3–SS6, the same selection rule at `Ta` = 8, K = 10) is configured, trained, exported and flown
@@ -2347,8 +2347,8 @@ scale, 1/6 s full scale).
    - **At 12 workers** (a 140-step `test` run), the steady rate is **9.82 steps/s**, with data
      loading at 0.05 s per step.
    - **Decision: 12 workers.** It was decided by the Phase 6 coordinator on 2026-10-30, before
-     any R1 train run and before the config was hashed for training. It is recorded here for
-     the user's confirmation at the gate; it was not received as a user message.
+     any R1 train run and before the config was hashed for training. It was recorded for the
+     user's confirmation at the gate, and **the user confirmed it on 2026-11-02**.
      - It is infrastructure. The worker count changes neither the data order
        (`EpisodeAwareSampler` is a pure function of seed and epoch) nor any sample, because no
        randomness runs in the workers: image transforms are off, and the crop and the DDPM
@@ -2658,4 +2658,4 @@ frozen list was flown.
   `selection.json` (`ila.train.select.inference_settings`). The Phase 6 selections predate this.
   For them, `Ta` = 8, K = 10 is shown by the sweep determinism check: each reference cell flown
   at `Ta` = 8, K = 10 reproduced the selection rows text for text.
-- **M5.** P6-D3's 12-worker decision awaits the user's confirmation at Gate 6.
+- **M5.** The user confirmed P6-D3's 12-worker decision on 2026-11-02, and P6-D3 is frozen.
