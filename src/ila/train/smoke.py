@@ -47,6 +47,17 @@ B. **the on-policy data's alignment**: the ``bc`` architecture overfit on those 
 Rollouts go to a scratch data root (``artifacts/runs/smoke/bc_dagger/data``, whose ``demos``
 links to the real ``${data_root}/demos``), never to the real ``${data_root}/dagger/``.
 
+``modular`` (Phase 7, P7-D1; ``results/phase7/smoke_modular.json``) trains the estimator on the
+same 8 episodes and replaces criterion 1, since its output is not an action, by the
+**normalised estimator MSE**: the EMA estimator's output (CPU fp32, eval mode, centre crop)
+against ``(priv[t] - mean) / std`` (the run's fixed target normaliser) over every frame, mean
+over frames and the 11 dimensions, below :data:`MODULAR_MSE_THRESHOLD`; the per-field RMSE in
+P8 units is reported beside it. Criterion 0 adds the target side: stored ``priv`` of steps 0-3
+byte-identical to the privileged fields of a fresh teacher rollout
+(:func:`ila.train.modular_targets.replay_priv_check`). Criterion 2 flies the estimator with
+P8's frozen ``T_ppo`` through ``act_modular`` (the true ``time_fraction`` to the teacher only),
+CPU fp32 single-sample path, and needs >= 7/8 ``success``.
+
 ``R1_lerobot_dp`` (Phase 6, P6-D3, :func:`run_r1_smoke`;
 ``results/phase6/smoke_R1_lerobot_dp.json``)
 checks R1's whole pipeline end to end: LeRobot's training on the LeRobotDataset's episodes 0-7
@@ -75,12 +86,14 @@ from ila.data import episodes as data_episodes
 from ila.data.store import DemoStore
 from ila.obs.split import load_contract
 from ila.policies.dp.policy import DPStudent
+from ila.policies.modular import ModularStudent
 from ila.policies.registry import REGISTRY, REPO_ROOT, load_student, read_checkpoint
 from ila.policies.state_mlp import StateMLPStudent
 from ila.train import loop
 from ila.train import manifest as mf
 from ila.train.config import TrainConfig, sha256_file
 from ila.train.dataset import BCWindowDataset, DPChunkDataset, FrameTable
+from ila.train.modular_targets import EstimatorDataset, replay_priv_check
 from ila.train.sampling import choose_episodes
 from ila.train.select import OUTCOME_ORDER, fly_checkpoint, summarise_rows
 from ila.train.state_dataset import StateFrames
@@ -96,6 +109,7 @@ __all__ = [
     "DP_SMOKE_K",
     "DP_SMOKE_TA",
     "MIN_LANDED",
+    "MODULAR_MSE_THRESHOLD",
     "MSE_THRESHOLD",
     "REPLAY_STEPS",
     "SMOKE_EPISODES",
@@ -127,7 +141,13 @@ MIN_LANDED: Final[int] = 7
 #: frames of 8 episodes (13 min at the timing run's 12.79 steps/s). Its power-law EMA (0.75)
 #: has no init bias to wait out: after 10 000 updates its decay is 0.999, a window of about
 #: 1 000 steps at the tail of the cosine schedule, where the weights barely move.
-SMOKE_STEPS: Final[dict[str, int]] = {"bc": 8000, "bc_state": 10000, "dp": 10000}
+#: ``modular`` (P7-D1): ``bc``'s 8 000, for the same reason (same encoder, batch, constant EMA).
+SMOKE_STEPS: Final[dict[str, int]] = {"bc": 8000, "bc_state": 10000, "dp": 10000, "modular": 8000}
+
+#: ``modular`` overfit criterion (P7-D1): estimator MSE in normalised target units (each
+#: dimension divided by its training-set std), mean over frames and the 11 dimensions. 1e-3 is
+#: an RMS of 0.032 std per dimension. The binding criterion is the closed-loop one.
+MODULAR_MSE_THRESHOLD: Final[float] = 1e-3
 
 #: ``dp`` overfit criterion (P6-D1): sampled executed-chunk MSE, normalised action units
 #: squared (RMS 0.032 = 0.047 m/s model scale per axis at v_max = 1.5 m/s). Ten times the BC
@@ -333,7 +353,8 @@ def run_smoke(
     """Run the smoke for one arm and write its summary JSON.
 
     Args:
-        arm: ``bc``, ``bc_state``, ``dp`` (Phase 6: Ta = 8, K = 10) or ``bc_dagger``.
+        arm: ``bc``, ``bc_state``, ``dp`` (Phase 6: Ta = 8, K = 10), ``bc_dagger``,
+            ``modular`` (Phase 7) or an ablation (its base's criteria, its own data/variant).
         steps: Smoke steps (default :data:`SMOKE_STEPS`).
         device: Training device.
         workers: Closed-loop rollout processes (rows do not depend on it).
@@ -373,7 +394,8 @@ def run_smoke(
     root = p8_adapter.load_paths()["data_root"] if data_root is None else data_root
     run_dir = run_root / "smoke" / arm
     shutil.rmtree(run_dir, ignore_errors=True)
-    n_steps = SMOKE_STEPS.get(arm, 8000) if steps is None else steps
+    default_steps = SMOKE_STEPS.get(arm, SMOKE_STEPS.get(entry.kind, SMOKE_STEPS["bc"]))
+    n_steps = default_steps if steps is None else steps
     spec = loop.RunSpec(
         cfg=cfg,
         run_seed=0,
@@ -403,8 +425,14 @@ def run_smoke(
             store.meta(first).episode_teacher,  # reporting/selection use of meta only
         )
         n_obs = load_contract(variant=cfg.obs_variant).n_obs_steps
+        replay_priv = None
         if entry.kind == "state":
             data: Any = StateFrames(store, choice.names)
+        elif entry.kind == "modular":
+            data = EstimatorDataset.from_store(store, choice.names, n_obs)
+            replay_priv = replay_priv_check(
+                store, first, rows_all[choice.demo_indices[0]], store.meta(first).episode_teacher
+            )
         elif entry.kind == "dp":
             data = DPChunkDataset(
                 FrameTable.from_store(store, choice.names, cfg.obs_variant),
@@ -421,7 +449,13 @@ def run_smoke(
     torch.set_num_threads(1)
     listed = [rows_all[i] for i in choice.demo_indices]
     inference: dict[str, Any] | None = None
-    if isinstance(student, DPStudent):
+    estimator: dict[str, Any] | None = None
+    if isinstance(student, ModularStudent):
+        assert isinstance(data, EstimatorDataset)
+        estimator = modular_overfit(student, data)
+        mse, per_episode_mse = estimator["value"], estimator["per_episode"]
+        threshold = MODULAR_MSE_THRESHOLD
+    elif isinstance(student, DPStudent):
         dp_mse = dp_sampled_mse(student, data, [e.episode_seed for e in listed])
         mse, per_episode_mse = dp_mse["value"], dp_mse["per_episode"]
         threshold = DP_MSE_THRESHOLD
@@ -469,7 +503,8 @@ def run_smoke(
     man = mf.read_json(run_dir / "manifest.json")
     record: dict[str, Any] = {
         "arm": arm,
-        "what": "overfit the first 8 ppo_2000 train episodes, then fly them closed loop "
+        "what": f"overfit the first 8 {cfg.collection} train episodes "
+        f"(contract {cfg.obs_variant!r}), then fly them closed loop "
         "(CPU fp32 single-sample path, EMA weights from ema_last.pt)",
         "config": man["config"],
         "frozen_hyperparameters_unchanged": True,
@@ -507,6 +542,15 @@ def run_smoke(
                 if inference is not None
                 else {}
             ),
+            **(
+                {
+                    "what": "EMA estimator MSE in normalised target units (priv minus the "
+                    "run's training mean, over its std), mean over frames and 11 dims (P7-D1)",
+                    "rmse_by_field": estimator["rmse_by_field"],
+                }
+                if estimator is not None
+                else {}
+            ),
         },
         "inference": inference,
         "closed_loop": {
@@ -528,16 +572,65 @@ def run_smoke(
             ],
         },
         "replay": replay,
+        **({} if replay_priv is None else {"replay_priv": replay_priv}),
         "checkpoint": {"file": _repo_relative(ckpt), "sha256": sha256_file(ckpt)},
         "git": man["git"],
     }
     record["passed"] = (
-        record["mse"]["passed"] and record["closed_loop"]["passed"] and replay["passed"]
+        record["mse"]["passed"]
+        and record["closed_loop"]["passed"]
+        and replay["passed"]
+        and (replay_priv is None or bool(replay_priv["passed"]))
     )
-    phase = "phase6" if entry.kind == "dp" else "phase4"
+    phase = {"dp": "phase6", "modular": "phase7"}.get(entry.kind, "phase4")
+    if entry.tag == "ablation":
+        phase = "phase7"
     out = Path("results") / phase / f"smoke_{arm}.json" if out_json is None else out_json
     mf.write_json_atomic(out if out.is_absolute() else REPO_ROOT / out, record)
     return record
+
+
+def modular_overfit(student: ModularStudent, data: EstimatorDataset) -> dict[str, Any]:
+    """The ``modular`` smoke's overfit measure (module docstring) on the CPU, fp32, eval mode.
+
+    Args:
+        student: The EMA estimator wrapped as a student (its ``net`` holds the normaliser).
+        data: The episodes' samples.
+
+    Returns:
+        ``value`` (normalised MSE, mean over frames and dims), ``per_episode``, ``frames`` and
+        ``rmse_by_field`` (P8 units, model scale: m, m/s, unit vector, rad, m).
+    """
+    import torch
+
+    est = []
+    for start in range(0, len(data), 256):
+        idx = np.arange(start, min(len(data), start + 256), dtype=np.int64)
+        b = data.batch(idx)
+        images = np.asarray(b["images"], dtype=np.uint8)
+        est.append(student.estimate_batch(images, np.asarray(b["proprio"], dtype=np.float32)))
+    pred = np.concatenate(est).astype(np.float64)
+    target = data.targets.astype(np.float64)
+    std = student.net.target_std.cpu().to(torch.float64).numpy()
+    err = ((pred - target) / std) ** 2
+    per_episode = []
+    start = 0
+    for t_len in data.table.episode_len:
+        per_episode.append(float(err[start : start + int(t_len)].mean()))
+        start += int(t_len)
+    contract = load_contract()
+    rmse: dict[str, float] = {}
+    col = 0
+    for name in contract.privileged:
+        size = contract.layout[name][1]
+        rmse[name] = float(np.sqrt(np.mean((pred - target)[:, col : col + size] ** 2)))
+        col += size
+    return {
+        "value": float(err.mean()),
+        "per_episode": per_episode,
+        "frames": len(data),
+        "rmse_by_field": rmse,
+    }
 
 
 def _repo_relative(path: Path) -> str:

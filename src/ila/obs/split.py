@@ -25,6 +25,13 @@ Two labelled ablations each move exactly one field between the student proprio a
 teacher-only block: ``plus_clock`` appends ``time_fraction`` (14-d), ``minus_last_action``
 removes ``last_action`` (10-d). The five privileged names are refused in a student input
 whatever the YAML says, and ``time_fraction`` is refused outside ``plus_clock``.
+
+The ``modular`` arm (P3-D1 §3, declared clock exception 2) is the one other path for
+``time_fraction``: :meth:`ObsContract.modular_input` wraps the default-variant
+:class:`StudentInput` and the true ``time_fraction`` of the same ``To`` steps in a
+:class:`ModularInput`. The clock goes to the frozen teacher's observation assembly only
+(:func:`assemble_teacher_obs`, which writes each block at its fields' P8 offsets), never to the
+estimator.
 """
 
 from __future__ import annotations
@@ -47,8 +54,10 @@ __all__ = [
     "CONTRACT_PATH",
     "NEVER_STUDENT",
     "VARIANTS",
+    "ModularInput",
     "ObsContract",
     "StudentInput",
+    "assemble_teacher_obs",
     "load_contract",
     "split",
 ]
@@ -69,6 +78,9 @@ CLOCK_FIELD: Final[str] = "time_fraction"
 VARIANTS: Final[tuple[str, ...]] = ("default", "plus_clock", "minus_last_action")
 
 _CLOCK_VARIANT: Final[str] = "plus_clock"
+
+#: The only contract variant a ``ModularInput`` is built under (the arm has no ablation).
+_MODULAR_VARIANT: Final[str] = "default"
 
 
 def _index(layout: Mapping[str, tuple[int, int]], names: Sequence[str]) -> NDArray[np.intp]:
@@ -265,6 +277,83 @@ class ObsContract:
             variant=self.variant,
         )
 
+    def modular_input(self, images: ArrayLike, obs_window: ArrayLike) -> ModularInput:
+        """Build the ``modular`` arm's :class:`ModularInput` from one observation window.
+
+        The student part is exactly :meth:`student_input` on the same arguments; the clock
+        is P8's ``time_fraction`` field, selected by name from the same window, so both share
+        one step alignment and one start-of-episode padding. The window itself (steps
+        ``t-To+1 ... t``, indices < 0 repeat step 0) is assembled by the caller from
+        :func:`ila.policies.dp.chunking.obs_window_steps`, as for :meth:`student_input`
+        (``ila.eval.runner.StudentWindow``).
+
+        Args:
+            images: ``uint8[To, H, W, 3]``, frame ``i`` rendered from the same physics state
+                (``stepSimulation`` count) as ``obs_window[i]``.
+            obs_window: P8 observations at the same ``To`` steps, ``float32[To, 25]``,
+                oldest first.
+
+        Returns:
+            ``ModularInput(student_input, time_fraction)``; the privileged fields are
+            dropped here and never reach the result.
+
+        Raises:
+            ValueError: If this contract is not the ``default`` variant, the window is not
+                ``(n_obs_steps, 25)``, the images do not validate, or ``time_fraction`` is
+                not finite in ``[0, 1]``.
+        """
+        if self.variant != _MODULAR_VARIANT:
+            raise ValueError(
+                f"a ModularInput is built under the {_MODULAR_VARIANT!r} contract only, "
+                f"not {self.variant!r}"
+            )
+        student = self.student_input(images, obs_window)
+        offset, size = self.layout[CLOCK_FIELD]
+        clock = np.take(
+            self._full(obs_window), np.arange(offset, offset + size, dtype=np.intp), axis=-1
+        )
+        return ModularInput(student_input=student, time_fraction=clock.reshape(-1))
+
+    def assemble_teacher_obs(
+        self, proprio_t: ArrayLike, priv_estimate_t: ArrayLike, time_fraction_t: ArrayLike
+    ) -> NDArray[np.float32]:
+        """Assemble one 25-d P8 teacher observation from its three blocks, by field name.
+
+        See :func:`assemble_teacher_obs` (the module-level entry point).
+        """
+        if self.variant != _MODULAR_VARIANT:
+            raise ValueError(
+                f"a teacher observation is assembled under the {_MODULAR_VARIANT!r} contract "
+                f"only, not {self.variant!r}"
+            )
+        if self.teacher_only != (CLOCK_FIELD,):
+            raise ValueError(f"teacher-only block {self.teacher_only} is not ({CLOCK_FIELD!r},)")
+        blocks = (
+            ("proprio_t", proprio_t, self._proprio_idx),
+            ("priv_estimate_t", priv_estimate_t, self._priv_idx),
+            ("time_fraction_t", time_fraction_t, self._extras_idx),
+        )
+        out = np.full(self.obs_dim, np.nan, dtype=np.float32)
+        written = np.zeros(self.obs_dim, dtype=bool)
+        for name, value, idx in blocks:
+            arr = np.asarray(value)
+            if not np.issubdtype(arr.dtype, np.floating):
+                raise ValueError(f"{name} must be a float array, got {arr.dtype}")
+            if arr.ndim == 0:  # a scalar clock
+                arr = arr.reshape(1)
+            if arr.shape != (idx.size,):
+                raise ValueError(f"{name} must have shape ({idx.size},), got {np.shape(value)}")
+            if not np.all(np.isfinite(arr)):
+                raise ValueError(f"{name} has non-finite entries: {arr}")
+            out[idx] = arr.astype(np.float32, copy=False)
+            written[idx] = True
+        if not written.all():  # every P8 field is classified once, so this cannot happen
+            raise RuntimeError("assembled teacher observation has unwritten fields")
+        clock = out[self._extras_idx]
+        if np.any(clock < 0.0) or np.any(clock > 1.0):
+            raise ValueError(f"time_fraction_t must be in [0, 1], got {clock}")
+        return out
+
 
 @dataclass(frozen=True)
 class StudentInput:
@@ -340,6 +429,69 @@ class StudentInput:
     def n_obs_steps(self) -> int:
         """``To``, the number of stacked steps."""
         return int(self.proprio.shape[0])
+
+
+@dataclass(frozen=True)
+class ModularInput:
+    """What the ``modular`` arm receives at one control step (P3-D1 §3, clock exception 2).
+
+    ``modular`` = vision estimator -> estimated privileged block -> frozen teacher. The
+    estimator sees ``student_input`` only. The teacher MLP additionally needs P8's
+    ``time_fraction`` observation field, which is neither a student input (outside the
+    labelled ``+clock`` ablation) nor an estimator target; this dataclass is the only path
+    that carries it (leak RISK 2). ``time_fraction`` is for the teacher-observation assembly
+    alone: it is never passed to the estimator's ``forward``, a feature, a normaliser or a
+    training batch. There is no field for the privileged block: the teacher gets the
+    estimator's *estimate* of it, never the true values.
+
+    Build it with :meth:`ObsContract.modular_input`, which selects the clock by field name
+    from the same observation window as the student input.
+
+    Attributes:
+        student_input: The ``default``-variant :class:`StudentInput` (images and 13-d
+            proprio at steps ``t-To+1 ... t``), bit-identical to
+            :meth:`ObsContract.student_input` on the same window.
+        time_fraction: ``float32[To]``, P8's ``time_fraction`` at the same steps, oldest
+            first (last entry = step ``t``; indices < 0 repeat step 0, as in the student
+            input). Dimensionless: ``t_episode / episode_len`` clipped into ``[0, 1]`` by P8,
+            ``episode_len`` = 12 s model scale (60 s full scale, lambda = 1/25). Read-only copy.
+    """
+
+    student_input: StudentInput
+    time_fraction: NDArray[np.float32]
+
+    def __post_init__(self) -> None:
+        """Validate the student part and the clock, and store a read-only clock copy.
+
+        Raises:
+            TypeError: If ``student_input`` is not a :class:`StudentInput`.
+            ValueError: If the student input is not the ``default`` variant, or
+                ``time_fraction`` is not float32 of shape ``(To,)`` with finite values in
+                ``[0, 1]``.
+        """
+        if not isinstance(self.student_input, StudentInput):
+            raise TypeError(f"student_input must be a StudentInput, got {type(self.student_input)}")
+        if self.student_input.variant != _MODULAR_VARIANT:
+            raise ValueError(
+                f"modular uses the {_MODULAR_VARIANT!r} student input, "
+                f"got {self.student_input.variant!r}"
+            )
+        clock = np.asarray(self.time_fraction)
+        if clock.dtype != np.float32:
+            raise ValueError(f"time_fraction must be float32, got {clock.dtype}")
+        n_obs = self.student_input.n_obs_steps
+        if clock.shape != (n_obs,):
+            raise ValueError(f"time_fraction must be [{n_obs}] (To), got {clock.shape}")
+        if not (np.all(np.isfinite(clock)) and np.all(clock >= 0.0) and np.all(clock <= 1.0)):
+            raise ValueError(f"time_fraction must be finite in [0, 1], got {clock}")
+        clock = clock.copy()
+        clock.setflags(write=False)
+        object.__setattr__(self, "time_fraction", clock)
+
+    @property
+    def n_obs_steps(self) -> int:
+        """``To``, the number of stacked steps."""
+        return self.student_input.n_obs_steps
 
 
 def _apply_ablation(
@@ -433,3 +585,42 @@ def split(
         See :meth:`ObsContract.split`.
     """
     return (load_contract() if contract is None else contract).split(obs)
+
+
+def assemble_teacher_obs(
+    contract: ObsContract,
+    proprio_t: ArrayLike,
+    priv_estimate_t: ArrayLike,
+    time_fraction_t: ArrayLike,
+) -> NDArray[np.float32]:
+    """Assemble the ``modular`` arm's 25-d teacher observation at one step, by field name.
+
+    The inverse of :meth:`ObsContract.split` for the ``default`` contract: each block is
+    written at the positions P8's layout gives its fields (``contract.layout``, from P8's
+    ``obs_fields``), so the result is in P8's field order whatever the block order. Fed the
+    true blocks of an env observation it reproduces that observation bit for bit; in the
+    ``modular`` arm ``priv_estimate_t`` is the estimator's output, and ``time_fraction_t``
+    comes only from :attr:`ModularInput.time_fraction` (its last entry, step ``t``).
+
+    Args:
+        contract: The ``default`` observation contract (P8 layout and field classes).
+        proprio_t: ``float[13]``, the student proprio at step t in contract order
+            (``attitude`` rad world, ``body_rates`` rad/s world axes, ``velocity`` m/s model
+            scale drone-yaw frame, ``last_action`` normalised world, ``in_contact`` {0, 1}),
+            e.g. ``ModularInput.student_input.proprio[-1]``.
+        priv_estimate_t: ``float[11]``, the privileged block in contract order
+            (``rel_position`` m and ``rel_velocity`` m/s model scale drone-yaw frame,
+            ``deck_normal`` unit drone-yaw, ``rel_tilt`` rad, ``height`` m model scale along the
+            deck normal); the estimator's estimate in the ``modular`` arm.
+        time_fraction_t: Scalar or ``float[1]``, dimensionless in ``[0, 1]``
+            (``t_episode / episode_len``, ``episode_len`` = 12 s model scale).
+
+    Returns:
+        ``float32[25]``, a new array in P8's observation layout. Float inputs are cast to
+        float32 (P8's observation dtype).
+
+    Raises:
+        ValueError: If the contract is not ``default``, a block has the wrong shape, a
+            non-float dtype or a non-finite entry, or the clock is outside ``[0, 1]``.
+    """
+    return contract.assemble_teacher_obs(proprio_t, priv_estimate_t, time_fraction_t)

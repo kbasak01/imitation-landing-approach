@@ -2704,3 +2704,101 @@ No threshold was changed.
   - Sweeps ran 30–34 min per seed on `select`, against an estimate of 15–25.
 - **`load_student(weights="raw")`** now works (`c83019c`); it is used for diagnostics only.
   `selection.json` now records `inference`.
+
+### P7-D1 — `modular` implementation choices P3-D1 leaves open; leak review (2026-11-02)
+*Status: frozen 2026-11-02. This entry was written before any `modular` or ablation training run,
+and before any `select` number from them was read.*
+
+*Decision.* None of the following is fixed by `modular.yaml` (`84153e6d…eadc`, unchanged) or by
+P3-D1 §3. They are implementation choices within the frozen protocol, not deviations.
+1. **Estimator.** `ila.policies.modular.ModularEstimator` is built as follows:
+   - the shared encoder (the same `EncoderConfig` as `bc`);
+   - a 2×64 proprio MLP;
+   - a 2×256 head that outputs the 11-d `priv` estimate, normalised by the mean and std of the
+     training slice (`ppo_2000` first 1 000, success-filtered). Those statistics are stored as
+     checkpoint buffers and in `manifest["normaliser"]`.
+
+   `forward(images, proprio, crop_generator=None)` has **no clock argument**. Two tests assert
+   this: `tests/test_modular.py` and `tests/test_step_guard.py`.
+2. **Clock path** (P3-D1 §3, leak RISK 2).
+   - `time_fraction` enters as `ila.obs.split.ModularInput(student_input, time_fraction[To])`.
+     That object is built only by `ObsContract.modular_input` on the runner's `StudentWindow`,
+     through `push_modular`.
+   - `ModularStudent.act_modular` gives the estimator `student_input` only. It then builds the
+     teacher's 25-d observation with `assemble_teacher_obs(contract, proprio[t], estimate,
+     time_fraction[t])`, placing each block by P8 field name.
+   - On a real `train`-pool episode, true inputs reproduce the env observation bit for bit
+     (`tests/test_obs_split.py`).
+   - The frozen `T_ppo` uses P8's VecNormalize with `training=False`.
+   - `act_vision` and `act` raise.
+   - When all 11 privileged env fields are set to NaN, the action is bit-identical. This holds
+     through the runner and with the real teacher.
+3. **Batched GPU path refuses `modular`.** `batched.PerSlotPolicy` raises `TypeError` for it,
+   because `SlotRequest` has no clock field. Adding one would widen the clock's route to every
+   batched student. So `modular` flies the in-worker CPU fp32 single-sample path. That covers
+   selection, the smoke and the estimation study, and Phase 8 unless a reviewed change says
+   otherwise.
+4. **Loss and training.** The loss is Huber (δ = 1.0) on normalised targets, as `modular.yaml`
+   specifies. Everything else is `modular.yaml`'s and shares `bc`'s loop: EMA, checkpoints every
+   5 k, held-out loss on `loop.HELDOUT`, and the P3-D1 §4 selection rule over the 6 EMA
+   checkpoints.
+5. **`modular` smoke** (`make train-smoke ARM=modular` → `results/phase7/smoke_modular.json`).
+   - It overfits the first 8 `ppo_2000` `train` episodes for **8 000 steps**, the `bc` smoke
+     count, with `modular.yaml`'s other settings.
+   - It passes only if all of these hold:
+     - replay of the stored images, proprio, labels and `priv` for steps 0–3 is byte-identical
+       to a fresh teacher rollout;
+     - the EMA estimator's MSE is **< 1e-3** in normalised target units (CPU, fp32, centre
+       crop), averaged over frames and the 11 dims;
+     - the arm lands ≥ 7/8 `success` closed loop on the CPU single-sample path.
+   - The 1e-3 threshold is the `dp` smoke's, applied to the estimator target.
+6. **Ablations.**
+   - The 11 ablation arms are registered (`tag="ablation"`), and each config's `obs_variant` is
+     carried from training to evaluation:
+     - proprio is 14-d for `bc_plus_clock`;
+     - proprio is 10-d for both `*_minus_last_action`;
+     - proprio is 13-d otherwise.
+   - All 12 config SHA-256s match P3-D1 §3.
+   - A selection row's `teacher` column now names the arm's training teacher (`T_pid`, `T_mix`).
+   - **The held-out loss of `bc_pid`, `dp_pid`, `bc_mix` and `dp_mix` is still scored against
+     `ppo_2000` labels**, because their stores have no episodes left to hold out. Those curves
+     measure distance to `T_ppo`, not fit. They are diagnostic only; selection reads `select`.
+7. **Leak review** (privileged-leak-auditor, 2026-11-02, before any training): **no LEAK, no
+   RISK**, 4 NOTEs.
+   - The `AUDIT_ALLOWLIST` entry `train/modular_targets.py: {estimator_targets, audit_field}` is
+     accepted:
+     - `estimator_targets` is the training target;
+     - `audit_field` gives the closed-loop truth for the estimation study, used for logging only.
+   - A name scan restricts `modular_targets` and `modular_eval` to `loop.py`, `smoke.py` and
+     `modular_eval.py`.
+   - A mutation test (`height` planted in proprio) is caught by all four poison tests.
+   - The NOTEs and their dispositions:
+     1. The ablation poison test now sets `priv` to NaN for the non-modular arms, and asserts a
+        3-d target and no `EstimatorDataset`. Fixed.
+     2. `modular_eval` was added to the name scan. Fixed.
+     3. `ObsContract.split()` is not in the audit name list. This predates the change. No
+        restricted file calls it, and the runtime poison tests cover it. It is deferred to the
+        next `ila/obs` change.
+     4. The first `modular` smoke ran on the pending code on a dirty tree. It used only
+        `ppo_2000` episodes 0–7. It is re-run on the committed tree before training.
+
+### P7-D2 — Deviation: data for `modular`'s estimation-error study (2026-11-02)
+*Decision* (user, 2026-11-02). Plan Phase 7 item 1 asks for the per-field estimation error "on
+held-out `tune` demos". No `tune` demo store exists, and P3-D1 §2 restricts `select` to named
+uses. The study uses instead:
+- **open loop:** `loop.HELDOUT`, which is `ppo_2000` stream indices 1950–1999 (`train` pool,
+  outside `modular`'s first 1 000, never trained on by `modular`);
+- **closed loop:** the selected checkpoint of each seed, re-flown on the 150 `select` episodes on
+  the CPU fp32 single-sample path. The re-flown rows must reproduce the selection rows. True
+  `priv` is logged per step through the reviewed audit path and never reaches the student.
+
+*Reason.* Collecting a `tune` demo set would be a new collection and a new use of `select`. The
+closed-loop part is a diagnostic that chooses nothing: no checkpoint, no hyper-parameter and no
+threshold depends on it.
+
+*Consequence.*
+- Outputs: `results/phase7/modular_estimation.{csv,json}`. Errors are per field, per axis and as
+  a norm, with RMSE and p95. They are in model scale (λ = 1/25), with full scale stated.
+- `rel_position` and `height` are compared with P8's σ_p = 0.04 m. `rel_velocity` is compared
+  with σ_v = 0.2 m/s.
+- The open-loop numbers are on `train`-pool realizations. That is stated with them.

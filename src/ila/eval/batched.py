@@ -58,6 +58,7 @@ from ila.eval.runner import (
     check_privilege,
     fly_chunk,
     init_worker_threads,
+    is_modular,
     is_student,
     set_single_thread_env,
 )
@@ -162,13 +163,20 @@ class PerSlotPolicy:
         """Build ``slots`` students from ``spec.build``.
 
         Raises:
-            TypeError: If the spec does not build a student (no ``act_vision``).
+            TypeError: If the spec does not build a student (no ``act_vision``), or builds a
+                ``modular`` student (``act_modular``): a :class:`SlotRequest` does not carry
+                the teacher's clock, so that arm flies through the in-worker runner only.
             ValueError: If a student's flags differ from the spec's.
         """
         self.run_seed = int(spec.run_seed)
         self.students: dict[int, Any] = {}
         for slot in range(slots):
             student = spec.build(cfgs)
+            if is_modular(student):
+                raise TypeError(
+                    f"{spec.method}: a modular student (act_modular) flies through "
+                    "ila.eval.runner only; the batched path does not carry time_fraction"
+                )
             if not is_student(student):
                 raise TypeError(f"{spec.method}: the batched path flies students only")
             check_privilege(spec, student)

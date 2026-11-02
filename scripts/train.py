@@ -12,6 +12,14 @@ checkpoint with identical RNG state (P3-D1 §4) and the resume is logged. Exampl
     python scripts/train.py configs/train/bc_dart.yaml --seed 3                   # at sigma*
     python scripts/train.py configs/train/bc_matched.yaml --seed 2                # init: bc s2
     python scripts/train.py configs/train/bc_dagger.yaml --seed 2 --rollout-workers 24
+    python scripts/train.py configs/train/modular.yaml --seed 0                  # Phase 7
+    python scripts/train.py configs/train/ablations/bc_plus_clock.yaml --seed 1  # 14-d proprio
+    python scripts/train.py configs/train/ablations/dp_mix.yaml --seed 0         # T_mix, dp
+
+``modular`` trains the estimator only (Huber on normalised ``priv``; the frozen ``T_ppo`` is not
+part of training). An ablation config (``configs/train/ablations/<arm>.yaml``, ``base:`` the
+core config) trains under its ``obs_variant`` and lands in ``artifacts/runs/<arm>/s<seed>/``
+with ``tag: ablation`` in its manifest.
 
 ``bc_dagger`` (``make dagger-bg SEED=<s>``) runs ``bc_matched``'s iteration driver; each
 iteration first flies its 200 on-policy rollouts on the CPU (``--rollout-workers`` processes,

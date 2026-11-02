@@ -43,7 +43,8 @@ from ila.obs.split import load_contract
 from ila.policies.bc import BCNet
 from ila.policies.dp.unet1d import ConditionalUnet1D
 from ila.policies.encoder import VisionEncoder
-from ila.policies.registry import build_dummy
+from ila.policies.modular import ModularEstimator, ModularStudent
+from ila.policies.registry import build_dummy, build_net
 
 #: The only parameter names a network entry point may take (besides ``self``).
 ALLOWED_PARAMS = frozenset(
@@ -67,7 +68,12 @@ TA, K = 2, 2
 
 
 def _entry_points() -> list[Any]:
-    points: list[Any] = [BCNet.forward, VisionEncoder.forward, ConditionalUnet1D.forward]
+    points: list[Any] = [
+        BCNet.forward,
+        VisionEncoder.forward,
+        ConditionalUnet1D.forward,
+        ModularEstimator.forward,  # P3-D1 §3: the estimator has no clock argument
+    ]
     for name in ("sample", "predict_noise", "forward"):
         fn = getattr(dpp.DiffusionPolicyNet, name, None)
         if fn is not None and fn is not torch.nn.Module.forward:
@@ -145,6 +151,8 @@ REVIEWED_MODULES: dict[str, str] = {
         "internal: ConditionalUnet1D.forward (sample, FiLM of timestep embedding + global_cond)"
     ),
     "ila.policies.state_mlp.StateMLP": "state: forward(obs), P8's 25-d observation (bc_state)",
+    # Phase 7: images + 13-d proprio only; the clock goes to the frozen teacher outside it.
+    "ila.policies.modular.ModularEstimator": "entry (modular estimator: no clock argument)",
 }
 
 
@@ -209,8 +217,8 @@ def _same_calls(a: list[Any], b: list[Any]) -> bool:
     )
 
 
-def _window(seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
-    contract = load_contract()
+def _window(seed: int = 0, variant: str = "default") -> tuple[np.ndarray, np.ndarray]:
+    contract = load_contract(variant=variant)
     rng = np.random.default_rng(seed)
     images = rng.integers(0, 256, (contract.n_obs_steps, 96, 96, 3), dtype=np.uint8)
     proprio = rng.standard_normal((contract.n_obs_steps, contract.proprio_dim)).astype(np.float32)
@@ -296,10 +304,19 @@ def test_dp_ensembling_inputs_do_not_depend_on_episode_seed_or_step(
 
 
 def _registry_arms() -> list[str]:
-    """Vision arms with an ila torch network (hooked below)."""
+    """Vision arms with an ila torch network flown through ``act_vision`` (hooked below)."""
     from ila.policies.registry import REGISTRY
 
-    return sorted(a for a, e in REGISTRY.items() if e.is_vision and e.has_ila_network)
+    return sorted(
+        a for a, e in REGISTRY.items() if e.is_vision and e.has_ila_network and e.kind != "modular"
+    )
+
+
+def _modular_registry_arms() -> list[str]:
+    """Vision arms flown through ``act_modular`` (the frozen teacher gets the clock)."""
+    from ila.policies.registry import REGISTRY
+
+    return sorted(a for a, e in REGISTRY.items() if e.kind == "modular")
 
 
 def _onnx_registry_arms() -> list[str]:
@@ -313,8 +330,11 @@ def test_every_vision_arm_is_guarded() -> None:
     from ila.policies.registry import REGISTRY
 
     vision = {a for a, e in REGISTRY.items() if e.is_vision}
-    assert set(_registry_arms()) | set(_onnx_registry_arms()) == vision
+    assert set(_registry_arms()) | set(_onnx_registry_arms()) | set(_modular_registry_arms()) == (
+        vision
+    )
     assert _onnx_registry_arms() == ["R1_lerobot_dp"]
+    assert _modular_registry_arms() == ["modular"]
 
 
 class _RecordingSession:
@@ -400,7 +420,7 @@ def test_registry_arm_invariant_to_episode_seed_and_step(
     student = build_dummy(arm, 0, "cpu", **kw)
     net = student.net
     hooks = _Hooks(net, *net.children())
-    images, proprio = _window()
+    images, proprio = _window(variant=REGISTRY[arm].obs_variant)
     try:
         runs = {}
         for episode_seed in (11, 99_999):
@@ -697,3 +717,61 @@ def test_negative_control_ast_scan_flags_planted_reads() -> None:
     sites = set(_reads(PLANTED_SOURCE, _is_key_field))
     assert ("SharedDPPolicy.act_batch", "step", "binop") in sites
     assert ("SharedDPPolicy.act_batch", "episode_seed", "keyword") in sites
+
+
+class _ObsTeacher:
+    """A stand-in for P8's frozen teacher: records every observation, returns a fixed action."""
+
+    def __init__(self) -> None:
+        self.obs: list[np.ndarray] = []
+
+    def reset(self, seed: int, context: Any = None) -> None:
+        del seed, context
+
+    def act(self, obs: Any) -> np.ndarray:
+        self.obs.append(np.array(obs, dtype=np.float32, copy=True))
+        return np.zeros(3, np.float32)
+
+
+@pytest.mark.parametrize("arm", _modular_registry_arms())
+def test_modular_estimator_inputs_invariant_to_clock_seed_and_step(arm: str) -> None:
+    """``modular``: the clock changes per step and episode, the estimator's inputs never do.
+
+    Same window, ``time_fraction`` advancing every step, two episode seeds: the tensors
+    entering the estimator and its encoder (forward-pre-hooks) are bit-identical; the clock
+    reaches only the teacher's observation, at P8's ``time_fraction`` offset.
+    """
+    torch.set_num_threads(1)
+    teacher = _ObsTeacher()
+    student = ModularStudent(build_net(arm, 0), "cpu", teacher=teacher)  # type: ignore[arg-type]
+    net = student.net
+    hooks = _Hooks(net, *net.children())
+    contract = load_contract()
+    images, _ = _window()
+    rng = np.random.default_rng(3)
+    obs = rng.standard_normal((contract.n_obs_steps, contract.obs_dim)).astype(np.float32)
+    off, size = contract.layout["time_fraction"]
+    try:
+        runs = {}
+        for episode_seed in (11, 99_999):
+            hooks.clear()
+            teacher.obs.clear()
+            student.reset(episode_seed)
+            for t in range(2 * TA):
+                window = obs.copy()
+                window[:, off : off + size] = (t + episode_seed % 7) / 100.0
+                student.act_modular(contract.modular_input(images, window))
+            runs[episode_seed] = (list(hooks.calls), list(teacher.obs))
+    finally:
+        hooks.remove()
+    (c11, o11), (c99, o99) = runs[11], runs[99_999]
+    assert c11, "no hooked estimator call"
+    assert _same_calls(c11, c99)
+    per_step = len(c11) // (2 * TA)
+    for t in range(1, 2 * TA):
+        assert _same_calls(c11[:per_step], c11[t * per_step : (t + 1) * per_step]), t
+    clock = [float(o[off]) for o in o11]
+    assert len(set(clock)) == 2 * TA  # the teacher saw the clock move
+    mask = np.ones(contract.obs_dim, bool)
+    mask[off : off + size] = False
+    assert all(np.array_equal(o[mask], o11[0][mask]) for o in [*o11, *o99])

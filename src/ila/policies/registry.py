@@ -9,6 +9,12 @@ loading (:func:`load_student`) on the same modules. Phase 6 adds ``R1_lerobot_dp
 ``onnx_dp``, tag ``reference_external``): LeRobot's DiffusionPolicy trained in
 ``.venv-lerobot``; ``ila`` has no network for it and flies its ONNX export through
 :class:`ila.policies.onnx_dp.OnnxDPStudent` (:func:`ila.policies.onnx_dp.load_onnx_student`).
+Phase 7 adds ``modular`` (kind ``modular``: :class:`ila.policies.modular.ModularEstimator`, the
+shared encoder plus an 11-d privileged-block head, flown with P8's frozen ``T_ppo`` by
+:class:`ila.policies.modular.ModularStudent`) and the 11 ablations of P3-D1 §3 (tag
+``ablation``, config ``configs/train/ablations/<arm>.yaml``, kind and ``obs_variant`` read from
+the resolved config: ``bc_plus_clock`` trains and flies the 14-d ``plus_clock`` proprio, the
+``*_minus_last_action`` arms the 10-d ``minus_last_action`` proprio).
 Every builder of an ``ila`` network:
 
 * reads the arm's ``configs/train/<arm>.yaml``, the camera config (input 96 px, crop 88 px) and
@@ -37,11 +43,14 @@ from torch import nn
 from ila.policies.bc import BCHeadConfig, BCNet, BCStudent
 from ila.policies.dp.policy import DiffusionPolicyNet, DPConfig, DPStudent
 from ila.policies.encoder import EncoderConfig
+from ila.policies.modular import ModularEstimator, ModularHeadConfig, ModularStudent
 from ila.policies.state_mlp import StateMLP, StateMLPConfig, StateMLPStudent
 
 __all__ = [
     "CAMERA_CONFIG",
     "CHECKPOINT_FORMAT",
+    "ABLATIONS",
+    "ABLATIONS_DIR",
     "REGISTRY",
     "REPO_ROOT",
     "Kind",
@@ -66,16 +75,35 @@ CAMERA_CONFIG: Final[Path] = REPO_ROOT / "configs" / "render" / "camera.yaml"
 #: Format tag of every training checkpoint (written by ``ila.train.loop``).
 CHECKPOINT_FORMAT: Final[str] = "ila-ckpt/1"
 
-#: Architecture families: vision BC, Diffusion Policy, the 25-d state MLP (``bc_state``), and an
-#: external diffusion policy flown from its ONNX export (``R1_lerobot_dp``; no ``ila`` network).
-type Kind = Literal["bc", "dp", "state", "onnx_dp"]
+#: Ablation configs (P3-D1 §3), one ``<arm>.yaml`` each with a ``base:`` of ``bc.yaml``/``dp.yaml``.
+ABLATIONS_DIR: Final[Path] = REPO_ROOT / "configs" / "train" / "ablations"
+
+#: The 11 ablations of P3-D1 §3 (``configs/eval/matrix.yaml`` names), 3 seeds each.
+ABLATIONS: Final[tuple[str, ...]] = (
+    "bc_pid",
+    "dp_pid",
+    "bc_mix",
+    "dp_mix",
+    "bc_n100",
+    "bc_n300",
+    "dp_n100",
+    "dp_n300",
+    "bc_minus_last_action",
+    "dp_minus_last_action",
+    "bc_plus_clock",
+)
+
+#: Architecture families: vision BC, Diffusion Policy, the 25-d state MLP (``bc_state``), an
+#: external diffusion policy flown from its ONNX export (``R1_lerobot_dp``; no ``ila``
+#: network), and the ``modular`` estimator flown with the frozen teacher.
+type Kind = Literal["bc", "dp", "state", "onnx_dp", "modular"]
 
 #: Any network an arm builds.
-type Net = BCNet | DiffusionPolicyNet | StateMLP
+type Net = BCNet | DiffusionPolicyNet | StateMLP | ModularEstimator
 
 #: Any student wrapper built from an ``ila`` checkpoint (P8 ``EvalPolicy`` shape). An ``onnx_dp``
 #: arm's student is :class:`ila.policies.onnx_dp.OnnxDPStudent`, loaded from its export.
-type Student = BCStudent | DPStudent | StateMLPStudent
+type Student = BCStudent | DPStudent | StateMLPStudent | ModularStudent
 
 
 @dataclass(frozen=True)
@@ -85,10 +113,11 @@ class StudentEntry:
     Attributes:
         name: Arm name.
         config: Its ``configs/train/<arm>.yaml``.
-        kind: Architecture family (``"bc"``, ``"dp"``, ``"state"`` or ``"onnx_dp"``).
+        kind: Architecture family (``"bc"``, ``"dp"``, ``"state"``, ``"onnx_dp"`` or
+            ``"modular"``).
         obs_variant: Observation-contract variant (``ila.obs.split.VARIANTS``).
-        tag: Row tag (``core``; ``reference_external`` for R1, P3-D1 §3, never mixed into core
-            tables).
+        tag: Row tag (``core``; ``reference_external`` for R1 and ``ablation`` for the 11
+            ablations, P3-D1 §3, never mixed into core tables).
     """
 
     name: str
@@ -112,8 +141,30 @@ def _entry(name: str, kind: Kind) -> StudentEntry:
     return StudentEntry(name, REPO_ROOT / "configs" / "train" / f"{name}.yaml", kind)
 
 
-#: Registered students (more arms are added in Phases 5-7). ``bc_state`` is the only
-#: non-vision entry (P8's 25-d observation, privileged by design; P3-D1 §3).
+def _ablation(name: str) -> StudentEntry:
+    """An ablation's entry, kind and ``obs_variant`` read from its resolved config.
+
+    Kind ``dp`` when the resolved config has ``horizons``, else ``bc``; one ``base:`` level
+    (:func:`ila.train.config.load_train_yaml`'s rule).
+
+    Raises:
+        ValueError: If the file declares another arm.
+    """
+    path = ABLATIONS_DIR / f"{name}.yaml"
+    raw: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if raw.get("arm") != name:
+        raise ValueError(f"{path} declares arm {raw.get('arm')!r}, expected {name!r}")
+    base_path = path.parent / str(raw["base"])
+    base: dict[str, Any] = yaml.safe_load(base_path.read_text(encoding="utf-8"))
+    resolved = {**base, **raw}
+    kind: Kind = "dp" if "horizons" in resolved else "bc"
+    variant = str(resolved.get("obs_variant", "default"))
+    return StudentEntry(name, path, kind, obs_variant=variant, tag="ablation")
+
+
+#: Registered students. ``bc_state`` is the only non-vision entry (P8's 25-d observation,
+#: privileged by design; P3-D1 §3). ``modular`` is a vision student flown through
+#: ``act_modular`` (its frozen teacher gets the clock; P3-D1 §3).
 REGISTRY: Final[Mapping[str, StudentEntry]] = MappingProxyType(
     {
         "bc": _entry("bc", "bc"),
@@ -122,6 +173,10 @@ REGISTRY: Final[Mapping[str, StudentEntry]] = MappingProxyType(
         "bc_dart": _entry("bc_dart", "bc"),
         "bc_state": _entry("bc_state", "state"),
         "dp": _entry("dp", "dp"),
+        # P3-D1 §3 core arm (Phase 7): estimator + frozen T_ppo, clock to the teacher only.
+        "modular": _entry("modular", "modular"),
+        # P3-D1 §3 ablations (Phase 7), tag "ablation", 3 seeds each.
+        **{name: _ablation(name) for name in ABLATIONS},
         # P3-D1 §3 reference row (P6-D3): LeRobot 0.6.1 DiffusionPolicy, flown from ONNX.
         "R1_lerobot_dp": StudentEntry(
             "R1_lerobot_dp",
@@ -213,7 +268,12 @@ def build_net_from_config(
 
         state_cfg = StateMLPConfig.from_mapping(train_cfg, load_contract().obs_dim)
         return _seeded_cpu_init(seed, lambda: StateMLP(state_cfg))
+    if kind == "modular" and obs_variant != "default":
+        raise ValueError(f"modular uses the default contract, not {obs_variant!r}")
     enc = encoder_config(train_cfg, obs_variant)
+    if kind == "modular":
+        mod_head = ModularHeadConfig.from_mapping(train_cfg)
+        return _seeded_cpu_init(seed, lambda: ModularEstimator(enc, mod_head))
     if kind == "bc":
         head = BCHeadConfig.from_mapping(train_cfg)
         return _seeded_cpu_init(seed, lambda: BCNet(enc, head))
@@ -257,6 +317,8 @@ def _wrap(
         )
     if n_action_steps is not None or num_inference_steps is not None or temporal_ensembling:
         raise ValueError(f"{arm!r} is not a diffusion arm; Ta/K/ensembling do not apply")
+    if isinstance(net, ModularEstimator):
+        return ModularStudent(net, device)  # builds P8's frozen T_ppo (VecNormalize frozen)
     if isinstance(net, StateMLP):
         return StateMLPStudent(net, device)
     return BCStudent(net, device)
@@ -293,6 +355,8 @@ def build_dummy(
         raise ValueError(f"{arm!r} is not a vision student")
     if not REGISTRY[arm].has_ila_network:
         raise ValueError(f"{arm!r} has no ila network to initialise; load its ONNX export")
+    if REGISTRY[arm].kind == "modular":
+        raise ValueError("modular has no dummy: build ModularStudent(build_net('modular', s))")
     student = _wrap(
         build_net(arm, seed),
         seed,

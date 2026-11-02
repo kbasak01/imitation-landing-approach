@@ -2,7 +2,8 @@
 
 One loop serves every arm and every stage structure:
 
-* a **single-stage** run (``bc``, ``bc_state``, ``bc_dart``, ``dp``, the ablations) is stage 0;
+* a **single-stage** run (``bc``, ``bc_state``, ``bc_dart``, ``dp``, ``modular``, the ablations)
+  is stage 0;
 * an **iterated** run (``bc_matched``, ``bc_dagger``: one driver, P4-D5 item 1) is stages
   ``1 .. n``, warm-started from the same-seed ``bc`` run's last step (weights **and** EMA
   copied, AdamW reset, its own cosine schedule with warm-up per stage, frames sampled uniformly
@@ -13,8 +14,12 @@ Per step (``s`` = optimiser steps already taken in the stage): ``lr = lr_peak * 
 diffusers' ``cosine`` multiplier ``m(s) = s / W`` for ``s < W``, else
 ``0.5 (1 + cos(pi (s - W) / (S - W)))``; forward under ``torch.autocast(bfloat16)`` (fp32
 for ``bc_state``); MSE (BC: on the ``tanh`` output against ``label[t]``; DP: epsilon-prediction
-DDPM, :func:`ila.policies.dp.policy.ddpm_loss`); AdamW (torch's default betas and eps, recorded);
-the gradient norm is measured, never clipped (no config sets clipping); EMA update.
+DDPM, :func:`ila.policies.dp.policy.ddpm_loss`); ``modular``: Huber (delta 1) on the
+normalised privileged-block estimate against ``priv[t]``
+(:func:`ila.policies.modular.estimator_loss`; targets from :mod:`ila.train.modular_targets`,
+the one training file with an ``estimator_targets`` allowlist entry); AdamW (torch's default
+betas and eps, recorded); the gradient norm is measured, never clipped (no config sets
+clipping); EMA update.
 
 Data randomness is a pure function of ``(run_seed, stage, step)``
 (:mod:`ila.train.sampling`), so a resumed run is bit-identical on the CPU (tested). Checkpoints
@@ -55,11 +60,19 @@ from torch import nn
 from ila.data.store import DemoStore
 from ila.policies.bc import BCNet
 from ila.policies.dp.policy import DiffusionPolicyNet, ddpm_loss
-from ila.policies.registry import CHECKPOINT_FORMAT, Net, build_net_from_config, read_checkpoint
+from ila.policies.modular import ModularEstimator, estimator_loss
+from ila.policies.registry import (
+    CHECKPOINT_FORMAT,
+    REGISTRY,
+    Net,
+    build_net_from_config,
+    read_checkpoint,
+)
 from ila.policies.state_mlp import StateMLP, fit_normaliser
 from ila.train import manifest as mf
 from ila.train.config import ADAMW_BETAS, ADAMW_EPS, EMAConfig, TrainConfig, sha256_file
 from ila.train.dataset import BCWindowDataset, DPChunkDataset, FrameTable
+from ila.train.modular_targets import EstimatorDataset
 from ila.train.sampling import (
     STREAM_CROP,
     STREAM_HELDOUT,
@@ -259,6 +272,10 @@ def _dataset(kind: str, cfg: TrainConfig, store: DemoStore, names: Sequence[str]
     """Build the arm's dataset over ``names`` (vision: student path only)."""
     if kind == "state":
         return StateFrames(store, names)
+    if kind == "modular":
+        from ila.obs.split import load_contract  # lazy: P8's field layout
+
+        return EstimatorDataset.from_store(store, names, load_contract().n_obs_steps)
     table = FrameTable.from_store(store, names, cfg.obs_variant)
     return _wrap_table(kind, cfg, table)
 
@@ -311,8 +328,8 @@ def load_stage_data(
             tables.append(_dataset(spec.cfg.kind, spec.cfg, store, choice.names))
     if len(tables) == 1:
         train = tables[0]
-    elif spec.cfg.kind == "state":
-        raise ValueError("bc_state is single-stage")
+    elif spec.cfg.kind in ("state", "modular"):
+        raise ValueError(f"{spec.cfg.arm} is single-stage")
     else:
         train = _wrap_table(spec.cfg.kind, spec.cfg, FrameTable.concat([t.table for t in tables]))
     heldout, overlap = _heldout(spec, choices)
@@ -596,6 +613,9 @@ def _forward_loss(
         assert isinstance(net, BCNet)
         out = net(b["images"], b["proprio"], inp.crop)
         return ((out.float() - b["target"]) ** 2).mean(dim=-1), None
+    if kind == "modular":
+        assert isinstance(net, ModularEstimator)
+        return estimator_loss(net, b["images"], b["proprio"], b["target"], inp.crop), None
     assert isinstance(net, DiffusionPolicyNet) and inp.noise is not None
     assert inp.timestep is not None
     k = inp.timestep.to(device)
@@ -805,6 +825,8 @@ def train_run(
         else {
             "arm": cfg.arm,
             "kind": cfg.kind,
+            "obs_variant": cfg.obs_variant,
+            "tag": REGISTRY[cfg.arm].tag if cfg.arm in REGISTRY else "core",
             "run_seed": spec.run_seed,
             "purpose": spec.purpose,
             "selectable": spec.purpose in ("train", "tuning"),
@@ -1131,7 +1153,11 @@ def train_run(
 def _fit_normaliser(
     net: Net, ema: EMA, data: BCWindowDataset | StateFrames, device: torch.device
 ) -> None:
-    """Fix the input normaliser from the training frames (state: obs; vision: proprio)."""
+    """Fix the normalisers from the training frames.
+
+    ``bc_state``: its 25-d obs. Vision arms: the encoder's proprio. ``modular`` also its output
+    (target) normaliser, the per-dimension mean/std of ``priv`` over the training frames.
+    """
     if isinstance(net, StateMLP):
         assert isinstance(data, StateFrames)
         mean, std = fit_normaliser(data.obs)
@@ -1143,6 +1169,12 @@ def _fit_normaliser(
         with torch.no_grad():
             enc.proprio_mean.copy_(torch.from_numpy(mean).to(enc.proprio_mean.device))
             enc.proprio_std.copy_(torch.from_numpy(std).to(enc.proprio_std.device))
+        if isinstance(net, ModularEstimator):
+            assert isinstance(data, EstimatorDataset)
+            t_mean, t_std = data.target_stats()
+            with torch.no_grad():
+                net.target_mean.copy_(torch.from_numpy(t_mean).to(net.target_mean.device))
+                net.target_std.copy_(torch.from_numpy(t_std).to(net.target_std.device))
     with torch.no_grad():
         for e_b, b in zip(ema.model.buffers(), net.buffers(), strict=True):
             e_b.copy_(b.to(e_b.device))
@@ -1152,10 +1184,14 @@ def _fit_normaliser(
 def _normaliser_record(net: Net) -> dict[str, list[float]]:
     if isinstance(net, StateMLP):
         return {"obs_mean": net.obs_mean.tolist(), "obs_std": net.obs_std.tolist()}
-    return {
+    record = {
         "proprio_mean": net.encoder.proprio_mean.tolist(),
         "proprio_std": net.encoder.proprio_std.tolist(),
     }
+    if isinstance(net, ModularEstimator):
+        record["target_mean"] = net.target_mean.tolist()
+        record["target_std"] = net.target_std.tolist()
+    return record
 
 
 def _common_payload(spec: RunSpec, stage: int, stage_step: int, global_step: int) -> dict[str, Any]:

@@ -299,7 +299,9 @@ def test_registry_entry() -> None:
     for fn in (registry.build_net, registry.build_dummy):
         with pytest.raises(ValueError, match="no ila network"):
             fn("R1_lerobot_dp", 0)
-    assert all(e.tag == "core" for n, e in registry.REGISTRY.items() if n != "R1_lerobot_dp")
+    tags = {n: e.tag for n, e in registry.REGISTRY.items() if n != "R1_lerobot_dp"}
+    assert {n for n, t in tags.items() if t == "ablation"} == set(registry.ABLATIONS)
+    assert all(t == "core" for n, t in tags.items() if n not in registry.ABLATIONS)
 
 
 def test_r1_config_matches_dp() -> None:
