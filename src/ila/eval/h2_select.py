@@ -1031,7 +1031,7 @@ def plot(
     present_groups = [g for g in GROUPS if any(by[(g, c)]["n_episodes"] for c in cells)]
     with plt.rc_context({"font.family": "DejaVu Sans", "font.size": 8, "svg.hashsalt": "h2"}):
         fig, axes = plt.subplots(
-            2, len(cells), figsize=(14.0, 7.6), sharex=True, sharey="row", squeeze=False
+            2, len(cells), figsize=(14.0, 8.2), sharex=True, sharey="row", squeeze=False
         )
         for j, cell in enumerate(cells):
             top, bottom = axes[0, j], axes[1, j]
@@ -1069,7 +1069,7 @@ def plot(
                 fontsize=6.5, family="DejaVu Sans Mono",
                 bbox={"boxstyle": "round", "fc": "white", "ec": "0.7", "alpha": 0.9},
             )  # fmt: skip
-            top.set_title(f"{cell}" if cell != ALL_CELL else "SS3-SS5 pooled (descriptive)")
+            top.set_title(cell if cell != ALL_CELL else "SS3-SS5 pooled (descriptive)", pad=26)
             top.grid(True, lw=0.3, alpha=0.5)
             sec = top.secondary_xaxis("top", functions=(lambda t: t * 5.0, lambda t: t / 5.0))
             sec.set_xlabel("full scale, s (x5)", fontsize=7)
@@ -1104,7 +1104,7 @@ def plot(
         h2, l2 = axes[1, 0].get_legend_handles_labels()
         fig.legend(
             handles + h2, labels + l2, loc="upper center", ncol=4, fontsize=7,
-            bbox_to_anchor=(0.5, 0.935), frameon=False,
+            bbox_to_anchor=(0.5, 0.965), frameon=False,
         )  # fmt: skip
         missing = [f"{s.arm} s{s.seed}" for s in statuses if s.status != "present"]
         title = (
@@ -1118,7 +1118,7 @@ def plot(
         if missing:
             caption += "\n" + textwrap.fill("Missing: " + ", ".join(missing), 200)
         fig.text(0.01, 0.005, caption, fontsize=6.3, va="bottom", ha="left")
-        fig.subplots_adjust(left=0.05, right=0.99, top=0.85, bottom=0.2, wspace=0.06, hspace=0.12)
+        fig.subplots_adjust(left=0.05, right=0.99, top=0.80, bottom=0.19, wspace=0.06, hspace=0.12)
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, dpi=150, metadata={"Software": None})
         plt.close(fig)
