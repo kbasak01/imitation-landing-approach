@@ -1,0 +1,136 @@
+{
+  "batch_consistency": {
+    "batch": 64,
+    "eps_per_step_max_abs_vs_b1": 9.5367431640625e-07,
+    "global_cond_max_abs_vs_b1": 0.0
+  },
+  "chunk_executed_max_abs": 3.725290298461914e-06,
+  "chunk_executed_vs_lerobot_select_action_max_abs": 3.725290298461914e-06,
+  "chunk_max_abs": 2.0205974578857422e-05,
+  "chunk_norm_max_abs": 3.3915042877197266e-05,
+  "chunk_within_1e-3": true,
+  "criterion": "per-step eps max-abs <= 0.0001 end to end (ORT encoder -> ORT denoiser at the torch path's x_k), at each of the K=10 DDIM-trailing steps and at probe timesteps [99, 89, 49, 9, 0] (P3-D1 \u00a76 H5(a), open loop); sampler and unnormalisation replays <= 1e-06; graphs opset 17, IR <= 10, no RNG op; SHA-256 match. Final-chunk max-abs reported, not judged (x2 029 first-step gain, P3-D1 \u00a78).",
+  "ddim_timesteps": [
+    99,
+    89,
+    79,
+    69,
+    59,
+    49,
+    39,
+    29,
+    19,
+    9
+  ],
+  "eps_per_step_max_abs": [
+    1.1920928955078125e-06,
+    1.430511474609375e-06,
+    1.1920928955078125e-06,
+    1.4603137969970703e-06,
+    1.7583370208740234e-06,
+    2.4884939193725586e-06,
+    3.248453140258789e-06,
+    4.3585896492004395e-06,
+    5.4836273193359375e-06,
+    6.22868537902832e-06
+  ],
+  "eps_per_step_max_abs_reference_cond": [
+    1.0132789611816406e-06,
+    1.430511474609375e-06,
+    1.1920928955078125e-06,
+    1.6689300537109375e-06,
+    1.6689300537109375e-06,
+    1.1920928955078125e-06,
+    1.430511474609375e-06,
+    1.430511474609375e-06,
+    1.6689300537109375e-06,
+    2.6226043701171875e-06
+  ],
+  "eps_probe_max_abs": {
+    "0": 3.337860107421875e-06,
+    "49": 1.8551945686340332e-06,
+    "89": 1.6689300537109375e-06,
+    "9": 2.1457672119140625e-06,
+    "99": 1.1920928955078125e-06
+  },
+  "eps_probe_max_abs_reference_cond": {
+    "0": 2.384185791015625e-06,
+    "49": 1.6689300537109375e-06,
+    "89": 1.1920928955078125e-06,
+    "9": 2.384185791015625e-06,
+    "99": 1.1920928955078125e-06
+  },
+  "global_cond_max_abs": 7.450580596923828e-07,
+  "global_cond_max_abs_rel": 7.450580596923828e-07,
+  "graph_optimization_level": "ORT_ENABLE_ALL",
+  "graphs": {
+    "denoiser.onnx": {
+      "ir_version": 10,
+      "n_functions": 0,
+      "ok": true,
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "rng_ops": []
+    },
+    "encoder.onnx": {
+      "ir_version": 10,
+      "n_functions": 0,
+      "ok": true,
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "rng_ops": []
+    },
+    "ok": true
+  },
+  "judged": {
+    "files_match_meta": true,
+    "graphs_opset17_no_rng": true,
+    "lerobot_path_check": true,
+    "per_step_eps_le_tol": true,
+    "probe_eps_le_tol": true,
+    "sampler_replay_le_tol": true,
+    "scheduler_match": true,
+    "unnormalise_replay_le_tol": true
+  },
+  "lerobot_path_check": {
+    "bit_identical": true,
+    "executed_slice": [
+      1,
+      9
+    ],
+    "max_abs": 0.0,
+    "method": "preprocess_observation -> checkpoint preprocessor -> DiffusionPolicy.select_action (own observation/action queues, t=1 windows: frame 0 queued first, then the action queue cleared so frame 1 replans) -> checkpoint postprocessor; batch 1; same noise argument; LeRobot's noise_scheduler replaced by ila's DDIM-trailing K=10 for this check only",
+    "n": 64,
+    "tolerance": 1e-06
+  },
+  "machine": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39"
+  },
+  "meta_sha256": "1ea95780c2991a4883a49c4c0f6164bb74125bd605a9cb6cdaf89334defe9221",
+  "n_inputs": 64,
+  "onnx_sha256": {
+    "denoiser.onnx": "7ec46b2a2ae23162f66c2b6bcd9a71e6b8df39b431c9e541204130b65b4fd808",
+    "encoder.onnx": "ae8fca4bc82e96350df926449159d2232637dcf36992218b70e3fafb806d7a71"
+  },
+  "onnxruntime": "1.29.0",
+  "ort_threads": 1,
+  "pass": true,
+  "provider": "CPUExecutionProvider",
+  "sampler_replay_bit_identical": true,
+  "sampler_replay_max_abs": 0.0,
+  "sampler_replay_timesteps_match": true,
+  "sampler_replay_x_k_max_abs": 0.0,
+  "scheduler_match": {
+    "alphas_cumprod_bit_identical": true,
+    "timesteps": true
+  },
+  "source_checkpoint_sha256": "87fcea068a1daaecca455f9450e6da8a705ac70862be2171efe7283c7c533c43",
+  "step": 20000,
+  "torch_reference": "torch fp32 CPU batch 1 (2.11.0+cu130)",
+  "unnormalise_replay_bit_identical": true,
+  "unnormalise_replay_max_abs": 0.0,
+  "wall_s": 36.94559814495733
+}

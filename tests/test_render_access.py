@@ -327,14 +327,44 @@ FROZEN_LIST_NAMES = frozenset(
 )
 
 
-#: The Phase 4 training scripts (argparse wrappers over ``ila/train``).
-TRAIN_SCRIPTS: tuple[str, ...] = ("train.py", "train_smoke.py", "select.py", "budget.py")
+#: The training scripts (argparse wrappers over ``ila/train``; Phase 6 adds the dp sweeps and
+#: diagnostics).
+TRAIN_SCRIPTS: tuple[str, ...] = (
+    "train.py",
+    "train_smoke.py",
+    "select.py",
+    "budget.py",
+    "dp_sweeps.py",
+    "dp_diagnostics.py",
+)
+
+
+#: R1's pathway (leak audit R3, Phase 6): the dataset export, every ``scripts/r1`` script
+#: (dataset build, training, ONNX export, parity) and the ONNX student. Paths from the repo root.
+R1_FILES: tuple[str, ...] = (
+    "src/ila/data/export_lerobot.py",
+    "src/ila/policies/onnx_dp.py",
+    "src/ila/deploy/r1_parity.py",
+)
 
 
 def test_training_code_reads_no_frozen_list() -> None:
-    """``ila/train`` and its scripts never read a P8 frozen list (P3-D1 §4)."""
-    scripts = SRC.parents[1] / "scripts"
-    files = [*sorted((SRC / "train").rglob("*.py")), *(scripts / n for n in TRAIN_SCRIPTS)]
+    """``ila/train``, its scripts and R1's pathway never read a P8 frozen list (P3-D1 §4)."""
+    repo = SRC.parents[1]
+    scripts = repo / "scripts"
+    r1_scripts = sorted((scripts / "r1").glob("*.py"))
+    assert {p.name for p in r1_scripts} >= {
+        "export_dataset.py",
+        "build_lerobot_dataset.py",
+        "train_r1.py",
+        "export_onnx.py",
+    }
+    files = [
+        *sorted((SRC / "train").rglob("*.py")),
+        *(scripts / n for n in TRAIN_SCRIPTS),
+        *r1_scripts,
+        *(repo / n for n in R1_FILES),
+    ]
     assert all(p.is_file() for p in files)
     found = [
         f"{p.name}:{line}:{name}"

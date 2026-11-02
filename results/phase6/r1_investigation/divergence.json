@@ -1,0 +1,200 @@
+{
+ "r1": {
+  "t0-0": {
+   "mean_abs_action_minus_label": [
+    0.0048,
+    0.0048,
+    0.0067
+   ],
+   "mean_xy_dist_to_demo_m": 0.0
+  },
+  "t1-3": {
+   "mean_abs_action_minus_label": [
+    0.0049,
+    0.0046,
+    0.0074
+   ],
+   "mean_xy_dist_to_demo_m": 0.0
+  },
+  "t4-7": {
+   "mean_abs_action_minus_label": [
+    0.0044,
+    0.0048,
+    0.0058
+   ],
+   "mean_xy_dist_to_demo_m": 0.0007
+  },
+  "t8-15": {
+   "mean_abs_action_minus_label": [
+    0.0091,
+    0.008,
+    0.0083
+   ],
+   "mean_xy_dist_to_demo_m": 0.004
+  },
+  "t16-23": {
+   "mean_abs_action_minus_label": [
+    0.0646,
+    0.0783,
+    0.0313
+   ],
+   "mean_xy_dist_to_demo_m": 0.0184
+  },
+  "t24-31": {
+   "mean_abs_action_minus_label": [
+    0.1078,
+    0.1343,
+    0.0324
+   ],
+   "mean_xy_dist_to_demo_m": 0.052
+  },
+  "t32-39": {
+   "mean_abs_action_minus_label": [
+    0.1351,
+    0.1813,
+    0.0404
+   ],
+   "mean_xy_dist_to_demo_m": 0.0675
+  },
+  "t40-47": {
+   "mean_abs_action_minus_label": [
+    0.1326,
+    0.1579,
+    0.0615
+   ],
+   "mean_xy_dist_to_demo_m": 0.0797
+  }
+ },
+ "dp_ema": {
+  "t0-0": {
+   "mean_abs_action_minus_label": [
+    0.0075,
+    0.0087,
+    0.0083
+   ],
+   "mean_xy_dist_to_demo_m": 0.0
+  },
+  "t1-3": {
+   "mean_abs_action_minus_label": [
+    0.0074,
+    0.0082,
+    0.0092
+   ],
+   "mean_xy_dist_to_demo_m": 0.0
+  },
+  "t4-7": {
+   "mean_abs_action_minus_label": [
+    0.0068,
+    0.0072,
+    0.0085
+   ],
+   "mean_xy_dist_to_demo_m": 0.001
+  },
+  "t8-15": {
+   "mean_abs_action_minus_label": [
+    0.0179,
+    0.0189,
+    0.0187
+   ],
+   "mean_xy_dist_to_demo_m": 0.0049
+  },
+  "t16-23": {
+   "mean_abs_action_minus_label": [
+    0.0886,
+    0.1036,
+    0.0534
+   ],
+   "mean_xy_dist_to_demo_m": 0.02
+  },
+  "t24-31": {
+   "mean_abs_action_minus_label": [
+    0.1357,
+    0.1485,
+    0.0367
+   ],
+   "mean_xy_dist_to_demo_m": 0.0513
+  },
+  "t32-39": {
+   "mean_abs_action_minus_label": [
+    0.1386,
+    0.1805,
+    0.0441
+   ],
+   "mean_xy_dist_to_demo_m": 0.0694
+  },
+  "t40-47": {
+   "mean_abs_action_minus_label": [
+    0.1395,
+    0.1523,
+    0.0534
+   ],
+   "mean_xy_dist_to_demo_m": 0.0753
+  }
+ },
+ "dp_raw": {
+  "t0-0": {
+   "mean_abs_action_minus_label": [
+    0.0073,
+    0.0084,
+    0.0082
+   ],
+   "mean_xy_dist_to_demo_m": 0.0
+  },
+  "t1-3": {
+   "mean_abs_action_minus_label": [
+    0.0072,
+    0.0079,
+    0.0084
+   ],
+   "mean_xy_dist_to_demo_m": 0.0
+  },
+  "t4-7": {
+   "mean_abs_action_minus_label": [
+    0.0066,
+    0.0069,
+    0.0078
+   ],
+   "mean_xy_dist_to_demo_m": 0.0009
+  },
+  "t8-15": {
+   "mean_abs_action_minus_label": [
+    0.0167,
+    0.0177,
+    0.0177
+   ],
+   "mean_xy_dist_to_demo_m": 0.0049
+  },
+  "t16-23": {
+   "mean_abs_action_minus_label": [
+    0.0909,
+    0.0997,
+    0.053
+   ],
+   "mean_xy_dist_to_demo_m": 0.0195
+  },
+  "t24-31": {
+   "mean_abs_action_minus_label": [
+    0.133,
+    0.1456,
+    0.0369
+   ],
+   "mean_xy_dist_to_demo_m": 0.0527
+  },
+  "t32-39": {
+   "mean_abs_action_minus_label": [
+    0.1402,
+    0.181,
+    0.0445
+   ],
+   "mean_xy_dist_to_demo_m": 0.075
+  },
+  "t40-47": {
+   "mean_abs_action_minus_label": [
+    0.1275,
+    0.1559,
+    0.0522
+   ],
+   "mean_xy_dist_to_demo_m": 0.0854
+  }
+ }
+}

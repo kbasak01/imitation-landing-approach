@@ -1,0 +1,26 @@
+===== dp
+mean success by step {10: np.float64(51.6), 20: np.float64(51.4), 30: np.float64(50.8), 40: np.float64(51.8), 50: np.float64(56.2), 60: np.float64(59.2), 70: np.float64(56.4), 80: np.float64(59.2), 90: np.float64(61.0), 100: np.float64(61.6)}
+per-seed rho(succ,heldout) [ 0.63 -0.07  0.58  0.52  0.78] mean 0.49
+per-seed rho(succ,step) [0.41 0.4  0.83 0.55 0.56] mean 0.55
+  s0: Cochran Q=4.9 df=9 p=0.840; per-episode success-count var 3.94 vs independent binomial 2.34 (ratio 1.69); eps with 0/10:9 10/10:0 hist=[9, 11, 20, 30, 30, 22, 12, 11, 5, 0, 0]
+  s1: Cochran Q=13.9 df=9 p=0.126; per-episode success-count var 3.53 vs independent binomial 2.33 (ratio 1.51); eps with 0/10:9 10/10:0 hist=[9, 12, 16, 31, 29, 27, 16, 8, 2, 0, 0]
+  s2: Cochran Q=25.9 df=9 p=0.002; per-episode success-count var 4.00 vs independent binomial 2.33 (ratio 1.72); eps with 0/10:8 10/10:0 hist=[8, 15, 18, 33, 24, 19, 17, 14, 2, 0, 0]
+  s3: Cochran Q=6.5 df=9 p=0.684; per-episode success-count var 4.06 vs independent binomial 2.40 (ratio 1.69); eps with 0/10:6 10/10:0 hist=[6, 13, 14, 29, 29, 18, 25, 9, 7, 0, 0]
+  s4: Cochran Q=10.5 df=9 p=0.313; per-episode success-count var 3.42 vs independent binomial 2.26 (ratio 1.51); eps with 0/10:5 10/10:0 hist=[5, 20, 24, 32, 24, 18, 20, 6, 1, 0, 0]
+  10-30k: N=2250 success=34.2% off_pad=38.7% hard_landing=16.4% bounce=9.9% crash=0.5% timeout=0.3% tun=16.7%
+  40-50k: N=1500 success=36.0% off_pad=40.4% hard_landing=17.5% bounce=5.9% crash=0.2% timeout=0.1% tun=19.5%
+  60k: N=750 success=39.5% off_pad=41.6% hard_landing=13.6% bounce=5.2% crash=0.1% timeout=0.0% tun=17.1%
+  70-100k: N=3000 success=39.7% off_pad=44.0% hard_landing=10.2% bounce=5.8% crash=0.2% timeout=0.0% tun=13.4%
+  mean p95 by step {10: np.float64(0.617), 20: np.float64(0.713), 30: np.float64(0.72), 40: np.float64(0.729), 50: np.float64(0.694), 60: np.float64(0.668), 70: np.float64(0.659), 80: np.float64(0.648), 90: np.float64(0.631), 100: np.float64(0.615)}
+===== R1_lerobot_dp
+mean success by step {10: np.float64(40.0), 20: np.float64(47.3), 30: np.float64(35.0), 40: np.float64(51.3), 50: np.float64(46.3), 60: np.float64(42.0), 70: np.float64(51.3), 80: np.float64(45.3), 90: np.float64(43.3), 100: np.float64(46.3)}
+per-seed rho(succ,heldout) [ 0.63  0.08 -0.52] mean 0.06
+per-seed rho(succ,step) [ 0.5   0.28 -0.16] mean 0.21
+  s0: Cochran Q=10.3 df=9 p=0.328; per-episode success-count var 2.99 vs independent binomial 2.11 (ratio 1.41); eps with 0/10:7 10/10:0 hist=[7, 21, 38, 29, 24, 18, 10, 1, 1, 1, 0]
+  s1: Cochran Q=24.0 df=9 p=0.004; per-episode success-count var 2.90 vs independent binomial 2.09 (ratio 1.39); eps with 0/10:9 10/10:0 hist=[9, 19, 36, 33, 27, 13, 9, 2, 2, 0, 0]
+  s2: Cochran Q=14.0 df=9 p=0.124; per-episode success-count var 2.69 vs independent binomial 2.08 (ratio 1.29); eps with 0/10:10 10/10:0 hist=[10, 22, 27, 34, 32, 13, 11, 1, 0, 0, 0]
+  10-30k: N=1350 success=27.2% off_pad=52.5% hard_landing=11.4% bounce=7.4% crash=1.4% timeout=0.1% tun=19.4%
+  40-50k: N=900 success=32.6% off_pad=53.0% hard_landing=8.9% bounce=4.4% crash=1.0% timeout=0.1% tun=18.3%
+  60k: N=450 success=28.0% off_pad=56.7% hard_landing=8.7% bounce=5.8% crash=0.9% timeout=0.0% tun=17.1%
+  70-100k: N=1800 success=31.1% off_pad=55.4% hard_landing=7.5% bounce=4.3% crash=1.7% timeout=0.0% tun=13.4%
+  mean p95 by step {10: np.float64(0.636), 20: np.float64(0.696), 30: np.float64(0.748), 40: np.float64(0.71), 50: np.float64(0.699), 60: np.float64(0.671), 70: np.float64(0.629), 80: np.float64(0.638), 90: np.float64(0.629), 100: np.float64(0.662)}

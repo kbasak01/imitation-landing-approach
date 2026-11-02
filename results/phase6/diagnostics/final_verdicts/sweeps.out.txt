@@ -1,0 +1,20 @@
+s0: ckpt step 100000 reproduces_selection_rows=True my-diff-cells=0 hdr=True sweep_commit=f9659fa dirty=False train=b912942; Ta/K/ens in sel rows: '','','' vs sweep 8,10,False
+s1: ckpt step 50000 reproduces_selection_rows=True my-diff-cells=0 hdr=True sweep_commit=f9659fa dirty=True train=b912942; Ta/K/ens in sel rows: '','','' vs sweep 8,10,False
+s2: ckpt step 60000 reproduces_selection_rows=True my-diff-cells=0 hdr=True sweep_commit=f9659fa dirty=True train=b912942; Ta/K/ens in sel rows: '','','' vs sweep 8,10,False
+s3: ckpt step 100000 reproduces_selection_rows=True my-diff-cells=0 hdr=True sweep_commit=f9659fa dirty=True train=f9659fa; Ta/K/ens in sel rows: '','','' vs sweep 8,10,False
+s4: ckpt step 100000 reproduces_selection_rows=True my-diff-cells=0 hdr=True sweep_commit=f9659fa dirty=True train=f9659fa; Ta/K/ens in sel rows: '','','' vs sweep 8,10,False
+
+Ta01_K010_off   S=[143, 129, 137, 141, 145] mean=139.0 sl=False off=14 hard=38 bnc=3 crash=0 to=0 tun=[1, 3, 2, 0, 0] dd=[0, 0, 0, 0, 1] p95=[0.468, 0.531, 0.521, 0.488, 0.46] steps=[70.3, 74.9, 67.2, 62.3, 64.0]
+Ta02_K010_off   S=[130, 113, 122, 130, 127] mean=124.4 sl=False off=33 hard=77 bnc=18 crash=0 to=0 tun=[1, 6, 2, 2, 4] dd=[0, 0, 1, 1, 0] p95=[0.528, 0.634, 0.556, 0.557, 0.557] steps=[66.6, 68.1, 70.0, 61.8, 63.7]
+Ta04_K010_off   S=[75, 84, 93, 83, 91] mean=85.2 sl=False off=196 hard=101 bnc=27 crash=0 to=0 tun=[18, 13, 20, 13, 15] dd=[0, 0, 0, 0, 1] p95=[0.665, 0.682, 0.575, 0.596, 0.6] steps=[64.0, 65.7, 66.4, 63.3, 62.3]
+Ta08_K010_off   S=[63, 66, 68, 67, 62] mean=65.2 sl=False off=329 hard=62 bnc=31 crash=1 to=1 tun=[19, 26, 24, 13, 17] dd=[0, 0, 0, 0, 0] p95=[0.656, 0.669, 0.686, 0.629, 0.609] steps=[60.8, 65.0, 63.5, 62.3, 60.4]
+Ta12_K010_off   S=[53, 64, 69, 51, 55] mean=58.4 sl=False off=330 hard=72 bnc=49 crash=7 to=0 tun=[27, 18, 24, 17, 26] dd=[0, 1, 0, 2, 2] p95=[0.587, 0.725, 0.631, 0.594, 0.654] steps=[63.4, 69.2, 65.6, 61.4, 61.8]
+Ta02_K010_ens   S=[138, 128, 130, 135, 145] mean=135.2 sl=False off=10 hard=54 bnc=10 crash=0 to=0 tun=[1, 3, 0, 2, 1] dd=[1, 0, 0, 0, 0] p95=[0.481, 0.54, 0.513, 0.523, 0.487] steps=[67.2, 70.4, 69.5, 61.5, 64.1]
+Ta04_K010_ens   S=[114, 106, 121, 122, 122] mean=117.0 sl=False off=64 hard=81 bnc=20 crash=0 to=0 tun=[5, 8, 4, 2, 3] dd=[0, 0, 0, 0, 1] p95=[0.576, 0.621, 0.551, 0.549, 0.584] steps=[65.9, 67.1, 67.2, 59.6, 64.8]
+Ta08_K010_ens   S=[109, 107, 111, 116, 120] mean=112.6 sl=False off=95 hard=68 bnc=22 crash=1 to=1 tun=[5, 2, 1, 4, 2] dd=[1, 0, 0, 0, 0] p95=[0.535, 0.594, 0.515, 0.566, 0.505] steps=[65.1, 67.6, 65.8, 61.1, 63.6]
+Ta12_K010_ens   S=[122, 119, 122, 131, 121] mean=123.0 sl=False off=63 hard=41 bnc=30 crash=0 to=1 tun=[1, 1, 2, 2, 0] dd=[0, 2, 0, 1, 0] p95=[0.508, 0.516, 0.503, 0.504, 0.52] steps=[63.1, 66.8, 64.8, 61.0, 62.6]
+Ta08_K001_off   S=[0, 0, 0, 0, 0] mean=0.0 sl=True off=88 hard=2 bnc=0 crash=660 to=0 tun=[14, 24, 21, 19, 17] dd=[1, 8, 8, 3, 1] p95=[1.041, 0.971, 1.013, 0.886, 0.989] steps=[39.5, 45.2, 45.5, 45.5, 45.1]
+Ta08_K002_off   S=[36, 28, 23, 23, 27] mean=27.4 sl=True off=468 hard=97 bnc=43 crash=5 to=0 tun=[42, 59, 54, 40, 51] dd=[1, 0, 1, 2, 1] p95=[0.717, 0.79, 0.773, 0.675, 0.76] steps=[60.7, 70.1, 67.0, 63.6, 60.8]
+Ta08_K005_off   S=[56, 71, 66, 58, 48] mean=59.8 sl=False off=330 hard=83 bnc=35 crash=3 to=0 tun=[24, 27, 24, 16, 32] dd=[1, 1, 0, 0, 0] p95=[0.688, 0.645, 0.673, 0.605, 0.615] steps=[61.0, 64.0, 65.4, 62.4, 60.8]
+Ta08_K025_off   S=[59, 53, 58, 52, 62] mean=56.8 sl=False off=325 hard=95 bnc=43 crash=3 to=0 tun=[23, 37, 26, 15, 17] dd=[0, 1, 0, 0, 0] p95=[0.645, 0.737, 0.685, 0.618, 0.641] steps=[60.5, 63.5, 60.7, 62.0, 60.8]
+Ta08_K100_off   S=[60, 52, 48, 55, 56] mean=54.2 sl=False off=359 hard=77 bnc=41 crash=2 to=0 tun=[25, 37, 38, 14, 22] dd=[1, 1, 1, 1, 0] p95=[0.66, 0.692, 0.698, 0.645, 0.642] steps=[61.2, 62.4, 62.0, 60.5, 61.3]

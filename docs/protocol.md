@@ -1997,3 +1997,710 @@ reproduction gate was not re-run, because Phase 5 changed nothing under `ila/ren
   and `bc_dart`. Read `dp`'s held-out curves as diagnostics only.
 - **`select` is decided by a few episodes** (SS5 #16 and #49 recur across arms). Expect `dp`'s
   selection to be decided by the p95 tie-break and say so.
+
+### P6-D1 — Diffusion Policy implementation choices P3-D1 leaves open (2026-10-30)
+*Status: frozen 2026-10-30. Written and frozen before the `dp` smoke result, any `dp` training run
+or any `dp` number on `select` was read. Item 1 defines the ensembling that H3's curve uses, so it
+is not revised after `select` sweep numbers exist (leak audit NOTE 1).*
+
+*Decision.* The settings below are not fixed by `dp.yaml` (`c8f90c35…6913`, unchanged) or
+P3-D1. They are implementation choices within the frozen protocol, not deviations.
+1. **Temporal ensembling: which predictions are averaged.** P3-D1 §3 crosses `Ta` with
+   ensembling and fixes the weights (`w_i = exp(−m i)`, m = 0.01, i = 0 the oldest), but not
+   which past chunks count. Reading adopted: with ensembling the policy replans at **every**
+   step; step t averages the chunks planned at s ∈ [max(0, t − Ta + 1), t], the chunk planned at
+   s read at index To − 1 + (t − s) (`chunking.ensemble_sources`, oldest first). So `Ta` is the
+   ensemble window, and each chunk contributes to exactly the steps it would have executed
+   without ensembling.
+   - At the start of an episode there are t + 1 < Ta predictions. The weights are renormalised
+     over those.
+   - `Ta` = 1 with ensembling is the same policy as `Ta` = 1 without: one source, weight 1.0.
+     The actions are bit-identical (`tests/test_policies.py`).
+   - Noise for the chunk planned at t is keyed (run_seed, episode_seed, t), as without
+     ensembling. The weighted sum is taken in float64 and returned as float32.
+   - Code: `DPStudent(temporal_ensembling=True)`, threaded through `registry.build_dummy` and
+     `load_student`. The default stays off, and the default path is bit-identical to before
+     (item 5).
+2. **`dp` smoke** (`make train-smoke ARM=dp` → `results/phase6/smoke_dp.json`). It overfits the
+   first 8 `ppo_2000` `train` episodes (success-filtered, as `dp.yaml` says) for **10 000
+   steps**. Every other hyper-parameter is `dp.yaml`'s: batch 128, bf16, lr 1e-4, cosine with
+   500 warm-up steps, EMA power 0.75. The checkpoint cadence equals the step count, and the
+   purpose is `smoke`, so it can never be selected. It passes iff all three hold:
+   - **0. Replay.** Stored steps 0–3 of the first episode are byte-identical to a fresh teacher
+     rollout (as in Phase 4).
+   - **1. Overfit.** Sampled executed-chunk MSE < **1e-3** (normalised action units squared;
+     RMS 0.032 = 0.047 m/s model scale per axis).
+     - At every frame t of the 8 episodes, one chunk is sampled from the EMA weights. Settings:
+       CPU, fp32, eval mode (centre crop), DDIM K = 10 (trailing), the flight's noise key
+       (0, episode_seed, t).
+     - The executed indices at `Ta` = 8 (To − 1 … To + 6, steps t … t + 7) are compared with
+       `label` at those steps, edge-repeated past the episode end.
+     - The mean is taken over frames, steps and axes. The action at t alone is reported beside
+       it.
+   - **2. Closed loop.** ≥ 7/8 `success` flying the saved `ema_last.pt` at `Ta` = 8, K = 10,
+     no ensembling, on the CPU fp32 single-sample path (`select.fly_checkpoint`, the selection
+     path). Outcome classes are printed.
+3. **Inference sweeps on `select`** (plan Phase 6 item 4; `make dp-sweeps` →
+   `results/phase6/sweeps/<arm>/s<n>/<cell>_rows.csv` and `results/dp_sweeps.json`).
+   - **Checkpoint.** For each run, the checkpoint P3-D1 §4 selected at `Ta` = 8, K = 10, read
+     from `selection.json`. Its SHA-256 is re-checked. Nothing is re-selected.
+   - **Path.** The selection path: EMA weights, CPU fp32 single-sample, render `full`, 150
+     `select` episodes.
+   - **Cells.** Taken from `dp.yaml`'s `inference_sweeps`:
+     - `Ta` ∈ {1, 2, 4, 8, 12} × ensembling {off, on}, at K = 10;
+     - K ∈ {1, 2, 5, 10, 25, 100}, at `Ta` = 8, off.
+     That is 15 distinct settings. `Ta` = 1 on is recorded as an alias of `Ta` = 1 off (item 1),
+     so 14 are flown.
+   - **K = 1 and 2** are labelled `schedule_limited` (P3-D1 §3).
+   - **Per cell:** success, outcome classes, p95 closing speed, mean steps, `n_tunnelled`,
+     `n_detectors_disagree`. Rows carry the cell in their `Ta`/`K`/`ensemble` columns.
+   - **Determinism check.** The `Ta` = 8 / K = 10 / off cell is flown first. It must equal the
+     stored selection rows text for text in every column except those three; otherwise the job
+     stops.
+   - **Resumable per cell**, as P5-D1's iterations: a cell is reused only if its rows file
+     holds the 150 `select` episodes in order, flown by this checkpoint at this setting.
+   - **Recorded in the summary:** config SHA-256, checkpoint SHA-256, the training commit and
+     the sweep's commit.
+   - **Scope.** These are not P3-D1 §3's sweeps. Those fly the same cells on `id` SS4–SS6
+     (`Ta`) and `id` SS5 (K) in Phase 8 (`configs/eval/matrix.yaml` `sweeps`), and H3 is scored
+     there. The `select` sweep is reported only. It feeds no choice, and no frozen list is
+     read.
+4. **Diagnostics** (`make dp-diagnostics` → `results/phase6/diagnostics/<arm>/s<n>.json`;
+   definitions in `ila.train.dp_diagnostics`). All are measured on the selected checkpoint's EMA
+   weights, CPU fp32, eval mode, at `Ta` = 8, K = 10. Actions are normalised (× 1.5 m/s model
+   scale), and one control step is 1/30 s model scale.
+   - **Spread.** For each state, 16 chunks are sampled. Sample j of state i is keyed
+     (run_seed, −1, 16 i + j). The episode slot is negative, so it never collides with a flight
+     key. Two figures are reported:
+     - the per-element standard deviation (ddof 1), averaged over the executed slice (8 steps ×
+       3 axes);
+     - the same at index To − 1 alone.
+     The teacher is deterministic per state, so all spread is the student's own sampling.
+   - **Clip fraction.** The fraction of sampled elements with |a| ≥ 1 − 1e-6. With
+     `clip_sample` and `set_alpha_to_one`, the last DDIM step returns the clipped x̂₀, so these
+     elements are exactly ±1. Reported beside it: the labels' fraction (held-out set) and the
+     executed actions' fraction (closed loop).
+   - **Chunk-boundary vs within-chunk jerk** of the executed actions, replanning at
+     `chunking.is_replan_step(t, 8)`:
+     - **First difference** |a_t − a_{t−1}| (× 45 m/s² model scale per unit). It is a boundary
+       difference when t is a replanning step.
+     - **Second difference** |a_t − 2a_{t−1} + a_{t−2}| (× 1 350 m/s³ model scale per unit). It
+       is a boundary difference when t or t − 1 is a replanning step.
+     - Reported for each class: mean, median, p95, n, and the ratio of the means.
+   - **States.**
+     - **P4-D5's held-out set** (`ppo_2000` 1950–1999, every second episode). Spread and clip
+       are measured on 512 frames drawn by `default_rng(0)`. Jerk is measured **open loop**:
+       each episode's recorded windows are fed in order, with noise keyed
+       (run_seed, −2 − e, t). The labels' differences at the same steps are the reference.
+     - **`select`, closed loop.** The selected checkpoint is re-flown through the runner with
+       an actor that records executed actions and the replan-step inputs. Two checks must
+       hold: its rows equal the stored selection rows, and its per-episode mean first
+       difference equals P8's `action_jerk_mean` column. Jerk is measured on the executed
+       actions; spread and clip on up to 512 recorded replan-step inputs (`default_rng(0)`).
+     - The stored rows have no per-step actions, which is why `select` is re-flown.
+   - The denoising loss by k-bucket is already logged by the training loop (held-out, raw and
+     EMA).
+5. **Sampler refactor, bit-identity kept.**
+   - The DDIM loop is now the module function `ddim_sample(eps_fn, noise, scheduler)`, with the
+     final clip to [−1, 1]. The schedulers are built by `ddim_scheduler(cfg, K)` and
+     `ddpm_scheduler(cfg)`. `DiffusionPolicyNet.sample` calls these.
+   - `ddpm_sample` is DDPM ancestral sampling with every step's noise an explicit input. It is
+     tested equal to diffusers' `DDPMScheduler.step` loop given the same draws. It is used only
+     by the toy test.
+   - The refactored sampler was compared with the pre-refactor `policy.py` (git HEAD
+     `b891e05`) on a dummy `dp`: chunks bit-identical at K ∈ {1, 2, 10, 100}, and a 17-step
+     episode of actions bit-identical. All existing `tests/test_policies.py` tests pass
+     unchanged.
+6. **Toy test** (`tests/test_dp_toy.py`, CPU, about 11 s).
+   - **Setup.** A 1-D mixture ½ N(−0.6, 0.08²) + ½ N(0.6, 0.08²) under a constant
+     observation. A 3 × 128 Mish MLP ε-net is trained with the schedulers built from `dp.yaml`
+     through `DPConfig`.
+   - **(a)** DDIM at K = 100 matches DDPM ancestral sampling. Mode fractions agree within
+     0.06, mode means within 0.05, and mode standard deviations within 0.03.
+   - **(b)** Both modes are recovered at K = 10 and 100: each holds 30–70 % of samples, and
+     fewer than 5 % fall between.
+   - **(c)** MSE-BC on the same data lands at the data mean, in the gap.
+   - **Sanity check.** Reversing the DDIM timesteps fails (a): mode mean −0.456 against
+     −0.598. At K = 1 every sample saturates near ±1, which is the schedule-limited regime.
+
+*Reason.*
+- Item 1: the frozen sweep crosses `Ta` with ensembling, so `Ta` must mean something when
+  ensembling is on. Two other readings were rejected:
+  - averaging every prediction any earlier replan made for t (up to Tp − To + 1 = 15) makes
+    the `Ta` axis empty under ensembling;
+  - taking the window from the last replan only is not ensembling.
+- Item 2: a diffusion student has no deterministic action, so Phase 4's action-MSE < 1e-4
+  cannot apply as written. Two reasons for the threshold:
+  - A K = 10 sample adds the sampler's error to the fit. The last DDIM step's x̂₀ carries
+    √(1 − ᾱ₉) ≈ 0.15 times the ε error.
+  - The comparison spans 8 steps of open-loop prediction, not one.
+  1e-3 is ten times the BC threshold, and closed-loop landing remains the binding check.
+- Item 2, step count:
+  - 10 000 steps at batch 128 is about 2 600 passes over the ~490 frames.
+  - At the timing run's 12.79 steps/s that is 13 min.
+  - The power-law EMA has no init bias to wait out. Unlike BC's constant 0.999, after 10 000
+    updates its decay is 0.999, a window of about 1 000 steps at the tail of the cosine
+    schedule.
+- Item 3: the approved Phase 6 plan (Step 1, item 6) specifies re-flying the selected
+  checkpoint on `select`. The determinism check costs nothing extra, because the reference cell
+  has to be flown anyway.
+
+*Evidence.* Code:
+- `src/ila/policies/dp/{chunking,policy}.py`, `src/ila/policies/registry.py`;
+- `src/ila/train/{smoke,select,dp_sweeps,dp_diagnostics}.py`;
+- `scripts/{train_smoke,dp_sweeps,dp_diagnostics}.py`, `Makefile`.
+
+Tests:
+- `tests/test_dp_chunking.py`: `ensemble_sources` tables for To ∈ {1, 2} × `Ta` ∈ {1, 8, 15},
+  with start-of-episode truncation; the To = 1 executed and target tables;
+- `tests/test_policies.py`: ensembling, `Ta` = 1 equivalence, `ddim_sample` identity;
+- `tests/test_dp_toy.py`;
+- `tests/test_dp_jobs.py`: smoke MSE keys; sweep cells; reproduction of the selection rows on a
+  full simulated flight; a tampered row caught; resume; diagnostics end to end.
+
+*Consequence.*
+- The `dp` smoke runs first, in the background (about 16 min). `dp` s0 is queued only after
+  it passes.
+- Sweeps and diagnostics run after selection. Each takes the selected checkpoint and never
+  chooses one.
+- Wall clock per seed, from P2-D2's 170 ms per K = 10 call on one CPU thread, at 24 workers:
+  - sweeps: 15–25 min at teacher-length episodes (61.5 steps), up to about 6 × that if
+    episodes time out;
+  - diagnostics: a few minutes.
+- **Conventions amended** (item 1). `il-conventions` and its mirror `docs/CONVENTIONS.md` said
+  "average all predictions made for t by earlier replans". Both now state the `Ta`-window reading
+  above, and stay identical (`tests/test_conventions_mirror.py`).
+
+### P6-D2 — Deviation: `.venv-lerobot` gains lerobot's dataset, diffusion and training extras (2026-10-30)
+*Decision.* R1 could not run in `.venv-lerobot` as P0-D1 froze it. That env was a bare
+`pip install lerobot==0.6.1` with no extras, so it was missing three things:
+- `import lerobot.datasets` raised `ImportError` (no `datasets`);
+- `DiffusionPolicy` needs `diffusers`;
+- `lerobot_train` needs `accelerate`.
+
+The extras `lerobot[dataset,diffusion,training]==0.6.1` were installed with torch 2.11.0,
+torchvision 0.26.0, numpy 2.2.6 and gymnasium 1.4.0 held as constraints.
+
+*Reason.* R1 (plan Phase 6 item 6) needs those three packages to build its LeRobotDataset and to
+train. P8's `.venv` is untouched, and only ONNX files and the neutral intermediate cross between
+the venvs.
+
+*Evidence.*
+- A `pip install --dry-run` first: it changed none of the held packages.
+- The installed set: datasets 4.8.5, diffusers 0.39.0, accelerate 1.15.0, pandas, pyarrow, av,
+  torchcodec, wandb, plus their dependencies. For R1's ONNX export, onnx 1.23.2 and onnxscript
+  0.7.2 were added under the same constraints. ORT is not installed there: parity and every
+  flight run ORT in `.venv`.
+- `results/env/pip_freeze_lerobot.txt` was regenerated. Its SHA-256 goes from `c00401da…` (P0-D1)
+  to `d9a49039d22091a8e1d7e8dd9db3419a093d54f82bdee637e9c19b853d854d69`, and the torch,
+  torchvision, numpy, gymnasium and lerobot lines are unchanged.
+
+*Consequence.* P0-D1's freeze hash is superseded for `.venv-lerobot` only. No `ila` code pins
+it.
+
+### P6-D3 — R1 configuration and pipeline (2026-10-30)
+*Status: frozen 2026-11-02 at Gate 6 (written before any R1 training run; the 12-worker decision
+confirmed by the user).*
+
+*Decision.* `R1_lerobot_dp` (P3-D1 §3: reference row, tag `reference_external`, 3 seeds, `id`
+SS3–SS6, the same selection rule at `Ta` = 8, K = 10) is configured, trained, exported and flown
+as follows. Everything is simulation only. Times are model scale (one control step = 1/30 s model
+scale, 1/6 s full scale).
+1. **Config.** `configs/train/r1_lerobot_dp.yaml`, SHA-256
+   `a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720`, entered in
+   `ila.train.manifest.FROZEN_CONFIG_SHA256` (P3-D1 §3: "hashed at its creation").
+   `scripts/r1/train_r1.py` parses that table without importing `ila` and refuses a `train` run
+   whose config differs from it, a dirty tree, or any step, episode, cadence or loader override.
+   - **Set explicitly, matched to `dp.yaml`.** LeRobot `DiffusionConfig`: `n_obs_steps` 2,
+     `horizon` 16, `n_action_steps` 8; `crop_shape` [88, 88], `crop_is_random` true (centre crop
+     in eval mode); `resnet18`, `pretrained_backbone_weights` null, `use_group_norm` true;
+     `spatial_softmax_num_keypoints` 32; `down_dims` [128, 256, 512], `kernel_size` 5,
+     `diffusion_step_embed_dim` 128; DDPM 100 train steps, `squaredcos_cap_v2`, epsilon,
+     `clip_sample` true with range 1.0. `TrainPipelineConfig`: 100 000 steps, batch 128,
+     `save_freq` 10 000, wandb off; seeds 0, 1, 2. `push_to_hub` false (infrastructure).
+   - **Set explicitly, infrastructure: `num_workers` 12** (LeRobot's default is 4; that default
+     is still asserted, under `lerobot_defaults_overridden`). Item 7 gives the reason and the
+     rates.
+   - **Kept at LeRobot 0.6.1's defaults** (recorded in the config's `lerobot_defaults_kept`;
+     `train_r1.py` asserts each against the installed source before any step):
+     - normalisation VISUAL MEAN_STD, STATE MIN_MAX, ACTION MIN_MAX;
+     - `drop_n_last_frames` 7 (the last 7 frames of each episode are never sampled as
+       anchors);
+     - `n_groups` 8 (U-Net GroupNorm); `use_film_scale_modulation` true;
+     - `use_separate_rgb_encoder_per_camera` true; `resize_shape` null; `crop_ratio` 1.0;
+     - `noise_scheduler_type` DDPM; `beta_start` / `beta_end` 1e-4 / 0.02 (unused by
+       `squaredcos_cap_v2`); `num_inference_steps` null;
+     - `do_mask_loss_for_padding` false; `compile_model` false; `gradient_checkpointing` false;
+     - `use_amp` false, so R1 trains in **fp32** (`dp` trains in bf16);
+     - optimiser preset: **Adam** (`torch.optim.Adam`, coupled L2 weight decay), lr 1e-4,
+       betas (0.95, 0.999), eps 1e-8, weight decay 1e-6, gradient-norm clip 10; cosine with
+       500 warm-up steps (diffusers `get_scheduler`). `dp` uses AdamW, betas (0.9, 0.999) and
+       no clipping (P4-D1 item 2);
+     - loader: prefetch 4, persistent, `spawn`; `cudnn_deterministic` false (cuDNN
+       benchmark on, TF32 matmul allowed, as `lerobot_train` sets them); `log_freq` 200;
+     - dataset: `use_imagenet_stats` true (VISUAL MEAN_STD uses ImageNet mean and std, not the
+       data's); image transforms off; `eval_split` 0.
+   - **EMA: none.** LeRobot 0.6.1 has no EMA for diffusion. There is no `EMAModel` in
+     `policies/diffusion` or `scripts/lerobot_train.py`, and `train_r1.py` asserts this. R1
+     saves and flies **raw** weights; `dp` flies its EMA. This difference is stated with every
+     R1-vs-`dp` comparison.
+2. **Training code.** `scripts/r1/train_r1.py` runs in `.venv-lerobot` only, with the standard
+   library, yaml, torch and lerobot; it never imports `ila`. Its loop is `lerobot_train.train`
+   step for step, built from LeRobot's own functions: `make_train_eval_datasets`, `make_policy`,
+   `make_pre_post_processors`, `make_optimizer_and_scheduler`, `EpisodeAwareSampler`,
+   `update_policy`, `save_checkpoint`, `load_training_state`, `compute_sampler_state`.
+   `HF_HUB_OFFLINE=1`. Around it is `ila`'s bookkeeping:
+   - Run dir `artifacts/runs/R1_lerobot_dp/s<seed>/`. It holds `status.json`, `train_log.jsonl`
+     and `manifest.json`. The manifest records the config SHA-256 against the frozen table, the
+     dataset path, its `.build.json` SHA-256 (every file it lists is re-hashed), the `ila` and
+     P8 commits with the clean-tree flag, lerobot and torch versions, host, GPU and thread
+     variables, wall clock and GPU-hours.
+   - Checkpoints every 10 000 steps go to `checkpoints/<NNNNNN>/` in LeRobot's layout: weights,
+     processors, optimizer, scheduler, step, and the python / numpy / torch / CUDA RNG states.
+     Each is written to a temporary directory and renamed. The checkpoint SHA-256 is
+     `model.safetensors`'s, and every file is hashed.
+   - **Resume** (P3-D1 §4) restarts from the last complete checkpoint: weights, optimizer,
+     scheduler and RNG state, plus the data order (`compute_sampler_state`). The resume is
+     logged. It is not claimed bit-identical on the GPU (P4-D1 item 8). It was exercised on the
+     CPU (step 4 to 6) and on the GPU (step 200 to 300).
+   - **Leak audit R1, asserted after `make_policy`.** The policy's inputs are exactly
+     `observation.image` [3, 96, 96] and `observation.state` [13], and its output is `action`.
+     There is no `environment_state`, and the parquet's `timestamp`, `frame_index` and `index`
+     never become inputs.
+3. **Differences from `dp`.** These are LeRobot's recipe, reported, not tuned.
+   - *Normalisation.* `dp` uses identity actions and standardised proprio through a 2 × 64
+     MLP. R1 uses:
+     - ACTION MIN_MAX, which maps each axis's training-label [min, max] to [−1, 1]. With
+       `clip_sample` R1 can therefore only command vx ∈ [−0.558, 0.629], vy ∈ [−0.444, 0.564]
+       and vz ∈ [−1.0, 0.265] (normalised; × 1.5 m/s model scale). These are the checkpoint
+       postprocessor's statistics, equal to the extremes of the 61 518 training labels.
+     - STATE MIN_MAX without clipping. The normalised state enters the conditioning raw, with
+       no proprio MLP.
+     - Images use ImageNet MEAN_STD.
+   - *Encoder and conditioning.* GroupNorm with `num_features // 16` groups (`dp`: 16 groups).
+     Spatial softmax is followed by Linear(64, 64) and ReLU per frame. `global_cond` = flatten
+     over `To` of [state (13), image feature (64)], so C = **154** (`dp`: 256).
+   - *Sampling of training data.* `drop_n_last_frames` 7; edge padding with no loss mask.
+   - *Randomness in training.* The random crop (torchvision `RandomCrop`, one crop per batch)
+     and the DDPM ε and k draw from the global torch RNG, seeded by `set_seed(run_seed)`. This
+     is LeRobot's, not the data-loading generator of il-conventions. It affects training only;
+     no flight noise comes from it.
+   - *Inference.* LeRobot's native eval would sample DDPM-100 with the global RNG. R1 is flown
+     by `ila` instead, with the same trailing DDIM, K = 10 and per-episode noise
+     `(run_seed, episode_seed, t)` as `dp` (item 4).
+4. **Interface contract** (fixed with `deploy-benchmarker`). Each checkpoint at step N is
+   exported by `scripts/r1/export_onnx.py` (`.venv-lerobot`, CPU) to
+   `<run>/onnx/step<N>/`:
+   - `encoder.onnx`: `image` uint8[B, 2, 96, 96, 3] (HWC, oldest first) and `state`
+     float32[B, 2, 13] (raw proprio) → `global_cond` float32[B, C]. LeRobot's input
+     normalisation and the eval centre crop are inside the graph.
+   - `denoiser.onnx`: `sample` float32[B, 16, 3] (normalised), `timestep` int64[B] and
+     `global_cond` → `eps` float32[B, 16, 3]. Opset 17. No RNG op: `OnnxDPStudent` refuses a
+     graph that holds one.
+   - `meta.json` (`ila-r1-onnx/1`): horizons, C, both schedulers, the MIN_MAX statistics, and
+     the source checkpoint's and graphs' SHA-256 and versions.
+   - `reference.npz`: the torch reference for parity.
+
+   `ila.policies.onnx_dp.OnnxDPStudent` (registry `R1_lerobot_dp`, kind `onnx_dp`, tag
+   `reference_external`) runs ORT CPU with one thread, sequentially, through
+   `ila.deploy.r1_parity`'s helpers. Its sampler is `ddim_sample` with `dp`'s trailing DDIM at
+   K, initial noise `initial_noise((run_seed, episode_seed, t))`, then the final clip to
+   [−1, 1] in normalised space, LeRobot's float32 MIN_MAX inverse, and a second clip to [−1, 1]
+   (the action bound). Chunk execution, replanning and ensembling are `dp`'s own code: the
+   executor moved, unchanged, into `ChunkedDiffusionStudent`, shared by `DPStudent` and
+   `OnnxDPStudent`. `dp` stays bit-identical, checked against `efbf359`'s `policy.py` on a
+   dummy `dp` at (`Ta` 8, K 10), (`Ta` 4, ensembling) and (`Ta` 1, K 2) over 17 steps.
+5. **Selection.** The same rule (P3-D1 §4), at `Ta` = 8, K = 10, no ensembling, on the 150
+   `select` episodes, through `select_run`. An R1 run's config sets `selection.candidates:
+   onnx_exports`.
+   - The candidates are its exports `onnx/step<N>/`, one per manifest checkpoint. Each export's
+     `meta.json` must name that checkpoint's `model.safetensors` SHA-256.
+   - A candidate's SHA-256 (the rows' `ckpt_sha256`) is `meta.json`'s. Both graphs are
+     re-verified against it before flying.
+   - **Parity gate.** Every export must carry a `parity.json` (`scripts/r1/parity.py`) written
+     for its exact `meta.json` and graphs. A run with an unchecked export is refused. A failed
+     parity bars that checkpoint: it is never flown and is listed under `excluded_by_parity`.
+   - `selection.json` keeps the same format, with `weights: raw_no_ema` and
+     `inference_path: ort_cpu_fp32_single_sample`.
+6. **R1 smoke** (`make train-smoke ARM=R1_lerobot_dp` → `results/phase6/smoke_R1_lerobot_dp.json`).
+   LeRobot trains 10 000 steps (the `dp` smoke's count, P6-D1 item 2) on LeRobotDataset
+   episodes 0–7, with every other setting from the R1 config. The run is then exported, parity
+   is run, and the episodes are flown through `OnnxDPStudent` at `Ta` = 8, K = 10. It passes iff:
+   - (0) the replay check holds (P6-D1);
+   - (1) LeRobot episodes 0–7 are the store's first 8 kept episodes, the `dp` smoke's, by group
+     and demo index;
+   - (2) the export's parity passed;
+   - (3) at least 7 of 8 land `success`. Outcome classes are printed.
+
+   `dp`'s sampled executed-chunk MSE is reported through the ONNX student but **not judged**.
+   It is given over all frames and over the frames LeRobot samples as anchors (t ≤ T − 8):
+   with `drop_n_last_frames` = 7, the last 7 frames of each episode are never trained as
+   anchors, so the all-frame figure is not an overfit measure. `dp`'s 1e-3 is printed beside it
+   as a reference.
+7. **Loader workers, measured rate and projection** (P3-D1 §5 proxy check; dev runs tagged
+   `test`, RTX A4000, full dataset, real schedule; `artifacts/runs/R1_lerobot_dp_test/`).
+   - **At LeRobot's default 4 workers**, the steady rate is **3.7–3.9 steps/s** (3.88 and 3.73
+     in the two segments of a 300-step run; 3.68 with `OMP_NUM_THREADS` unset). The rate over
+     all steps, warm-up included, is 3.36. Training is bound by PNG decoding in the loader:
+     data loading takes 0.175–0.19 s per step against 0.10–0.14 s for the fp32 update. GPU
+     memory peaks at 1.39 GiB. Projection: ≈ 7.3 h per run, ≈ 21.9 GPU-h for 3.
+   - **At 12 workers** (a 140-step `test` run), the steady rate is **9.82 steps/s**, with data
+     loading at 0.05 s per step.
+   - **Decision: 12 workers.** It was decided by the Phase 6 coordinator on 2026-10-30, before
+     any R1 train run and before the config was hashed for training. It was recorded for the
+     user's confirmation at the gate, and **the user confirmed it on 2026-11-02**.
+     - It is infrastructure. The worker count changes neither the data order
+       (`EpisodeAwareSampler` is a pure function of seed and epoch) nor any sample, because no
+       randomness runs in the workers: image transforms are off, and the crop and the DDPM
+       noise run in the main process.
+     - It departs from "every other setting at LeRobot's default" in this one place.
+   - **Projection at 12 workers:** 100 000 / 9.8 ≈ 10 200 s ≈ 2.8 h per run, so **≈ 8.5 GPU-h
+     for 3 runs, against P4-D2's 6.5 GPU-h proxy (+2.0 GPU-h)**. P4-D2's 91.6 h becomes about
+     93.6 h, under the 120 h limit. Under P3-D1 §5 any overrun is reported, not cut. The first
+     train run's own rate is compared with this projection.
+
+*Reason.* R1 tests whether `dp`'s numbers depend on `ila`'s implementation. It must be
+LeRobot's recipe at the matched hyper-parameters, trained by LeRobot's code and flown by the same
+runner, sampler, noise keys and selection as `dp`. Items 1–3 write down every place where it
+nevertheless differs, before any number exists. The parity gate keeps an export that does not
+match its torch weights out of selection.
+
+*Evidence.*
+- Code:
+  - `configs/train/r1_lerobot_dp.yaml`;
+  - `scripts/r1/train_r1.py`;
+  - `src/ila/policies/{onnx_dp,registry}.py`, `src/ila/policies/dp/policy.py`
+    (`ChunkedDiffusionStudent`);
+  - `src/ila/train/{select,smoke,manifest}.py`;
+  - `Makefile` (`r1-train`).
+- Tests:
+  - `tests/test_student_onnx_dp.py` (synthetic ONNX pair exported in-test): contract, torch
+    reference, execution indices and noise keys, determinism, the MIN_MAX inverse, the
+    `meta.json`, hash, RNG-op and graph guards, the registry, ONNX candidates, the parity gate,
+    and a runner flight independent of the worker count;
+  - `tests/test_step_guard.py`: the executor's clock sites; no clock read in `onnx_dp.py`; ORT
+    session inputs invariant to the episode seed and step, with and without ensembling;
+    ensembling invariance for `dp` (leak audit R2);
+  - `tests/test_render_access.py` and `tests/test_data_export_lerobot.py`: the frozen-list scan
+    covers R1's pathway (leak audit R3).
+- Dev runs:
+  - CPU, 8 episodes, 4 + 2 steps with a resume;
+  - GPU, full data, 200 + 100 steps with a resume, plus 140-step loader measurements at 4
+    workers (`OMP_NUM_THREADS` unset) and at 12 workers.
+
+  None is selectable.
+
+*Consequence.*
+- R1 s0–s2 are queued only after the R1 smoke passes (rule 4).
+- Each finished run is exported (≈ 46 s per checkpoint on the CPU), and parity is run on every
+  export before `make select-bg SELECT="--arm R1_lerobot_dp --seeds 0 1 2"`.
+- R1 is never mixed into core tables.
+
+### P6-D4 — Deviation: R1 trains despite its smoke failing; what the smoke can and cannot show (2026-10-30)
+*Decision* (approved by the user on 2026-10-30). R1 s0–s2 train as configured (P6-D3, config
+`a55e2fa0…6720`), although `results/phase6/smoke_R1_lerobot_dp.json` failed the ≥ 7/8 closed-loop
+rule (6/8, 2 `off_pad`). The overfit, parity, replay and episode-match checks passed. Nothing in
+R1's recipe changes.
+
+*Reason.* On one noise key, a ≥ 7/8 smoke cannot tell a diffusion student apart from a bug. The
+investigation re-flew both smoke checkpoints on the same 8 `train` episodes (`ppo_2000` 0–7) at
+run_seed 0–9 (`Ta` = 8, K = 10, CPU). Episodes and physics were unchanged; only the noise keys
+moved. No `select` episode and no frozen list was flown. Each re-fly at run_seed 0 reproduced
+its smoke JSON exactly.
+
+| Student | Success per run_seed 0–9 | Pooled | run_seeds at ≥ 7/8 |
+|---|---|---|---|
+| R1 (ONNX, raw weights) | 6 5 3 4 6 6 6 4 4 5 | 49/80 | 0 |
+| `dp` smoke, EMA | 7 4 5 6 4 5 7 6 6 7 | 57/80 | 3 |
+| `dp` smoke, raw weights | 5 3 6 5 5 5 4 5 6 6 | 50/80 | 0 |
+
+- **Contrasts** (bootstrap over seeds and episodes):
+  - R1 − `dp` EMA = −0.10 [−0.31, +0.10];
+  - `dp` raw − `dp` EMA = −0.09 [−0.30, +0.10].
+
+  Neither excludes 0.
+- **`dp`'s own smoke pass (P6-D1 item 2) was a favourable draw.** Its per-episode rates give a
+  0.26 chance that one 8-episode flight passes. The `dp` runs are not affected: the smoke is a
+  pre-flight check, and selection flies 150 `select` episodes.
+- **No bug signature:**
+  - The first chunk follows the demo to under 1 mm.
+  - Labels shifted by ±1 step raise the open-loop MSE about 850×, so the alignment is right.
+  - ONNX parity passes.
+  - R1 sits at its MIN_MAX action bounds on 0.16 % of executed steps, so that is not a factor.
+- **Where the failures come from.** All three students drift from the demo after the first
+  replan, from 4–5 mm at t 8–15 to about 8 cm at touchdown (model scale). They land
+  0.078–0.085 m (model scale) from the pad centre on average, against the teacher's 0.010 m.
+- **`drop_n_last_frames` = 7** makes R1 about 12× worse than `dp` open loop on each episode's last
+  7 frames. Those frames are 8–15 steps after first contact (the dwell), so this cannot cause
+  `off_pad`, which is decided at first contact.
+- **Training rate.** P6-D3's 9.82 steps/s was measured inside the 48-batch prefetch buffer of a
+  140-step test run, so it overstates the rate.
+  - The loader alone, built as `train_r1.py` builds it (12 workers, full dataset), gives 9.03
+    batches/s steady. With 4 workers it gives 3.91.
+  - R1 is data-bound at about 8.5–9 steps/s: 3.1–3.3 h per run, **9.3–9.8 GPU-h for 3 runs**,
+    against P6-D3's 8.5. P4-D2's total becomes about 94.4–94.9 h of 120. This is reported, not
+    cut.
+  - The smoke's 2.93 steps/s is an artefact of 8 episodes (the pipeline restarts every 4
+    batches).
+
+*Evidence.*
+- Summaries: `results/phase6/r1_investigation/`
+  - `analysis_flights.json` (SHA-256 `211cdf03…f717`)
+  - `divergence.json` (`731283c8…3087`)
+  - `analysis_openloop.json` (`b3d7557b…458f`)
+  - `analysis_ta1.json` (`12d77538…67e3`)
+  - `loader_*.json`
+- Scripts: `results/phase6/r1_investigation/scripts/`.
+- Per-step flight pickles were not committed.
+
+*Consequence and caveats.*
+- **A diagnostic only, never used for a choice.** At `Ta` = 1 on the same 8 `train` episodes:
+  - `dp` EMA lands 72/80, against 57/80 at `Ta` = 8;
+  - R1 lands 59/80, against 49/80, with 5 hard landings.
+
+  These are overfit-8 models. The core row's `Ta` stays 8 (P3-D1 §4), and H3 is scored only in
+  Phase 8 on `id` SS6. The result is recorded because H3 is about exactly this mechanism.
+- **R1 is a reference with a recorded recipe gap.** It has no EMA, MIN_MAX normalisation and raw
+  state conditioning. Under per-step feedback it is weaker than `dp` (−0.16 [−0.41, +0.06] at
+  `Ta` = 1, not significant). That is a caveat to any R1 vs `dp` comparison, not a bug.
+- **Side finding.** `registry.load_student(weights="raw")` reads `ckpt["raw"]`, but
+  `loop.py` saves raw weights under `"model"`. This is a diagnostics-only path; no selection or
+  flight uses it. It is fixed after the Phase 6 queue, because the trainers refuse a dirty tree.
+- R1 s0–s2 train after `dp` s4. Each is exported, passes parity, then is selected by the P3-D1 §4
+  rule at `Ta` = 8, K = 10.
+
+### P6-D5 — `dp` and R1 run verdicts, selection, the chunking finding, budget (2026-10-31; revised 2026-11-02 after the results-skeptic review)
+*Decision.* All 8 Phase 6 runs are kept: no exclusions, no re-selection, nothing tuned. Final
+verdicts from the `training-run-diagnostician`:
+
+| Run | Verdict | Selected step | `select` success | Main reasons |
+|---|---|---|---|---|
+| `dp` s0 | TRUSTWORTHY | 100 k | 63/150 | |
+| `dp` s1 | TRUSTWORTHY | 50 k | 66/150 | |
+| `dp` s2 | TRUSTWORTHY | 60 k | 68/150 | |
+| `dp` s3 | TRUSTWORTHY | 100 k | 67/150 | |
+| `dp` s4 | TRUSTWORTHY | 100 k | 62/150 | |
+| `R1_lerobot_dp` s0 | CAVEAT | 100 k | 54/150 | no EMA; over-trains past 40 k; LeRobot recipe gap; reference only |
+| `R1_lerobot_dp` s1 | CAVEAT | 40 k | 57/150 | same |
+| `R1_lerobot_dp` s2 | CAVEAT | 50 k | 53/150 | same |
+
+Source: `results/phase6/runs_summary.csv` and `results/phase6/runs/<arm>/s<n>/`.
+
+*Findings.* All are simulation results at model scale, on the 150 `select` episodes only. No
+frozen list was flown.
+
+1. **Provenance.**
+   - Configs: `dp.yaml` `c8f90c35…6913`, `r1_lerobot_dp.yaml` `a55e2fa0…6720`. Data: `ppo_2000`
+     `35b70cbd…7cfd`, first 1 000 episodes, 999 kept, 61 518 frames.
+   - Every tree was clean. `dp` s0–s2 ran at `b912942`; `dp` s3–s4 and every R1 run at `f9659fa`.
+     The two commits differ only in protocol and results files, with no code change.
+   - No resumes. Every checkpoint SHA-256 was recomputed and matches.
+   - R1's `selected_ckpt_sha256` is the SHA-256 of the export bundle's `meta.json`. That file
+     records the `model.safetensors` SHA-256, which equals the manifest's.
+2. **Selection followed P3-D1 §4 in all 8 runs**, and was decided by success alone. The p95
+   tie-break was never used, so the Phase 6 note's expectation did not happen.
+   - Winning margins were 1–5 episodes.
+   - Differences between the 10 checkpoints of a run are mostly binomial noise: Cochran's Q is
+     not significant in 6 of 8 runs (exceptions: `dp` s2 p = 0.002, R1 s1 p = 0.004).
+   - The selected scores are what taking the maximum of 10 noisy draws predicts. Candidate means
+     are `dp` 55.9 and R1 44.8; the expected maxima are 65.1 and 53.6; the selected means are 65.2
+     and 54.7. **Phase 8 should expect lower numbers than the selected `select` scores.**
+   - Source: `results/phase6/diagnostics/final_verdicts/{sel,pool}.out.txt`.
+3. **Held-out denoising loss is not a selection proxy.**
+   - Every `dp` seed reaches its held-out EMA minimum at 41–45 k, then rises 53–70 % by 100 k;
+     89–90 % of the rise is in k 0–24 (`results/phase6/diagnostics/dp/heldout_curves.json`, EMA and
+     raw by k-bucket at every evaluation). R1's offline reconstruction has its minimum at 40 k in
+     3 of 3 seeds, then rises 55–72 % (`results/phase6/diagnostics/R1_lerobot_dp/heldout_reconstruction/`).
+   - Yet `dp` success *rises* late. Mean success by step is 51.6 / 51.4 / 50.8 / 51.8 at 10–40 k
+     and 56.4 / 59.2 / 61.0 / 61.6 at 70–100 k.
+   - Two contrasts were tested (post hoc). 100 k − 40 k is positive in 5 of 5 seeds (+7, +2, +10,
+     +16, +14): sign test p = 0.0625. 100 k − 50 k is +13, −15, +9, +4, +16: sign test p = 0.375.
+     The episode-level McNemar values (p = 0.011 and 0.163) ignore clustering by seed and are not
+     relied on. So success does not *follow* held-out loss; a late rise is suggestive only, and
+     it sits within item 2's noise.
+   - The diagnostician had predicted more `off_pad` and `hard_landing` late. `off_pad` did rise
+     (44.0 % vs 40.4 %), but `hard_landing` fell (10.2 % vs 17.5 %), so the prediction was
+     falsified.
+   - Source: `results/phase6/diagnostics/final_verdicts/{pool,late}.out.txt`.
+4. **`dp` at its frozen setting (`Ta` = 8, K = 10) lands far below the BC family.**
+   - `dp` 62–68/150, mostly `off_pad`, against 145–150/150 for `bc`, `bc_matched`, `bc_dart`,
+     `bc_dagger` and `bc_state` (`results/phase4/runs_summary.csv`, `results/phase5/runs_summary.csv`).
+   - The median lateral touchdown offset is 0.092 m, against an `off_pad` boundary of 0.10 m
+     (success maximum 0.100 m, `off_pad` minimum 0.100 m). At `Ta` = 8, outcomes sit on the
+     threshold, which is why selection is noise-dominated.
+   - Tunnelled episodes: 13–26 per run, against 0–2 for the BC family. They close faster: median
+     0.559 m/s against 0.385 m/s overall. 17 tunnelled `dp` episodes are scored `success` under
+     P8's rule.
+   - Across the 5 runs there was 1 timeout (s1 SS5 #22) and 1 crash (s3 SS5 #48, tilt).
+     Detectors disagreed 0 times.
+   - Source: `results/phase6/diagnostics/final_verdicts/tun.out.txt`.
+5. **Inference sweeps on `select`** (`results/dp_sweeps.json`; reported only; unscored; nothing
+   re-selected). Success per seed s0–s4 and mean:
+
+   | Cell | Success, s0–s4 | Mean | With ensembling (mean) |
+   |---|---|---|---|
+   | `Ta` 1 | 143 129 137 141 145 | 139.0 | (same policy) |
+   | `Ta` 2 | 130 113 122 130 127 | 124.4 | 135.2 |
+   | `Ta` 4 | 75 84 93 83 91 | 85.2 | 117.0 |
+   | `Ta` 8 | 63 66 68 67 62 | 65.2 | 112.6 |
+   | `Ta` 12 | 53 64 69 51 55 | 58.4 | 123.0 |
+
+   - Every seed's reference cell reproduced its selection rows text for text.
+   - The `Ta` = 8 / K = 10 cell is the selection cell and carries the full selection optimism of
+     item 2. Every other cell flies the same checkpoint and carries part of it (`Ta` = 12 off
+     executes the same first chunk).
+   - Ensembling beats no ensembling in all 20 seed × `Ta` comparisons and recovers 59–80 % of the
+     gap to `Ta` = 1. With ensembling, success is not monotone in `Ta`: `Ta` 12 beats `Ta` 8 in 5
+     of 5 seeds.
+   - **K.** K 5 / 25 / 100 give means of 59.8 / 56.8 / 54.2, against 65.2 for K = 10 in the
+     selection cell (the candidate mean at K = 10 is 55.9). All carry some optimism, and they
+     cannot be told apart. "K = 10 beats K = 25 or 100" must not be claimed.
+     K = 1 and 2 (0/150 and 23–36/150) are labelled `schedule_limited`.
+   - At `Ta` = 1 the leading failure is `hard_landing` (38 of 750), not `off_pad` (14 of 750).
+   - Source: `results/phase6/diagnostics/final_verdicts/sweeps.out.txt`.
+   - **Reading (revised after review, S1 and S2).** The loss at `Ta` = 8 is mostly a chunking
+     effect: executing 8-step chunks (0.27 s model scale, 1.33 s full scale) open loop.
+     - **It does not grow with deck motion.** Pooled over 5 seeds, `Ta` 1 → 8 goes 245 → 113 of
+       250 at SS3, 235 → 116 at SS4 and 215 → 97 at SS5 (−52.8, −47.6, −47.2 points). In the
+       calmest slice, SS3 at 0 kn, it goes 94 → 40 of 95, and the median lateral offset goes from
+       0.020 to 0.096 m (model scale).
+     - Together with the under-dispersed, biased chunk predictions of item 7, this points to
+       multi-step prediction error that does not depend on sea state, not to deck bandwidth. A
+       `Ta` contrast therefore cannot attribute the loss to deck motion. H3's verdict in Phase 8
+       (`id` SS6, same checkpoints; wording and threshold as frozen) is reported with this
+       caveat.
+     - **`dp` at `Ta` = 1 is still below `bc`.** It lands mean 139.0/150 (129–145) against
+       `bc`'s selected 145–149, below `bc` in every seed, with 38 hard landings in 750 against
+       `bc`'s 7. This is an unpaired reading: different checkpoints and selection settings.
+     - Source: `results/phase6/diagnostics/final_verdicts/review_fixes.out.txt`.
+6. **No execution (index) bug.** The discriminating evidence is (a) and (c). (a) and (b) come
+   from the overfit-8 smoke checkpoints on `train` episodes 0–7, not from the selected runs. (d)
+   and (e) are the observations being explained, so they are consistency checks, not
+   independent evidence.
+   - (a) Shifting labels by ±1 step makes open-loop MSE 506× worse for `dp` and 850× worse for R1.
+     *Correction to P6-D4:* its "about 850×" is R1's figure.
+   - (b) In closed loop the first chunk stays within 0.007–0.009 (`dp`; R1 0.004–0.007) of the
+     same-step label, with ≤ 1 mm xy drift (model scale) through t = 7.
+   - (c) All 30 R1 parity files show LeRobot's own `select_action` matching the executed slice
+     To − 1 … To + 6.
+   - (d) `Ta` = 1 lands mean 139.0/150 over 5 seeds.
+   - (e) Degradation grows with `Ta` and is mostly `off_pad`.
+   - Sources: `results/phase6/r1_investigation/{analysis_openloop,divergence}.json` and the R1
+     `parity.json` files.
+7. **DP diagnostics** (`results/phase6/diagnostics/dp/s<n>.json`; normalised actions,
+   × 1.5 m/s model scale).
+   - **Spread.** Over the executed slice, the spread of 16 samples is 0.015–0.033. The
+     sample-mean RMS error is 0.071–0.077, so samples are under-dispersed but not collapsed.
+   - **Clipping.** In closed loop on `select`, executed actions at ±1 occur in 0.027–0.096 % of
+     steps (`select.executed_at_bound`), against 0.195 % in the labels.
+   - **Jerk.** First-difference ratio at chunk boundaries vs within chunks: 1.35–1.47 in closed
+     loop, 1.15–1.25 open loop, 1.09 for the teacher's labels. The closed-loop re-fly reproduced
+     the selection rows and P8's `action_jerk_mean` in all 5 seeds.
+8. **R1 vs `dp` at `Ta` = 8** (descriptive; 3 vs 5 seeds).
+   - Selected: −7.0 points, 95 % CI [−14.5, +0.7]. This is an ad hoc bootstrap (rng seed 0,
+     20 000 replicates, `final_verdicts/scripts/r1dp.py`), not P8's `paired_bootstrap`, and it is
+     descriptive only. Candidate means: −7.4 points (no CI computed).
+   - Same failure profile: lateral offset median 0.099 m, `off_pad`-dominated.
+   - The gap is in the direction the recorded recipe gaps predict: no EMA, MIN_MAX
+     normalisation, fp32 Adam (P6-D3). It has the size of P6-D4's `dp` raw − EMA effect on the
+     smoke models. Judged not large enough to need further investigation before Phase 8 (plan
+     Phase 6 item 6), on weak support: the CI only just includes 0.
+   - R1 reproduces the main result (`Ta` = 8 far below BC) with independent training code,
+     dataset indexing and normalisation. It shares ila's executor, sampler and runner, which (c)
+     covers.
+   - Source: `results/phase6/diagnostics/final_verdicts/r1dp.out.txt`.
+9. **Budget** (wall-clock GPU-h).
+   - `dp`: 2.2095 / 2.2142 / 2.2160 / 2.1889 / 2.1715 = **11.000**, against 10.9 (+0.9 %).
+   - R1: 2.9248 / 2.9548 / 2.9424 = **8.822**, against P4-D2's 6.5 proxy (+2.32 h). About 0.07 h
+     of that came from diagnostics sharing the CPU with s1 and s2.
+   - Cumulative training through Phase 6: 17.50 + 7.11 + 19.82 = **44.43 GPU-h**, against 40.9
+     projected through Phase 6.
+   - Projected total if `modular` and the ablations run at projection: about 95 of 120 h.
+   - No cut (P4-D2).
+   - Sweeps took 30–34 min per seed, against P6-D1's 15–25 min estimate.
+
+*Evidence.*
+- `results/phase6/runs_summary.csv`.
+- `results/phase6/runs/<arm>/s<n>/{manifest.json, selection.json, select/*_rows.csv}`, plus R1's
+  `onnx/step*/{parity,meta}.json`.
+- `results/dp_sweeps.json` and `results/phase6/sweeps/`.
+- `results/phase6/diagnostics/{dp, R1_lerobot_dp, final_verdicts}/`. The scripts read
+  `artifacts/` paths; the same rows are committed under `results/phase6/runs/`.
+
+*Consequence.*
+- **The README must state:**
+  - that `dp` at its frozen `Ta` = 8 lands far below BC on `select`, and that this is mostly a
+    chunking effect that does not depend on sea state (item 5). At `Ta` = 1, `dp` (distilled from
+    P8 `ppo` s0) lands mean 139.0/150 (129–145), still below `bc`'s 145–149 in every seed
+    (unpaired);
+  - that selection is noise-dominated and the selected scores are optimistic;
+  - that held-out loss is not a selection proxy: success does not follow it (item 3).
+- **Phase 8, GPU acceptance.** The binding GPU-acceptance test for `dp` (≤ 3 of 150 flips, P3-D1
+  §3) has not been run. Outcomes at `Ta` = 8 sit on the 0.10 m threshold, so a failure is likely.
+  Plan the CPU-path budget now:
+  - 170 ms per K = 10 call;
+  - the `Ta` = 1 and ensembling cells replan every step.
+
+*Review response (results-skeptic, 2026-11-02; no BLOCKER).*
+- **S1.** The deck-motion reading was withdrawn. The per-sea-state and 0 kn breakdown is in item 5.
+- **S2.** "Not a weaker network" was replaced by the `dp` vs `bc` comparison at `Ta` = 1 (item 5
+  and the README requirement).
+- **M1.** The scope of each piece of item 6's evidence is now stated.
+- **M2.** Item 5 now says the other cells share the selected checkpoint and part of its
+  optimism.
+- **M3.** Item 3 now reports both contrasts and the seed-level sign tests.
+- **M4.** Held-out curves are committed in `results/phase6/diagnostics/dp/heldout_curves.json`,
+  and the clip range comes from one source.
+- **M6.** Item 8 now labels its bootstrap ad hoc and descriptive.
+- **M7.** Wording fixed in P6-D1 ("full simulated flight") and model scale added in P6-D4; P6-D5
+  is now dated to its commit.
+- **M8.** `select.py` now writes `inference: {Ta, K, temporal_ensembling}` into
+  `selection.json` (`ila.train.select.inference_settings`). The Phase 6 selections predate this.
+  For them, `Ta` = 8, K = 10 is shown by the sweep determinism check: each reference cell flown
+  at `Ta` = 8, K = 10 reproduced the selection rows text for text.
+- **M5.** The user confirmed P6-D3's 12-worker decision on 2026-11-02, and P6-D3 is frozen.
+
+### Gate 6 passed (2026-11-02)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| CPU tests green | `make lint` clean (ruff, format, mypy --strict, 67 files). `make test`: 786 passed (11 min 48 s, GPU and slow included) at `a898704`. CI green on `phase-6` (run 41253888633, `c83019c`) | PASS |
+| 5 seeds trained | `results/phase6/runs/dp/s0–s4/manifest.json`: `done`, 100 000 steps each, clean trees (`b912942` ×3, `f9659fa` ×2; no code difference between them), no resumes, `dp.yaml` `c8f90c35…6913` | PASS |
+| 5 seeds selected | `results/phase6/runs/dp/s*/selection.json`: 10 EMA candidates each on `select` (`07ecf049…`), CPU fp32 path, at `Ta` = 8, K = 10 (shown by the sweep reference cells). Selected 63/66/68/67/62 of 150 (`runs_summary.csv`). The rule was recomputed independently from the committed rows by the diagnostician and the skeptic | PASS |
+| Diagnostician TRUSTWORTHY | `dp` s0–s4 TRUSTWORTHY (P6-D5). R1 s0–s2 CAVEAT (a reference arm, not gating) | PASS |
+| Sweep JSON committed | `results/dp_sweeps.json` with rows in `results/phase6/sweeps/dp/`; `reproduces_selection_rows: true` for all 5 seeds | PASS |
+
+*Reviewers.*
+- `privileged-leak-auditor` (Phase 6 code and the R1 data path): no LEAK. Three RISKs were fixed
+  with guard tests (P6-D3).
+- `training-run-diagnostician`, every run: `dp` TRUSTWORTHY ×5, R1 CAVEAT ×3 (P6-D5).
+- `results-skeptic`: no BLOCKER. Two SERIOUS (the withdrawn deck-motion reading; `dp` vs `bc` at
+  `Ta` = 1) and eight MINOR, all addressed in P6-D5's review response.
+
+*Deviations this phase.*
+- P6-D2: `.venv-lerobot` extras.
+- P6-D4: R1 trained despite its smoke failing (user-approved).
+- P6-D3's 12-worker decision was confirmed by the user.
+
+No threshold was changed.
+
+## Phase 7
+
+*Before you start (from Phase 6).*
+- **Budget.** Training so far is 44.43 GPU-h of wall clock against 40.9 projected through Phase 6
+  (P6-D5 item 9). `modular` and the ablations at projection bring the total to about 95 of 120 h.
+  - The five `dp` ablations (`dp_mix`, `dp_pid`, `dp_n100`, `dp_n300`, `dp_minus_last_action`)
+    are 3 seeds each at about 2.2 GPU-h per run.
+- **`dp` ablations inherit Phase 6's selection noise.** At `Ta` = 8, outcomes sit on the 0.10 m
+  `off_pad` boundary, so per-checkpoint differences are mostly binomial noise and selected
+  `select` scores run about 6 points above the candidate mean. Read `dp`-ablation selections the
+  same way.
+- **H2's touchdown-time plots** (plan Phase 7 item 3) use `dp`-mix at the frozen `Ta` = 8. `dp`'s
+  failures there are lateral (`off_pad`) and do not depend on sea state, so do not read them as
+  multimodality effects without checking.
+- **Phase 8 risks, to plan now.**
+  - The binding GPU-acceptance test for `dp` (≤ 3/150 flips) is likely to fail. Budget the CPU
+    path: 170 ms per K = 10 call, and the `Ta` = 1 and ensembling cells replan every step.
+  - Sweeps ran 30–34 min per seed on `select`, against an estimate of 15–25.
+- **`load_student(weights="raw")`** now works (`c83019c`); it is used for diagnostics only.
+  `selection.json` now records `inference`.

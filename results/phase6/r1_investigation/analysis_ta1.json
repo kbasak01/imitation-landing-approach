@@ -1,0 +1,354 @@
+{
+ "r1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "success_counts": [
+   6,
+   5,
+   3,
+   4,
+   6,
+   6,
+   6,
+   4,
+   4,
+   5
+  ],
+  "pooled": "49/80",
+  "rate": 0.6125,
+  "outcomes": {
+   "off_pad": 27,
+   "hard_landing": 1,
+   "bounce": 3,
+   "success": 49
+  },
+  "lat_off_mean_m": 0.08506305304027673,
+  "lat_off_median_m": 0.0767514591385278,
+  "frac_lat_gt_0.10": 0.3375,
+  "seeds_ge_7": 0,
+  "closing_mean_m_s": 0.27372029233258444,
+  "closing_p95_m_s": 0.4087311280548419,
+  "frac_closing_gt_0.45": 0.025
+ },
+ "dp_ema": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "success_counts": [
+   7,
+   4,
+   5,
+   6,
+   4,
+   5,
+   7,
+   6,
+   6,
+   7
+  ],
+  "pooled": "57/80",
+  "rate": 0.7125,
+  "outcomes": {
+   "off_pad": 22,
+   "bounce": 1,
+   "success": 57
+  },
+  "lat_off_mean_m": 0.07798244481621981,
+  "lat_off_median_m": 0.06561036383583631,
+  "frac_lat_gt_0.10": 0.275,
+  "seeds_ge_7": 3,
+  "closing_mean_m_s": 0.27293027793528035,
+  "closing_p95_m_s": 0.40416956807640125,
+  "frac_closing_gt_0.45": 0.0
+ },
+ "dp_raw": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "success_counts": [
+   5,
+   3,
+   6,
+   5,
+   5,
+   5,
+   4,
+   5,
+   6,
+   6
+  ],
+  "pooled": "50/80",
+  "rate": 0.625,
+  "outcomes": {
+   "off_pad": 30,
+   "success": 50
+  },
+  "lat_off_mean_m": 0.08435102402553933,
+  "lat_off_median_m": 0.07982123907920771,
+  "frac_lat_gt_0.10": 0.375,
+  "seeds_ge_7": 0,
+  "closing_mean_m_s": 0.27075136134306754,
+  "closing_p95_m_s": 0.35346678098719114,
+  "frac_closing_gt_0.45": 0.0125
+ },
+ "r1_ta1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "success_counts": [
+   4,
+   7,
+   4,
+   8,
+   5,
+   6,
+   7,
+   7,
+   5,
+   6
+  ],
+  "pooled": "59/80",
+  "rate": 0.7375,
+  "outcomes": {
+   "off_pad": 16,
+   "hard_landing": 5,
+   "success": 59
+  },
+  "lat_off_mean_m": 0.06755007785905941,
+  "lat_off_median_m": 0.05641622572840331,
+  "frac_lat_gt_0.10": 0.2,
+  "seeds_ge_7": 4,
+  "closing_mean_m_s": 0.28987741987120685,
+  "closing_p95_m_s": 0.5754844717958699,
+  "frac_closing_gt_0.45": 0.1125
+ },
+ "dp_ema_ta1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "success_counts": [
+   7,
+   6,
+   8,
+   8,
+   7,
+   8,
+   6,
+   7,
+   8,
+   7
+  ],
+  "pooled": "72/80",
+  "rate": 0.9,
+  "outcomes": {
+   "off_pad": 8,
+   "success": 72
+  },
+  "lat_off_mean_m": 0.06106724403830048,
+  "lat_off_median_m": 0.05806071729408003,
+  "frac_lat_gt_0.10": 0.1,
+  "seeds_ge_7": 8,
+  "closing_mean_m_s": 0.2680608464796461,
+  "closing_p95_m_s": 0.3990837666882405,
+  "frac_closing_gt_0.45": 0.025
+ },
+ "dp_raw_ta1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "success_counts": [
+   6,
+   6,
+   8,
+   6,
+   7,
+   7,
+   8,
+   6,
+   7,
+   8
+  ],
+  "pooled": "69/80",
+  "rate": 0.8625,
+  "outcomes": {
+   "off_pad": 11,
+   "success": 69
+  },
+  "lat_off_mean_m": 0.06145225277199464,
+  "lat_off_median_m": 0.05893888149048078,
+  "frac_lat_gt_0.10": 0.1375,
+  "seeds_ge_7": 6,
+  "closing_mean_m_s": 0.2716334388056642,
+  "closing_p95_m_s": 0.3912490240284725,
+  "frac_closing_gt_0.45": 0.0
+ },
+ "diff_r1_ta1_minus_dp_ema_ta1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "point": -0.1625,
+  "ci95": [
+   -0.4125,
+   0.0625
+  ]
+ },
+ "diff_dp_raw_ta1_minus_dp_ema_ta1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "point": -0.0375,
+  "ci95": [
+   -0.175,
+   0.1
+  ]
+ },
+ "diff_r1_ta1_minus_dp_raw_ta1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "point": -0.125,
+  "ci95": [
+   -0.4,
+   0.1375
+  ]
+ },
+ "diff_r1_ta1_minus_r1": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "point": 0.125,
+  "ci95": [
+   -0.175,
+   0.4125
+  ]
+ },
+ "diff_dp_ema_ta1_minus_dp_ema": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "point": 0.1875,
+  "ci95": [
+   0.0,
+   0.3875
+  ]
+ },
+ "diff_dp_raw_ta1_minus_dp_raw": {
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "point": 0.2375,
+  "ci95": [
+   0.05,
+   0.425
+  ]
+ }
+}

@@ -1,0 +1,7 @@
+dp pooled 100k-only 202 vs 40k-only 153, exact p=0.011, diff 6.5 pts
+dp pooled 100k-only 187 vs 50k-only 160, exact p=0.163, diff 3.6 pts
+0 5.5
+1 -0.75
+2 6.5
+3 5.75
+4 10.75

@@ -1,0 +1,1132 @@
+{
+ "A": {
+  "r1": {
+   "per_seed": [
+    {
+     "seed": 0,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 1,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 2,
+      "hard_landing": 1,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "hard_landing",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 2,
+     "success": 3,
+     "outcomes": {
+      "off_pad": 4,
+      "bounce": 1,
+      "success": 3
+     },
+     "per_episode": [
+      "off_pad",
+      "bounce",
+      "off_pad",
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 3,
+     "success": 4,
+     "outcomes": {
+      "off_pad": 4,
+      "success": 4
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 4,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 5,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 1,
+      "bounce": 1,
+      "success": 6
+     },
+     "per_episode": [
+      "off_pad",
+      "bounce",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 6,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 7,
+     "success": 4,
+     "outcomes": {
+      "off_pad": 3,
+      "bounce": 1,
+      "success": 4
+     },
+     "per_episode": [
+      "off_pad",
+      "bounce",
+      "success",
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 8,
+     "success": 4,
+     "outcomes": {
+      "off_pad": 4,
+      "success": 4
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 9,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "off_pad"
+     ]
+    }
+   ],
+   "success_counts": [
+    6,
+    5,
+    3,
+    4,
+    6,
+    6,
+    6,
+    4,
+    4,
+    5
+   ],
+   "mean_per_8": 4.9,
+   "sd_per_8": 1.1005049346146119,
+   "pooled": "49/80",
+   "pooled_rate": 0.6125,
+   "wilson95": [
+    0.5029345562232477,
+    0.711756003117223
+   ],
+   "seeds_ge_7": 0,
+   "per_episode_success_rate": [
+    0.6,
+    0.2,
+    0.8,
+    0.4,
+    0.7,
+    0.9,
+    0.7,
+    0.6
+   ],
+   "pooled_outcomes": {
+    "crash": 0,
+    "off_pad": 27,
+    "hard_landing": 1,
+    "bounce": 3,
+    "success": 49,
+    "timeout": 0
+   },
+   "p_pass_ge7_model": 0.09196992000000001
+  },
+  "dp_ema": {
+   "per_seed": [
+    {
+     "seed": 0,
+     "success": 7,
+     "outcomes": {
+      "off_pad": 1,
+      "success": 7
+     },
+     "per_episode": [
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 1,
+     "success": 4,
+     "outcomes": {
+      "off_pad": 3,
+      "bounce": 1,
+      "success": 4
+     },
+     "per_episode": [
+      "off_pad",
+      "bounce",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 2,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 3,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 4,
+     "success": 4,
+     "outcomes": {
+      "off_pad": 4,
+      "success": 4
+     },
+     "per_episode": [
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 5,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 6,
+     "success": 7,
+     "outcomes": {
+      "off_pad": 1,
+      "success": 7
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 7,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 8,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 9,
+     "success": 7,
+     "outcomes": {
+      "off_pad": 1,
+      "success": 7
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    }
+   ],
+   "success_counts": [
+    7,
+    4,
+    5,
+    6,
+    4,
+    5,
+    7,
+    6,
+    6,
+    7
+   ],
+   "mean_per_8": 5.7,
+   "sd_per_8": 1.1595018087284057,
+   "pooled": "57/80",
+   "pooled_rate": 0.7125,
+   "wilson95": [
+    0.6053944721715182,
+    0.8001321399160374
+   ],
+   "seeds_ge_7": 3,
+   "per_episode_success_rate": [
+    0.7,
+    0.5,
+    0.9,
+    0.6,
+    0.8,
+    1.0,
+    0.5,
+    0.7
+   ],
+   "pooled_outcomes": {
+    "crash": 0,
+    "off_pad": 22,
+    "hard_landing": 0,
+    "bounce": 1,
+    "success": 57,
+    "timeout": 0
+   },
+   "p_pass_ge7_model": 0.25850999999999996
+  },
+  "dp_raw": {
+   "per_seed": [
+    {
+     "seed": 0,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 1,
+     "success": 3,
+     "outcomes": {
+      "off_pad": 5,
+      "success": 3
+     },
+     "per_episode": [
+      "off_pad",
+      "off_pad",
+      "success",
+      "off_pad",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 2,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 3,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad"
+     ]
+    },
+    {
+     "seed": 4,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 5,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 6,
+     "success": 4,
+     "outcomes": {
+      "off_pad": 4,
+      "success": 4
+     },
+     "per_episode": [
+      "off_pad",
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 7,
+     "success": 5,
+     "outcomes": {
+      "off_pad": 3,
+      "success": 5
+     },
+     "per_episode": [
+      "success",
+      "off_pad",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad",
+      "success"
+     ]
+    },
+    {
+     "seed": 8,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "off_pad",
+      "success",
+      "success",
+      "success"
+     ]
+    },
+    {
+     "seed": 9,
+     "success": 6,
+     "outcomes": {
+      "off_pad": 2,
+      "success": 6
+     },
+     "per_episode": [
+      "success",
+      "success",
+      "success",
+      "success",
+      "off_pad",
+      "success",
+      "success",
+      "off_pad"
+     ]
+    }
+   ],
+   "success_counts": [
+    5,
+    3,
+    6,
+    5,
+    5,
+    5,
+    4,
+    5,
+    6,
+    6
+   ],
+   "mean_per_8": 5.0,
+   "sd_per_8": 0.9428090415820634,
+   "pooled": "50/80",
+   "pooled_rate": 0.625,
+   "wilson95": [
+    0.515485228513904,
+    0.7230598374199522
+   ],
+   "seeds_ge_7": 0,
+   "per_episode_success_rate": [
+    0.6,
+    0.6,
+    0.8,
+    0.6,
+    0.3,
+    0.9,
+    0.5,
+    0.7
+   ],
+   "pooled_outcomes": {
+    "crash": 0,
+    "off_pad": 30,
+    "hard_landing": 0,
+    "bounce": 0,
+    "success": 50,
+    "timeout": 0
+   },
+   "p_pass_ge7_model": 0.11631599999999996
+  },
+  "diff_r1_minus_dp_ema": {
+   "point": -0.1,
+   "ci95_two_way_cluster_bootstrap": [
+    -0.3125,
+    0.1
+   ]
+  },
+  "diff_dp_raw_minus_dp_ema": {
+   "point": -0.0875,
+   "ci95_two_way_cluster_bootstrap": [
+    -0.3,
+    0.1
+   ]
+  },
+  "diff_r1_minus_dp_raw": {
+   "point": -0.0125,
+   "ci95_two_way_cluster_bootstrap": [
+    -0.25,
+    0.2375
+   ]
+  }
+ },
+ "B": {
+  "teacher_refly_equals_demo": [
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true
+  ],
+  "teacher_rows": [
+   {
+    "demo": 0,
+    "outcome": "success",
+    "steps": 65,
+    "td_step": 49.625,
+    "lateral_offset_m": 0.021651490712634135,
+    "closing_speed_m_s": 0.2615954226053986
+   },
+   {
+    "demo": 1,
+    "outcome": "success",
+    "steps": 64,
+    "td_step": 48.5,
+    "lateral_offset_m": 0.0025943191283378125,
+    "closing_speed_m_s": 0.22678683284220766
+   },
+   {
+    "demo": 2,
+    "outcome": "success",
+    "steps": 63,
+    "td_step": 47.0,
+    "lateral_offset_m": 0.00516318230842205,
+    "closing_speed_m_s": 0.2796005916618488
+   },
+   {
+    "demo": 3,
+    "outcome": "success",
+    "steps": 63,
+    "td_step": 47.25,
+    "lateral_offset_m": 0.020918769706725127,
+    "closing_speed_m_s": 0.2267833966526576
+   },
+   {
+    "demo": 4,
+    "outcome": "success",
+    "steps": 59,
+    "td_step": 43.125,
+    "lateral_offset_m": 0.006685972206851874,
+    "closing_speed_m_s": 0.23481380501166385
+   },
+   {
+    "demo": 5,
+    "outcome": "success",
+    "steps": 61,
+    "td_step": 45.25,
+    "lateral_offset_m": 0.00683897135991217,
+    "closing_speed_m_s": 0.25459877836889105
+   },
+   {
+    "demo": 6,
+    "outcome": "success",
+    "steps": 62,
+    "td_step": 46.25,
+    "lateral_offset_m": 0.006840067253712824,
+    "closing_speed_m_s": 0.25323608552356597
+   },
+   {
+    "demo": 7,
+    "outcome": "success",
+    "steps": 63,
+    "td_step": 47.5,
+    "lateral_offset_m": 0.011871491040127963,
+    "closing_speed_m_s": 0.2576404489243123
+   }
+  ],
+  "seed0_failures": [
+   {
+    "variant": "r1",
+    "seed": 0,
+    "demo": 1,
+    "outcome": "off_pad",
+    "steps": 61,
+    "td_step": 45,
+    "teacher_td_step": 48,
+    "lateral_offset_m": 0.10196571079199561,
+    "teacher_lateral_offset_m": 0.0025943191283378125,
+    "closing_speed_m_s": 0.2051268582150132,
+    "rel_xy_at_td_student_m": [
+     -0.09440000355243683,
+     -0.00279999990016222
+    ],
+    "rel_xy_same_t_demo_m": [
+     -0.01860000006854534,
+     -0.0005000000237487257
+    ],
+    "window_steps": [
+     30,
+     45
+    ],
+    "dist_xy_to_demo_m": {
+     "mean": 0.08231750130653381,
+     "max": 0.10281410068273544,
+     "first": 0.08362215757369995,
+     "last": 0.0757966861128807
+    },
+    "dz_to_demo_m_last": 0.02195601910352707,
+    "rmse_action_vs_teacher_on_student_state": [
+     0.2474,
+     0.1732,
+     0.1076
+    ],
+    "rmse_action_vs_demo_label_same_t": [
+     0.2017,
+     0.2198,
+     0.0437
+    ],
+    "mean_action_err_vs_teacher_xy": [
+     0.2295,
+     0.0648,
+     -0.0773
+    ]
+   },
+   {
+    "variant": "r1",
+    "seed": 0,
+    "demo": 3,
+    "outcome": "off_pad",
+    "steps": 63,
+    "td_step": 47,
+    "teacher_td_step": 47,
+    "lateral_offset_m": 0.13642247457528198,
+    "teacher_lateral_offset_m": 0.020918769706725127,
+    "closing_speed_m_s": 0.2580502502632872,
+    "rel_xy_at_td_student_m": [
+     -0.0348999984562397,
+     -0.1251000016927719
+    ],
+    "rel_xy_same_t_demo_m": [
+     -0.020999999716877937,
+     -0.005799999926239252
+    ],
+    "window_steps": [
+     32,
+     47
+    ],
+    "dist_xy_to_demo_m": {
+     "mean": 0.06859549134969711,
+     "max": 0.12002111971378326,
+     "first": 0.023202570155262947,
+     "last": 0.12002111971378326
+    },
+    "dz_to_demo_m_last": -0.01348794437944889,
+    "rmse_action_vs_teacher_on_student_state": [
+     0.137,
+     0.3465,
+     0.043
+    ],
+    "rmse_action_vs_demo_label_same_t": [
+     0.1417,
+     0.1997,
+     0.0308
+    ],
+    "mean_action_err_vs_teacher_xy": [
+     0.06,
+     0.31,
+     0.0278
+    ]
+   },
+   {
+    "variant": "dp_ema",
+    "seed": 0,
+    "demo": 0,
+    "outcome": "off_pad",
+    "steps": 59,
+    "td_step": 44,
+    "teacher_td_step": 50,
+    "lateral_offset_m": 0.13004749999888407,
+    "teacher_lateral_offset_m": 0.021651490712634135,
+    "closing_speed_m_s": 0.27570955738390784,
+    "rel_xy_at_td_student_m": [
+     -0.06790000200271606,
+     0.11339999735355377
+    ],
+    "rel_xy_same_t_demo_m": [
+     -0.029999999329447746,
+     -0.01889999955892563
+    ],
+    "window_steps": [
+     29,
+     44
+    ],
+    "dist_xy_to_demo_m": {
+     "mean": 0.12169917672872543,
+     "max": 0.14298225939273834,
+     "first": 0.0830560103058815,
+     "last": 0.1375463604927063
+    },
+    "dz_to_demo_m_last": 0.046460844576358795,
+    "rmse_action_vs_teacher_on_student_state": [
+     0.2405,
+     0.2525,
+     0.1278
+    ],
+    "rmse_action_vs_demo_label_same_t": [
+     0.2219,
+     0.2395,
+     0.0502
+    ],
+    "mean_action_err_vs_teacher_xy": [
+     0.1569,
+     -0.1941,
+     -0.0859
+    ]
+   }
+  ],
+  "lateral_offset_all": {
+   "r1": {
+    "n": 80,
+    "mean": 0.08506305304027673,
+    "median": 0.0767514591385278,
+    "p90": 0.14463020657932066,
+    "frac_gt_0.10": 0.3375,
+    "last15_dist_xy_to_demo_mean_m": 0.06831231152173131,
+    "last15_dist_xy_to_demo_last_m": 0.08197544938884675,
+    "last15_rmse_action_vs_teacher_on_student_state": [
+     0.189,
+     0.2763,
+     0.0859
+    ],
+    "fail_vs_success_last15_dist_xy_mean_m": [
+     0.08973057556056208,
+     0.054761981211450636
+    ],
+    "td_step_minus_teacher_td_step_mean": 1.5125
+   },
+   "dp_ema": {
+    "n": 80,
+    "mean": 0.07798244481621981,
+    "median": 0.06561036383583631,
+    "p90": 0.13318250859485498,
+    "frac_gt_0.10": 0.275,
+    "last15_dist_xy_to_demo_mean_m": 0.06429518875665963,
+    "last15_dist_xy_to_demo_last_m": 0.07615582190046552,
+    "last15_rmse_action_vs_teacher_on_student_state": [
+     0.1976,
+     0.2456,
+     0.0867
+    ],
+    "fail_vs_success_last15_dist_xy_mean_m": [
+     0.10871725626613783,
+     0.046370494849326316
+    ],
+    "td_step_minus_teacher_td_step_mean": -0.2375
+   },
+   "dp_raw": {
+    "n": 80,
+    "mean": 0.08435102402553933,
+    "median": 0.07982123907920771,
+    "p90": 0.14378434001007864,
+    "frac_gt_0.10": 0.375,
+    "last15_dist_xy_to_demo_mean_m": 0.0676614222349599,
+    "last15_dist_xy_to_demo_last_m": 0.08094608078245073,
+    "last15_rmse_action_vs_teacher_on_student_state": [
+     0.1956,
+     0.2601,
+     0.0934
+    ],
+    "fail_vs_success_last15_dist_xy_mean_m": [
+     0.09336835605402788,
+     0.05223726194351912
+    ],
+    "td_step_minus_teacher_td_step_mean": -0.625
+   },
+   "teacher": {
+    "n": 8,
+    "mean": 0.010320532964590495,
+    "median": 0.006839519306812497,
+    "max": 0.021651490712634135
+   }
+  }
+ },
+ "C": {
+  "r1": {
+   "n_executed_steps": 5055,
+   "frac_outside_R1_range_per_axis": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "frac_steps_any_axis_outside": 0.0,
+   "frac_below_min_per_axis": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "frac_above_max_per_axis": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max_excess_per_axis": [
+    -0.0498,
+    0.0,
+    0.0
+   ],
+   "executed_min": [
+    -0.3443,
+    -0.444,
+    -1.0
+   ],
+   "executed_max": [
+    0.5797,
+    0.5635,
+    -0.0077
+   ],
+   "executed_frac_at_minmax_bound_per_axis": [
+    0.0,
+    0.0004,
+    0.0012
+   ],
+   "executed_frac_at_bound_any_axis": 0.001582591493570722,
+   "executed_frac_at_lower_vs_upper": null,
+   "chunk_all16_frac_at_bound_per_axis": [
+    0.0,
+    0.0002,
+    0.0013
+   ],
+   "executed_action_equal_bound_per_axis": [
+    0.0,
+    0.0004,
+    0.0012
+   ],
+   "executed_action_at_lower_per_axis": [
+    0.0,
+    0.0002,
+    0.0012
+   ],
+   "executed_action_at_upper_per_axis": [
+    0.0,
+    0.0002,
+    0.0
+   ]
+  },
+  "dp_ema": {
+   "n_executed_steps": 4939,
+   "frac_outside_R1_range_per_axis": [
+    0.0,
+    0.0002,
+    0.0
+   ],
+   "frac_steps_any_axis_outside": 0.00020247013565499088,
+   "frac_below_min_per_axis": [
+    0.0,
+    0.0002,
+    0.0
+   ],
+   "frac_above_max_per_axis": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max_excess_per_axis": [
+    -0.0692,
+    0.0079,
+    0.0
+   ],
+   "executed_min": [
+    -0.3358,
+    -0.4519,
+    -1.0
+   ],
+   "executed_max": [
+    0.5603,
+    0.4935,
+    -0.0136
+   ]
+  },
+  "dp_raw": {
+   "n_executed_steps": 4924,
+   "frac_outside_R1_range_per_axis": [
+    0.0,
+    0.0002,
+    0.0
+   ],
+   "frac_steps_any_axis_outside": 0.00020308692120227456,
+   "frac_below_min_per_axis": [
+    0.0,
+    0.0002,
+    0.0
+   ],
+   "frac_above_max_per_axis": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max_excess_per_axis": [
+    -0.0687,
+    0.0052,
+    0.0
+   ],
+   "executed_min": [
+    -0.476,
+    -0.4492,
+    -1.0
+   ],
+   "executed_max": [
+    0.5608,
+    0.4952,
+    -0.0133
+   ]
+  },
+  "teacher_refly_frac_outside_R1_range_per_axis": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "teacher_on_dp_ema_states_frac_outside_R1_range_per_axis": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "teacher_on_r1_states_frac_outside_R1_range_per_axis": [
+   0.0,
+   0.0004,
+   0.0
+  ]
+ },
+ "D": {}
+}

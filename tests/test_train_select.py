@@ -416,3 +416,24 @@ def test_resummarise_refuses_any_change(tmp_path: Path, tamper: str) -> None:
     with pytest.raises(ResummaryMismatchError):
         resummarise_run(run)
     assert (run / "selection.json").read_bytes() == before  # nothing written
+
+
+def test_inference_settings_recorded_for_diffusion_arms_only() -> None:
+    # Pre-gate review M8: selection.json states the Ta / K it flew.
+    from ila.train.select import inference_settings
+
+    dp = {
+        "config_resolved": {
+            "horizons": {"n_action_steps": 8},
+            "inference": {"num_inference_steps": 10},
+        }
+    }
+    r1 = {
+        "config_resolved": {
+            "policy": {"n_action_steps": 8},
+            "inference": {"num_inference_steps": 10},
+        }
+    }
+    assert inference_settings(dp) == {"Ta": 8, "K": 10, "temporal_ensembling": False}
+    assert inference_settings(r1) == {"Ta": 8, "K": 10, "temporal_ensembling": False}
+    assert inference_settings({"config_resolved": {"steps": 30000}}) is None

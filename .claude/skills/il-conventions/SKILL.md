@@ -52,8 +52,10 @@ At control step t:
 - Training targets for a sample anchored at t: `label[t−To+1 … t−To+Tp]`; steps < 0 repeat
   `label[0]`; steps ≥ T repeat `label[T−1]`.
 - Replanning happens at t, t+Ta, t+2Ta, … (without ensembling).
-- **Temporal ensembling:** replan every step; for step t average all predictions made for t by
-  earlier replans, weight `w_i = exp(−m·i)`, i = 0 the oldest, m = 0.01, normalised.
+- **Temporal ensembling:** replan every step; for step t average the predictions made for t by
+  the replans s ∈ [max(0, t−Ta+1), t] (those whose executed window covers t; chunk index
+  To−1+(t−s)), weight `w_i = exp(−m·i)`, i = 0 the oldest, m = 0.01, normalised. With Ta = 1
+  this is no ensembling (P6-D1).
 - Only `ila/policies/dp/chunking.py` computes these indices.
 
 ## Latency-in-the-loop semantics

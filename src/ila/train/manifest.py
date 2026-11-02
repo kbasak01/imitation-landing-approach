@@ -54,8 +54,9 @@ RUNS_ROOT: Final[Path] = REPO_ROOT / "artifacts" / "runs"
 #: Committed demo-store summary with every store's SHA-256 (P3-D1 §2).
 DEMOS_SUMMARY: Final[Path] = REPO_ROOT / "results" / "demos_summary.json"
 
-#: SHA-256 of every training config frozen by P3-D1 §3 (the protocol prints them truncated:
-#: ``tests/test_train_loop.py`` checks each against the truncated form in ``docs/protocol.md``),
+#: SHA-256 of every training config frozen by P3-D1 §3 and of R1's (P6-D3). The protocol prints
+#: them truncated or in full (``tests/test_train_loop.py`` checks each against
+#: ``docs/protocol.md``),
 #: plus ``configs/data/demos.yaml`` (P3-D1 §2, printed in full), which ``bc_dagger`` reads.
 FROZEN_CONFIG_SHA256: Final[Mapping[str, str]] = {
     "configs/train/bc.yaml": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
@@ -107,6 +108,11 @@ FROZEN_CONFIG_SHA256: Final[Mapping[str, str]] = {
     ),
     "configs/train/ablations/bc_plus_clock.yaml": (
         "505f3bef192125bf3882b84ac8a5387f96d58afdf67cbacde2998e91f11c9caa"
+    ),
+    # R1_lerobot_dp (P3-D1 §3: "Phase 6 config, hashed at its creation"; P6-D3, printed in
+    # full there). Read by scripts/r1/train_r1.py in .venv-lerobot, which parses this table.
+    "configs/train/r1_lerobot_dp.yaml": (
+        "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720"
     ),
     # Frozen by P3-D1 §2 (printed in full there); read by bc_dagger.yaml's
     # ``dagger: {from: configs/data/demos.yaml#dagger}``, so it is part of that run's config.

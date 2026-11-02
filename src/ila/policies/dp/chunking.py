@@ -15,7 +15,11 @@ Notation (il-conventions, "Chunks"). Control step ``t`` is an integer, one step 
   repeat ``label[0]``, steps >= ``T`` repeat ``label[T-1]``.
 * Temporal ensembling: replan every step; for step ``t`` average every prediction made for
   ``t`` by earlier replans with weights ``w_i = exp(-m i)``, ``i = 0`` the oldest, normalised
-  (``m = 0.01``).
+  (``m = 0.01``). **Which** replans count (P6-D1's reading of P3-D1 §3): those whose executed
+  window covers ``t``, i.e. replans ``s`` in ``[max(0, t-Ta+1), t]``, each read at chunk index
+  ``To-1+(t-s)`` (:func:`ensemble_sources`). ``Ta`` is then the ensemble window, a chunk
+  contributes to exactly the steps it would have executed without ensembling, and ``Ta = 1``
+  with ensembling is the same policy as ``Ta = 1`` without.
 
 Every function here is pure integer arithmetic (and :func:`ensemble_weights`, numpy), so the
 runner, the dataset and the policy all take their indices from one table-tested place
@@ -25,13 +29,20 @@ runner, the dataset and the policy all take their indices from one table-tested 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Final
 
 import numpy as np
 from numpy.typing import NDArray
 
+#: Temporal-ensembling decay per prediction, ``m`` (dimensionless; il-conventions and
+#: ``configs/train/dp.yaml`` ``inference_sweeps.temporal_ensembling.m``).
+ENSEMBLE_DECAY: Final[float] = 0.01
+
 __all__ = [
+    "ENSEMBLE_DECAY",
     "ChunkSpec",
     "chunk_steps",
+    "ensemble_sources",
     "ensemble_weights",
     "executed_indices",
     "executed_slice",
@@ -232,7 +243,38 @@ def target_steps(t: int, n_obs_steps: int, horizon: int, episode_len: int) -> tu
     return tuple(min(max(s, 0), episode_len - 1) for s in chunk_steps(t, n_obs_steps, horizon))
 
 
-def ensemble_weights(n: int, m: float = 0.01) -> NDArray[np.float64]:
+def ensemble_sources(
+    t: int, n_obs_steps: int, horizon: int, n_action_steps: int
+) -> tuple[tuple[int, int], ...]:
+    """Return the predictions temporal ensembling averages for step ``t``, oldest first.
+
+    With ensembling the policy replans at every step. Step ``t`` averages the chunks planned
+    at ``s = max(0, t-Ta+1) ... t``, chunk planned at ``s`` read at index ``To-1+(t-s)``
+    (which :func:`chunk_steps` maps back to step ``t``). These are exactly the chunks whose
+    executed window (:func:`executed_slice`) covers ``t``; at the start of an episode there
+    are fewer (``t+1`` when ``t < Ta-1``). Weight ``i`` of :func:`ensemble_weights` goes to
+    entry ``i`` (``i = 0`` the oldest). ``Ta = 1`` gives the single pair ``(t, To-1)``: the
+    same action as without ensembling.
+
+    Args:
+        t: Control step (>= 0; 1/30 s model scale).
+        n_obs_steps: ``To``.
+        horizon: ``Tp``.
+        n_action_steps: ``Ta``, the ensemble window (``1 <= Ta <= Tp - To + 1``).
+
+    Returns:
+        ``((s, j), ...)`` pairs: replanning step ``s`` and chunk index ``j``, ``s`` ascending.
+
+    Raises:
+        ValueError: If ``t < 0`` or ``(To, Tp, Ta)`` is inadmissible.
+    """
+    _check_step(t)
+    ChunkSpec(n_obs_steps, horizon, n_action_steps)
+    first = max(0, t - n_action_steps + 1)
+    return tuple((s, n_obs_steps - 1 + (t - s)) for s in range(first, t + 1))
+
+
+def ensemble_weights(n: int, m: float = ENSEMBLE_DECAY) -> NDArray[np.float64]:
     """Return normalised temporal-ensembling weights for ``n`` predictions of one step.
 
     Args:

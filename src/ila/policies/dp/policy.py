@@ -12,7 +12,11 @@ Sampling: diffusers' ``DDIMScheduler`` with the training schedule's betas
 (``squaredcos_cap_v2``, 100 train steps, epsilon prediction, ``clip_sample``), eta = 0, ``K``
 inference steps chosen at inference time (``1 <= K <= 100``). The final sample is clipped to
 ``[-1, 1]``. Timestep spacing comes from the config (P3-D1: ``trailing``, so every ``K``
-starts at ``k = 99``; see :class:`DPConfig`).
+starts at ``k = 99``; see :class:`DPConfig`). The loop is the module function
+:func:`ddim_sample` (any epsilon network, any sample shape), which
+:meth:`DiffusionPolicyNet.sample` calls with the U-Net; :func:`ddpm_sample` is DDPM ancestral
+sampling with every step's noise an explicit input (the reference sampler of
+``tests/test_dp_toy.py``: DDIM at ``K = 100`` must match it in distribution).
 
 Randomness: with eta = 0 the only randomness is the initial noise ``x_K ~ N(0, I)``. It is an
 explicit input of :meth:`DiffusionPolicyNet.sample` (so a graph export can take it as an input),
@@ -26,6 +30,12 @@ epsilon-prediction DDPM objective on diffusers' ``DDPMScheduler`` with the same 
 inputs drawn by the caller from the data-loading generator (run_seed, epoch, worker_id), never
 from :func:`noise_seed` (P2-D3 item 4).
 
+Execution (:class:`ChunkedDiffusionStudent`, shared by :class:`DPStudent` and
+``ila.policies.onnx_dp.OnnxDPStudent``): without temporal ensembling a chunk is planned every ``Ta``
+steps and its executed indices are queued; with temporal ensembling (P6-D1) a chunk is planned
+at every step and step ``t`` returns the weighted mean of the predictions
+:func:`chunking.ensemble_sources` names, weights :func:`chunking.ensemble_weights`.
+
 Chunk indices come only from :mod:`ila.policies.dp.chunking`.
 """
 
@@ -34,7 +44,7 @@ from __future__ import annotations
 import hashlib
 import struct
 from collections import deque
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Final
 
@@ -50,17 +60,27 @@ from ila.policies.dp.unet1d import ConditionalUnet1D, UNetConfig
 from ila.policies.encoder import EncoderConfig, VisionEncoder, VisionStudentBase
 
 __all__ = [
+    "ChunkedDiffusionStudent",
     "DPConfig",
     "DPStudent",
     "DiffusionPolicyNet",
+    "EpsFn",
     "SeedTuple",
+    "ddim_sample",
+    "ddim_scheduler",
     "ddpm_loss",
+    "ddpm_sample",
+    "ddpm_scheduler",
     "initial_noise",
     "noise_seed",
 ]
 
 #: ``(run_seed, episode_seed, step)``: the key of one replanning call's noise.
 SeedTuple = tuple[int, int, int]
+
+#: An epsilon network ``(x_k float32[B, ...], k int64[B]) -> eps_hat float32[B, ...]`` (the
+#: observation conditioning already bound).
+type EpsFn = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 
 _SEED_STRUCT: Final[struct.Struct] = struct.Struct("<qqq")
 
@@ -226,6 +246,129 @@ def _check_k(k: int, num_train_timesteps: int) -> None:
         raise ValueError(f"K must be in [1, {num_train_timesteps}] (train steps), got {k}")
 
 
+def ddim_scheduler(cfg: DPConfig, num_inference_steps: int) -> Any:
+    """Return a DDIM scheduler with the training betas and ``set_timesteps(K)`` applied.
+
+    Args:
+        cfg: The config (``num_train_timesteps``, ``beta_schedule``, ``clip_sample``,
+            ``prediction_type``, ``timestep_spacing``).
+        num_inference_steps: ``K`` (``1 <= K <= num_train_timesteps``).
+
+    Returns:
+        diffusers ``DDIMScheduler`` (``set_alpha_to_one=True``, ``steps_offset=0``).
+
+    Raises:
+        ValueError: If ``K`` is out of range.
+    """
+    k = int(num_inference_steps)
+    _check_k(k, cfg.num_train_timesteps)
+    sched = _DDIM(
+        num_train_timesteps=cfg.num_train_timesteps,
+        beta_schedule=cfg.beta_schedule,
+        clip_sample=cfg.clip_sample,
+        prediction_type=cfg.prediction_type,
+        set_alpha_to_one=True,
+        steps_offset=0,
+        timestep_spacing=cfg.timestep_spacing,
+    )
+    sched.set_timesteps(k)
+    return sched
+
+
+def ddpm_scheduler(cfg: DPConfig) -> Any:
+    """Return the training DDPM scheduler (betas identical to :func:`ddim_scheduler`'s).
+
+    Args:
+        cfg: The config.
+
+    Returns:
+        diffusers ``DDPMScheduler`` with ``num_train_timesteps``, ``beta_schedule``,
+        ``clip_sample`` and ``prediction_type`` from the config (``variance_type``
+        ``fixed_small``, diffusers' default).
+    """
+    return _DDPM(
+        num_train_timesteps=cfg.num_train_timesteps,
+        beta_schedule=cfg.beta_schedule,
+        clip_sample=cfg.clip_sample,
+        prediction_type=cfg.prediction_type,
+    )
+
+
+def ddim_sample(eps_fn: EpsFn, noise: torch.Tensor, scheduler: Any) -> torch.Tensor:
+    """Denoise ``noise`` with DDIM (eta = 0; deterministic given the noise), clip to [-1, 1].
+
+    Args:
+        eps_fn: The epsilon network, conditioning bound.
+        noise: ``float32[B, ...]`` initial noise ``x_K`` (on the network's device).
+        scheduler: A DDIM scheduler from :func:`ddim_scheduler` (its ``timesteps`` set).
+
+    Returns:
+        ``float32[B, ...]`` sample in normalised action units, clipped to ``[-1, 1]``.
+    """
+    b = noise.shape[0]
+    x = noise.to(dtype=torch.float32)
+    for k in scheduler.timesteps:
+        kk = torch.full((b,), int(k), dtype=torch.long, device=x.device)
+        eps = eps_fn(x, kk)
+        x = scheduler.step(eps, int(k), x, eta=0.0).prev_sample
+    return x.clamp(-1.0, 1.0)
+
+
+def ddpm_sample(
+    eps_fn: EpsFn, noise: torch.Tensor, step_noise: torch.Tensor, scheduler: Any
+) -> torch.Tensor:
+    """DDPM ancestral sampling with every step's noise an explicit input; clip to [-1, 1].
+
+    For ``k = T-1 ... 0`` (all training steps): ``x0_hat = (x - sqrt(1 - abar_k) eps_hat) /
+    sqrt(abar_k)``, clipped to ``[-1, 1]`` when ``clip_sample``; posterior mean
+    ``mu = sqrt(abar_prev) beta_k / (1 - abar_k) x0_hat + sqrt(alpha_k) (1 - abar_prev) /
+    (1 - abar_k) x``; ``x <- mu + sqrt(var_k) z_k`` with diffusers' ``fixed_small`` variance
+    for ``k > 0``, and ``x <- mu`` at ``k = 0``. This is diffusers' ``DDPMScheduler.step``
+    with ``z_k`` supplied instead of drawn (``tests/test_dp_toy.py`` checks the identity).
+
+    Args:
+        eps_fn: The epsilon network, conditioning bound.
+        noise: ``float32[B, ...]`` initial noise ``x_{T-1}``.
+        step_noise: ``float32[T, B, ...]``; row ``i`` is ``z`` for the ``i``-th step (timestep
+            ``T-1-i``); the last row (``k = 0``) is unused.
+        scheduler: A DDPM scheduler from :func:`ddpm_scheduler` (epsilon prediction).
+
+    Returns:
+        ``float32[B, ...]`` sample, clipped to ``[-1, 1]``.
+
+    Raises:
+        ValueError: On a ``step_noise`` shape mismatch or a non-epsilon scheduler.
+    """
+    cfg = scheduler.config
+    if cfg.prediction_type != "epsilon" or cfg.variance_type != "fixed_small":
+        raise ValueError("ddpm_sample implements epsilon prediction, fixed_small variance")
+    n_t = int(cfg.num_train_timesteps)
+    if tuple(step_noise.shape) != (n_t, *noise.shape):
+        raise ValueError(f"step_noise must be {(n_t, *noise.shape)}, got {tuple(step_noise.shape)}")
+    abar = scheduler.alphas_cumprod
+    b = noise.shape[0]
+    x = noise.to(dtype=torch.float32)
+    for i, k in enumerate(range(n_t - 1, -1, -1)):
+        kk = torch.full((b,), k, dtype=torch.long, device=x.device)
+        eps = eps_fn(x, kk)
+        a_t = abar[k]
+        a_prev = abar[k - 1] if k > 0 else scheduler.one
+        alpha_t = a_t / a_prev
+        beta_t = 1 - alpha_t
+        x0 = (x - (1 - a_t) ** 0.5 * eps) / a_t**0.5
+        if cfg.clip_sample:
+            x0 = x0.clamp(-cfg.clip_sample_range, cfg.clip_sample_range)
+        coef_x0 = (a_prev**0.5 * beta_t) / (1 - a_t)
+        coef_x = alpha_t**0.5 * (1 - a_prev) / (1 - a_t)
+        mean = coef_x0 * x0 + coef_x * x
+        if k > 0:
+            var = torch.clamp((1 - a_prev) / (1 - a_t) * beta_t, min=1e-20)
+            x = mean + var**0.5 * step_noise[i].to(device=x.device, dtype=x.dtype)
+        else:
+            x = mean
+    return x.clamp(-1.0, 1.0)
+
+
 class DiffusionPolicyNet(nn.Module):
     """Encoder + noise-prediction U-Net, with a DDIM sampler taking explicit noise."""
 
@@ -262,17 +405,7 @@ class DiffusionPolicyNet(nn.Module):
         k = int(num_inference_steps)
         _check_k(k, self.cfg.num_train_timesteps)
         if k not in self._ddim:
-            sched = _DDIM(
-                num_train_timesteps=self.cfg.num_train_timesteps,
-                beta_schedule=self.cfg.beta_schedule,
-                clip_sample=self.cfg.clip_sample,
-                prediction_type=self.cfg.prediction_type,
-                set_alpha_to_one=True,
-                steps_offset=0,
-                timestep_spacing=self.cfg.timestep_spacing,
-            )
-            sched.set_timesteps(k)
-            self._ddim[k] = sched
+            self._ddim[k] = ddim_scheduler(self.cfg, k)
         return self._ddim[k]
 
     def ddpm(self) -> Any:
@@ -283,12 +416,7 @@ class DiffusionPolicyNet(nn.Module):
             ``clip_sample`` and ``prediction_type`` from the config.
         """
         if self._ddpm is None:
-            self._ddpm = _DDPM(
-                num_train_timesteps=self.cfg.num_train_timesteps,
-                beta_schedule=self.cfg.beta_schedule,
-                clip_sample=self.cfg.clip_sample,
-                prediction_type=self.cfg.prediction_type,
-            )
+            self._ddpm = ddpm_scheduler(self.cfg)
         return self._ddpm
 
     def predict_noise(
@@ -328,12 +456,11 @@ class DiffusionPolicyNet(nn.Module):
             )
         sched = self.ddim(num_inference_steps)
         cond = self.encoder(images, proprio)
-        x = noise.to(device=cond.device, dtype=torch.float32)
-        for k in sched.timesteps:
-            kk = torch.full((b,), int(k), dtype=torch.long, device=cond.device)
-            eps = self.predict_noise(x, kk, cond)
-            x = sched.step(eps, int(k), x, eta=0.0).prev_sample
-        return x.clamp(-1.0, 1.0)
+
+        def eps_fn(x: torch.Tensor, kk: torch.Tensor) -> torch.Tensor:
+            return self.predict_noise(x, kk, cond)
+
+        return ddim_sample(eps_fn, noise.to(device=cond.device, dtype=torch.float32), sched)
 
 
 def ddpm_loss(
@@ -385,13 +512,153 @@ def ddpm_loss(
     return per
 
 
-class DPStudent(VisionStudentBase):
-    """P8 ``EvalPolicy`` shape around a :class:`DiffusionPolicyNet`, executing chunks.
+class ChunkedDiffusionStudent(VisionStudentBase):
+    """Chunk executor shared by every diffusion student (P8 ``EvalPolicy`` shape).
 
-    Per episode (after ``reset(seed)``): at step ``t`` (the number of ``act_vision`` calls since
-    the reset), if :func:`chunking.is_replan_step` ``(t, Ta)``, a chunk is sampled with noise
-    keyed ``(run_seed, seed, t)`` and its executed indices (:func:`chunking.executed_slice`,
-    ``To-1 ... To-2+Ta``) are queued; each step pops one action.
+    It owns the episode clock, the chunk queue and the temporal-ensembling buffer; a subclass
+    supplies only :meth:`sample_batch` (``DPStudent``: torch; ``ila.policies.onnx_dp
+    .OnnxDPStudent``: ONNX Runtime). Per episode (after ``reset(seed)``): at step ``t`` (the
+    number of ``act_vision`` calls since the reset), if :func:`chunking.is_replan_step`
+    ``(t, Ta)``, a chunk is sampled with noise keyed ``(run_seed, seed, t)`` and its executed
+    indices (:func:`chunking.executed_slice`, ``To-1 ... To-2+Ta``) are queued; each step pops
+    one action.
+
+    With ``temporal_ensembling`` (P6-D1) a chunk is sampled at **every** step, noise keyed
+    ``(run_seed, seed, t)`` as above, and kept; step ``t`` returns
+    ``sum_i w_i chunk_{s_i}[j_i]`` over :func:`chunking.ensemble_sources` ``(t, To, Tp, Ta)``
+    (oldest first) with :func:`chunking.ensemble_weights` (``m = 0.01``), summed in float64
+    and returned as float32. Chunks older than the window are dropped. ``Ta = 1`` gives one
+    source with weight 1.0, so the action is bit-identical to ``Ta = 1`` without ensembling.
+
+    The clock and the episode seed are read only in :meth:`act_vision` (noise key and
+    ``chunking``'s schedule; ``tests/test_step_guard.py`` pins the sites).
+
+    Attributes:
+        run_seed: The run's seed (first element of every noise key).
+        chunk_spec: ``(To, Tp, Ta)`` in use (``Ta`` chosen at construction).
+        num_inference_steps: ``K`` in use.
+        temporal_ensembling: Replan every step and average (P6-D1); off by default.
+    """
+
+    def __init__(
+        self,
+        run_seed: int,
+        chunk: chunking.ChunkSpec,
+        num_train_timesteps: int,
+        *,
+        n_action_steps: int | None = None,
+        num_inference_steps: int,
+        temporal_ensembling: bool = False,
+    ) -> None:
+        """Set the schedule and clear the episode state.
+
+        Args:
+            run_seed: The run's seed.
+            chunk: The default ``(To, Tp, Ta)``.
+            num_train_timesteps: DDPM training steps (``K`` must not exceed it).
+            n_action_steps: ``Ta``; ``chunk``'s when ``None``. With ``temporal_ensembling`` it
+                is the ensemble window.
+            num_inference_steps: ``K``.
+            temporal_ensembling: Replan every step and average (P6-D1).
+        """
+        self.run_seed = int(run_seed)
+        ta = chunk.n_action_steps if n_action_steps is None else int(n_action_steps)
+        self.chunk_spec = chunk.with_action_steps(ta)
+        _check_k(int(num_inference_steps), num_train_timesteps)
+        self.num_inference_steps = int(num_inference_steps)
+        self.temporal_ensembling = bool(temporal_ensembling)
+        self._episode_seed: int | None = None
+        self._t = 0
+        self._queue: deque[NDArray[np.float32]] = deque()
+        self._chunks: dict[int, NDArray[np.float32]] = {}
+
+    def _reset_episode(self, seed: int) -> None:
+        """Start an episode: step counter 0, empty chunk queue and ensemble buffer."""
+        self._episode_seed = seed
+        self._t = 0
+        self._queue.clear()
+        self._chunks.clear()
+
+    def sample_batch(
+        self,
+        images: NDArray[np.uint8],
+        proprio: NDArray[np.float32],
+        seeds: Sequence[SeedTuple],
+        num_inference_steps: int | None = None,
+    ) -> NDArray[np.float32]:
+        """One full chunk per slot, slot ``i``'s noise keyed ``seeds[i]`` (subclass)."""
+        raise NotImplementedError
+
+    def act_vision(
+        self, image_stack: NDArray[np.uint8], proprio: NDArray[np.float32]
+    ) -> NDArray[np.float32]:
+        """Return the action for step ``t`` of the current episode (CPU single-sample path).
+
+        Args:
+            image_stack: ``uint8[To, 96, 96, 3]``, steps ``t-To+1 ... t`` oldest first.
+            proprio: ``float32[To, D]``.
+
+        Returns:
+            ``float32[3]`` in ``[-1, 1]``.
+
+        Raises:
+            RuntimeError: If ``reset`` has not been called.
+        """
+        if self._episode_seed is None:
+            raise RuntimeError("call reset(seed) before act_vision")
+        img, prop = self._check_window(image_stack, proprio)
+        spec = self.chunk_spec
+        # The clock and the episode seed are read here only (P2-D3 item 4): the noise key, and
+        # chunking's schedule (replanning, or the ensembling sources).
+        key = (self.run_seed, self._episode_seed, self._t)
+        if self.temporal_ensembling:
+            sources = chunking.ensemble_sources(
+                self._t, spec.n_obs_steps, spec.horizon, spec.n_action_steps
+            )
+            action = self._ensembled(img, prop, key, sources)
+        else:
+            if chunking.is_replan_step(self._t, spec.n_action_steps):
+                chunk = self.sample_batch(img[None], prop[None], [key])[0]
+                self._queue.clear()
+                self._queue.extend(chunk[spec.executed])
+            action = self._queue.popleft().copy()
+        self._t += 1
+        return action
+
+    def _ensembled(
+        self,
+        img: NDArray[np.uint8],
+        prop: NDArray[np.float32],
+        key: SeedTuple,
+        sources: tuple[tuple[int, int], ...],
+    ) -> NDArray[np.float32]:
+        """Plan this step's chunk and mix the ensemble's predictions (class docstring).
+
+        Args:
+            img: ``uint8[To, 96, 96, 3]``.
+            prop: ``float32[To, D]``.
+            key: This step's noise key ``(run_seed, episode_seed, t)``.
+            sources: :func:`chunking.ensemble_sources` for this step, oldest first; the newest
+                is ``(t, To-1)``, the chunk planned now.
+
+        Returns:
+            ``float32[3]``: ``sum_i w_i chunk_{s_i}[j_i]`` (float64 sum).
+        """
+        self._chunks[sources[-1][0]] = self.sample_batch(img[None], prop[None], [key])[0]
+        for s in [s for s in self._chunks if s < sources[0][0]]:
+            del self._chunks[s]
+        weights = chunking.ensemble_weights(len(sources))
+        preds = np.stack([self._chunks[s][j] for s, j in sources]).astype(np.float64)
+        action: NDArray[np.float32] = (weights[:, None] * preds).sum(axis=0).astype(np.float32)
+        return action
+
+
+class DPStudent(ChunkedDiffusionStudent):
+    """P8 ``EvalPolicy`` shape around a :class:`DiffusionPolicyNet` (torch sampling).
+
+    The chunk execution, replanning and temporal ensembling are
+    :class:`ChunkedDiffusionStudent`'s; this class supplies :meth:`sample_batch` from the
+    network (DDIM, :func:`ddim_sample`, initial noise from :func:`initial_noise`).
 
     Attributes:
         net: The network (eval mode).
@@ -400,6 +667,7 @@ class DPStudent(VisionStudentBase):
         run_seed: The run's seed (first element of every noise key).
         chunk_spec: ``(To, Tp, Ta)`` in use (``Ta`` chosen at construction).
         num_inference_steps: ``K`` in use.
+        temporal_ensembling: Replan every step and average (P6-D1); off by default.
         device: Where inference runs.
     """
 
@@ -411,6 +679,7 @@ class DPStudent(VisionStudentBase):
         *,
         n_action_steps: int | None = None,
         num_inference_steps: int | None = None,
+        temporal_ensembling: bool = False,
     ) -> None:
         """Wrap a network for closed-loop evaluation.
 
@@ -418,28 +687,25 @@ class DPStudent(VisionStudentBase):
             net: The network (moved to ``device``, eval mode).
             run_seed: The run's seed.
             device: Torch device.
-            n_action_steps: ``Ta``; the config's default (8) when ``None``.
+            n_action_steps: ``Ta``; the config's default (8) when ``None``. With
+                ``temporal_ensembling`` it is the ensemble window.
             num_inference_steps: ``K``; the config's default (10) when ``None``.
+            temporal_ensembling: Replan every step and average the overlapping predictions
+                (P6-D1); ``False`` (the selection and core-row setting) by default.
         """
         self.device = torch.device(device)
         self.net = net.to(self.device).eval()
         self.cfg = net.encoder.cfg
         self.dp_cfg = net.cfg
-        self.run_seed = int(run_seed)
-        ta = self.dp_cfg.n_action_steps if n_action_steps is None else int(n_action_steps)
-        self.chunk_spec = self.dp_cfg.chunk.with_action_steps(ta)
         k = self.dp_cfg.num_inference_steps if num_inference_steps is None else num_inference_steps
-        _check_k(int(k), self.dp_cfg.num_train_timesteps)
-        self.num_inference_steps = int(k)
-        self._episode_seed: int | None = None
-        self._t = 0
-        self._queue: deque[NDArray[np.float32]] = deque()
-
-    def _reset_episode(self, seed: int) -> None:
-        """Start an episode: step counter 0, empty chunk queue."""
-        self._episode_seed = seed
-        self._t = 0
-        self._queue.clear()
+        super().__init__(
+            run_seed,
+            self.dp_cfg.chunk,
+            self.dp_cfg.num_train_timesteps,
+            n_action_steps=n_action_steps,
+            num_inference_steps=int(k),
+            temporal_ensembling=temporal_ensembling,
+        )
 
     def sample_batch(
         self,
@@ -475,30 +741,3 @@ class DPStudent(VisionStudentBase):
             out = self.net.sample(img_t, prop_t, noise, k)
         chunks: NDArray[np.float32] = out.cpu().numpy().astype(np.float32)
         return chunks
-
-    def act_vision(
-        self, image_stack: NDArray[np.uint8], proprio: NDArray[np.float32]
-    ) -> NDArray[np.float32]:
-        """Return the action for step ``t`` of the current episode (CPU single-sample path).
-
-        Args:
-            image_stack: ``uint8[To, 96, 96, 3]``, steps ``t-To+1 ... t`` oldest first.
-            proprio: ``float32[To, D]``.
-
-        Returns:
-            ``float32[3]`` in ``[-1, 1]``.
-
-        Raises:
-            RuntimeError: If ``reset`` has not been called.
-        """
-        if self._episode_seed is None:
-            raise RuntimeError("call reset(seed) before act_vision")
-        img, prop = self._check_window(image_stack, proprio)
-        if chunking.is_replan_step(self._t, self.chunk_spec.n_action_steps):
-            chunk = self.sample_batch(
-                img[None], prop[None], [(self.run_seed, self._episode_seed, self._t)]
-            )[0]
-            self._queue.clear()
-            self._queue.extend(chunk[self.chunk_spec.executed])
-        self._t += 1
-        return self._queue.popleft().copy()

@@ -1,0 +1,19 @@
+dp outcome x tunnelled [(('bounce', 'False'), 30), (('bounce', 'True'), 1), (('crash', 'False'), 1), (('hard_landing', 'False'), 39), (('hard_landing', 'True'), 23), (('off_pad', 'False'), 271), (('off_pad', 'True'), 58), (('success', 'False'), 309), (('success', 'True'), 17), (('timeout', 'False'), 1)]
+  tunnelled n=99 closing median 0.559 vs all 0.385; max pen mm median -6.0 max -5.0
+  lateral offset m: all median 0.092 mean 0.098; success max 0.100; off_pad min 0.100 median 0.137
+  hard_landing closing min 0.192 median 0.546; success closing max 0.498
+    timeout SS5 22 360 time_limit nan nan
+    crash SS5 48 98 tilt_gt_crash 0.2591 0.3776
+  steps median 60.0 max 360 n>200 1
+R1_lerobot_dp outcome x tunnelled [(('bounce', 'False'), 21), (('bounce', 'True'), 1), (('crash', 'False'), 3), (('hard_landing', 'False'), 24), (('hard_landing', 'True'), 17), (('off_pad', 'False'), 164), (('off_pad', 'True'), 56), (('success', 'False'), 162), (('success', 'True'), 2)]
+  tunnelled n=76 closing median 0.606 vs all 0.386; max pen mm median -6.2 max -5.0
+  lateral offset m: all median 0.099 mean 0.109; success max 0.099; off_pad min 0.101 median 0.148
+  hard_landing closing min 0.137 median 0.614; success closing max 0.498
+    crash SS4 9 66 off_plate_strike 0.3180 0.2408
+    crash SS4 32 113 below_deck nan nan
+    crash SS3 47 49 off_plate_strike 0.2622 0.2230
+  steps median 60.0 max 113 n>200 0
+dp Ta=1 lateral offset median 0.024 mean 0.031
+dp Ta=8 ens lateral offset median nan
+bc n 750 lateral offset median 0.018 mean jerk 0.217
+bc_dagger n 750 lateral offset median 0.014 mean jerk 0.215

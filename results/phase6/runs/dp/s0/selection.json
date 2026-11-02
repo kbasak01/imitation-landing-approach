@@ -1,0 +1,309 @@
+{
+  "arm": "dp",
+  "candidate_kind": "checkpoint",
+  "candidates": [
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step010000.pt",
+        "global_step": 10000,
+        "sha256": "ab845fe7ca09183942c2015bd9c331490a0b1a55f8550a5c69a864dc9e6f6b2c",
+        "stage": 0,
+        "stage_step": 10000
+      },
+      "mean_steps": 66.95333333333333,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 148,
+      "n_tunnelled": 17,
+      "outcomes": {
+        "bounce": 22,
+        "crash": 1,
+        "hard_landing": 18,
+        "off_pad": 50,
+        "success": 58,
+        "timeout": 1
+      },
+      "p95_closing_speed_m_s": 0.6001867489739048,
+      "rows_file": "s0_step010000_rows.csv",
+      "success": 58,
+      "success_rate": 0.38666666666666666
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step020000.pt",
+        "global_step": 20000,
+        "sha256": "1d5fedfd29b2df5434ec5a26579aa80950c262b31e34b58ea1ff8b79eebaef36",
+        "stage": 0,
+        "stage_step": 20000
+      },
+      "mean_steps": 66.36,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 149,
+      "n_tunnelled": 33,
+      "outcomes": {
+        "bounce": 13,
+        "crash": 1,
+        "hard_landing": 24,
+        "off_pad": 63,
+        "success": 49,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.7209205073817226,
+      "rows_file": "s0_step020000_rows.csv",
+      "success": 49,
+      "success_rate": 0.32666666666666666
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step030000.pt",
+        "global_step": 30000,
+        "sha256": "20219c25347fbd77133554a30a96e0845348c2b0dda4e8a225a1090a9c541c39",
+        "stage": 0,
+        "stage_step": 30000
+      },
+      "mean_steps": 64.00666666666666,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 149,
+      "n_tunnelled": 31,
+      "outcomes": {
+        "bounce": 13,
+        "crash": 1,
+        "hard_landing": 31,
+        "off_pad": 48,
+        "success": 57,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.7354049708576942,
+      "rows_file": "s0_step030000_rows.csv",
+      "success": 57,
+      "success_rate": 0.38
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step040000.pt",
+        "global_step": 40000,
+        "sha256": "303f07ae491d9d6fbb8ea92c019cecd2547a7327b669122f120eec538a4adbd7",
+        "stage": 0,
+        "stage_step": 40000
+      },
+      "mean_steps": 65.23333333333333,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 150,
+      "n_tunnelled": 35,
+      "outcomes": {
+        "bounce": 9,
+        "crash": 0,
+        "hard_landing": 22,
+        "off_pad": 63,
+        "success": 56,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.7200158016247677,
+      "rows_file": "s0_step040000_rows.csv",
+      "success": 56,
+      "success_rate": 0.37333333333333335
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step050000.pt",
+        "global_step": 50000,
+        "sha256": "abcc86e519c18479c04c8de8ed5308a6ecb9941cf6d2299758f3602d0c788c4c",
+        "stage": 0,
+        "stage_step": 50000
+      },
+      "mean_steps": 63.21333333333333,
+      "n": 150,
+      "n_detectors_disagree": 1,
+      "n_touchdown": 149,
+      "n_tunnelled": 26,
+      "outcomes": {
+        "bounce": 6,
+        "crash": 2,
+        "hard_landing": 30,
+        "off_pad": 62,
+        "success": 50,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.7080564357954088,
+      "rows_file": "s0_step050000_rows.csv",
+      "success": 50,
+      "success_rate": 0.3333333333333333
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step060000.pt",
+        "global_step": 60000,
+        "sha256": "8c4cf4eac06404adec1d98f4525f9c777be4d730abedbc82c6bbd0ec09fc45b3",
+        "stage": 0,
+        "stage_step": 60000
+      },
+      "mean_steps": 60.6,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 150,
+      "n_tunnelled": 32,
+      "outcomes": {
+        "bounce": 11,
+        "crash": 0,
+        "hard_landing": 18,
+        "off_pad": 65,
+        "success": 56,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.6802121475294268,
+      "rows_file": "s0_step060000_rows.csv",
+      "success": 56,
+      "success_rate": 0.37333333333333335
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step070000.pt",
+        "global_step": 70000,
+        "sha256": "df2544101921a50d1b4235404e4a4d87e1cfc4bd112ba640bfb8f03293b6327e",
+        "stage": 0,
+        "stage_step": 70000
+      },
+      "mean_steps": 62.6,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 150,
+      "n_tunnelled": 32,
+      "outcomes": {
+        "bounce": 4,
+        "crash": 1,
+        "hard_landing": 18,
+        "off_pad": 73,
+        "success": 54,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.6767437293002012,
+      "rows_file": "s0_step070000_rows.csv",
+      "success": 54,
+      "success_rate": 0.36
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step080000.pt",
+        "global_step": 80000,
+        "sha256": "0a1517d55470b0ebed2065099329828c58fe167317e41d314151fb71f1e0f48e",
+        "stage": 0,
+        "stage_step": 80000
+      },
+      "mean_steps": 61.333333333333336,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 150,
+      "n_tunnelled": 11,
+      "outcomes": {
+        "bounce": 4,
+        "crash": 0,
+        "hard_landing": 14,
+        "off_pad": 72,
+        "success": 60,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.6450578237568511,
+      "rows_file": "s0_step080000_rows.csv",
+      "success": 60,
+      "success_rate": 0.4
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step090000.pt",
+        "global_step": 90000,
+        "sha256": "159d8c93faafeca193f752fc8458d4dff2d7191358cd80ca0e3f53e9e0f87812",
+        "stage": 0,
+        "stage_step": 90000
+      },
+      "mean_steps": 62.00666666666667,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 150,
+      "n_tunnelled": 27,
+      "outcomes": {
+        "bounce": 6,
+        "crash": 0,
+        "hard_landing": 20,
+        "off_pad": 67,
+        "success": 57,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.7063862088853846,
+      "rows_file": "s0_step090000_rows.csv",
+      "success": 57,
+      "success_rate": 0.38
+    },
+    {
+      "candidate": {
+        "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step100000.pt",
+        "global_step": 100000,
+        "sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+        "stage": 0,
+        "stage_step": 100000
+      },
+      "mean_steps": 60.806666666666665,
+      "n": 150,
+      "n_detectors_disagree": 0,
+      "n_touchdown": 150,
+      "n_tunnelled": 19,
+      "outcomes": {
+        "bounce": 6,
+        "crash": 0,
+        "hard_landing": 10,
+        "off_pad": 71,
+        "success": 63,
+        "timeout": 0
+      },
+      "p95_closing_speed_m_s": 0.6555551340772556,
+      "rows_file": "s0_step100000_rows.csv",
+      "success": 63,
+      "success_rate": 0.42
+    }
+  ],
+  "inference_path": "cpu_fp32_single_sample",
+  "list": {
+    "episodes": 150,
+    "file": "select.parquet",
+    "file_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+    "name": "select"
+  },
+  "purpose": "train",
+  "render": "full",
+  "rule": "max success; then min pooled p95 closing_speed_normal_m_s (touched-down); then min global step (P3-D1 \u00a74)",
+  "run_dir": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0",
+  "run_seed": 0,
+  "selected": {
+    "candidate": {
+      "file": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs/dp/s0/checkpoints/s0_step100000.pt",
+      "global_step": 100000,
+      "sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+      "stage": 0,
+      "stage_step": 100000
+    },
+    "mean_steps": 60.806666666666665,
+    "n": 150,
+    "n_detectors_disagree": 0,
+    "n_touchdown": 150,
+    "n_tunnelled": 19,
+    "outcomes": {
+      "bounce": 6,
+      "crash": 0,
+      "hard_landing": 10,
+      "off_pad": 71,
+      "success": 63,
+      "timeout": 0
+    },
+    "p95_closing_speed_m_s": 0.6555551340772556,
+    "rows_file": "s0_step100000_rows.csv",
+    "success": 63,
+    "success_rate": 0.42
+  },
+  "sigma": null,
+  "tag": "core",
+  "wall_clock_s": 502.95635849499376,
+  "weights": "ema",
+  "workers": 24
+}
