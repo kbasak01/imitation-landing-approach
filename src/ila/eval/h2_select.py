@@ -43,12 +43,33 @@ Outputs (:func:`build`, then :func:`render`)
 * ``h2_touchdown_select_sources.json``: provenance (reference file SHA-256, every student
   run's status and verified SHA-256s, the missing list);
 * ``h2_touchdown_select.csv`` / ``.json``: per group (``T_mix``, ``T_mix:ppo``,
-  ``T_mix:gated``, ``bc_mix``, ``dp_mix``; students pooled over their seeds, and per seed) and
-  per cell (SS3, SS4, SS5, all): episodes, touchdowns, the fraction without a touchdown, the
-  six outcome classes, p10 / p50 / p90 of touched-down ``time_to_touchdown_s`` (P8's
-  ``quantile_linear``) and the descriptive W1 to the ``T_mix`` reference of the same cell
-  (:func:`ila.eval.metrics.wasserstein_1`);
-* ``h2_touchdown_select.png``: ECDF and histogram panels per cell.
+  ``T_mix:gated``, ``bc_mix``, ``dp_mix``; students pooled over their seeds, ``level =
+  pooled``, and per seed, ``level = seed``) and per cell (SS3, SS4, SS5, all): episodes,
+  touchdowns, the fraction without a touchdown, the six outcome classes, p10 / p50 / p90 of
+  touched-down ``time_to_touchdown_s`` (P8's ``quantile_linear``), the descriptive W1 to the
+  ``T_mix`` reference of the same cell (:func:`ila.eval.metrics.wasserstein_1`) and the
+  fraction of touchdowns in the reference's inter-mode gap (:func:`mode_gap`). The JSON adds a
+  ``per_seed`` block (each seed's selected checkpoint and cells, and the across-seed range of
+  each statistic);
+* ``h2_touchdown_select.png``: row 1, ECDFs with students pooled over seeds; rows 2-3, one per
+  student arm, each seed's ECDF over the reference's; row 4, histograms (students pooled).
+
+Why per seed
+------------
+Pooling seeds can hide seeds in different regimes: one seed whose touchdown times sit between
+the two modes and another that commits to them pool into something that looks like either.
+The per-seed rows and lines are there to show that. H2 itself (Phase 8, P3-D1 §6) still pools
+seeds, as P3-D1 states; nothing here changes its scoring.
+
+The inter-mode gap (post hoc, descriptive)
+------------------------------------------
+:func:`mode_gap` is the open interval between the faster reference half's p90 and the slower
+half's p10 in the same cell (on ``select``: the ``ppo``-assigned half's p90 and the
+``gated``-assigned half's p10). ``frac_td_in_ref_mode_gap`` is the fraction of a group's
+touched-down times inside it. A policy that commits to one mode per episode puts little mass
+there (the reference itself puts some, from its halves' tails); one that averages the modes
+puts much. This statistic was added on 2026-11-03, after the per-seed p50s on ``select`` had
+been seen, to describe them; it is not H2, has no interval and decides nothing.
 
 :func:`render` reads only the two committed files above, so ``render`` re-creates the summary
 and the figure byte for byte (PNG written without a software/date stamp).
@@ -98,6 +119,9 @@ __all__ = [
     "SUMMARY_CSV",
     "SUMMARY_JSON",
     "TMIX_SEED",
+    "gap_fraction",
+    "mode_gap",
+    "per_seed_block",
     "EpisodeRecord",
     "H2SourceError",
     "StudentStatus",
@@ -188,6 +212,15 @@ SUMMARY_COLUMNS: Final[tuple[str, ...]] = (
     *(f"n_{o}" for o in OUTCOME_ORDER),
     *(f"p{round(q * 100)}_model_s" for q in QUANTILES),
     "w1_to_tmix_ref_model_s",
+    "frac_td_in_ref_mode_gap",
+)
+
+#: Per-cell statistics given an across-seed range in the JSON's ``per_seed`` block.
+PER_SEED_RANGE_KEYS: Final[tuple[str, ...]] = (
+    "n_touchdown",
+    *(f"p{round(q * 100)}_model_s" for q in QUANTILES),
+    "w1_to_tmix_ref_model_s",
+    "frac_td_in_ref_mode_gap",
 )
 
 #: Labels that travel with every output (CSV header comment lines are avoided: the JSON and
@@ -197,10 +230,12 @@ CAPTION: Final[tuple[str, ...]] = (
     "splits/select.parquet (150 P8 tune-pool episodes, 50 per sea state).",
     "Model scale, lambda = 1/25: times x5 for full scale.",
     "bc_mix and dp_mix are distilled from T_mix (P8 ppo s0 + gated, balanced per sea state); "
-    "dp_mix at Ta = 8, K = 10. Students are pooled over seeds 0-2; their rows are the select "
-    "rows of the checkpoint selected on these same episodes (in-sample).",
-    "W1 is descriptive and unscored, on select, without an interval. The scored H2 is id SS4 "
-    "in Phase 8.",
+    "dp_mix at Ta = 8, K = 10. Row 1 and the histograms pool seeds 0-2; rows 2-3 show each "
+    "seed. Student rows are the select rows of each seed's checkpoint selected on these same "
+    "episodes (in-sample).",
+    "W1 and the gap fraction (touchdowns between the ppo half's p90 and the gated half's p10, "
+    "shaded; post hoc) are descriptive and unscored, on select, without an interval. The "
+    "scored H2 is id SS4 in Phase 8, seeds pooled as P3-D1 states.",
     "dp's failures at Ta = 8 are lateral (off_pad, Phase 6) and do not depend on sea state; do "
     "not read them as multimodality effects without checking.",
     "P8's teacher saw the tune realizations in P8's own tuning; its select rows may read high.",
@@ -753,20 +788,54 @@ def _quantile(values: Sequence[float], q: float) -> float:
     return float(p8_adapter.stats.quantile_linear(arr, q)) if arr.size else float("nan")
 
 
+def mode_gap(reference: Sequence[EpisodeRecord], cell: str) -> tuple[float, float]:
+    """The reference's inter-mode gap in one cell (module docstring; post hoc, descriptive).
+
+    The halves are ordered by their p50; the gap is ``(p90 of the faster half, p10 of the
+    slower half)``, P8's ``quantile_linear`` over each half's touched-down times.
+
+    Args:
+        reference: Records holding the ``T_mix`` reference (other arms are ignored).
+        cell: A sea-state cell or ``all``.
+
+    Returns:
+        ``(lo, hi)`` in seconds, model scale; ``(nan, nan)`` if a half has no touchdown or the
+        halves overlap (``lo >= hi``), in which case there is no gap.
+    """
+    halves = [_touched(group_records(reference, g, cell)) for g in MODE_GROUPS]
+    if not all(halves):
+        return float("nan"), float("nan")
+    fast, slow = sorted(halves, key=lambda t: _quantile(t, 0.5))
+    lo, hi = _quantile(fast, 0.9), _quantile(slow, 0.1)
+    return (lo, hi) if lo < hi else (float("nan"), float("nan"))
+
+
+def gap_fraction(times: Sequence[float], gap: tuple[float, float]) -> float:
+    """Fraction of ``times`` strictly inside ``gap`` (s, model scale); NaN if no gap or times."""
+    lo, hi = gap
+    if not times or not (math.isfinite(lo) and math.isfinite(hi)):
+        return float("nan")
+    return sum(lo < t < hi for t in times) / len(times)
+
+
 def cell_stats(
-    records: Sequence[EpisodeRecord], reference: Sequence[EpisodeRecord] | None
+    records: Sequence[EpisodeRecord],
+    reference: Sequence[EpisodeRecord] | None,
+    gap: tuple[float, float] = (float("nan"), float("nan")),
 ) -> dict[str, Any]:
-    """Counts, outcome breakdown, quantiles and W1 for one group in one cell.
+    """Counts, outcome breakdown, quantiles, W1 and the gap fraction for one group in one cell.
 
     Args:
         records: The group's records in the cell.
         reference: The ``T_mix`` reference's records in the same cell (``None``: no W1).
+        gap: The cell's :func:`mode_gap`, s model scale.
 
     Returns:
         ``n_episodes``, ``n_touchdown``, ``n_without_touchdown``, ``frac_without_touchdown``,
-        ``outcomes`` (P8's order, zeros included), ``p10/p50/p90_model_s`` and
+        ``outcomes`` (P8's order, zeros included), ``p10/p50/p90_model_s``,
         ``w1_to_tmix_ref_model_s`` (NaN if either side has no touchdown or ``reference`` is
-        ``None``). Times in seconds, model scale.
+        ``None``) and ``frac_td_in_ref_mode_gap`` (:func:`gap_fraction`). Times in seconds,
+        model scale.
     """
     times = _touched(records)
     n = len(records)
@@ -783,6 +852,7 @@ def cell_stats(
         "outcomes": {o: counts.get(o, 0) for o in OUTCOME_ORDER},
         **{f"p{round(q * 100)}_model_s": _quantile(times, q) for q in QUANTILES},
         "w1_to_tmix_ref_model_s": w1,
+        "frac_td_in_ref_mode_gap": gap_fraction(times, gap),
     }
 
 
@@ -824,12 +894,13 @@ def summarise(
             present, status = [], "present"
         for cell in cells:
             ref = group_records(records, REFERENCE_GROUP, cell)
+            gap = mode_gap(records, cell)
             levels: list[tuple[str, str, int | None]] = [("pooled", _seeds_text(present), None)]
             if group in STUDENT_ARMS:
                 levels += [("seed", str(s), s) for s in present]
             for level, seeds, seed in levels:
                 mine_r = group_records(records, group, cell, seed)
-                stats = cell_stats(mine_r, None if group == REFERENCE_GROUP else ref)
+                stats = cell_stats(mine_r, None if group == REFERENCE_GROUP else ref, gap)
                 outcomes = stats.pop("outcomes")
                 out.append(
                     {
@@ -842,6 +913,60 @@ def summarise(
                         **{f"n_{o}": outcomes[o] for o in OUTCOME_ORDER},
                     }
                 )
+    return out
+
+
+def per_seed_block(
+    rows: Sequence[Mapping[str, Any]], statuses: Sequence[StudentStatus]
+) -> dict[str, Any]:
+    """The JSON's per-seed view of the student arms (the same numbers as the ``seed`` rows).
+
+    Args:
+        rows: :func:`summarise`'s rows.
+        statuses: Every student run's status.
+
+    Returns:
+        ``{arm: {"seeds": {seed: {...}}, "range_across_seeds": {cell: {stat: [min, max]}}}}``.
+        Each seed carries its selected checkpoint (step, ``select`` success of 150, SHA-256)
+        and, per cell, the summary row's statistics with the outcome counts regrouped under
+        ``outcomes``. The range is over the present seeds' finite values (``[nan, nan]`` if
+        none). Times in seconds, model scale.
+    """
+    cells = (*CELLS, ALL_CELL)
+    outcome_cols = {f"n_{o}" for o in OUTCOME_ORDER}
+    label_cols = {"group", "level", "seeds", "cell", "status"}
+    stat_keys = [c for c in SUMMARY_COLUMNS if c not in label_cols | outcome_cols]
+    out: dict[str, Any] = {}
+    for arm in STUDENT_ARMS:
+        present = sorted(
+            (s for s in statuses if s.arm == arm and s.status == "present"), key=lambda s: s.seed
+        )
+        seed_rows = {
+            (r["seeds"], r["cell"]): r for r in rows if r["group"] == arm and r["level"] == "seed"
+        }
+        seeds: dict[str, Any] = {}
+        for st in present:
+            per_cell: dict[str, Any] = {}
+            for cell in cells:
+                r = seed_rows[(str(st.seed), cell)]
+                per_cell[cell] = {
+                    **{k: r[k] for k in stat_keys},
+                    "outcomes": {o: r[f"n_{o}"] for o in OUTCOME_ORDER},
+                }
+            seeds[str(st.seed)] = {
+                "selected_global_step": st.selected_global_step,
+                "select_success_of_150": st.select_success,
+                "ckpt_sha256": st.ckpt_sha256,
+                "cells": per_cell,
+            }
+        ranges: dict[str, Any] = {}
+        for cell in cells:
+            ranges[cell] = {}
+            for k in PER_SEED_RANGE_KEYS:
+                vals = [float(seed_rows[(str(st.seed), cell)][k]) for st in present]
+                vals = [v for v in vals if math.isfinite(v)]
+                ranges[cell][k] = [min(vals), max(vals)] if vals else [math.nan, math.nan]
+        out[arm] = {"seeds": seeds, "range_across_seeds": ranges}
     return out
 
 
@@ -946,6 +1071,7 @@ def render(out_dir: Path) -> dict[str, Any]:
         )
         for cell in (*CELLS, ALL_CELL)
     }
+    gaps = {cell: list(mode_gap(ref, cell)) for cell in (*CELLS, ALL_CELL)}
     record = {
         "what": "H2 touchdown-time distributions on select (plan Phase 7 item 3): plotted "
         "only, never scored",
@@ -956,15 +1082,20 @@ def render(out_dir: Path) -> dict[str, Any]:
         "units": "time_to_touchdown_s: seconds, model scale (lambda = 1/25); x5 for full scale",
         "statistics": "quantiles: P8 quantile_linear (type 7) over touched-down episodes; W1: "
         "exact 1-D empirical Wasserstein-1 (ila.eval.metrics.wasserstein_1) between a group's "
-        "pooled touched-down times and the T_mix reference's in the same cell; descriptive, "
-        "no interval, no test",
+        "touched-down times (seeds pooled, or one seed) and the T_mix reference's in the same "
+        "cell; gap fraction: share of touched-down times strictly between the reference's "
+        "faster half's p90 and slower half's p10 in the same cell (post hoc, added 2026-11-03 "
+        "after the per-seed p50s were seen); all descriptive, no interval, no test. H2 (Phase "
+        "8) pools seeds as P3-D1 states; the per-seed view is for the plot only",
         "reference": {
             **sources["reference"],
             "w1_ppo_vs_gated_model_s": modes,
+            "mode_gap_model_s": gaps,
         },
         "select": sources["select"],
         "students": sources["students"],
         "summary": rows,
+        "per_seed": per_seed_block(rows, statuses),
     }
     (out_dir / SUMMARY_CSV).write_text(_summary_csv(rows), encoding="utf-8")
     (out_dir / SUMMARY_JSON).write_text(_dump(record), encoding="utf-8")
@@ -992,8 +1123,44 @@ LABELS: Final[Mapping[str, str]] = {
     "dp_mix": "dp_mix, Ta = 8, K = 10 (seeds pooled)",
 }
 
+#: Per-seed ECDF colours (Okabe-Ito blue and vermillion, then a purple; apart from the
+#: reference halves' colours) and line styles, by seed position; one row per student arm.
+SEED_COLOURS: Final[tuple[str, ...]] = ("#0072B2", "#D55E00", "#7F3C8D")
+SEED_STYLES: Final[tuple[str, ...]] = ("-", "--", "-.")
+
 #: Histogram bin width, s model scale (three control steps at 30 Hz).
 BIN_S: Final[float] = 0.1
+
+
+def _ecdf(ax: Any, times: Sequence[float], **kwargs: Any) -> None:
+    """Step-plot the ECDF of ``times`` (s, model scale) from (0, 0); nothing if empty."""
+    t = np.sort(np.asarray(times, dtype=np.float64))
+    if not t.size:
+        return
+    y = np.arange(1, t.size + 1) / t.size
+    ax.step(np.concatenate([[0.0], t]), np.concatenate([[0.0], y]), where="post", **kwargs)
+
+
+def _note(ax: Any, lines: Sequence[str]) -> None:
+    ax.text(
+        0.98, 0.04, "\n".join(lines), transform=ax.transAxes, ha="right", va="bottom",
+        fontsize=6.3, family="DejaVu Sans Mono",
+        bbox={"boxstyle": "round", "fc": "white", "ec": "0.7", "alpha": 0.9},
+    )  # fmt: skip
+
+
+def _shade_gap(ax: Any, records: Sequence[EpisodeRecord], cell: str) -> None:
+    lo, hi = mode_gap(records, cell)
+    if math.isfinite(lo) and math.isfinite(hi):
+        ax.axvspan(lo, hi, color="0.85", alpha=0.6, lw=0, zorder=0)
+
+
+def _w1_txt(w1: float) -> str:
+    return f"W1 {w1:.2f}" if math.isfinite(w1) else "W1 n/a"
+
+
+def _gap_txt(frac: float) -> str:
+    return f"gap {frac:.2f}" if math.isfinite(frac) else "gap n/a"
 
 
 def plot(
@@ -1004,17 +1171,19 @@ def plot(
     *,
     partial: bool,
 ) -> None:
-    """Draw ECDF (top) and histogram (bottom) panels per cell and save a stamp-free PNG.
+    """Draw the four panel rows per cell and save a stamp-free PNG.
 
-    Top: ECDF of touched-down times (fraction of each group's touched-down episodes, the
-    distribution W1 compares). Bottom: per 0.1 s bin, the fraction of each group's episodes
-    (so the missing mass is the fraction without a touchdown); the reference is drawn as
-    stacked bars of its two halves, so both modes stay visible.
+    Row 1: ECDF of touched-down times (fraction of each group's touched-down episodes, the
+    distribution W1 compares), students pooled over seeds. Rows 2-3: one per student arm, each
+    present seed's ECDF over the reference and its two halves (thin). Row 4: per 0.1 s bin, the
+    fraction of each group's episodes (so the missing mass is the fraction without a
+    touchdown); the reference as stacked bars of its two halves, students pooled. The
+    reference's inter-mode gap (:func:`mode_gap`) is shaded in rows 1-3.
 
     Args:
         records: Every record.
         rows: :func:`summarise`'s rows.
-        statuses: Student statuses (for the missing notes).
+        statuses: Student statuses (for the seed lines and the missing notes).
         path: The PNG.
         partial: Whether any student run is missing (marks the title).
     """
@@ -1022,58 +1191,92 @@ def plot(
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
 
     cells = (*CELLS, ALL_CELL)
     finite = [r.time_to_touchdown_s for r in records if r.touched_down]
     x_max = max(math.ceil(max(finite) + BIN_S), 1.0) if finite else 1.0
     bins = np.arange(0.0, x_max + BIN_S / 2, BIN_S)
     by = {(r["group"], r["cell"]): r for r in rows if r["level"] == "pooled"}
+    by_seed = {(r["group"], r["seeds"], r["cell"]): r for r in rows if r["level"] == "seed"}
     present_groups = [g for g in GROUPS if any(by[(g, c)]["n_episodes"] for c in cells)]
+    seeds_of = {
+        arm: sorted(s.seed for s in statuses if s.arm == arm and s.status == "present")
+        for arm in STUDENT_ARMS
+    }
+    step_of = {(s.arm, s.seed): s.selected_global_step for s in statuses}
+    n_rows = 2 + len(STUDENT_ARMS)
     with plt.rc_context({"font.family": "DejaVu Sans", "font.size": 8, "svg.hashsalt": "h2"}):
         fig, axes = plt.subplots(
-            2, len(cells), figsize=(14.0, 8.2), sharex=True, sharey="row", squeeze=False
+            n_rows, len(cells), figsize=(14.0, 14.5), sharex=True, sharey="row", squeeze=False
         )
         for j, cell in enumerate(cells):
-            top, bottom = axes[0, j], axes[1, j]
+            # Row 1: pooled ECDFs.
+            top = axes[0, j]
+            _shade_gap(top, records, cell)
             for g in present_groups:
-                times = np.sort(_touched(group_records(records, g, cell)))
-                if not times.size:
-                    continue
-                y = np.arange(1, times.size + 1) / times.size
                 style = {"ls": "--", "lw": 1.1} if g in MODE_GROUPS else {"ls": "-", "lw": 1.6}
-                top.step(
-                    np.concatenate([[0.0], times]),
-                    np.concatenate([[0.0], y]),
-                    where="post",
-                    color=COLOURS[g],
-                    label=LABELS[g],
-                    **style,
-                )
+                _ecdf(
+                    top, _touched(group_records(records, g, cell)),
+                    color=COLOURS[g], label=LABELS[g], **style,
+                )  # fmt: skip
             notes = []
             for g in present_groups:
                 r = by[(g, cell)]
-                w1 = r["w1_to_tmix_ref_model_s"]
-                w1_txt = (
-                    ""
+                extra = (
+                    f", {_gap_txt(r['frac_td_in_ref_mode_gap'])}"
                     if g == REFERENCE_GROUP
-                    else f", W1 {w1:.2f} s"
-                    if math.isfinite(w1)
-                    else ", W1 n/a"
+                    else f", {_w1_txt(r['w1_to_tmix_ref_model_s'])}, "
+                    f"{_gap_txt(r['frac_td_in_ref_mode_gap'])}"
+                    if g in STUDENT_ARMS
+                    else ""
                 )
-                notes.append(f"{g}: td {r['n_touchdown']}/{r['n_episodes']}{w1_txt}")
+                notes.append(f"{g}: td {r['n_touchdown']}/{r['n_episodes']}{extra}")
             for arm in STUDENT_ARMS:
                 if arm not in present_groups:
                     notes.append(f"{arm}: missing")
-            top.text(
-                0.98, 0.04, "\n".join(notes), transform=top.transAxes, ha="right", va="bottom",
-                fontsize=6.5, family="DejaVu Sans Mono",
-                bbox={"boxstyle": "round", "fc": "white", "ec": "0.7", "alpha": 0.9},
-            )  # fmt: skip
+            _note(top, notes)
             top.set_title(cell if cell != ALL_CELL else "SS3-SS5 pooled (descriptive)", pad=26)
-            top.grid(True, lw=0.3, alpha=0.5)
             sec = top.secondary_xaxis("top", functions=(lambda t: t * 5.0, lambda t: t / 5.0))
             sec.set_xlabel("full scale, s (x5)", fontsize=7)
-            # Bottom: reference halves stacked, students as outlines.
+            # Rows 2-3: per-seed ECDFs, one row per student arm.
+            for i, arm in enumerate(STUDENT_ARMS, start=1):
+                ax = axes[i, j]
+                _shade_gap(ax, records, cell)
+                _ecdf(
+                    ax, _touched(group_records(records, REFERENCE_GROUP, cell)),
+                    color=COLOURS[REFERENCE_GROUP], lw=0.9, label=LABELS[REFERENCE_GROUP],
+                )  # fmt: skip
+                for g in MODE_GROUPS:
+                    _ecdf(
+                        ax, _touched(group_records(records, g, cell)),
+                        color=COLOURS[g], ls=":", lw=0.9, label=LABELS[g].strip(),
+                    )  # fmt: skip
+                seed_notes = []
+                for k, seed in enumerate(seeds_of[arm]):
+                    _ecdf(
+                        ax, _touched(group_records(records, arm, cell, seed)),
+                        color=SEED_COLOURS[k % len(SEED_COLOURS)],
+                        ls=SEED_STYLES[k % len(SEED_STYLES)], lw=1.5,
+                        label=f"{arm} s{seed} (step {step_of[(arm, seed)]})",
+                    )  # fmt: skip
+                    r = by_seed[(arm, str(seed), cell)]
+                    p50 = r["p50_model_s"]
+                    p50_txt = f"p50 {p50:.2f}" if math.isfinite(p50) else "p50 n/a"
+                    seed_notes.append(
+                        f"s{seed}: td {r['n_touchdown']}/{r['n_episodes']}, {p50_txt}, "
+                        f"{_w1_txt(r['w1_to_tmix_ref_model_s'])}, "
+                        f"{_gap_txt(r['frac_td_in_ref_mode_gap'])}"
+                    )
+                if not seeds_of[arm]:
+                    seed_notes.append(f"{arm}: missing")
+                _note(ax, seed_notes)
+                if j == 0:
+                    ax.set_ylabel(f"{arm}: ECDF per seed\n(touched-down episodes)")
+                if j == len(cells) - 1 and seeds_of[arm]:
+                    ax.legend(loc="center right", fontsize=6.3, frameon=True, framealpha=0.9)
+            # Row 4: reference halves stacked, students as outlines (seeds pooled).
+            bottom = axes[n_rows - 1, j]
             ref_all = group_records(records, REFERENCE_GROUP, cell)
             n_ref = len(ref_all)
             base = np.zeros(bins.size - 1)
@@ -1095,30 +1298,39 @@ def plot(
                     continue
                 h, _ = np.histogram(_touched(mine), bins=bins)
                 bottom.stairs(h / len(mine), bins, color=COLOURS[g], lw=1.4, label=LABELS[g])
-            bottom.grid(True, lw=0.3, alpha=0.5)
             bottom.set_xlabel("time to touchdown, s (model scale)")
-        axes[0, 0].set_ylabel("ECDF over touched-down episodes")
-        axes[1, 0].set_ylabel(f"fraction of all episodes per {BIN_S:g} s bin")
+            for ax in axes[:, j]:
+                ax.grid(True, lw=0.3, alpha=0.5)
+        axes[0, 0].set_ylabel("ECDF over touched-down episodes\n(students: seeds pooled)")
+        axes[n_rows - 1, 0].set_ylabel(f"fraction of all episodes per {BIN_S:g} s bin")
         axes[0, 0].set_xlim(0.0, x_max)
         handles, labels = axes[0, 0].get_legend_handles_labels()
-        h2, l2 = axes[1, 0].get_legend_handles_labels()
+        # The histogram's student outlines share row 1's colours and labels: list them once.
+        h2: list[Any] = []
+        l2: list[str] = []
+        for h, lab in zip(*axes[n_rows - 1, 0].get_legend_handles_labels(), strict=True):
+            if lab not in labels:
+                h2.append(h)
+                l2.append(lab)
+        handles.append(Patch(facecolor="0.85", alpha=0.6, lw=0))
+        labels.append("reference inter-mode gap (ppo p90 to gated p10; post hoc)")
         fig.legend(
             handles + h2, labels + l2, loc="upper center", ncol=4, fontsize=7,
-            bbox_to_anchor=(0.5, 0.965), frameon=False,
+            bbox_to_anchor=(0.5, 0.975), frameon=False,
         )  # fmt: skip
         missing = [f"{s.arm} s{s.seed}" for s in statuses if s.status != "present"]
         title = (
             "H2 touchdown-time distributions on select, simulated (PyBullet): plotted only, "
-            "not scored"
+            "not scored; in-sample for the students"
         )
         if partial:
             title = f"PARTIAL ({len(missing)} student runs missing): " + title
-        fig.suptitle(title, fontsize=10, y=0.995)
+        fig.suptitle(title, fontsize=10, y=0.997)
         caption = "\n".join(textwrap.fill(c, 200) for c in CAPTION)
         if missing:
             caption += "\n" + textwrap.fill("Missing: " + ", ".join(missing), 200)
-        fig.text(0.01, 0.005, caption, fontsize=6.3, va="bottom", ha="left")
-        fig.subplots_adjust(left=0.05, right=0.99, top=0.80, bottom=0.19, wspace=0.06, hspace=0.12)
+        fig.text(0.01, 0.004, caption, fontsize=6.3, va="bottom", ha="left")
+        fig.subplots_adjust(left=0.06, right=0.99, top=0.885, bottom=0.115, wspace=0.06, hspace=0.1)
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, dpi=150, metadata={"Software": None})
         plt.close(fig)

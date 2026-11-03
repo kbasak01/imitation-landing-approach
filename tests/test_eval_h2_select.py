@@ -3,10 +3,11 @@
 Synthetic rows only, except ``splits/select.parquet`` (keys, for the ``T_mix`` draw and the
 row-order checks). Covers: W1 on cases of known value (and agreement with scipy and with the
 demo audit's copy); the per-cell ``T_mix`` draw on ``select``; pooling over seeds, quantiles,
-outcome counts and W1 in the summary; missing-arm reporting; verification of a student run's
-rows against its ``selection.json`` (accepts a faithful run, refuses tampered rows); the
-reference file's checks; byte-identical re-rendering; and that neither the module nor its
-script names a P8 frozen-list accessor. Nothing is flown.
+outcome counts and W1 in the summary; per-seed rows, the inter-mode gap fraction and the JSON's
+``per_seed`` block on seeds in different regimes; missing-arm reporting; verification of a
+student run's rows against its ``selection.json`` (accepts a faithful run, refuses tampered
+rows); the reference file's checks; byte-identical re-rendering; and that neither the module
+nor its script names a P8 frozen-list accessor. Nothing is flown.
 """
 
 from __future__ import annotations
@@ -151,6 +152,71 @@ def test_summary_pools_seeds_and_reports_known_values() -> None:
     assert _row(rows, "bc_mix", "all")["n_episodes"] == 4
     assert _row(rows, "bc_mix", "SS3")["n_episodes"] == 0
     assert math.isnan(_row(rows, "bc_mix", "SS3")["p50_model_s"])
+
+
+def test_per_seed_rows_separate_regimes_that_pooling_hides() -> None:
+    """Two seeds in different regimes: s0 averages (all mass in the gap), s1 commits.
+
+    Reference SS4: ppo half [1.0, 1.2], gated half [3.0, 3.4] -> type-7 p90 of the fast half
+    1.18, p10 of the slow half 3.04: gap (1.18, 3.04). s0 lands at [2.0, 2.2] (gap 1.0); s1 at
+    [1.1, 3.3] (gap 0.0). Pooled [1.1, 2.0, 2.2, 3.3]: gap 0.5, which describes neither seed.
+    """
+    ref = [
+        _rec("T_mix", None, "ppo", 0, "SS4", 1.0, "success"),
+        _rec("T_mix", None, "ppo", 1, "SS4", 1.2, "success"),
+        _rec("T_mix", None, "gated", 2, "SS4", 3.0, "success"),
+        _rec("T_mix", None, "gated", 3, "SS4", 3.4, "success"),
+    ]
+    bc = [
+        _rec("bc_mix", 0, "", 0, "SS4", 2.0, "success"),
+        _rec("bc_mix", 0, "", 1, "SS4", 2.2, "success"),
+        _rec("bc_mix", 1, "", 0, "SS4", 1.1, "success"),
+        _rec("bc_mix", 1, "", 1, "SS4", 3.3, "off_pad"),
+    ]
+    statuses = [
+        h2.StudentStatus("bc_mix", 0, "present", selected_global_step=5000, select_success=2),
+        h2.StudentStatus("bc_mix", 1, "present", selected_global_step=20000, select_success=1),
+        *(h2.StudentStatus("dp_mix", s, "missing", "run directory absent") for s in (0, 1, 2)),
+    ]
+    records = ref + bc
+    lo, hi = h2.mode_gap(records, "SS4")
+    assert (lo, hi) == (pytest.approx(1.18), pytest.approx(3.04))
+    assert math.isnan(h2.mode_gap(records, "SS3")[0])  # no reference in SS3: no gap
+    rows = h2.summarise(records, statuses)
+    s0 = _row(rows, "bc_mix", "SS4", "seed", "0")
+    s1 = _row(rows, "bc_mix", "SS4", "seed", "1")
+    pooled = _row(rows, "bc_mix", "SS4")
+    assert s0["frac_td_in_ref_mode_gap"] == 1.0 and s1["frac_td_in_ref_mode_gap"] == 0.0
+    assert pooled["frac_td_in_ref_mode_gap"] == 0.5
+    # The reference's own tails reach into the gap: 1.2 > 1.18 and 3.0 < 3.04.
+    assert _row(rows, "T_mix", "SS4")["frac_td_in_ref_mode_gap"] == 0.5
+    assert s0["p50_model_s"] == pytest.approx(2.1) and s1["p50_model_s"] == pytest.approx(2.2)
+    # W1 of s0 to [1.0, 1.2, 3.0, 3.4], integral of |F_a - F_b|: 0.05 + 0.4 + 0 + 0.4 + 0.1.
+    assert s0["w1_to_tmix_ref_model_s"] == pytest.approx(0.95)
+    block = h2.per_seed_block(rows, statuses)
+    assert set(block) == set(h2.STUDENT_ARMS) and block["dp_mix"]["seeds"] == {}
+    seeds = block["bc_mix"]["seeds"]
+    assert list(seeds) == ["0", "1"]
+    assert seeds["0"]["selected_global_step"] == 5000
+    assert seeds["1"]["cells"]["SS4"]["outcomes"]["off_pad"] == 1
+    assert seeds["0"]["cells"]["SS4"]["frac_td_in_ref_mode_gap"] == 1.0
+    rng = block["bc_mix"]["range_across_seeds"]["SS4"]
+    assert rng["frac_td_in_ref_mode_gap"] == [0.0, 1.0]
+    assert rng["p50_model_s"] == [pytest.approx(2.1), pytest.approx(2.2)]
+    assert all(math.isnan(v) for v in block["dp_mix"]["range_across_seeds"]["SS4"]["p50_model_s"])
+
+
+def test_gap_fraction_is_strict_and_nan_without_a_gap() -> None:
+    assert h2.gap_fraction([1.0, 1.5, 2.0], (1.0, 2.0)) == pytest.approx(1.0 / 3.0)
+    assert math.isnan(h2.gap_fraction([], (1.0, 2.0)))
+    assert math.isnan(h2.gap_fraction([1.5], (NAN, NAN)))
+    overlap = [
+        _rec("T_mix", None, "ppo", 0, "SS4", 1.0, "success"),
+        _rec("T_mix", None, "ppo", 1, "SS4", 3.0, "success"),
+        _rec("T_mix", None, "gated", 2, "SS4", 1.5, "success"),
+        _rec("T_mix", None, "gated", 3, "SS4", 3.5, "success"),
+    ]
+    assert all(math.isnan(v) for v in h2.mode_gap(overlap, "SS4"))  # halves overlap: no gap
 
 
 def test_missing_arm_is_reported_never_skipped() -> None:
@@ -352,6 +418,12 @@ def test_render_is_byte_identical_and_marks_partial(tmp_path: Path) -> None:
     assert tuple(header) == h2.SUMMARY_COLUMNS
     text = (outs[0] / h2.SUMMARY_JSON).read_text(encoding="utf-8")
     assert "descriptive" in text and "id SS4 in Phase 8" in text and "lambda = 1/25" in text
+    assert "post hoc" in text and "pools seeds as P3-D1" in text
+    rec = json.loads(text)
+    assert list(rec["per_seed"]["bc_mix"]["seeds"]) == ["0", "1"]
+    assert rec["per_seed"]["bc_mix"]["seeds"]["0"]["cells"]["SS4"]["n_touchdown"] == 1
+    assert rec["per_seed"]["dp_mix"]["seeds"] == {}
+    assert set(rec["reference"]["mode_gap_model_s"]) == {*h2.CELLS, h2.ALL_CELL}
 
 
 def test_episode_table_round_trips(tmp_path: Path) -> None:
