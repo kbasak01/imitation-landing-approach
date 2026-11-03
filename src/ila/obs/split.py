@@ -32,12 +32,18 @@ The ``modular`` arm (P3-D1 §3, declared clock exception 2) is the one other pat
 :class:`ModularInput`. The clock goes to the frozen teacher's observation assembly only
 (:func:`assemble_teacher_obs`, which writes each block at its fields' P8 offsets), never to the
 estimator.
+
+The closed-loop clock diagnostic (``ila.train.clock_diagnostics``) changes the *value* of
+``time_fraction`` where a network already receives it, and nothing else:
+:meth:`ObsContract.with_proprio_clock` (the ``plus_clock`` proprio column; refused under any
+other variant) and :meth:`ObsContract.with_obs_clock` (a teacher's 25-d observation) copy the
+input and replace that one field, by name. Neither adds the clock to any input.
 """
 
 from __future__ import annotations
 
 import functools
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
@@ -277,6 +283,106 @@ class ObsContract:
             variant=self.variant,
         )
 
+    # ------------------------------------------------------------------ clock intervention
+    # The closed-loop clock diagnostic (``ila.train.clock_diagnostics``) changes the value of
+    # the ``time_fraction`` field and nothing else. These three methods are the only way it
+    # reaches that column: by field name, here, never by position elsewhere. They never add
+    # a field to anything: a student proprio stays the contract's (``plus_clock`` only) and a
+    # teacher observation stays P8's 25-d vector.
+
+    def _proprio_clock_idx(self) -> NDArray[np.intp]:
+        """The ``time_fraction`` column(s) of this contract's student proprio, by name.
+
+        Raises:
+            ValueError: Outside the ``plus_clock`` variant (no clock column exists).
+        """
+        if self.variant != _CLOCK_VARIANT or CLOCK_FIELD not in self.student_proprio:
+            raise ValueError(
+                f"the student proprio has a {CLOCK_FIELD!r} column only under the "
+                f"{_CLOCK_VARIANT!r} contract, not {self.variant!r}"
+            )
+        start = 0
+        for name in self.student_proprio:
+            size = self.layout[name][1]
+            if name == CLOCK_FIELD:
+                return np.arange(start, start + size, dtype=np.intp)
+            start += size
+        raise AssertionError("unreachable: the clock is in the proprio")  # pragma: no cover
+
+    def proprio_clock(self, proprio: ArrayLike) -> NDArray[np.float32]:
+        """Return the ``time_fraction`` column of a ``plus_clock`` student proprio.
+
+        Args:
+            proprio: ``float32[..., proprio_dim]`` (14 under ``plus_clock``), contract order.
+                A proprio-shaped vector such as a normaliser mean is accepted too.
+
+        Returns:
+            Float32, shape ``(..., 1)``, dimensionless (``t_episode / episode_len``,
+            ``episode_len`` = 12 s model scale), a new array.
+
+        Raises:
+            ValueError: Outside ``plus_clock`` or on a wrong width.
+        """
+        idx = self._proprio_clock_idx()
+        arr = np.asarray(proprio, dtype=np.float32)
+        if arr.ndim < 1 or arr.shape[-1] != self.proprio_dim:
+            raise ValueError(f"expected a proprio of width {self.proprio_dim}, got {arr.shape}")
+        return np.take(arr, idx, axis=-1)
+
+    def with_proprio_clock(
+        self,
+        proprio: ArrayLike,
+        clock_fn: Callable[[NDArray[np.float32]], ArrayLike],
+    ) -> NDArray[np.float32]:
+        """Return a copy of a ``plus_clock`` proprio with only its clock column replaced.
+
+        Every other column is copied bit for bit; the clock column becomes
+        ``clock_fn(old_clock)``, cast to float32.
+
+        Args:
+            proprio: ``float32[..., 14]``, the ``plus_clock`` student proprio, contract order.
+            clock_fn: ``float32[..., 1] -> [..., 1]``, the new ``time_fraction`` values,
+                dimensionless, finite, in ``[0, 1]`` (P8's range).
+
+        Returns:
+            A new writable float32 array of the input's shape.
+
+        Raises:
+            ValueError: Outside ``plus_clock``, on a wrong width, or if ``clock_fn`` returns a
+                wrong shape or a value that is not finite in ``[0, 1]``.
+        """
+        idx = self._proprio_clock_idx()
+        arr = np.asarray(proprio, dtype=np.float32)
+        if arr.ndim < 1 or arr.shape[-1] != self.proprio_dim:
+            raise ValueError(f"expected a proprio of width {self.proprio_dim}, got {arr.shape}")
+        return _replace_columns(arr, idx, clock_fn)
+
+    def with_obs_clock(
+        self,
+        obs: ArrayLike,
+        clock_fn: Callable[[NDArray[np.float32]], ArrayLike],
+    ) -> NDArray[np.float32]:
+        """Return a copy of P8 observation(s) with only ``time_fraction`` replaced, by name.
+
+        For the teacher side of the clock diagnostic: the observation stays P8's 25-d vector
+        (it is never a student input); every other field is copied bit for bit.
+
+        Args:
+            obs: ``float32[..., 25]``, P8 observation(s).
+            clock_fn: ``float32[..., 1] -> [..., 1]``, the new ``time_fraction`` values,
+                dimensionless, finite, in ``[0, 1]``.
+
+        Returns:
+            A new writable float32 array of the input's shape.
+
+        Raises:
+            ValueError: On a wrong width, or if ``clock_fn`` returns a wrong shape or a value
+                that is not finite in ``[0, 1]``.
+        """
+        offset, size = self.layout[CLOCK_FIELD]
+        idx = np.arange(offset, offset + size, dtype=np.intp)
+        return _replace_columns(self._full(obs), idx, clock_fn)
+
     def modular_input(self, images: ArrayLike, obs_window: ArrayLike) -> ModularInput:
         """Build the ``modular`` arm's :class:`ModularInput` from one observation window.
 
@@ -353,6 +459,35 @@ class ObsContract:
         if np.any(clock < 0.0) or np.any(clock > 1.0):
             raise ValueError(f"time_fraction_t must be in [0, 1], got {clock}")
         return out
+
+
+def _replace_columns(
+    arr: NDArray[np.float32],
+    idx: NDArray[np.intp],
+    fn: Callable[[NDArray[np.float32]], ArrayLike],
+) -> NDArray[np.float32]:
+    """Copy ``arr`` and set its last-axis columns ``idx`` to ``fn(arr[..., idx])``.
+
+    Args:
+        arr: Float32 array, columns on the last axis.
+        idx: Column indices (computed by name by the caller).
+        fn: Old columns ``float32[..., len(idx)]`` -> new ones, finite in ``[0, 1]``.
+
+    Returns:
+        A new writable float32 array; columns outside ``idx`` are bit-identical to ``arr``'s.
+
+    Raises:
+        ValueError: If ``fn`` returns a wrong shape or a value not finite in ``[0, 1]``.
+    """
+    out = np.array(arr, dtype=np.float32, copy=True)
+    old = np.take(arr, idx, axis=-1)
+    new = np.asarray(fn(old.copy()), dtype=np.float32)
+    if new.shape != old.shape:
+        raise ValueError(f"replacement has shape {new.shape}, expected {old.shape}")
+    if not (np.all(np.isfinite(new)) and np.all(new >= 0.0) and np.all(new <= 1.0)):
+        raise ValueError(f"{CLOCK_FIELD} must be finite in [0, 1], got {new}")
+    out[..., idx] = new
+    return out
 
 
 @dataclass(frozen=True)

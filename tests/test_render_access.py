@@ -339,7 +339,7 @@ FROZEN_LIST_NAMES = frozenset(
 
 
 #: The training scripts (argparse wrappers over ``ila/train``; Phase 6 adds the dp sweeps and
-#: diagnostics).
+#: diagnostics, Phase 7 the modular estimation study and the clock intervention).
 TRAIN_SCRIPTS: tuple[str, ...] = (
     "train.py",
     "train_smoke.py",
@@ -348,6 +348,7 @@ TRAIN_SCRIPTS: tuple[str, ...] = (
     "dp_sweeps.py",
     "dp_diagnostics.py",
     "modular_estimation.py",
+    "clock_intervention.py",
 )
 
 
