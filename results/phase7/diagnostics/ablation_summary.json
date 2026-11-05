@@ -1,0 +1,1753 @@
+{
+ "note": "Phase 7 run summary on `select`, recomputed from committed files only (descriptive; P7-D3).",
+ "bands_s": [
+  1.8,
+  2.8
+ ],
+ "arms": {
+  "bc": {
+   "seeds": [
+    {
+     "selected_success": 146,
+     "selected_step": 10000,
+     "candidates": [
+      142,
+      146,
+      144,
+      143,
+      145,
+      145
+     ],
+     "candidate_mean": 144.16666666666666,
+     "inflation": 1.8333333333333428
+    },
+    {
+     "selected_success": 146,
+     "selected_step": 30000,
+     "candidates": [
+      142,
+      141,
+      142,
+      141,
+      145,
+      146
+     ],
+     "candidate_mean": 142.83333333333334,
+     "inflation": 3.166666666666657
+    },
+    {
+     "selected_success": 147,
+     "selected_step": 25000,
+     "candidates": [
+      143,
+      140,
+      147,
+      147,
+      147,
+      145
+     ],
+     "candidate_mean": 144.83333333333334,
+     "inflation": 2.166666666666657
+    },
+    {
+     "selected_success": 145,
+     "selected_step": 25000,
+     "candidates": [
+      144,
+      145,
+      142,
+      144,
+      145,
+      145
+     ],
+     "candidate_mean": 144.16666666666666,
+     "inflation": 0.8333333333333428
+    },
+    {
+     "selected_success": 149,
+     "selected_step": 30000,
+     "candidates": [
+      145,
+      145,
+      146,
+      147,
+      140,
+      149
+     ],
+     "candidate_mean": 145.33333333333334,
+     "inflation": 3.666666666666657
+    }
+   ],
+   "candidate_mean_pooled": 144.26666666666668,
+   "selected_mean": 146.6
+  },
+  "bc_state": {
+   "seeds": [
+    {
+     "selected_success": 150,
+     "selected_step": 15000,
+     "candidates": [
+      149,
+      148,
+      150,
+      149,
+      150,
+      148
+     ],
+     "candidate_mean": 149.0,
+     "inflation": 1.0
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 20000,
+     "candidates": [
+      148,
+      148,
+      149,
+      150,
+      149,
+      149
+     ],
+     "candidate_mean": 148.83333333333334,
+     "inflation": 1.1666666666666572
+    },
+    {
+     "selected_success": 149,
+     "selected_step": 15000,
+     "candidates": [
+      149,
+      149,
+      149,
+      148,
+      149,
+      149
+     ],
+     "candidate_mean": 148.83333333333334,
+     "inflation": 0.1666666666666572
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 25000,
+     "candidates": [
+      149,
+      149,
+      150,
+      150,
+      150,
+      150
+     ],
+     "candidate_mean": 149.66666666666666,
+     "inflation": 0.3333333333333428
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 30000,
+     "candidates": [
+      149,
+      149,
+      149,
+      149,
+      149,
+      150
+     ],
+     "candidate_mean": 149.16666666666666,
+     "inflation": 0.8333333333333428
+    }
+   ],
+   "candidate_mean_pooled": 149.1,
+   "selected_mean": 149.8
+  },
+  "bc_matched": {
+   "seeds": [
+    {
+     "selected_success": 148,
+     "selected_step": 50000,
+     "candidates": [
+      144,
+      148
+     ],
+     "candidate_mean": 146.0,
+     "inflation": 2.0
+    },
+    {
+     "selected_success": 145,
+     "selected_step": 50000,
+     "candidates": [
+      144,
+      145
+     ],
+     "candidate_mean": 144.5,
+     "inflation": 0.5
+    },
+    {
+     "selected_success": 147,
+     "selected_step": 50000,
+     "candidates": [
+      146,
+      147
+     ],
+     "candidate_mean": 146.5,
+     "inflation": 0.5
+    },
+    {
+     "selected_success": 147,
+     "selected_step": 45000,
+     "candidates": [
+      147,
+      143
+     ],
+     "candidate_mean": 145.0,
+     "inflation": 2.0
+    },
+    {
+     "selected_success": 146,
+     "selected_step": 45000,
+     "candidates": [
+      146,
+      144
+     ],
+     "candidate_mean": 145.0,
+     "inflation": 1.0
+    }
+   ],
+   "candidate_mean_pooled": 145.4,
+   "selected_mean": 146.6
+  },
+  "bc_dart": {
+   "seeds": [
+    {
+     "selected_success": 150,
+     "selected_step": 30000,
+     "candidates": [
+      148,
+      149,
+      149,
+      149,
+      149,
+      150
+     ],
+     "candidate_mean": 149.0,
+     "inflation": 1.0
+    },
+    {
+     "selected_success": 149,
+     "selected_step": 20000,
+     "candidates": [
+      147,
+      149,
+      149,
+      149,
+      148,
+      148
+     ],
+     "candidate_mean": 148.33333333333334,
+     "inflation": 0.6666666666666572
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 30000,
+     "candidates": [
+      147,
+      150,
+      148,
+      148,
+      150,
+      150
+     ],
+     "candidate_mean": 148.83333333333334,
+     "inflation": 1.1666666666666572
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 15000,
+     "candidates": [
+      147,
+      148,
+      150,
+      150,
+      149,
+      149
+     ],
+     "candidate_mean": 148.83333333333334,
+     "inflation": 1.1666666666666572
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 20000,
+     "candidates": [
+      147,
+      149,
+      149,
+      150,
+      148,
+      149
+     ],
+     "candidate_mean": 148.66666666666666,
+     "inflation": 1.3333333333333428
+    }
+   ],
+   "candidate_mean_pooled": 148.73333333333332,
+   "selected_mean": 149.8
+  },
+  "bc_dagger": {
+   "seeds": [
+    {
+     "selected_success": 149,
+     "selected_step": 45000,
+     "candidates": [
+      149,
+      148
+     ],
+     "candidate_mean": 148.5,
+     "inflation": 0.5
+    },
+    {
+     "selected_success": 149,
+     "selected_step": 50000,
+     "candidates": [
+      149,
+      149
+     ],
+     "candidate_mean": 149.0,
+     "inflation": 0.0
+    },
+    {
+     "selected_success": 148,
+     "selected_step": 45000,
+     "candidates": [
+      148,
+      147
+     ],
+     "candidate_mean": 147.5,
+     "inflation": 0.5
+    },
+    {
+     "selected_success": 149,
+     "selected_step": 50000,
+     "candidates": [
+      149,
+      149
+     ],
+     "candidate_mean": 149.0,
+     "inflation": 0.0
+    },
+    {
+     "selected_success": 150,
+     "selected_step": 45000,
+     "candidates": [
+      150,
+      148
+     ],
+     "candidate_mean": 149.0,
+     "inflation": 1.0
+    }
+   ],
+   "candidate_mean_pooled": 148.6,
+   "selected_mean": 149.0
+  },
+  "dp": {
+   "seeds": [
+    {
+     "selected_success": 63,
+     "selected_step": 100000,
+     "candidates": [
+      58,
+      49,
+      57,
+      56,
+      50,
+      56,
+      54,
+      60,
+      57,
+      63
+     ],
+     "candidate_mean": 56.0,
+     "inflation": 7.0
+    },
+    {
+     "selected_success": 66,
+     "selected_step": 50000,
+     "candidates": [
+      46,
+      51,
+      53,
+      49,
+      66,
+      64,
+      52,
+      62,
+      62,
+      51
+     ],
+     "candidate_mean": 55.6,
+     "inflation": 10.399999999999999
+    },
+    {
+     "selected_success": 68,
+     "selected_step": 60000,
+     "candidates": [
+      43,
+      48,
+      39,
+      55,
+      56,
+      68,
+      59,
+      64,
+      60,
+      65
+     ],
+     "candidate_mean": 55.7,
+     "inflation": 12.299999999999997
+    },
+    {
+     "selected_success": 67,
+     "selected_step": 100000,
+     "candidates": [
+      56,
+      63,
+      58,
+      51,
+      63,
+      61,
+      63,
+      56,
+      65,
+      67
+     ],
+     "candidate_mean": 60.3,
+     "inflation": 6.700000000000003
+    },
+    {
+     "selected_success": 62,
+     "selected_step": 100000,
+     "candidates": [
+      55,
+      46,
+      47,
+      48,
+      46,
+      47,
+      54,
+      54,
+      61,
+      62
+     ],
+     "candidate_mean": 52.0,
+     "inflation": 10.0
+    }
+   ],
+   "candidate_mean_pooled": 55.92,
+   "selected_mean": 65.2,
+   "all_candidates": {
+    "n_episodes": 7500,
+    "outcome_rate": {
+     "success": 0.3728,
+     "off_pad": 0.4145333333333333,
+     "hard_landing": 0.13866666666666666,
+     "bounce": 0.07,
+     "crash": 0.0029333333333333334,
+     "timeout": 0.0010666666666666667
+    },
+    "success_by_ss": {
+     "SS3": 0.4168,
+     "SS4": 0.3712,
+     "SS5": 0.3304
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.1125,
+     1.5166666666666666,
+     2.1625
+    ],
+    "band_share": {
+     "fast": 0.7420820526526795,
+     "between": 0.23560069490845917,
+     "slow": 0.02231725243886142
+    },
+    "band_success": {
+     "fast": 0.3841166936790924,
+     "between": 0.34429948950652295,
+     "slow": 0.33532934131736525
+    },
+    "fast_band_lateral_p50_m": 0.08976487643927275,
+    "fast_band_closing_p50_m_s": 0.3944074646968722,
+    "lateral_offset_m_p50_p95": [
+     0.08915783929212708,
+     0.18572706497177058
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.39985607252080857,
+     0.6863307502588605
+    ],
+    "frac_closing_above_0p5_m_s": 0.2807697447547775,
+    "n_tunnelled": 1198
+   }
+  },
+  "modular": {
+   "seeds": [
+    {
+     "selected_success": 143,
+     "selected_step": 20000,
+     "candidates": [
+      139,
+      132,
+      140,
+      143,
+      141,
+      140
+     ],
+     "candidate_mean": 139.16666666666666,
+     "inflation": 3.833333333333343
+    },
+    {
+     "selected_success": 142,
+     "selected_step": 10000,
+     "candidates": [
+      132,
+      142,
+      141,
+      137,
+      137,
+      141
+     ],
+     "candidate_mean": 138.33333333333334,
+     "inflation": 3.666666666666657
+    },
+    {
+     "selected_success": 144,
+     "selected_step": 25000,
+     "candidates": [
+      142,
+      141,
+      143,
+      143,
+      144,
+      142
+     ],
+     "candidate_mean": 142.5,
+     "inflation": 1.5
+    },
+    {
+     "selected_success": 145,
+     "selected_step": 30000,
+     "candidates": [
+      140,
+      143,
+      136,
+      139,
+      142,
+      145
+     ],
+     "candidate_mean": 140.83333333333334,
+     "inflation": 4.166666666666657
+    },
+    {
+     "selected_success": 145,
+     "selected_step": 25000,
+     "candidates": [
+      133,
+      138,
+      136,
+      140,
+      145,
+      140
+     ],
+     "candidate_mean": 138.66666666666666,
+     "inflation": 6.333333333333343
+    }
+   ],
+   "candidate_mean_pooled": 139.9,
+   "selected_mean": 143.8,
+   "all_candidates": {
+    "n_episodes": 4500,
+    "outcome_rate": {
+     "success": 0.9326666666666666,
+     "off_pad": 0.011333333333333334,
+     "hard_landing": 0.05,
+     "bounce": 0.006,
+     "crash": 0.0,
+     "timeout": 0.0
+    },
+    "success_by_ss": {
+     "SS3": 0.9706666666666667,
+     "SS4": 0.9433333333333334,
+     "SS5": 0.884
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.2458333333333333,
+     1.5291666666666666,
+     1.8
+    ],
+    "band_share": {
+     "fast": 0.8991111111111111,
+     "between": 0.10066666666666667,
+     "slow": 0.00022222222222222223
+    },
+    "band_success": {
+     "fast": 0.9522985664854177,
+     "between": 0.7571743929359823,
+     "slow": 1.0
+    },
+    "fast_band_lateral_p50_m": 0.020259599691892224,
+    "fast_band_closing_p50_m_s": 0.28788263275761616,
+    "lateral_offset_m_p50_p95": [
+     0.020084923195873045,
+     0.06303041716144385
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.29486144061592473,
+     0.5000145973259448
+    ],
+    "frac_closing_above_0p5_m_s": 0.05,
+    "n_tunnelled": 31
+   }
+  },
+  "bc_mix": {
+   "seeds": [
+    {
+     "selected_success": 143,
+     "selected_step": 5000,
+     "candidates": [
+      143,
+      141,
+      139,
+      140,
+      135,
+      136
+     ],
+     "candidate_mean": 139.0,
+     "inflation": 4.0
+    },
+    {
+     "selected_success": 146,
+     "selected_step": 20000,
+     "candidates": [
+      144,
+      143,
+      141,
+      146,
+      144,
+      137
+     ],
+     "candidate_mean": 142.5,
+     "inflation": 3.5
+    },
+    {
+     "selected_success": 145,
+     "selected_step": 20000,
+     "candidates": [
+      140,
+      141,
+      145,
+      145,
+      140,
+      135
+     ],
+     "candidate_mean": 141.0,
+     "inflation": 4.0
+    }
+   ],
+   "candidate_mean_pooled": 140.83333333333334,
+   "selected_mean": 144.66666666666666,
+   "all_candidates": {
+    "n_episodes": 2700,
+    "outcome_rate": {
+     "success": 0.9388888888888889,
+     "off_pad": 0.0044444444444444444,
+     "hard_landing": 0.04777777777777778,
+     "bounce": 0.008518518518518519,
+     "crash": 0.0,
+     "timeout": 0.00037037037037037035
+    },
+    "success_by_ss": {
+     "SS3": 0.9911111111111112,
+     "SS4": 0.9455555555555556,
+     "SS5": 0.88
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.2875,
+     2.0083333333333333,
+     3.8091666666666675
+    ],
+    "band_share": {
+     "fast": 0.40681733975546497,
+     "between": 0.3101148573545758,
+     "slow": 0.28306780288995925
+    },
+    "band_success": {
+     "fast": 0.9225865209471766,
+     "between": 0.945041816009558,
+     "slow": 0.9568062827225131
+    },
+    "fast_band_lateral_p50_m": 0.024547590815203642,
+    "fast_band_closing_p50_m_s": 0.2883824190638265,
+    "lateral_offset_m_p50_p95": [
+     0.02229898001371214,
+     0.05747665199664551
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.27422656197585626,
+     0.500017804795714
+    ],
+    "frac_closing_above_0p5_m_s": 0.050018525379770286,
+    "n_tunnelled": 16
+   }
+  },
+  "bc_pid": {
+   "seeds": [
+    {
+     "selected_success": 146,
+     "selected_step": 5000,
+     "candidates": [
+      146,
+      137,
+      127,
+      120,
+      114,
+      111
+     ],
+     "candidate_mean": 125.83333333333333,
+     "inflation": 20.16666666666667
+    },
+    {
+     "selected_success": 143,
+     "selected_step": 5000,
+     "candidates": [
+      143,
+      131,
+      107,
+      100,
+      110,
+      97
+     ],
+     "candidate_mean": 114.66666666666667,
+     "inflation": 28.33333333333333
+    },
+    {
+     "selected_success": 143,
+     "selected_step": 5000,
+     "candidates": [
+      143,
+      143,
+      131,
+      121,
+      114,
+      118
+     ],
+     "candidate_mean": 128.33333333333334,
+     "inflation": 14.666666666666657
+    }
+   ],
+   "candidate_mean_pooled": 122.94444444444444,
+   "selected_mean": 144.0,
+   "all_candidates": {
+    "n_episodes": 2700,
+    "outcome_rate": {
+     "success": 0.8196296296296296,
+     "off_pad": 0.008148148148148147,
+     "hard_landing": 0.14444444444444443,
+     "bounce": 0.027777777777777776,
+     "crash": 0.0,
+     "timeout": 0.0
+    },
+    "success_by_ss": {
+     "SS3": 0.8733333333333333,
+     "SS4": 0.8333333333333334,
+     "SS5": 0.7522222222222222
+    },
+    "touchdown_s_p10_p50_p90": [
+     3.3583333333333334,
+     4.25,
+     5.292083333333333
+    ],
+    "band_share": {
+     "fast": 0.0,
+     "between": 0.023333333333333334,
+     "slow": 0.9766666666666667
+    },
+    "band_success": {
+     "fast": null,
+     "between": 0.5555555555555556,
+     "slow": 0.825938566552901
+    },
+    "fast_band_lateral_p50_m": NaN,
+    "fast_band_closing_p50_m_s": NaN,
+    "lateral_offset_m_p50_p95": [
+     0.029422899375513838,
+     0.06780496566010454
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.3000730007890017,
+     0.630847519380135
+    ],
+    "frac_closing_above_0p5_m_s": 0.1425925925925926,
+    "n_tunnelled": 74
+   }
+  },
+  "bc_n100": {
+   "seeds": [
+    {
+     "selected_success": 117,
+     "selected_step": 5000,
+     "candidates": [
+      117,
+      116,
+      113,
+      107,
+      102,
+      108
+     ],
+     "candidate_mean": 110.5,
+     "inflation": 6.5
+    },
+    {
+     "selected_success": 122,
+     "selected_step": 5000,
+     "candidates": [
+      122,
+      98,
+      92,
+      88,
+      84,
+      87
+     ],
+     "candidate_mean": 95.16666666666667,
+     "inflation": 26.83333333333333
+    },
+    {
+     "selected_success": 125,
+     "selected_step": 5000,
+     "candidates": [
+      125,
+      119,
+      119,
+      111,
+      105,
+      108
+     ],
+     "candidate_mean": 114.5,
+     "inflation": 10.5
+    }
+   ],
+   "candidate_mean_pooled": 106.72222222222223,
+   "selected_mean": 121.33333333333333,
+   "all_candidates": {
+    "n_episodes": 2700,
+    "outcome_rate": {
+     "success": 0.7114814814814815,
+     "off_pad": 0.2225925925925926,
+     "hard_landing": 0.035925925925925924,
+     "bounce": 0.004814814814814815,
+     "crash": 0.0,
+     "timeout": 0.025185185185185185
+    },
+    "success_by_ss": {
+     "SS3": 0.7655555555555555,
+     "SS4": 0.7344444444444445,
+     "SS5": 0.6344444444444445
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.1833333333333333,
+     1.6291666666666667,
+     4.628333333333342
+    ],
+    "band_share": {
+     "fast": 0.6185410334346505,
+     "between": 0.22188449848024316,
+     "slow": 0.1595744680851064
+    },
+    "band_success": {
+     "fast": 0.8605651105651105,
+     "between": 0.7294520547945206,
+     "slow": 0.22380952380952382
+    },
+    "fast_band_lateral_p50_m": 0.046463432386467794,
+    "fast_band_closing_p50_m_s": 0.28771231950673465,
+    "lateral_offset_m_p50_p95": [
+     0.0527798206761375,
+     0.15776020302771537
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.2677865376523755,
+     0.4835995475714153
+    ],
+    "frac_closing_above_0p5_m_s": 0.04331306990881459,
+    "n_tunnelled": 23
+   }
+  },
+  "bc_n300": {
+   "seeds": [
+    {
+     "selected_success": 142,
+     "selected_step": 20000,
+     "candidates": [
+      141,
+      138,
+      139,
+      142,
+      136,
+      137
+     ],
+     "candidate_mean": 138.83333333333334,
+     "inflation": 3.166666666666657
+    },
+    {
+     "selected_success": 138,
+     "selected_step": 20000,
+     "candidates": [
+      137,
+      136,
+      136,
+      138,
+      136,
+      133
+     ],
+     "candidate_mean": 136.0,
+     "inflation": 2.0
+    },
+    {
+     "selected_success": 143,
+     "selected_step": 10000,
+     "candidates": [
+      137,
+      143,
+      138,
+      138,
+      133,
+      135
+     ],
+     "candidate_mean": 137.33333333333334,
+     "inflation": 5.666666666666657
+    }
+   ],
+   "candidate_mean_pooled": 137.38888888888889,
+   "selected_mean": 141.0,
+   "all_candidates": {
+    "n_episodes": 2700,
+    "outcome_rate": {
+     "success": 0.9159259259259259,
+     "off_pad": 0.03185185185185185,
+     "hard_landing": 0.04666666666666667,
+     "bounce": 0.005555555555555556,
+     "crash": 0.0,
+     "timeout": 0.0
+    },
+    "success_by_ss": {
+     "SS3": 0.9788888888888889,
+     "SS4": 0.9177777777777778,
+     "SS5": 0.8511111111111112
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.2083333333333333,
+     1.5583333333333333,
+     2.2583333333333333
+    ],
+    "band_share": {
+     "fast": 0.7303703703703703,
+     "between": 0.2222222222222222,
+     "slow": 0.047407407407407405
+    },
+    "band_success": {
+     "fast": 0.915314401622718,
+     "between": 0.93,
+     "slow": 0.859375
+    },
+    "fast_band_lateral_p50_m": 0.028548391152685343,
+    "fast_band_closing_p50_m_s": 0.2959842893251874,
+    "lateral_offset_m_p50_p95": [
+     0.026093754526359363,
+     0.08757549217580107
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.288549575905487,
+     0.4978908822093372
+    ],
+    "frac_closing_above_0p5_m_s": 0.048518518518518516,
+    "n_tunnelled": 23
+   }
+  },
+  "bc_minus_last_action": {
+   "seeds": [
+    {
+     "selected_success": 147,
+     "selected_step": 30000,
+     "candidates": [
+      142,
+      142,
+      132,
+      144,
+      146,
+      147
+     ],
+     "candidate_mean": 142.16666666666666,
+     "inflation": 4.833333333333343
+    },
+    {
+     "selected_success": 148,
+     "selected_step": 15000,
+     "candidates": [
+      134,
+      144,
+      148,
+      147,
+      146,
+      147
+     ],
+     "candidate_mean": 144.33333333333334,
+     "inflation": 3.666666666666657
+    },
+    {
+     "selected_success": 146,
+     "selected_step": 30000,
+     "candidates": [
+      120,
+      138,
+      141,
+      146,
+      143,
+      146
+     ],
+     "candidate_mean": 139.0,
+     "inflation": 7.0
+    }
+   ],
+   "candidate_mean_pooled": 141.83333333333334,
+   "selected_mean": 147.0,
+   "all_candidates": {
+    "n_episodes": 2700,
+    "outcome_rate": {
+     "success": 0.9455555555555556,
+     "off_pad": 0.009259259259259259,
+     "hard_landing": 0.02666666666666667,
+     "bounce": 0.004074074074074074,
+     "crash": 0.0,
+     "timeout": 0.014444444444444444
+    },
+    "success_by_ss": {
+     "SS3": 0.97,
+     "SS4": 0.9655555555555555,
+     "SS5": 0.9011111111111111
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.1916666666666667,
+     1.5166666666666666,
+     2.25
+    ],
+    "band_share": {
+     "fast": 0.7816610296880872,
+     "between": 0.16046599022923713,
+     "slow": 0.05787298008267568
+    },
+    "band_success": {
+     "fast": 0.9586538461538462,
+     "between": 0.9648711943793911,
+     "slow": 0.9545454545454546
+    },
+    "fast_band_lateral_p50_m": 0.0205064062125202,
+    "fast_band_closing_p50_m_s": 0.28245192212327197,
+    "lateral_offset_m_p50_p95": [
+     0.01867311068788621,
+     0.06927819609642591
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.27948144145056814,
+     0.4461807825243871
+    ],
+    "frac_closing_above_0p5_m_s": 0.02593010146561443,
+    "n_tunnelled": 11
+   }
+  },
+  "bc_plus_clock": {
+   "seeds": [
+    {
+     "selected_success": 148,
+     "selected_step": 20000,
+     "candidates": [
+      140,
+      142,
+      146,
+      148,
+      142,
+      141
+     ],
+     "candidate_mean": 143.16666666666666,
+     "inflation": 4.833333333333343
+    },
+    {
+     "selected_success": 144,
+     "selected_step": 15000,
+     "candidates": [
+      136,
+      140,
+      144,
+      141,
+      137,
+      139
+     ],
+     "candidate_mean": 139.5,
+     "inflation": 4.5
+    },
+    {
+     "selected_success": 144,
+     "selected_step": 5000,
+     "candidates": [
+      144,
+      131,
+      131,
+      139,
+      139,
+      137
+     ],
+     "candidate_mean": 136.83333333333334,
+     "inflation": 7.166666666666657
+    }
+   ],
+   "candidate_mean_pooled": 139.83333333333334,
+   "selected_mean": 145.33333333333334,
+   "all_candidates": {
+    "n_episodes": 2700,
+    "outcome_rate": {
+     "success": 0.9322222222222222,
+     "off_pad": 0.007407407407407408,
+     "hard_landing": 0.052222222222222225,
+     "bounce": 0.008148148148148147,
+     "crash": 0.0,
+     "timeout": 0.0
+    },
+    "success_by_ss": {
+     "SS3": 0.9811111111111112,
+     "SS4": 0.9388888888888889,
+     "SS5": 0.8766666666666667
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.2666666666666666,
+     1.5458333333333334,
+     1.9212499999999997
+    ],
+    "band_share": {
+     "fast": 0.835925925925926,
+     "between": 0.15851851851851853,
+     "slow": 0.005555555555555556
+    },
+    "band_success": {
+     "fast": 0.9587948604342047,
+     "between": 0.8037383177570093,
+     "slow": 0.6
+    },
+    "fast_band_lateral_p50_m": 0.01938355235709049,
+    "fast_band_closing_p50_m_s": 0.27562077778076083,
+    "lateral_offset_m_p50_p95": [
+     0.018472015900231526,
+     0.056556157082117565
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.28467349068128883,
+     0.5020596462836359
+    ],
+    "frac_closing_above_0p5_m_s": 0.05148148148148148,
+    "n_tunnelled": 24
+   }
+  },
+  "dp_mix": {
+   "seeds": [
+    {
+     "selected_success": 112,
+     "selected_step": 60000,
+     "candidates": [
+      111,
+      104,
+      107,
+      105,
+      103,
+      112,
+      105,
+      109,
+      111,
+      109
+     ],
+     "candidate_mean": 107.6,
+     "inflation": 4.400000000000006
+    },
+    {
+     "selected_success": 121,
+     "selected_step": 50000,
+     "candidates": [
+      93,
+      96,
+      100,
+      109,
+      121,
+      107,
+      107,
+      119,
+      113,
+      114
+     ],
+     "candidate_mean": 107.9,
+     "inflation": 13.099999999999994
+    },
+    {
+     "selected_success": 109,
+     "selected_step": 100000,
+     "candidates": [
+      98,
+      90,
+      89,
+      98,
+      106,
+      107,
+      94,
+      97,
+      105,
+      109
+     ],
+     "candidate_mean": 99.3,
+     "inflation": 9.700000000000003
+    }
+   ],
+   "candidate_mean_pooled": 104.93333333333334,
+   "selected_mean": 114.0,
+   "all_candidates": {
+    "n_episodes": 4500,
+    "outcome_rate": {
+     "success": 0.6995555555555556,
+     "off_pad": 0.16377777777777777,
+     "hard_landing": 0.06555555555555556,
+     "bounce": 0.07044444444444445,
+     "crash": 0.00022222222222222223,
+     "timeout": 0.00044444444444444447
+    },
+    "success_by_ss": {
+     "SS3": 0.76,
+     "SS4": 0.7,
+     "SS5": 0.6386666666666667
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.2791666666666666,
+     2.364583333333333,
+     4.033333333333333
+    ],
+    "band_share": {
+     "fast": 0.3670520231213873,
+     "between": 0.21009337483325924,
+     "slow": 0.42285460204535347
+    },
+    "band_success": {
+     "fast": 0.4875832828588734,
+     "between": 0.6497354497354497,
+     "slow": 0.9090431125131441
+    },
+    "fast_band_lateral_p50_m": 0.07797387123873595,
+    "fast_band_closing_p50_m_s": 0.31777177278770036,
+    "lateral_offset_m_p50_p95": [
+     0.043323032737726266,
+     0.14790578932367465
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.27240699485455816,
+     0.543034893958896
+    ],
+    "frac_closing_above_0p5_m_s": 0.08448199199644287,
+    "n_tunnelled": 161
+   },
+   "paired_vs_dp": {
+    "all_candidates_mean_ci95": [
+     0.3267555555555556,
+     0.29648888888888886,
+     0.3561777777777778
+    ],
+    "selected_mean_ci95": [
+     0.3253333333333333,
+     0.2697777777777777,
+     0.3804444444444444
+    ],
+    "episodes_better_worse_equal": [
+     143,
+     7,
+     0
+    ]
+   }
+  },
+  "dp_pid": {
+   "seeds": [
+    {
+     "selected_success": 143,
+     "selected_step": 70000,
+     "candidates": [
+      125,
+      127,
+      130,
+      137,
+      140,
+      143,
+      143,
+      142,
+      139,
+      141
+     ],
+     "candidate_mean": 136.7,
+     "inflation": 6.300000000000011
+    },
+    {
+     "selected_success": 145,
+     "selected_step": 70000,
+     "candidates": [
+      108,
+      110,
+      115,
+      120,
+      128,
+      134,
+      145,
+      141,
+      143,
+      140
+     ],
+     "candidate_mean": 128.4,
+     "inflation": 16.599999999999994
+    },
+    {
+     "selected_success": 142,
+     "selected_step": 60000,
+     "candidates": [
+      117,
+      122,
+      126,
+      126,
+      133,
+      142,
+      138,
+      139,
+      140,
+      141
+     ],
+     "candidate_mean": 132.4,
+     "inflation": 9.599999999999994
+    }
+   ],
+   "candidate_mean_pooled": 132.5,
+   "selected_mean": 143.33333333333334,
+   "all_candidates": {
+    "n_episodes": 4500,
+    "outcome_rate": {
+     "success": 0.8833333333333333,
+     "off_pad": 0.0044444444444444444,
+     "hard_landing": 0.050666666666666665,
+     "bounce": 0.06155555555555556,
+     "crash": 0.0,
+     "timeout": 0.0
+    },
+    "success_by_ss": {
+     "SS3": 0.942,
+     "SS4": 0.906,
+     "SS5": 0.802
+    },
+    "touchdown_s_p10_p50_p90": [
+     3.5875,
+     4.583333333333333,
+     5.5
+    ],
+    "band_share": {
+     "fast": 0.0,
+     "between": 0.0044444444444444444,
+     "slow": 0.9955555555555555
+    },
+    "band_success": {
+     "fast": null,
+     "between": 0.6,
+     "slow": 0.8845982142857143
+    },
+    "fast_band_lateral_p50_m": NaN,
+    "fast_band_closing_p50_m_s": NaN,
+    "lateral_offset_m_p50_p95": [
+     0.029177255367677984,
+     0.06758202805029942
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.2424342457610853,
+     0.49516724334812895
+    ],
+    "frac_closing_above_0p5_m_s": 0.048666666666666664,
+    "n_tunnelled": 41
+   },
+   "paired_vs_dp": {
+    "all_candidates_mean_ci95": [
+     0.5105333333333333,
+     0.48555555555555563,
+     0.534488888888889
+    ],
+    "selected_mean_ci95": [
+     0.5208888888888888,
+     0.4804444444444444,
+     0.5608888888888889
+    ],
+    "episodes_better_worse_equal": [
+     149,
+     1,
+     0
+    ]
+   }
+  },
+  "dp_n100": {
+   "seeds": [
+    {
+     "selected_success": 66,
+     "selected_step": 10000,
+     "candidates": [
+      66,
+      58,
+      51,
+      54,
+      49,
+      48,
+      53,
+      44,
+      54,
+      42
+     ],
+     "candidate_mean": 51.9,
+     "inflation": 14.100000000000001
+    },
+    {
+     "selected_success": 65,
+     "selected_step": 60000,
+     "candidates": [
+      59,
+      51,
+      54,
+      51,
+      47,
+      65,
+      50,
+      57,
+      57,
+      48
+     ],
+     "candidate_mean": 53.9,
+     "inflation": 11.100000000000001
+    },
+    {
+     "selected_success": 68,
+     "selected_step": 30000,
+     "candidates": [
+      51,
+      52,
+      68,
+      49,
+      47,
+      42,
+      48,
+      46,
+      46,
+      39
+     ],
+     "candidate_mean": 48.8,
+     "inflation": 19.200000000000003
+    }
+   ],
+   "candidate_mean_pooled": 51.53333333333333,
+   "selected_mean": 66.33333333333333,
+   "all_candidates": {
+    "n_episodes": 4500,
+    "outcome_rate": {
+     "success": 0.34355555555555556,
+     "off_pad": 0.5433333333333333,
+     "hard_landing": 0.021777777777777778,
+     "bounce": 0.07088888888888889,
+     "crash": 0.019777777777777776,
+     "timeout": 0.0006666666666666666
+    },
+    "success_by_ss": {
+     "SS3": 0.3913333333333333,
+     "SS4": 0.3333333333333333,
+     "SS5": 0.306
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.1791666666666667,
+     1.525,
+     1.9208333333333334
+    ],
+    "band_share": {
+     "fast": 0.8139013452914798,
+     "between": 0.18408071748878924,
+     "slow": 0.002017937219730942
+    },
+    "band_success": {
+     "fast": 0.36391184573002755,
+     "between": 0.2740560292326431,
+     "slow": 0.0
+    },
+    "fast_band_lateral_p50_m": 0.10499576321789775,
+    "fast_band_closing_p50_m_s": 0.2799635430652622,
+    "lateral_offset_m_p50_p95": [
+     0.10891198566825791,
+     0.24044728814686364
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.2792758465979303,
+     0.507260265075793
+    ],
+    "frac_closing_above_0p5_m_s": 0.054708520179372194,
+    "n_tunnelled": 182
+   },
+   "paired_vs_dp": {
+    "all_candidates_mean_ci95": [
+     -0.02924444444444445,
+     -0.05244444444444445,
+     -0.0062655555555556595
+    ],
+    "selected_mean_ci95": [
+     0.007555555555555535,
+     -0.04800000000000003,
+     0.06444444444444443
+    ],
+    "episodes_better_worse_equal": [
+     68,
+     78,
+     4
+    ]
+   }
+  },
+  "dp_n300": {
+   "seeds": [
+    {
+     "selected_success": 63,
+     "selected_step": 40000,
+     "candidates": [
+      59,
+      59,
+      41,
+      63,
+      52,
+      46,
+      40,
+      45,
+      39,
+      51
+     ],
+     "candidate_mean": 49.5,
+     "inflation": 13.5
+    },
+    {
+     "selected_success": 62,
+     "selected_step": 70000,
+     "candidates": [
+      52,
+      53,
+      59,
+      61,
+      62,
+      53,
+      62,
+      36,
+      47,
+      45
+     ],
+     "candidate_mean": 53.0,
+     "inflation": 9.0
+    },
+    {
+     "selected_success": 63,
+     "selected_step": 50000,
+     "candidates": [
+      51,
+      59,
+      48,
+      53,
+      63,
+      61,
+      58,
+      55,
+      46,
+      46
+     ],
+     "candidate_mean": 54.0,
+     "inflation": 9.0
+    }
+   ],
+   "candidate_mean_pooled": 52.166666666666664,
+   "selected_mean": 62.666666666666664,
+   "all_candidates": {
+    "n_episodes": 4500,
+    "outcome_rate": {
+     "success": 0.3477777777777778,
+     "off_pad": 0.5211111111111111,
+     "hard_landing": 0.044444444444444446,
+     "bounce": 0.0768888888888889,
+     "crash": 0.009555555555555555,
+     "timeout": 0.00022222222222222223
+    },
+    "success_by_ss": {
+     "SS3": 0.37666666666666665,
+     "SS4": 0.37533333333333335,
+     "SS5": 0.29133333333333333
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.1900000000000002,
+     1.5208333333333333,
+     1.9708333333333332
+    ],
+    "band_share": {
+     "fast": 0.7967388876479785,
+     "between": 0.19320973866428412,
+     "slow": 0.010051373687737324
+    },
+    "band_success": {
+     "fast": 0.3481917577796468,
+     "between": 0.3606936416184971,
+     "slow": 0.24444444444444444
+    },
+    "fast_band_lateral_p50_m": 0.10380474016791129,
+    "fast_band_closing_p50_m_s": 0.32390821959554694,
+    "lateral_offset_m_p50_p95": [
+     0.10398505106859879,
+     0.21348805668135654
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.32446574700182074,
+     0.5634910965385713
+    ],
+    "frac_closing_above_0p5_m_s": 0.10140719231628323,
+    "n_tunnelled": 324
+   },
+   "paired_vs_dp": {
+    "all_candidates_mean_ci95": [
+     -0.02502222222222223,
+     -0.04671111111111112,
+     -0.00342222222222223
+    ],
+    "selected_mean_ci95": [
+     -0.016888888888888915,
+     -0.07777777777777779,
+     0.04222222222222219
+    ],
+    "episodes_better_worse_equal": [
+     62,
+     87,
+     1
+    ]
+   }
+  },
+  "dp_minus_last_action": {
+   "seeds": [
+    {
+     "selected_success": 116,
+     "selected_step": 70000,
+     "candidates": [
+      88,
+      98,
+      92,
+      109,
+      110,
+      114,
+      116,
+      108,
+      106,
+      114
+     ],
+     "candidate_mean": 105.5,
+     "inflation": 10.5
+    },
+    {
+     "selected_success": 118,
+     "selected_step": 60000,
+     "candidates": [
+      89,
+      96,
+      103,
+      109,
+      109,
+      118,
+      105,
+      115,
+      103,
+      103
+     ],
+     "candidate_mean": 105.0,
+     "inflation": 13.0
+    },
+    {
+     "selected_success": 116,
+     "selected_step": 60000,
+     "candidates": [
+      81,
+      96,
+      99,
+      101,
+      110,
+      116,
+      105,
+      114,
+      110,
+      113
+     ],
+     "candidate_mean": 104.5,
+     "inflation": 11.5
+    }
+   ],
+   "candidate_mean_pooled": 105.0,
+   "selected_mean": 116.66666666666667,
+   "all_candidates": {
+    "n_episodes": 4500,
+    "outcome_rate": {
+     "success": 0.7,
+     "off_pad": 0.12266666666666666,
+     "hard_landing": 0.08333333333333333,
+     "bounce": 0.09244444444444444,
+     "crash": 0.0015555555555555555,
+     "timeout": 0.0
+    },
+    "success_by_ss": {
+     "SS3": 0.778,
+     "SS4": 0.6913333333333334,
+     "SS5": 0.6306666666666667
+    },
+    "touchdown_s_p10_p50_p90": [
+     1.1958333333333333,
+     1.5666666666666667,
+     2.1291666666666664
+    ],
+    "band_share": {
+     "fast": 0.7412183192530013,
+     "between": 0.23788350377945755,
+     "slow": 0.020898176967541128
+    },
+    "band_success": {
+     "fast": 0.7219556088782244,
+     "between": 0.6485981308411215,
+     "slow": 0.5212765957446809
+    },
+    "fast_band_lateral_p50_m": 0.050137168239940424,
+    "fast_band_closing_p50_m_s": 0.30227884422618845,
+    "lateral_offset_m_p50_p95": [
+     0.05181847836588467,
+     0.12930140782999186
+    ],
+    "closing_speed_m_s_p50_p95": [
+     0.30163574859647574,
+     0.5314804788509467
+    ],
+    "frac_closing_above_0p5_m_s": 0.07425522454424188,
+    "n_tunnelled": 242
+   },
+   "paired_vs_dp": {
+    "all_candidates_mean_ci95": [
+     0.3272,
+     0.30377777777777787,
+     0.3497333333333333
+    ],
+    "selected_mean_ci95": [
+     0.3431111111111111,
+     0.2951111111111111,
+     0.38933333333333336
+    ],
+    "episodes_better_worse_equal": [
+     145,
+     4,
+     1
+    ]
+   }
+  }
+ }
+}

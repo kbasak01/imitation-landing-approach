@@ -1,0 +1,17 @@
+dp_n100 n episodes 150 all-cand success by SS {'SS3': np.float64(0.391), 'SS4': np.float64(0.333), 'SS5': np.float64(0.306)} selected by SS {'SS3': np.float64(0.5), 'SS4': np.float64(0.427), 'SS5': np.float64(0.4)}
+   selected action_jerk_mean median 0.1801 p95 0.2160 ; steps median 61
+   per-episode success-prob distribution: frac always fail 0.033, always succeed 0.000, hist [ 5 24 56 54 11  0  0]
+dp_n300 n episodes 150 all-cand success by SS {'SS3': np.float64(0.377), 'SS4': np.float64(0.375), 'SS5': np.float64(0.291)} selected by SS {'SS3': np.float64(0.42), 'SS4': np.float64(0.48), 'SS5': np.float64(0.353)}
+   selected action_jerk_mean median 0.1958 p95 0.2298 ; steps median 61
+   per-episode success-prob distribution: frac always fail 0.007, always succeed 0.000, hist [ 1 16 70 59  4  0  0]
+dp n episodes 150 all-cand success by SS {'SS3': np.float64(0.417), 'SS4': np.float64(0.371), 'SS5': np.float64(0.33)} selected by SS {'SS3': np.float64(0.452), 'SS4': np.float64(0.464), 'SS5': np.float64(0.388)}
+   selected action_jerk_mean median 0.1944 p95 0.2288 ; steps median 60
+   per-episode success-prob distribution: frac always fail 0.007, always succeed 0.000, hist [ 1  8 70 67  4  0  0]
+per-episode corr n300 vs dp: 0.439
+dp_n100 between-episode var 0.0269 vs binomial-iid 0.0075
+dp_n300 between-episode var 0.0177 vs binomial-iid 0.0076
+dp between-episode var 0.0144 vs binomial-iid 0.0047
+per-episode corr n100 vs n300: 0.531
+dp_n100 spearman(success, heldout EMA loss) over candidates: rho=-0.519 p=0.00326 n=30
+dp_n300 spearman(success, heldout EMA loss) over candidates: rho=-0.393 p=0.0316 n=30
+dp spearman(success, heldout EMA loss) over candidates: rho=0.273 p=0.0548 n=50
