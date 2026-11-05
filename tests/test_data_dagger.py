@@ -16,12 +16,16 @@ Without physics (CPU CI):
 
 With P8's PPO checkpoint and the ``bc`` s0 checkpoint (``checkpoints`` + ``slow``): two episodes of
 iteration 1 into a temporary data root, audited clean (re-label, replay, attributes, sidecar),
-bit-identical for 1 and 2 workers.
+bit-identical for 1 and 2 workers, with the 2-worker run forced to complete in reverse order.
+Provenance (``ila_commit``, ``+dirty``) is pinned for the whole test: it is in the store's
+attributes by design, and a commit landing between two runs changed the store SHA-256 once
+(2026-11-04, ``make test`` during the Phase 7 commits; reproduced exactly).
 """
 
 from __future__ import annotations
 
 import json
+import os
 import time
 from collections import Counter
 from pathlib import Path
@@ -489,7 +493,10 @@ def test_limit_refused_for_train_and_bad_purpose(tmp_path: Path) -> None:
 
 
 def test_write_npz_is_deterministic_and_loadable(tmp_path: Path) -> None:
-    arrays = {"a": np.arange(5, dtype=np.int64), "b": np.ones((2, 3), np.float32)}
+    arrays: dict[str, np.ndarray[Any, Any]] = {
+        "a": np.arange(5, dtype=np.int64),
+        "b": np.ones((2, 3), np.float32),
+    }
     p1, p2 = tmp_path / "1.npz", tmp_path / "2.npz"
     dagger.write_npz(p1, arrays)
     time.sleep(1.1)  # zip timestamps have 2 s resolution; numpy.savez would differ here
@@ -501,14 +508,42 @@ def test_write_npz_is_deterministic_and_loadable(tmp_path: Path) -> None:
 
 # --------------------------------------------------------------------------- end to end
 
+_ORDER_DIR_ENV = "ILA_TEST_DAGGER_ORDER_DIR"
+
+
+def _first_chunk_finishes_last(task: dagger.DaggerTask) -> dagger.ChunkResult:
+    """Pool entry point forcing reversed completion (runs in a spawned worker).
+
+    Flies the chunk with the real :func:`ila.data.dagger.dagger_chunk` (the worker imports the
+    unpatched module), then the chunk holding demo 1000 waits until demo 1001's chunk has
+    finished, so the parent's ``imap`` gets its results in reverse completion order. Each chunk
+    stamps ``<demo>.done`` with ``time.time_ns()``.
+    """
+    out = Path(os.environ[_ORDER_DIR_ENV])
+    result = dagger.dagger_chunk(task)
+    first = task.episodes[0][0]
+    if first == 1000:
+        deadline = time.monotonic() + 900.0
+        while not (out / "1001.done").exists():
+            if time.monotonic() > deadline:
+                raise TimeoutError("the chunk of demo 1001 never finished")
+            time.sleep(0.05)
+    (out / f"{first}.done").write_text(str(time.time_ns()), encoding="utf-8")
+    return result
+
 
 @pytest.mark.pybullet
 @pytest.mark.checkpoints
 @pytest.mark.slow
-def test_two_episodes_end_to_end(tmp_path: Path) -> None:
+def test_two_episodes_end_to_end(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Iteration 1, two episodes, bc s0's final EMA: clean audit, worker-count invariant."""
     if not BC_S0_FINAL.is_file():
         pytest.skip(f"{BC_S0_FINAL} not present")
+    # Store bytes carry ila_commit (+dirty) by design (collect.provenance, read once per
+    # run_iteration). Pin one snapshot so that a commit or an edit in the checkout between r1
+    # and r2 cannot change the SHA under test; only workers, chunk and order differ below.
+    prov = collect.provenance()
+    monkeypatch.setattr(collect, "provenance", lambda: prov)
     quiet: dict[str, Any] = {"log": lambda _: None}
     t0 = time.perf_counter()
     r1 = dagger.run_iteration(
@@ -553,6 +588,11 @@ def test_two_episodes_end_to_end(tmp_path: Path) -> None:
     )
     assert again.reused and again.store_sha256 == r1.store_sha256
 
+    # Two workers, one episode each, demo 1001's chunk forced to complete first.
+    order_dir = tmp_path / "order"
+    order_dir.mkdir()
+    monkeypatch.setenv(_ORDER_DIR_ENV, str(order_dir))
+    monkeypatch.setattr(dagger, "dagger_chunk", _first_chunk_finishes_last)
     r2 = dagger.run_iteration(
         run_seed=0,
         iteration=1,
@@ -564,7 +604,10 @@ def test_two_episodes_end_to_end(tmp_path: Path) -> None:
         purpose="test",
         **quiet,
     )
+    done = {j: int((order_dir / f"{j}.done").read_text()) for j in (1000, 1001)}
+    assert done[1001] < done[1000], done  # the adverse order really happened
     m2 = json.loads(r2.manifest.read_text())
+    assert m2["ila_commit"] == man["ila_commit"] == prov["ila_commit"]
     assert r2.store_sha256 == r1.store_sha256
     assert m2["sidecar"]["sha256"] == man["sidecar"]["sha256"]
     assert m2["rows_csv"]["sha256"] == man["rows_csv"]["sha256"]
