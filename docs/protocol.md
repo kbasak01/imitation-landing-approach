@@ -3213,3 +3213,18 @@ NOTEs and their dispositions:
      the audit-scanned set, as for the other audit names.
 2. This entry records the diagnostic.
 3. `ClockInterventionTeacher` now refuses a student or `modular` inner policy (hardening).
+
+*Test fix (2026-11-04).* One full `make test` run failed
+`test_data_dagger.py::test_two_episodes_end_to_end` (store SHA, workers = 1 against 2).
+- **Cause:** commits landed in the checkout during the run. Each DAgger store records `ila_commit`
+  (with `+dirty`) as provenance, so r1 recorded clean `72c13b8` and r2 recorded `72c13b8+dirty`.
+  The two SHAs were reproduced exactly.
+- **Not the cause:** completion order, HDF5 timestamps or load. `imap` is ordered, the writer uses
+  `track_order` and `track_times=False`, and a forced reversed completion and an 8-core burner gave
+  identical bytes.
+- **Fix:** the test now pins one provenance snapshot and adds a forced-reversed-order regression
+  (`19838c9`). No `ila/data` code changed.
+- **Phase 5 is unaffected.** All 25 `bc_dagger` iteration stores re-hash to their manifests, each
+  at clean `576447c`, workers = 24.
+- **Scope of P5-D1's worker-count determinism:** it holds for a fixed checkout state. Re-running an
+  iteration at another commit, or on a dirty tree, changes the store SHA through provenance alone.
