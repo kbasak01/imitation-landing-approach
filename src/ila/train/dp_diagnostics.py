@@ -33,7 +33,8 @@ control step is 1/30 s model scale.
 State sets:
 
 * **Held-out** (:func:`ila.train.diagnostics.heldout_states`, P4-D5's set): ``ppo_2000``
-  stream indices 1950-1999, every second episode (25), read through the student path only.
+  stream indices 1950-1999, every second episode (25), read through the student path only
+  under the checkpoint's ``obs_variant`` (an ablation's proprio is 10-d or 14-d, not 13-d).
   Spread and clip on 512 frames drawn by ``default_rng(0)`` (P4-D5's draw). Jerk **open loop**:
   each episode's recorded observation windows fed to the student in order (a teacher-forced
   replay), noise keyed ``(run_seed, OPEN_LOOP_KEY_BASE - e, t)`` for held-out episode ``e``; the
@@ -464,7 +465,7 @@ def run_diagnostics(
     import time
 
     from ila.data import episodes as data_episodes
-    from ila.policies.registry import load_student
+    from ila.policies.registry import load_student, read_checkpoint
     from ila.train import manifest as mf
     from ila.train.config import sha256_file
     from ila.train.diagnostics import heldout_states
@@ -488,8 +489,8 @@ def run_diagnostics(
     net = student.net
     root = p8_adapter.load_paths()["data_root"] if data_root is None else data_root
 
-    # Held-out states (P4-D5's set), student path only.
-    held = heldout_states(Path(root))
+    # Held-out states (P4-D5's set), student path only, under the checkpoint's contract.
+    held = heldout_states(Path(root), obs_variant=str(read_checkpoint(ckpt)["obs_variant"]))
     data = DPChunkDataset(held.table, held.n_obs_steps, net.cfg.horizon)
     idx = draw_states(len(data))
     b = data.batch(idx)
