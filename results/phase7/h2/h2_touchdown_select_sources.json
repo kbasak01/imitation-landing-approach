@@ -1,0 +1,111 @@
+{
+  "reference": {
+    "file": "tmix_select_rows.csv",
+    "sha256": "73ab00e2cbc168169ddde6dfcf6a224a03a6c41a79b96abd3c36375afd9f7280",
+    "tmix_seed": 20261023
+  },
+  "run_root": "/home/kbasak/projects_02/imitation-landing-approach/artifacts/runs",
+  "students": [
+    {
+      "arm": "bc_mix",
+      "seed": 0,
+      "status": "present",
+      "reason": "",
+      "run_dir": "bc_mix/s0",
+      "selection_json_sha256": "af2584e70d0bcd374b9911564da919e40068f7590ffe3e74264de5f29bc0c909",
+      "rows_file": "select/s0_step005000_rows.csv",
+      "rows_sha256": "fc46a8b979073f53c5ed5c990db54be9f6668be8fa57c9fd5aeac10c3cd5a451",
+      "ckpt_sha256": "920e4d7040d7ba3b6b099b2c60e09a0094c104ba76b65f294894e541d0e56666",
+      "selected_global_step": 5000,
+      "select_success": 143,
+      "inference": null
+    },
+    {
+      "arm": "bc_mix",
+      "seed": 1,
+      "status": "present",
+      "reason": "",
+      "run_dir": "bc_mix/s1",
+      "selection_json_sha256": "b8a987ed15d5b922e301b4b8e3991c8a7a07de3678bfe26dc3243978c3884b35",
+      "rows_file": "select/s0_step020000_rows.csv",
+      "rows_sha256": "4d6d578417c61b5c1bc9e8453bbc04dba7083b7a5a314a961d9f8fdcf361d836",
+      "ckpt_sha256": "8b7d8b8d769b49abc643fa5adbc8cc721078a4db61b272d74afcec185ced6287",
+      "selected_global_step": 20000,
+      "select_success": 146,
+      "inference": null
+    },
+    {
+      "arm": "bc_mix",
+      "seed": 2,
+      "status": "present",
+      "reason": "",
+      "run_dir": "bc_mix/s2",
+      "selection_json_sha256": "dc27c3a1062f826bbf27c81942f2a8c0fc33497bbbfac216258d18ba254347c4",
+      "rows_file": "select/s0_step020000_rows.csv",
+      "rows_sha256": "09a7ac454bc0358da3fb602f4be9aea085034aa51e77175449b88c87ecd5418e",
+      "ckpt_sha256": "edbd991e7c5ec2b2abac2d4bc4b69c1e8585f890dd582cca6a3d53414ca77c2a",
+      "selected_global_step": 20000,
+      "select_success": 145,
+      "inference": null
+    },
+    {
+      "arm": "dp_mix",
+      "seed": 0,
+      "status": "present",
+      "reason": "",
+      "run_dir": "dp_mix/s0",
+      "selection_json_sha256": "54afcea9d9e93d27d1c3c57e3766374c61312e945f9250cc64223360ead5fae8",
+      "rows_file": "select/s0_step060000_rows.csv",
+      "rows_sha256": "29e2be814f96ddcb6fdc199c026faffc23470022be56075f14b7e79d935b1c43",
+      "ckpt_sha256": "28eca6aa6331c4f2a8dc04b04f520167a2a8244b162a9c33cf69e4a152c13e5a",
+      "selected_global_step": 60000,
+      "select_success": 112,
+      "inference": {
+        "K": 10,
+        "Ta": 8,
+        "temporal_ensembling": false
+      }
+    },
+    {
+      "arm": "dp_mix",
+      "seed": 1,
+      "status": "present",
+      "reason": "",
+      "run_dir": "dp_mix/s1",
+      "selection_json_sha256": "72b5474e4757927fd0b612e2a65f985c67ba868a7c63be563ec5ebf56c620bb6",
+      "rows_file": "select/s0_step050000_rows.csv",
+      "rows_sha256": "e90ff0650dbef1463e3bac75e1a3232fe37b38b7805c412f25ca4b10b9304f3e",
+      "ckpt_sha256": "24fbfc16db59917dc32335555a98b29166a201119086923753b87ad40016f591",
+      "selected_global_step": 50000,
+      "select_success": 121,
+      "inference": {
+        "K": 10,
+        "Ta": 8,
+        "temporal_ensembling": false
+      }
+    },
+    {
+      "arm": "dp_mix",
+      "seed": 2,
+      "status": "present",
+      "reason": "",
+      "run_dir": "dp_mix/s2",
+      "selection_json_sha256": "4bc26f951e41d471c62ead8345c50e7cd9025df33a604a10d4d16c7c608f267e",
+      "rows_file": "select/s0_step100000_rows.csv",
+      "rows_sha256": "778de4bd64d8fdb7ae3168fe9ac88560accca1e49eaae125f9b8366c5003b03a",
+      "ckpt_sha256": "182af621d22cc7e6b4715f20633a0aa927e1a321d753dd9b7f4d7e2b99d739ee",
+      "selected_global_step": 100000,
+      "select_success": 109,
+      "inference": {
+        "K": 10,
+        "Ta": 8,
+        "temporal_ensembling": false
+      }
+    }
+  ],
+  "missing": [],
+  "select": {
+    "file": "select.parquet",
+    "file_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b"
+  }
+}

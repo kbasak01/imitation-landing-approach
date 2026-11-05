@@ -1,0 +1,23 @@
+dp_n100 s0: per-ckpt success [66, 58, 51, 54, 49, 48, 53, 44, 54, 42] mean=51.9 sd=6.9 slope/10k=-1.72 selected=66@10000 sel-mean=+14.1
+dp_n100 s1: per-ckpt success [59, 51, 54, 51, 47, 65, 50, 57, 57, 48] mean=53.9 sd=5.6 slope/10k=-0.16 selected=65@60000 sel-mean=+11.1
+dp_n100 s2: per-ckpt success [51, 52, 68, 49, 47, 42, 48, 46, 46, 39] mean=48.8 sd=7.8 slope/10k=-1.62 selected=68@30000 sel-mean=+19.2
+ dp_n100: all-cand mean 51.5/150 ; early(<=30k) mean 56.7 late(>=80k) mean 48.1; selected [66, 65, 68]
+  all-candidate failures: {'bounce': 319, 'crash': 89, 'hard_landing': 98, 'off_pad': 2445, 'timeout': 3} off_pad share of failures=0.828, of episodes=0.543
+  selected failures: {'bounce': 32, 'crash': 8, 'hard_landing': 13, 'off_pad': 198, 'timeout': 0} off_pad share of failures=0.789
+  selected lateral offset: off_pad n=198 median=0.145 p10=0.110 p90=0.216 frac<0.15=0.55; success median=0.064 p90=0.093
+dp_n300 s0: per-ckpt success [59, 59, 41, 63, 52, 46, 40, 45, 39, 51] mean=49.5 sd=8.7 slope/10k=-1.62 selected=63@40000 sel-mean=+13.5
+dp_n300 s1: per-ckpt success [52, 53, 59, 61, 62, 53, 62, 36, 47, 45] mean=53.0 sd=8.5 slope/10k=-1.37 selected=62@70000 sel-mean=+9.0
+dp_n300 s2: per-ckpt success [51, 59, 48, 53, 63, 61, 58, 55, 46, 46] mean=54.0 sd=6.2 slope/10k=-0.53 selected=63@50000 sel-mean=+9.0
+ dp_n300: all-cand mean 52.2/150 ; early(<=30k) mean 53.4 late(>=80k) mean 45.6; selected [63, 62, 63]
+  all-candidate failures: {'bounce': 346, 'crash': 43, 'hard_landing': 200, 'off_pad': 2345, 'timeout': 1} off_pad share of failures=0.799, of episodes=0.521
+  selected failures: {'bounce': 35, 'crash': 3, 'hard_landing': 17, 'off_pad': 207, 'timeout': 0} off_pad share of failures=0.790
+  selected lateral offset: off_pad n=207 median=0.151 p10=0.112 p90=0.201 frac<0.15=0.50; success median=0.066 p90=0.095
+dp s0: per-ckpt success [58, 49, 57, 56, 50, 56, 54, 60, 57, 63] mean=56.0 sd=4.2 slope/10k=+0.70 selected=63@100000 sel-mean=+7.0
+dp s1: per-ckpt success [46, 51, 53, 49, 66, 64, 52, 62, 62, 51] mean=55.6 sd=7.1 slope/10k=+1.05 selected=66@50000 sel-mean=+10.4
+dp s2: per-ckpt success [43, 48, 39, 55, 56, 68, 59, 64, 60, 65] mean=55.7 sd=9.6 slope/10k=+2.61 selected=68@60000 sel-mean=+12.3
+dp s3: per-ckpt success [56, 63, 58, 51, 63, 61, 63, 56, 65, 67] mean=60.3 sd=4.9 slope/10k=+0.83 selected=67@100000 sel-mean=+6.7
+dp s4: per-ckpt success [55, 46, 47, 48, 46, 47, 54, 54, 61, 62] mean=52.0 sd=6.1 slope/10k=+1.35 selected=62@100000 sel-mean=+10.0
+ dp: all-cand mean 55.9/150 ; early(<=30k) mean 51.3 late(>=80k) mean 60.6; selected [63, 66, 68, 67, 62]
+  all-candidate failures: {'bounce': 525, 'crash': 22, 'hard_landing': 1040, 'off_pad': 3109, 'timeout': 8} off_pad share of failures=0.661, of episodes=0.415
+  selected failures: {'bounce': 31, 'crash': 1, 'hard_landing': 62, 'off_pad': 329, 'timeout': 1} off_pad share of failures=0.776
+  selected lateral offset: off_pad n=329 median=0.137 p10=0.106 p90=0.196 frac<0.15=0.61; success median=0.060 p90=0.092

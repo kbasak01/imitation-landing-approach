@@ -26,10 +26,13 @@ whose name starts with ``pybullet`` (e.g. ``pybullet_utils.bullet_client``) coun
 
 Store audit accessors (leak audit, Phase 3, RISK 1)
 --------------------------------------------------
-``AUDIT_NAMES`` -- ``ObsContract.audit_field`` (any P8 field by name, privileged included) and
-the demo store's non-student accessors ``privileged_observations`` (``teacher_obs``),
-``model_times`` (``t_model_s``, the clock), ``audit_arrays`` (every dataset) and
-``estimator_targets`` (``priv``) -- may not be referenced in ``ila/train``, ``ila/policies``,
+``AUDIT_NAMES`` -- ``ObsContract.audit_field`` (any P8 field by name, privileged included),
+``split_privileged`` (``ObsContract.split_privileged`` and the module function of the same name in
+``ila.obs.split``: the ``(proprio, priv, extras)`` blocks; renamed from ``split`` so that the scan
+can name it without matching ``str.split``, P7-D1 NOTE 3, closed in P7-D4) and the demo store's
+non-student accessors ``privileged_observations`` (``teacher_obs``), ``model_times``
+(``t_model_s``, the clock), ``audit_arrays`` (every dataset) and ``estimator_targets``
+(``priv``) -- may not be referenced in ``ila/train``, ``ila/policies``,
 ``ila/deploy`` or ``ila/eval``, by the same reference rules (any Attribute on any object, a
 Name, an import, a literal-string ``getattr``/``attrgetter``/...). ``ila/data`` (the store and
 its audits) and ``ila/obs`` are where they live and are not scanned for them.
@@ -39,9 +42,15 @@ the names that one file may reference), reviewed by ``privileged-leak-auditor``.
 one, ``train/state_dataset.py`` -> ``privileged_observations`` (``bc_state``'s dataset, P8's
 25-d observation by design; approved by ``privileged-leak-auditor`` 2026-10-28, conditional on
 the ``StateFrames`` name scan: only ``train/state_dataset.py``, ``train/loop.py`` and
-``train/smoke.py`` may name ``StateFrames`` or ``state_dataset``). Expected later: the
-``modular`` arm's estimator-target code may read ``estimator_targets``. No end-to-end vision
-student's dataset ever gets one (``ila/train/dataset.py`` has none, and
+``train/smoke.py`` may name ``StateFrames`` or ``state_dataset``). Phase 7 adds the second,
+``train/modular_targets.py`` -> ``estimator_targets`` (``modular``'s training target ``priv``)
+and ``audit_field`` (the closed-loop truth of the estimation-error study, by field name, logged
+only), reviewed 2026-11-02 by ``privileged-leak-auditor`` (no LEAK, no RISK; recorded in
+P7-D1) before any ``modular`` run as P3-D1 §8 requires, conditional on the same kind of
+name scan (``test_modular_targets_are_used_only_where_reviewed``: only
+``train/modular_targets.py``, ``train/loop.py``, ``train/smoke.py`` and
+``train/modular_eval.py`` may name the module, ``modular_eval`` or their names). No end-to-end
+vision student's dataset ever gets one (``ila/train/dataset.py`` has none, and
 ``test_vision_dataset_has_no_audit_entry`` keeps it so).
 """
 
@@ -84,6 +93,7 @@ EXEMPT: frozenset[str] = frozenset({"eval/runner.py"})
 AUDIT_NAMES = frozenset(
     {
         "audit_field",
+        "split_privileged",
         "privileged_observations",
         "model_times",
         "audit_arrays",
@@ -96,13 +106,18 @@ AUDIT_RESTRICTED: tuple[str, ...] = ("train", "policies", "deploy", "eval")
 
 #: Reviewed exceptions: file (relative to src/ila) -> AUDIT_NAMES that file may reference. Each
 #: entry needs a privileged-leak-auditor review recorded in docs/protocol.md.
-#: Expected later: the modular arm's estimator-target code -> {"estimator_targets"}.
 AUDIT_ALLOWLIST: dict[str, frozenset[str]] = {
     # bc_state's dataset (Phase 4): P8's full 25-d teacher_obs, privileged by design (P3-D1 §3,
     # declared exception 3); feeds only ila.policies.state_mlp.StateMLP. Approved by
     # privileged-leak-auditor 2026-10-28 (Phase 4), conditional on the StateFrames name scan
     # (test_state_dataset_is_used_only_where_reviewed).
     "train/state_dataset.py": frozenset({"privileged_observations"}),
+    # modular's estimator targets (Phase 7, P3-D1 §3/§8): ``priv`` as the training TARGET
+    # (EstimatorDataset; inputs through the student path only) and the closed-loop truth of the
+    # estimation-error study, selected by name and logged only (true_priv). Reviewed
+    # 2026-11-02 by privileged-leak-auditor (no LEAK, no RISK; recorded in P7-D1), before any
+    # modular run; conditional on the name scan (test_modular_targets_are_used_only_where_reviewed).
+    "train/modular_targets.py": frozenset({"estimator_targets", "audit_field"}),
 }
 
 #: Vision-student dataset files that may never get an AUDIT_ALLOWLIST entry.
@@ -253,6 +268,10 @@ PLANTED_AUDIT = [
     'get = operator.attrgetter("model_times")',
     'get = attrgetter("store.estimator_targets")',
     'call = methodcaller("audit_field", obs, "height")',
+    "proprio, priv, extras = contract.split_privileged(obs)",
+    "from ila.obs.split import split_privileged",
+    "blocks = obs_split.split_privileged(obs, contract)",
+    'f = getattr(contract, "split_privileged")',
     "from ila.data.store import DemoStore\nread = DemoStore.privileged_observations",
     "fn = (lambda s: s.audit_arrays)(store)",
 ]
@@ -262,6 +281,8 @@ ALLOWED_AUDIT = [
     "m = store.meta(name)",
     "p = contract.proprio(obs)",
     'f = getattr(store, "student_inputs")',
+    'parts = name.split("/")',
+    "train, test = sklearn.model_selection.train_test_split(x)",
 ]
 
 
@@ -328,7 +349,7 @@ FROZEN_LIST_NAMES = frozenset(
 
 
 #: The training scripts (argparse wrappers over ``ila/train``; Phase 6 adds the dp sweeps and
-#: diagnostics).
+#: diagnostics, Phase 7 the modular estimation study and the clock intervention).
 TRAIN_SCRIPTS: tuple[str, ...] = (
     "train.py",
     "train_smoke.py",
@@ -336,6 +357,8 @@ TRAIN_SCRIPTS: tuple[str, ...] = (
     "budget.py",
     "dp_sweeps.py",
     "dp_diagnostics.py",
+    "modular_estimation.py",
+    "clock_intervention.py",
 )
 
 
@@ -438,8 +461,73 @@ def test_state_dataset_scan_flags_planted_use(line: str) -> None:
 def test_audit_names_exist_where_they_live() -> None:
     """The scanned names are the real accessor names (a rename would silently void the scan)."""
     from ila.data.store import DemoStore
+    from ila.obs import split as obs_split
     from ila.obs.split import ObsContract
 
     assert callable(ObsContract.audit_field)
-    for name in AUDIT_NAMES - {"audit_field"}:
+    assert callable(ObsContract.split_privileged)
+    assert callable(obs_split.split_privileged)
+    assert not hasattr(ObsContract, "split") and not hasattr(obs_split, "split")
+    for name in AUDIT_NAMES - {"audit_field", "split_privileged"}:
         assert callable(getattr(DemoStore, name)), name
+
+
+#: ``modular``'s target/truth module, by module and public names (Phase 7, mirrors bc_state's).
+MODULAR_TARGET_NAMES = frozenset(
+    {"modular_targets", "modular_eval", "EstimatorDataset", "true_priv", "replay_priv_check"}
+)
+
+#: The only files (relative to src/ila) that may name it: the module, the loop (training
+#: targets), the smoke (overfit + target replay) and the estimation-error study (truth log).
+MODULAR_TARGET_USERS = frozenset(
+    {
+        "train/modular_targets.py",
+        "train/loop.py",
+        "train/smoke.py",
+        "train/modular_eval.py",
+    }
+)
+
+
+def _modular_target_offenders(sources: dict[str, str]) -> list[str]:
+    return [
+        f"src/ila/{rel}:{line}:{name}"
+        for rel, text in sorted(sources.items())
+        if rel not in MODULAR_TARGET_USERS
+        for line, name in sorted(
+            set(_references(text, MODULAR_TARGET_NAMES))
+            | set(_dynamic_imports(text, MODULAR_TARGET_NAMES))
+        )
+    ]
+
+
+def test_modular_targets_are_used_only_where_reviewed() -> None:
+    sources = {
+        p.relative_to(SRC).as_posix(): p.read_text(encoding="utf-8")
+        for package in AUDIT_RESTRICTED
+        for p in sorted((SRC / package).rglob("*.py"))
+    }
+    assert set(sources) >= MODULAR_TARGET_USERS
+    assert _modular_target_offenders(sources) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "from ila.train.modular_targets import EstimatorDataset",
+        "from ila.train import modular_targets",
+        "x = mt.true_priv(contract, obs)",
+        'm = importlib.import_module("ila.train.modular_targets")',
+    ],
+)
+def test_modular_target_scan_flags_planted_use(line: str) -> None:
+    for rel in ("train/dataset.py", "policies/modular.py", "eval/runner.py", "train/select.py"):
+        assert _modular_target_offenders({rel: line}) != [], (rel, line)
+    assert _modular_target_offenders({"train/modular_eval.py": line}) == []
+
+
+def test_modular_policy_reads_no_truth() -> None:
+    """``policies/modular.py`` names no store/contract audit accessor (truth stays out)."""
+    text = (SRC / "policies" / "modular.py").read_text(encoding="utf-8")
+    assert _references(text, AUDIT_NAMES) == []
+    assert _references(text, frozenset({"modular_targets", "true_priv"})) == []

@@ -20,6 +20,13 @@ requires the sampled executed-chunk MSE (one K = 10 DDIM sample per frame, EMA w
 fp32, executed indices at Ta = 8 against the labels) below 1e-3 and >= 7/8 ``success`` flown
 at Ta = 8, K = 10 on the CPU fp32 single-sample path. It writes ``results/phase6/smoke_dp.json``.
 
+``make train-smoke ARM=modular`` (Phase 7, P7-D1; background, about 15 min) overfits the
+estimator on the first 8 ``ppo_2000`` episodes (normalised estimator MSE < 1e-3, EMA, CPU fp32),
+checks the stored ``priv`` of steps 0-3 against a fresh teacher rollout, and flies the 8 with
+P8's frozen ``T_ppo`` through ``act_modular`` (>= 7/8 ``success``, CPU fp32 single-sample
+path). It writes ``results/phase7/smoke_modular.json``. An ablation arm runs its base's smoke
+on its own data and contract and writes ``results/phase7/smoke_<arm>.json``.
+
 ``make train-smoke ARM=R1_lerobot_dp`` (Phase 6, P6-D3; background) runs
 :func:`ila.train.smoke.run_r1_smoke`: LeRobot trains R1 10 000 steps on LeRobotDataset episodes
 0-7 in ``.venv-lerobot``, ``scripts/r1/export_onnx.py`` exports it, parity runs, and the 8

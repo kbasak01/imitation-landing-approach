@@ -2704,3 +2704,579 @@ No threshold was changed.
   - Sweeps ran 30–34 min per seed on `select`, against an estimate of 15–25.
 - **`load_student(weights="raw")`** now works (`c83019c`); it is used for diagnostics only.
   `selection.json` now records `inference`.
+
+### P7-D1 — `modular` implementation choices P3-D1 leaves open; leak review (2026-11-02)
+*Status: frozen 2026-11-02. This entry was written before any `modular` or ablation training run,
+and before any `select` number from them was read.*
+
+*Decision.* None of the following is fixed by `modular.yaml` (`84153e6d…eadc`, unchanged) or by
+P3-D1 §3. They are implementation choices within the frozen protocol, not deviations.
+1. **Estimator.** `ila.policies.modular.ModularEstimator` is built as follows:
+   - the shared encoder (the same `EncoderConfig` as `bc`);
+   - a 2×64 proprio MLP;
+   - a 2×256 head that outputs the 11-d `priv` estimate, normalised by the mean and std of the
+     training slice (`ppo_2000` first 1 000, success-filtered). Those statistics are stored as
+     checkpoint buffers and in `manifest["normaliser"]`.
+
+   `forward(images, proprio, crop_generator=None)` has **no clock argument**. Two tests assert
+   this: `tests/test_modular.py` and `tests/test_step_guard.py`.
+2. **Clock path** (P3-D1 §3, leak RISK 2).
+   - `time_fraction` enters as `ila.obs.split.ModularInput(student_input, time_fraction[To])`.
+     That object is built only by `ObsContract.modular_input` on the runner's `StudentWindow`,
+     through `push_modular`.
+   - `ModularStudent.act_modular` gives the estimator `student_input` only. It then builds the
+     teacher's 25-d observation with `assemble_teacher_obs(contract, proprio[t], estimate,
+     time_fraction[t])`, placing each block by P8 field name.
+   - On a real `train`-pool episode, true inputs reproduce the env observation bit for bit
+     (`tests/test_obs_split.py`).
+   - The frozen `T_ppo` uses P8's VecNormalize with `training=False`.
+   - `act_vision` and `act` raise.
+   - When all 11 privileged env fields are set to NaN, the action is bit-identical. This holds
+     through the runner and with the real teacher.
+3. **Batched GPU path refuses `modular`.** `batched.PerSlotPolicy` raises `TypeError` for it,
+   because `SlotRequest` has no clock field. Adding one would widen the clock's route to every
+   batched student. So `modular` flies the in-worker CPU fp32 single-sample path. That covers
+   selection, the smoke and the estimation study, and Phase 8 unless a reviewed change says
+   otherwise.
+4. **Loss and training.** The loss is Huber (δ = 1.0) on normalised targets, as `modular.yaml`
+   specifies. Everything else is `modular.yaml`'s and shares `bc`'s loop: EMA, checkpoints every
+   5 k, held-out loss on `loop.HELDOUT`, and the P3-D1 §4 selection rule over the 6 EMA
+   checkpoints.
+5. **`modular` smoke** (`make train-smoke ARM=modular` → `results/phase7/smoke_modular.json`).
+   - It overfits the first 8 `ppo_2000` `train` episodes for **8 000 steps**, the `bc` smoke
+     count, with `modular.yaml`'s other settings.
+   - It passes only if all of these hold:
+     - replay of the stored images, proprio, labels and `priv` for steps 0–3 is byte-identical
+       to a fresh teacher rollout;
+     - the EMA estimator's MSE is **< 1e-3** in normalised target units (CPU, fp32, centre
+       crop), averaged over frames and the 11 dims;
+     - the arm lands ≥ 7/8 `success` closed loop on the CPU single-sample path.
+   - The 1e-3 threshold is the `dp` smoke's, applied to the estimator target.
+6. **Ablations.**
+   - The 11 ablation arms are registered (`tag="ablation"`), and each config's `obs_variant` is
+     carried from training to evaluation:
+     - proprio is 14-d for `bc_plus_clock`;
+     - proprio is 10-d for both `*_minus_last_action`;
+     - proprio is 13-d otherwise.
+   - All 12 config SHA-256s match P3-D1 §3.
+   - A selection row's `teacher` column now names the arm's training teacher (`T_pid`, `T_mix`).
+   - **The held-out loss of `bc_pid`, `dp_pid`, `bc_mix` and `dp_mix` is still scored against
+     `ppo_2000` labels**, because their stores have no episodes left to hold out. Those curves
+     measure distance to `T_ppo`, not fit. They are diagnostic only; selection reads `select`.
+7. **Leak review** (privileged-leak-auditor, 2026-11-02, before any training): **no LEAK, no
+   RISK**, 4 NOTEs.
+   - The `AUDIT_ALLOWLIST` entry `train/modular_targets.py: {estimator_targets, audit_field}` is
+     accepted:
+     - `estimator_targets` is the training target;
+     - `audit_field` gives the closed-loop truth for the estimation study, used for logging only.
+   - A name scan restricts `modular_targets` and `modular_eval` to `loop.py`, `smoke.py` and
+     `modular_eval.py`.
+   - A mutation test (`height` planted in proprio) is caught by all four poison tests.
+   - The NOTEs and their dispositions:
+     1. The ablation poison test now sets `priv` to NaN for the non-modular arms, and asserts a
+        3-d target and no `EstimatorDataset`. Fixed.
+     2. `modular_eval` was added to the name scan. Fixed.
+     3. `ObsContract.split()` is not in the audit name list. This predates the change. No
+        restricted file calls it, and the runtime poison tests cover it. It is deferred to the
+        next `ila/obs` change.
+     4. The first `modular` smoke ran on the pending code on a dirty tree. It used only
+        `ppo_2000` episodes 0–7. It is re-run on the committed tree before training.
+
+### P7-D2 — Deviation: data for `modular`'s estimation-error study (2026-11-02)
+*Decision* (user, 2026-11-02). Plan Phase 7 item 1 asks for the per-field estimation error "on
+held-out `tune` demos". No `tune` demo store exists, and P3-D1 §2 restricts `select` to named
+uses. The study uses instead:
+- **open loop:** `loop.HELDOUT`, which is `ppo_2000` stream indices 1950–1999 (`train` pool,
+  outside `modular`'s first 1 000, never trained on by `modular`);
+- **closed loop:** the selected checkpoint of each seed, re-flown on the 150 `select` episodes on
+  the CPU fp32 single-sample path. The re-flown rows must reproduce the selection rows. True
+  `priv` is logged per step through the reviewed audit path and never reaches the student.
+
+*Reason.* Collecting a `tune` demo set would be a new collection and a new use of `select`. The
+closed-loop part is a diagnostic that chooses nothing: no checkpoint, no hyper-parameter and no
+threshold depends on it.
+
+*Consequence.*
+- Outputs: `results/phase7/modular_estimation.{csv,json}`. Errors are per field, per axis and as
+  a norm, with RMSE and p95. They are in model scale (λ = 1/25), with full scale stated.
+- `rel_position` and `height` are compared with P8's σ_p = 0.04 m. `rel_velocity` is compared
+  with σ_v = 0.2 m/s.
+- The open-loop numbers are on `train`-pool realizations. That is stated with them.
+
+### P7-D3 — `modular` and ablation run verdicts, selection, estimation error, H2 plots, budget (2026-11-04; revised 2026-11-04 after the results-skeptic review)
+*Decision.* All 38 Phase 7 runs are kept: no exclusions, no re-selection, nothing tuned.
+- **Selection.** Every run was trained and selected under P3-D1 §4: the 150 `select` episodes
+  (`07ecf049…`), EMA weights, the CPU fp32 single-sample path, and for `dp` arms `Ta` = 8, K = 10
+  with no ensembling.
+- **Scope of the numbers.** All are simulation results at model scale (λ = 1/25), in-sample on
+  `select`. No frozen list was flown.
+- **Verdicts** are from the `training-run-diagnostician`.
+- **Tunnelled episodes** are reported per Gate 4 as the selected rows' `n_tunnelled` /
+  `n_detectors_disagree`, summed over seeds.
+
+| Arm (teacher) | Seeds | Verdict | Selected `select` success | Candidate mean | Tunnelled / disagree (selected) | Main reason |
+|---|---|---|---|---|---|---|
+| `modular` (`T_ppo`) | s0–s4 | TRUSTWORTHY ×5 | 143 / 142 / 144 / 145 / 145 | 139.9 | 2 / 2 | |
+| `bc_mix` (`T_mix`) | s0–s2 | s0 CAVEAT; s1, s2 TRUSTWORTHY | 143 / 146 / 145 | 140.8 | 2 / 0 | s0: 5 k pick by 2 episodes; averaging policy |
+| `bc_pid` (`T_pid`) | s0–s2 | CAVEAT ×3 | 146 / 143 / 143 | 122.9 | 3 / 0 | success falls with training; every pick at 5 k |
+| `bc_n100` (`T_ppo`) | s0–s2 | CAVEAT ×3 | 117 / 122 / 125 | 106.7 | 1 / 0 | every pick at 5 k; closed-loop decline |
+| `bc_n300` (`T_ppo`) | s0–s2 | TRUSTWORTHY ×3 | 142 / 138 / 143 | 137.4 | 4 / 0 | |
+| `bc_minus_last_action` (`T_ppo`) | s0–s2 | TRUSTWORTHY ×3 | 147 / 148 / 146 | 141.8 | 1 / 0 | |
+| `bc_plus_clock` (`T_ppo`) | s0–s2 | CAVEAT ×3 | 148 / 144 / 144 | 139.8 | 0 / 0 | clock reliance (item 5) |
+| `dp_mix` (`T_mix`) | s0–s2 | TRUSTWORTHY ×3 | 112 / 121 / 109 | 104.9 | 16 / 1 | investigated (item 6) |
+| `dp_pid` (`T_pid`) | s0–s2 | TRUSTWORTHY ×3 | 143 / 145 / 142 | 132.5 | 0 / 0 | investigated (item 6) |
+| `dp_n100` (`T_ppo`) | s0–s2 | CAVEAT ×3 | 66 / 65 / 68 | 51.5 | 22 / 4 | overfits; picks +11 to +19 above candidate mean |
+| `dp_n300` (`T_ppo`) | s0–s2 | CAVEAT ×3 | 63 / 62 / 63 | 52.2 | 30 / 0 | overfits; picks +9 to +13.5 above candidate mean |
+| `dp_minus_last_action` (`T_ppo`) | s0–s2 | TRUSTWORTHY ×3 | 116 / 118 / 116 | 105.0 | 22 / 2 | investigated (item 7) |
+| *core `bc`, Phase 4 (`T_ppo`)* | s0–s4 | — | 146 / 146 / 147 / 145 / 149 | 144.3 | — | reference |
+| *core `dp`, Phase 6 (`T_ppo`)* | s0–s4 | — | 63 / 66 / 68 / 67 / 62 | 55.9 | — | reference |
+
+*Sources.*
+- **Runs:** `results/phase7/runs_summary.csv`, `results/phase7/runs_candidates.csv`, and
+  `results/phase7/runs/<arm>/s<n>/{manifest.json, selection.json, select/*_rows.csv.gz}`.
+- **Candidate means and every pooled rate, band and paired difference:**
+  `results/phase7/diagnostics/ablation_summary.json` (`results/phase7/scripts/ablation_summary.py`,
+  committed files only).
+- **Held-out and training-loss curves:** `results/phase7/diagnostics/heldout_curves.json`
+  (`results/phase7/scripts/heldout_curves.py`, extracted from the runs' `train_log.jsonl`).
+- **Scratch-only figures** are marked *(not committed)*. They are from the diagnostician's
+  working files: `results/phase7/diagnostics/verdicts/` holds their scripts, but those read
+  `artifacts/` and do not re-run from a clone.
+
+*Paired differences in this entry* are per-episode success differences against core `dp` on the
+same 150 `select` episodes. The 95 % intervals are percentile bootstraps over episodes only (rng 0,
+20 000 replicates). They are conditional on these seeds and checkpoints, leave out seed variance
+(the dominant term), and are **not P3-D1's paired bootstrap**. They are descriptive.
+
+*Findings.*
+1. **Provenance.**
+   - Every config SHA-256 equals P3-D1 §3 (`FROZEN_CONFIG_SHA256`), every tree was clean, and P8
+     was at `7237b70`. There were no resumes, and every checkpoint SHA-256 was recomputed and
+     matches.
+   - `modular` s0 trained at `a10bc78` and the other 37 runs at `d39cd4b`. The code between the two
+     commits adds only `ila.eval.h2_select` and `ila.eval.metrics.wasserstein_1`, which training
+     and selection do not use. All 38 selections ran at `d39cd4b`.
+   - **Schema gaps:**
+     - `selection.json` does not record the `ila` commit; it is taken from the queue order and the
+       manifests;
+     - `dp_*` rows files leave `Ta`/`K` empty; `Ta` = 8, K = 10 is recorded in `selection.json`
+       (`inference`).
+   - **Demo counts** (manifests): `ppo_2000` first 1 000 (999 kept), `n100` 100, `n300` 300,
+     `mix_1000` 978 kept, `pid_1000` 998 kept.
+   - **Frame counts at equal steps:**
+     - `ppo_2000` first 1 000: 61 518 frames;
+     - `mix_1000`: 94 749 frames (1.54×);
+     - `pid_1000`: 151 817 frames (2.47×).
+   - **Obs variants** were checked on the checkpoint and the selection flights: `plus_clock` 14-d;
+     `minus_last_action` 10-d (`proprio_mlp.0.weight` (64, 10)).
+   - **File names.** Rows files are named `s0_step…`; the `s0` is the training *stage*, not the
+     seed (`ila/train/loop.py`).
+   - **Selection check.** The skeptic re-applied the P3-D1 §4 rule from `runs_candidates.csv` for
+     38/38 runs: 0 mismatches, 5 picks decided by the p95 tie-break.
+2. **Selection is noise-dominated wherever outcomes sit near a boundary.**
+   - Picks sit above the run's candidate mean by:
+     - +1.5 to +7.0 for `modular` and the TRUSTWORTHY `bc` ablations;
+     - +9 to +19 for `dp_n100`, `dp_n300` and `dp_minus_last_action`, around what the maximum
+       of 10 binomial draws gives (about +8.5 to +9). The top of that range also reflects a
+       training-step trend (item 8);
+     - +14.7 to +28.3 for `bc_pid`, a trend (item 4).
+   - **Report both measures:** selected scores (what Phase 8 flies) and candidate means. The means
+     mix overfit late checkpoints (`*_n100`, `*_n300`) with immature early ones (`dp_pid`). Expect
+     Phase 8 to land below the selected `select` scores (as P6-D5 item 2).
+3. **`modular` (estimator → frozen `T_ppo`) lands below its teacher, and below `bc` (unpaired).**
+   - **Success.** Selected 142–145/150. The candidate mean is 139.9, against `bc`'s 144.3; that is
+     an unpaired reading, since Phase 4 rows are not committed.
+   - **Pooled over all candidates:** success by SS3/SS4/SS5 is 97.1 / 94.3 / 88.4 %, hard landings
+     5.0 %, 0 crashes.
+   - **Teacher.** `T_ppo` lands 149/150 on `select` (`results/phase7/diagnostics/clock_intervention.csv`,
+     `T_ppo`, `none`).
+   - **Estimation error** (`results/phase7/modular_estimation.{csv,json}`, the five selected
+     checkpoints, P7-D2). Ranges over seeds, closed loop on `select` unless stated, model scale
+     (×25 for lengths, ×5 for velocities at full scale):
+
+     | Field | Open-loop RMSE (held-out `train`-pool demos) | Closed-loop RMSE | Closed-loop p95 \|error\| | Closed-loop SS5 p95 |
+     |---|---|---|---|---|
+     | `rel_position` x / y / z | — | 0.018–0.022 / 0.014–0.016 / 0.010–0.012 m | 0.034–0.046 / 0.029–0.036 / 0.021–0.024 m | — |
+     | `rel_position` (norm) | 0.0130–0.0136 m | 0.0245–0.0287 m | 0.049–0.057 m | 0.056–0.072 m |
+     | `height` | 0.0063–0.0076 m | 0.0096–0.0117 m | 0.021–0.025 m | 0.025–0.030 m |
+     | `rel_velocity` z | 0.054–0.057 m/s | 0.119–0.132 m/s | 0.252–0.292 m/s | 0.313–0.367 m/s |
+     | `rel_velocity` x / y | — | 0.008–0.010 / 0.006–0.007 m/s | 0.017–0.020 / 0.011–0.014 m/s | — |
+     | `rel_tilt` | 0.56–0.63° | 0.78–0.91° | 1.52–1.62° | 2.12–2.32° |
+     | `deck_normal` (norm) | 0.012–0.014 | 0.018–0.021 | 0.037–0.042 | 0.049–0.058 |
+
+     - **Units.** The CSV's norm ratios are in units of √3·σ_p = 0.069 m (`sigma_name`).
+       Per axis, the closed-loop position RMSE is 1.0–2.2 cm, and v_z RMSE is 0.12–0.13 m/s.
+     - **Against P8's white-noise arm** (`external/rl-land-on-moving-deck/results/e07/noise/`,
+       latency 0, `id` SS3–SS6):
+       - at σ_p = 2 cm / σ_v = 0.10 m/s, `T_ppo` (P8 `ppo` seed 0, the teacher `modular` feeds)
+         lands 99 / 99 / 99 / 97 %, and `pid_feedforward` 60 / 66 / 56 / 59.5 %;
+       - at σ_p = 4 cm / σ_v = 0.20 m/s, `T_ppo` lands 70.5 / 75 / 71.5 / 66.5 %, and
+         `pid_feedforward` 0 / 0 / 0 / 0.5 %.
+     - **Where the estimator falls:** at or slightly above the 2 cm / 0.10 m/s condition (v_z is
+       above 0.10), and below 4 cm / 0.20 m/s. The tails are below P8's white-noise per-axis p95
+       of 1.96σ at 4 cm (0.078 m, 0.39 m/s) in every cell. The comparison is not like for like:
+       the estimator's error is state-dependent, not white noise.
+     - **Bias is small:** |bias| ≤ 1.5 mm in position and ≤ 6.6 mm/s in v_z. Time correlation was
+       not measured.
+     - **Open vs closed loop.** Closed-loop error exceeds open-loop error by 1.9–2.4× for
+       `rel_position` and v_z, and by 1.4–1.5× for height, tilt and normal. The estimator sees its
+       own states, a distribution shift. Error grows with sea state, and v_z is the worst field.
+     - This is consistent with `modular`'s hard landings (0.50–0.63 m/s) and its success falling
+       with sea state.
+   - **Re-fly check.** Every closed-loop re-fly reproduced its selection rows
+     (`rows_match_selection` true).
+4. **BC ablations.**
+   - **`bc_pid`: success falls with training.**
+     - Pooled successes by step, 5 k → 30 k: 432 / 411 / 365 / 341 / 338 / 326 of 450.
+     - Hard landings rise over the same steps: 12 → 98 (`runs_candidates.csv`).
+     - The copycat proxy (d a / d `last_action`) rises with step *(not committed)*, while `T_pid`
+       never reads `last_action`.
+     - Every pick is at the 5 k grid boundary, so `bc_pid` is an early-stopped student. The
+       `bc` vs `bc_pid` comparison confounds teacher with effective training length.
+     - Its held-out loss is scored against `ppo_2000` labels (P7-D1 item 6), so it measures
+       distance to `T_ppo`.
+   - **`bc_n100`.**
+     - It memorises: final train loss 1.5–1.8e-6, against held-out minima of 1.02–1.07e-3 that
+       stay flat to 30 k.
+     - Closed-loop success falls from 364 to 303 of 450, 5 k → 30 k, while `off_pad` rises from
+       49 to 117.
+     - Timeouts are most frequent at the selected 5 k checkpoints (19 of 450, against 5–15 later).
+       That is a Phase 8 watch item.
+     - Open-loop MSE did not anticipate the decline.
+   - **`bc_minus_last_action`.** Held-out minima are 5.4–5.7e-4, about twice `bc`'s 2.6–2.8e-4,
+     yet the selected scores (146–148) are at `bc`'s level (unpaired).
+   - **`bc_mix`.**
+     - s0 touchdown p50 is 2.62 s, between the teacher's modes.
+     - Per-seed touchdown p50 is 1.95–2.62 s, with 0.36–0.54 of touchdowns in the reference's mode
+       gap (`results/phase7/h2/h2_touchdown_select.json`, `per_seed`).
+     - The diagnostician found no assignment-dependent split *(not committed)*.
+5. **`bc_plus_clock` relies on `time_fraction` to a degree that varies by seed** (closed-loop clock
+   intervention on `select`, `results/phase7/diagnostics/clock_intervention.{csv,json}`, P7-D4; a
+   diagnostic that chooses nothing).
+
+   | Subject | `select` success: true clock / + 1 s / held at its mean / clamped at 1.6 s | Touchdown shift, paired mean (const_mean / shift) |
+   |---|---|---|
+   | s0 | 148 / 133 / 145 / 148 | +0.77 s / +0.01 s |
+   | s1 | 144 / 40 / 98 / 144 | — / −0.71 s |
+   | s2 | 144 / 85 / 145 / 146 | +0.56 s / — |
+   | `T_ppo` | 149 / 150 / 148 / 149 | — / touchdown p50 1.53 → 1.39 s |
+
+   - **s1** depends strongly on the clock in both perturbations.
+   - **s0 and s2** lose 15 and 59 successes under the 1 s shift, and change by −3 and +1 when the
+     clock is held at its mean. Holding it delays their touchdown.
+   - **The clock buys no fit:** held-out minima are 2.63–2.84e-4, against `bc`'s 2.61–2.82e-4
+     (`heldout_curves.json`).
+   - **`T_ppo` also moves under the shift**, though its success does not drop.
+   - **Consequence for H4.** P′ = S(`bc_state`) − S(`bc_plus_clock`) compares against a student
+     that relies on the clock to a seed-dependent degree. `bc_state`'s own clock reliance was not
+     measured, so this caveat is one-sided. State both with P′ in Phase 8.
+6. **`dp_mix` and `dp_pid` far exceed `dp`. Slow descent alone does not explain it.** CLAUDE.md
+   required an investigation before these numbers were reported. Touchdown-time bands are fast
+   < 1.8 s and slow > 2.8 s (model scale), pooled over all candidates.
+
+   | Arm | Fast / between / slow share | Success fast / between / slow | Lateral p50 / p95 | `off_pad` | Paired vs `dp`, all candidates | Paired vs `dp`, selected |
+   |---|---|---|---|---|---|---|
+   | `dp` | 74.2 / 23.6 / 2.2 % | 38.4 / 34.4 / 33.5 % | 0.089 / 0.186 m | 41.5 % | — | — |
+   | `dp_mix` | 36.7 / 21.0 / 42.3 % | 48.8 / 65.0 / 90.9 % | 0.043 / 0.148 m | 16.4 % | +0.327 [0.296, 0.356] | +0.325 [0.270, 0.380] |
+   | `dp_pid` | 0 / 0.4 / 99.6 % | — / 60.0 / 88.5 % | 0.029 / 0.068 m | 0.4 % | +0.511 [0.486, 0.534] | +0.521 [0.480, 0.561] |
+
+   - **Both arms beat `dp` in every band they occupy**, and `dp`'s own slow touchdowns succeed no
+     more often than its fast ones (33.5 % against 38.4 %). Shifting touchdowns toward slower bands
+     explains:
+     - for `dp_mix`, about 50 % of its touched-down gain at its own band rates and −6 % at `dp`'s
+       rates;
+     - for `dp_pid`, −8 % at `dp`'s rates. At `dp_pid`'s own rates it exceeds the whole gain
+       (142 %), because `dp_pid`'s rare between-band episodes succeed less often than its slow
+       ones. So the slow-descent share is not identified.
+
+     Source: `band_decomposition_vs_dp`. So the gain is **partly** associated with slow
+     touchdowns, and is not explained by them.
+   - **The gain is confounded with the teacher's data:**
+     - `T_pid`'s and `T_mix`'s labels;
+     - 1.54× and 2.47× the frames at equal steps (item 1).
+
+     `dp_pid` matches `bc_pid`: selected rows land 95.6 % against 96.0 %. The 8 failing episodes
+     they share are all at SS5 *(not committed)*. This points to the teacher's data, not to DP.
+   - **No late decline in `dp_pid`**, unlike `bc_pid`. Pooled success rises from 350/450 at 10 k
+     to 426/450 at 70 k (`runs_candidates.csv`).
+   - **Mode choice in `dp_mix`.** On the same episode, slow vs fast agrees 0.84 within a seed
+     across checkpoints and 0.54 across seeds (chance about 0.51; skeptic's recomputation from
+     committed rows). That is *consistent with* the per-episode noise key setting the mode. The key
+     contains `run_seed`, so this cannot be separated from the seed's network.
+   - **Tunnelling does not explain the gains.** Tunnelled successes are 36 of 3 148 (`dp_mix`) and
+     0 of 3 975 (`dp_pid`), against 131 of 2 796 for `dp`.
+   - **Neither beats its teacher.**
+     - `T_mix` lands 146/150 on `select` (`results/phase7/h2/tmix_select_rows.csv`). `bc_mix` s1
+       ties it at 146.
+     - `dp_pid` by sea state is 99.3 / 98.7 / 88.7 %, against `T_pid`'s 100 / 99.7 / 99.7 % on
+       `train` (P3-D1 ceilings). That is an *unpaired, cross-pool reading*: clear at SS5, within
+       about 1 point at SS3/SS4.
+     - `T_pid` was not flown on `select` (item 10). Phase 8 repeats the check against P8's
+       committed `pid_feedforward` rows at `id` SS4–SS6.
+7. **`dp_minus_last_action` nearly doubles `dp`, through lateral precision, not slow descent.**
+   CLAUDE.md required an investigation before this was reported.
+   - **Same touchdown timing.** Band shares equal `dp`'s (74.1 / 23.8 / 2.1 %), and the band
+     composition explains 0 % of the gain.
+   - **Inside the fast band:**
+     - success 72.2 % against 38.4 %;
+     - lateral p50 0.050 against 0.090 m;
+     - closing p50 0.302 against 0.394 m/s.
+   - **All candidates:** `off_pad` 12.3 % against 41.5 %; hard landing 8.3 % against 13.9 %.
+   - **Paired per-episode success vs `dp`:**
+     - all candidates +0.327 [0.304, 0.350] (145 episodes better, 4 worse, 1 equal);
+     - selected +0.343 [0.295, 0.389].
+   - **Candidates and tunnelling.** The worst candidate (81) beats the best `dp` candidate (68),
+     and success rises with training. Tunnelled successes are 75 of 3 150, against 131 of 2 796 for
+     `dp`, so tunnelling does not explain the gain.
+   - **Removing `last_action` costs `dp` no denoising fit.** Held-out EMA minima are 0.035–0.040 at
+     44–48 k, against `dp`'s 0.035–0.039 at 41–45 k (P6-D5). `bc` pays about a twofold open-loop
+     cost for the same removal and gains nothing in closed loop (item 4).
+   - **Reading.** The evidence is *consistent with* a `last_action` copycat channel that carries
+     stale chunk-end actions into the next chunk at `Ta` = 8.
+     - In open-loop replay on held-out demos, feeding `dp` its own executed previous action raises
+       lateral RMSE by 29–38 % across `dp` s0–s4
+       (`results/phase7/diagnostics/verdicts/dp_minus_last_action/ol_out/ol.json`). The variant has
+       no such channel.
+     - This fits `dp` recovering at `Ta` = 1 (P6-D5 item 5).
+     - The channel was not tested closed loop, and `Ta` = 1 was not flown for the variant (that
+       would be a new use of `select`).
+   - **`T_ppo` still beats it:** 149/150 against a best candidate of 118.
+   - **Not a code change.** `dp` code is unchanged since `4ae5e3b`, and `dp_n100` and `dp_n300`,
+     trained and selected at the same commit, still land 62–68.
+8. **The `dp` data axis (100 → 300 → 1 000 demos) is hidden by the `Ta` = 8 ceiling and by
+   selection.**
+   - **Candidate means:** 51.5 → 52.2 → 55.9.
+   - **Paired per-episode success vs `dp`:**
+     - all candidates: `dp_n100` −0.029 [−0.052, −0.006], `dp_n300` −0.025 [−0.047, −0.003];
+     - selected only: `dp_n100` +0.008 [−0.048, 0.064], `dp_n300` −0.017 [−0.078, 0.042].
+
+     The selected-only intervals include 0. The all-candidate ones exclude it, but that is driven
+     by overfit late checkpoints that Phase 8 will not fly.
+   - **Overfitting comes earlier with fewer demos:**
+     - held-out EMA minimum at 6 k → 13–14 k → 41–45 k;
+     - rises by 100 k of 3.46–3.94× and 3.40–3.90× for the two small arms, against 1.5–1.7× for
+       `dp`;
+     - success falls with training step for both small arms.
+   - **Fewer demos land with more sideways error but more gently:**
+
+     | Demos | `off_pad` | Lateral p50 | Closing p50 | Hard landing |
+     |---|---|---|---|---|
+     | 100 | 54.3 % | 0.109 m | 0.279 m/s | 2.2 % |
+     | 300 | 52.1 % | 0.104 m | 0.324 m/s | 4.4 % |
+     | 1 000 | 41.5 % | 0.089 m | 0.400 m/s | 13.9 % |
+
+   - **Wording.** Do not claim that `dp` is insensitive to data size, nor that it needs more data.
+     Neither is shown at `Ta` = 8.
+9. **H2 touchdown-time plots on `select`** (plan item 3; plotted, never scored;
+   `results/phase7/h2/h2_touchdown_select.{png,csv,json}`).
+   - **Reference.** `T_mix` lands 146/150. Its `ppo` and `gated` halves have touchdown p50 1.53 s
+     and 3.48 s, and 9.6 % of its touchdowns fall in the gap between the modes.
+   - **Students.** The share of touchdowns in that gap is 0.26–0.34 per seed for `dp_mix` and
+     0.36–0.54 for `bc_mix`. Pooled W₁ to the reference is 0.31 s (`dp_mix`) and 0.49 s (`bc_mix`).
+   - `dp_mix` is closer to committing to one mode than `bc_mix`, but neither reproduces the
+     reference's separation.
+   - **Different windows.** The diagnostician's "15–20 % between modes" used the fixed 1.8–2.8 s
+     band *(not committed)*, a different window from the plot's per-cell gap. Both are
+     descriptive and post hoc.
+   - Seeds are shown separately because pooling mixes regimes.
+   - **H2 pre-look.** The scored W₁ function has now been run on `select`, and its direction is
+     written here. The README must not cite these `select` W₁ values as H2 evidence.
+   - **Caveat.** `dp_mix`'s gain over `dp` is not shown to come from multimodality (item 6).
+10. **Uses of `select` beyond selection** (none chose anything):
+    - **Committed:**
+      - the `T_mix` teacher flights for the H2 reference (`tmix_select_rows.csv`, 2026-11-03);
+      - the `modular` closed-loop estimation re-fly (P7-D2, 2026-11-03);
+      - the reviewed clock intervention (P7-D4, 2026-11-03).
+    - **Scratch, not committed:**
+      - the diagnostician's scratch clock wrapper on `bc_plus_clock` s0–s2 and `T_ppo` (2026-11-03).
+        It read rows and preceded, and motivated, the reviewed path; its numbers are superseded by
+        P7-D4;
+      - the diagnostician's `T_pid` flight (2026-11-04). It hung and was stopped; no rows were
+        read.
+    - Earlier text cited a 1-ulp clock-shift sensitivity. It came from a scratch run and is
+      withdrawn.
+11. **Budget** (wall-clock GPU-h, `runs_summary.csv`).
+
+    | Arm | GPU-h |
+    |---|---|
+    | `modular` | 3.87 |
+    | `bc` ablations, 6 arms | 2.26–2.35 each, 13.70 in total |
+    | `dp_mix` | 6.52 |
+    | `dp_pid` | 6.72 |
+    | `dp_n100` | 6.83 |
+    | `dp_n300` | 6.70 |
+    | `dp_minus_last_action` | 6.64 |
+    | **Phase 7** | **50.98** |
+    | **Cumulative** (44.43 through Phase 6) | **95.41 of 120** |
+
+    The total is in line with P4-D2's projection of about 95. No cut was made.
+12. **Tooling.** `dp_diagnostics` read held-out windows under the default contract. It now passes
+    the checkpoint's `obs_variant` (`decc00a`, `tests/test_diagnostics_variants.py`). No committed
+    number depended on the old path.
+
+*Consequence for Phase 8.*
+- **H3.** `dp_minus_last_action` (item 7) is a competing explanation for `dp` recovering at
+  `Ta` = 1: an input-freshness effect, stale `last_action`, alongside chunk length. H3's statistic,
+  S(`Ta` = 1) − S(`Ta` = 8), is stated with this confound, and any README sentence that says `dp`
+  fails "because of chunking" must name it. The scoring rule does not change.
+- **H4.** Report P′ with item 5's seed-dependent clock-reliance caveat, and with the fact that
+  `bc_state`'s clock reliance was not measured.
+- **H2.** Score only at `id` SS4 with seeds pooled (P3-D1). State that `dp_mix`'s gain over `dp` is
+  not shown to come from multimodality (items 6 and 9).
+- **Teacher checks.** `dp_pid`/`bc_pid` against `pid_feedforward` on P8's committed rows at
+  `id` SS4–SS6.
+- **Watch items:** `bc_n100`'s 5 k timeouts; detector disagreements in the `dp_*` arms (4 in
+  `dp_n100`).
+- **Expected numbers.** Expect evaluation numbers below the selected `select` scores, especially for
+  every `dp` arm.
+- **README.** It must state:
+  - the `dp_minus_last_action` finding, worded "consistent with";
+  - `modular`'s teacher gap;
+  - where its estimation error falls relative to P8's noise arm (item 3).
+
+*Review response (results-skeptic, 2026-11-04; no BLOCKER).*
+- **S1.** Item 3 was rewritten:
+  - norm ratios are labelled in √3·σ_p units, and per-axis errors are added;
+  - the comparison is now against P8's 2 cm and 4 cm `T_ppo` and `pid_feedforward` rows, with
+    tails against 1.96σ;
+  - bias is quantified, and the time-correlation claim was dropped.
+- **S2.** Item 6 now carries both decompositions, the frame counts, and "consistent with; not
+  separated from seed" for mode choice. "About 70 %" was withdrawn.
+- **S3.** Selected-only paired differences are printed beside all-candidate ones, with the
+  conditioning stated.
+- **S4.** The H3 confound and the one-sided H4 caveat were added to the consequences.
+- **S5.** Item 10 now lists the scratch uses of `select`, and the 1-ulp figure was withdrawn.
+- **S6.** Held-out and training-loss figures now trace to `heldout_curves.json`. The rest are
+  marked *(not committed)*.
+- **M1–M10.**
+  - Number fixes (M1): +1.5 to +7.0; 29–38 %; per-field open/closed ratios; `bc_n100` timeouts;
+    all 8 shared episodes at SS5.
+  - Tunnelled and disagree counts were added to the table, and tunnelled successes to items 6
+    and 7 (M2).
+  - P7-D4 NOTE 1 is closed only by the rename commit (M3).
+  - Unpaired labels were added (M4, M5).
+  - Per-seed clock wording (M6).
+  - Both selected scores and candidate means are reported (M7).
+  - Schema gaps were added (M8).
+  - The H2 pre-look was noted (M9).
+  - The commit-difference wording was fixed (M10).
+
+### P7-D4 — Clock-intervention diagnostic on `select`; leak review of the Phase 7 merges (2026-11-04)
+*Decision.* The closed-loop clock intervention is recorded as a named diagnostic use of `select`,
+following P7-D2's precedent. It **chooses nothing and is not scored**.
+- **Subjects:** `bc_plus_clock` s0–s2 at their selected checkpoints, and `T_ppo`.
+- **Scope:** the 150 `select` episodes, CPU fp32 single-sample path.
+- **What changes:** only the `time_fraction` input value. Everything else is identical.
+- **Four modes:**
+  - `none`, the true clock;
+  - `shift_s`, `clip(time_fraction + 1 s / 12 s)`;
+  - `const_mean`, the training mean, 0.0843 (1.011 s);
+  - `clamp`, `min(time_fraction, 1.6 s / 12 s)`.
+- **Check:** `none` reproduces each student's selection rows and the bare `T_ppo` rows exactly.
+- **Code and results:**
+  - `ila.train.clock_diagnostics` and `scripts/clock_intervention.py`, added at `33b6e0c`;
+  - `results/phase7/diagnostics/clock_intervention.{csv,json}` and
+    `clock_intervention_episodes.csv.gz`, added at `d20669b`.
+- **New `ila/obs/split.py` helpers** (`ObsContract.proprio_clock`, `with_proprio_clock`,
+  `with_obs_clock`) replace the named `time_fraction` column in a *copy*. They refuse any variant
+  other than `plus_clock` for students, and they refuse `modular`.
+
+*Reason.* The diagnostician's scratch wrapper suggested that `bc_plus_clock` times its descent on
+the clock. H4's P′ depends on that student, so the finding had to come from a reviewed, committed
+path before anyone cites it (P7-D3 item 5).
+
+*Timing.* 23 of the 38 Phase 7 selections predate `33b6e0c`. The 15 `dp_*` selections came later
+but cannot use it: the diagnostic refuses their variants, and `select.py`, `loop.py` and
+`configs/train/` are unchanged since `eaec162`.
+
+*Leak review* (privileged-leak-auditor, 2026-11-04, HEAD `278d7d4`). This covers `33b6e0c`,
+`d20669b` and `decc00a`, the diagnostics `obs_variant` pass-through.
+- **Result: no LEAK, no RISK.** 219 focused tests pass on CPU.
+- Only the clock column of a copy changes. The env observation and the images are bit-identical
+  across the wrapper.
+- Default, `minus_last_action` and `modular` students are refused.
+- The literal-slice, audit-name and frozen-list scans cover the new files. `AUDIT_ALLOWLIST` is
+  unchanged at two entries:
+  - `train/state_dataset.py` (Phase 4);
+  - `train/modular_targets.py` (P7-D1).
+- `decc00a` routes variants through `DemoStore.variant_contract`, which refuses any
+  `NEVER_STUDENT` field.
+
+NOTEs and their dispositions:
+1. P7-D1's deferred NOTE 3 is closed: `ObsContract.split()` and the module function
+   `ila.obs.split.split()` were renamed `split_privileged` and added to `AUDIT_NAMES`
+   (`tests/test_render_access.py`; commit `902f852`).
+   - A bare `split` could not be scanned, since it also matches `str.split`.
+   - `ila/train`, `ila/policies`, `ila/deploy` and `ila/eval` may not reference it.
+     `AUDIT_ALLOWLIST` is unchanged.
+   - Its one user, `ila/data/store.py`, which writes and validates `proprio`/`priv`, lies outside
+     the audit-scanned set, as for the other audit names.
+2. This entry records the diagnostic.
+3. `ClockInterventionTeacher` now refuses a student or `modular` inner policy (hardening).
+
+*Test fix (2026-11-04).* One full `make test` run failed
+`test_data_dagger.py::test_two_episodes_end_to_end` (store SHA, workers = 1 against 2).
+- **Cause:** commits landed in the checkout during the run. Each DAgger store records `ila_commit`
+  (with `+dirty`) as provenance, so r1 recorded clean `72c13b8` and r2 recorded `72c13b8+dirty`.
+  The two SHAs were reproduced exactly.
+- **Not the cause:** completion order, HDF5 timestamps or load. `imap` is ordered, the writer uses
+  `track_order` and `track_times=False`, and a forced reversed completion and an 8-core burner gave
+  identical bytes.
+- **Fix:** the test now pins one provenance snapshot and adds a forced-reversed-order regression
+  (`19838c9`). No `ila/data` code changed.
+- **Phase 5 is unaffected.** All 25 `bc_dagger` iteration stores re-hash to their manifests, each
+  at clean `576447c`, workers = 24.
+- **Scope of P5-D1's worker-count determinism:** it holds for a fixed checkout state. Re-running an
+  iteration at another commit, or on a dirty tree, changes the store SHA through provenance alone.
+
+### Gate 7 passed (2026-11-05)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| Every planned run present with a manifest | All 38 planned runs are present, each with `manifest.json` and `selection.json` in `results/phase7/runs/` (`runs_summary.csv`): `modular` s0–s4 (core) and the 11 ablations of `configs/eval/matrix.yaml` × 3 seeds. Every run was `done` at 100 % of its steps on a clean tree with no resumes, and its config SHA matches P3-D1 §3 | PASS |
+| Diagnostician verdicts recorded | P7-D3 table: 22 TRUSTWORTHY, 16 CAVEAT, 0 EXCLUDE. The 3 investigations CLAUDE.md requires for results better than expected are recorded (`dp_mix`, `dp_pid`, `dp_minus_last_action`) | PASS |
+| Item 1: `modular` + estimation error vs P8's σ | `results/phase7/modular_estimation.{csv,json}`; P7-D2 (deviation), P7-D3 item 3 (against P8's 2 cm and 4 cm noise-arm rows); smoke `results/phase7/smoke_modular.json` passed | PASS |
+| Item 3: H2 touchdown plots on `select` | `results/phase7/h2/h2_touchdown_select.{png,csv,json}` (`T_mix`, `bc_mix`, `dp_mix`; plotted, not scored) | PASS |
+| CPU tests green | `make lint` clean (ruff, format, mypy --strict, 71 files). `make test`: 913 passed (13 min 48 s) at `5dbf2dc` on an unchanging tree. CI green on `phase-7` (run 41964884390, `5dbf2dc`) | PASS |
+
+*Reviewers.*
+- **`training-run-diagnostician`**, every run: verdicts as in the P7-D3 table.
+- **`privileged-leak-auditor`.**
+  - 2026-11-02, before training: no LEAK, no RISK (P7-D1).
+  - 2026-11-04, on the clock helpers and the diagnostics pass-through: no LEAK, no RISK (P7-D4).
+  - P7-D1's deferred NOTE 3 is closed (`902f852`).
+- **`results-skeptic`**, 2026-11-04: no BLOCKER; six SERIOUS and ten MINOR. All are addressed in the
+  revised P7-D3 (review response). The revision was not re-reviewed.
+
+*Deviations this phase.* P7-D2, the estimation-study data (user decision, 2026-11-02). No threshold
+was changed.
+
+## Phase 8
+
+*Before you start (from Phase 7).*
+- **Budget.** Training ended at 95.41 of 120 GPU-h (P7-D3 item 11). Phase 8 is evaluation only.
+- **Flying `modular`.**
+  - It flies only on the CPU fp32 single-sample path, because the batched path refuses it
+    (P7-D1 item 3).
+  - Budget for it on every list.
+  - Every ablation checkpoint carries its `obs_variant`, so evaluation must pass it through.
+- **Expected numbers.** Expect evaluation numbers below the selected `select` scores, most of all
+  for `dp` arms, where picks run 9–19 above candidate means (P7-D3 item 2).
+- **Hypothesis caveats to state with the result** (scoring rules unchanged):
+  - **H3:** the input-freshness confound from `dp_minus_last_action` (P7-D3 consequences);
+  - **H4:** P′ uses a `bc_plus_clock` that relies on the clock to a seed-dependent degree, and
+    `bc_state`'s clock reliance was not measured;
+  - **H2:** `dp_mix`'s gain over `dp` is not shown to come from multimodality, and `select` W₁ is
+    not H2 evidence.
+- **Teacher checks to repeat on frozen lists:**
+  - `dp_pid` and `bc_pid` against P8's `pid_feedforward` rows at `id` SS4–SS6;
+  - `dp_minus_last_action` and `modular` against `T_ppo`.
+- **Watch items:**
+  - `bc_n100`'s selected 5 k checkpoints, which carry the most timeouts;
+  - detector disagreements in the `dp_*` arms;
+  - the still-unrun binding GPU-acceptance test for `dp` (P6-D5).
+- **Process.** Do not commit in the checkout while `make test` runs there. Provenance-recording
+  tests compare store SHAs across runs (P7-D4 test fix).
+- **First task:** `eval-auditor` drafts `scripts/eval_matrix.py` and the arm definitions from
+  `configs/eval/matrix.yaml`, including ablation `obs_variant` pass-through and `modular`'s CPU path.
+  Then `privileged-leak-auditor` reviews it before any frozen list is flown.

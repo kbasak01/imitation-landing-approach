@@ -1,0 +1,47 @@
+{
+  "what": "T_mix reference flown on select for the H2 touchdown-time plot (plan Phase 7 item 3); plotted only, never scored",
+  "list": {
+    "name": "select",
+    "file": "select.parquet",
+    "file_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+    "episodes": 150
+  },
+  "assignment": {
+    "function": "ila.data.mix.assign_rows, one call per sea-state cell",
+    "seed": 20261023,
+    "per_cell": {
+      "SS3": {
+        "ppo": 25,
+        "gated": 25
+      },
+      "SS4": {
+        "ppo": 25,
+        "gated": 25
+      },
+      "SS5": {
+        "ppo": 25,
+        "gated": 25
+      }
+    }
+  },
+  "teachers": {
+    "ppo": {
+      "source": "P8 ppo seed 0, final/ (SB3, VecNormalize training=False)",
+      "model_zip_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49"
+    },
+    "gated": {
+      "source": "P8 controller registry 'gated' (run_seed 0)"
+    }
+  },
+  "runner": "ila.eval.runner.run_arms_vision (CPU)",
+  "render": "off",
+  "workers": 8,
+  "chunk": 10,
+  "limit_per_cell": null,
+  "episodes_flown": 150,
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "1a5da6a4029affb79ad573707eb0ccceee420049",
+  "ila_dirty": false,
+  "ila_dirty_paths": [],
+  "wall_s": 14.8
+}

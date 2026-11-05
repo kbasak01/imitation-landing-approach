@@ -41,6 +41,14 @@ A policy with ``act_vision`` is a student. At step t it receives
 never sees the 25-d observation, a ``RenderMeta`` or a step count; its ``act`` is never called.
 Students require render mode ``full`` (``camera`` frames show P8's world-fixed checkerboard).
 
+The ``modular`` arm (P3-D1 §3, declared clock exception 2): a policy with ``act_modular`` is
+flown through it instead of ``act_vision``. At step t it receives ``act_modular(mi)`` where
+``mi = contract.modular_input(frames, obs_window)``
+(:meth:`ila.obs.split.ObsContract.modular_input`) on the same window: the same
+``StudentInput`` plus P8's ``time_fraction`` of the same steps, for its frozen teacher's
+observation only. The contract must be ``default``. The batched path (:mod:`ila.eval.batched`)
+does not carry the clock and refuses such a policy.
+
 Timing assertion
 ----------------
 On sampled steps (k = 0, every ``timing_every``-th step and the terminal step) the frame is
@@ -68,14 +76,14 @@ import multiprocessing as mp
 import os
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Final, Literal, Protocol, runtime_checkable
+from typing import Any, Final, Literal, Protocol, cast, runtime_checkable
 
 import numpy as np
 import pybullet as pyb
 from numpy.typing import NDArray
 
 from ila import p8_adapter
-from ila.obs.split import ObsContract, load_contract
+from ila.obs.split import ModularInput, ObsContract, StudentInput, load_contract
 from ila.policies.dp import chunking
 from ila.render import scene as render_scene
 from ila.render.camera import Frame, render_pose
@@ -105,6 +113,7 @@ __all__ = [
     "episode_row",
     "fly_chunk",
     "init_worker_threads",
+    "is_modular",
     "is_student",
     "none_to_nan",
     "p8_rows",
@@ -427,9 +436,30 @@ class _VisionPolicy(Protocol):
         ...
 
 
+@runtime_checkable
+class _ModularPolicy(Protocol):
+    """The ``modular`` arm: P8's ``EvalPolicy`` reset plus ``act_modular``."""
+
+    def reset(self, seed: int, context: Any = None) -> None:
+        """Clear per-episode state (``context`` is always ``None`` for a student)."""
+        ...
+
+    def act_modular(self, mi: ModularInput) -> Any:
+        """Return a ``(3,)`` action in normalised units from a :class:`ModularInput`."""
+        ...
+
+
 def is_student(policy: object) -> bool:
     """Return whether a built policy is a vision student (it has ``act_vision``)."""
     return callable(getattr(policy, "act_vision", None))
+
+
+def is_modular(policy: object) -> bool:
+    """Return whether a built policy takes a :class:`ModularInput` (it has ``act_modular``).
+
+    Such a policy is flown through ``act_modular`` even when it also has ``act_vision``.
+    """
+    return callable(getattr(policy, "act_modular", None))
 
 
 class Actor(Protocol):
@@ -482,8 +512,10 @@ class StudentWindow:
     (steps ``t-To+1 ... t``, indices < 0 repeat step 0), with ``To`` from the contract
     (``configs/obs/student.yaml`` ``frames.n_obs_steps``); ``chunking`` is the only place
     those indices are computed. The window is built into a
-    :class:`~ila.obs.split.StudentInput` only through :meth:`ObsContract.student_input`, so the
-    privileged and teacher-only fields are dropped before anything leaves.
+    :class:`~ila.obs.split.StudentInput` only through :meth:`ObsContract.student_input` (or, for
+    the ``modular`` arm, a :class:`~ila.obs.split.ModularInput` only through
+    :meth:`ObsContract.modular_input`), so the privileged fields (and, outside ``modular``, the
+    teacher-only clock) are dropped before anything leaves.
 
     Attributes:
         contract: The observation contract.
@@ -502,7 +534,7 @@ class StudentWindow:
         self._obs.clear()
         self._step = -1
 
-    def push(self, step: int, obs: NDArray[Any], frame: Frame | None) -> Any:
+    def push(self, step: int, obs: NDArray[Any], frame: Frame | None) -> StudentInput:
         """Add step ``step`` and return the contract-built ``StudentInput`` for it.
 
         Args:
@@ -517,6 +549,34 @@ class StudentWindow:
         Raises:
             ValueError: If no frame is given or the steps are not consecutive.
         """
+        return self.contract.student_input(*self._advance(step, obs, frame))
+
+    def push_modular(self, step: int, obs: NDArray[Any], frame: Frame | None) -> ModularInput:
+        """Add step ``step`` and return the contract-built ``ModularInput`` for it.
+
+        The ``modular`` arm only (P3-D1 §3, clock exception 2): the same window as
+        :meth:`push`, built by :meth:`ObsContract.modular_input` (``StudentInput`` plus
+        ``time_fraction[To]``, dimensionless, of the same steps).
+
+        Args:
+            step: Control step, 0 after reset; must follow the previous one.
+            obs: P8's 25-d observation at the step.
+            frame: The frame rendered from the same physics state.
+
+        Returns:
+            ``ObsContract.modular_input(images[To], obs[To])`` over
+            ``obs_window_steps(step, To)``.
+
+        Raises:
+            ValueError: If no frame is given, the steps are not consecutive or the contract
+                is not ``default``.
+        """
+        return self.contract.modular_input(*self._advance(step, obs, frame))
+
+    def _advance(
+        self, step: int, obs: NDArray[Any], frame: Frame | None
+    ) -> tuple[NDArray[np.uint8], NDArray[Any]]:
+        """Record step ``step`` and return its ``(images[To], obs[To])`` window, oldest first."""
         if frame is None:
             raise ValueError("a student needs frames: render mode must be 'full'")
         if step != self._step + 1:
@@ -527,26 +587,43 @@ class StudentWindow:
         window = chunking.obs_window_steps(step, self.contract.n_obs_steps)
         for old in [s for s in self._frames if s < window[0]]:
             del self._frames[old], self._obs[old]
-        return self.contract.student_input(
-            np.stack([self._frames[s] for s in window]), np.stack([self._obs[s] for s in window])
+        return (
+            np.stack([self._frames[s] for s in window]),
+            np.stack([self._obs[s] for s in window]),
         )
 
 
 class StudentActor:
     """The in-worker student path: ``act_vision(si.images, si.proprio)``, nothing else.
 
+    A policy with ``act_modular`` (the ``modular`` arm) gets ``act_modular(mi)`` instead, with
+    ``mi`` built from the same window by :meth:`StudentWindow.push_modular`.
+
     Attributes:
-        policy: The student (has ``act_vision``; never privileged).
+        policy: The student (has ``act_vision`` or ``act_modular``; never privileged).
         window: Its frame/observation history.
+        modular: Whether the policy is flown through ``act_modular``.
         needs_frames: True.
     """
 
     needs_frames: bool = True
 
-    def __init__(self, policy: _VisionPolicy, contract: ObsContract) -> None:
-        """Hold the student and a fresh window."""
-        self.policy = policy
+    def __init__(self, policy: _VisionPolicy | _ModularPolicy, contract: ObsContract) -> None:
+        """Hold the student and a fresh window.
+
+        Raises:
+            ValueError: If a ``modular`` policy is given a non-``default`` contract.
+        """
+        # ``policy`` keeps its pre-Phase-7 type (subclasses call ``self.policy.act_vision``);
+        # a modular policy is flown through ``_modular_policy`` only.
+        self.policy = cast(_VisionPolicy, policy)
         self.window = StudentWindow(contract)
+        self.modular = is_modular(policy)
+        self._modular_policy = cast(_ModularPolicy, policy) if self.modular else None
+        if self.modular and contract.variant != "default":
+            raise ValueError(
+                f"the modular arm uses the 'default' contract, not {contract.variant!r}"
+            )
 
     def begin(
         self, listed: p8_adapter.ListedEpisode, context: p8_adapter.PrivilegedContext | None
@@ -562,7 +639,10 @@ class StudentActor:
         self.policy.reset(listed.episode_seed, None)
 
     def act(self, step: int, obs: NDArray[Any], frame: Frame | None) -> NDArray[np.float64]:
-        """Return ``act_vision`` on the contract-built input for this step, float64."""
+        """Return ``act_vision`` (or ``act_modular``) on the contract-built input, float64."""
+        if self._modular_policy is not None:
+            mi = self.window.push_modular(step, obs, frame)
+            return np.asarray(self._modular_policy.act_modular(mi), dtype=np.float64)
         si = self.window.push(step, obs, frame)
         return np.asarray(self.policy.act_vision(si.images, si.proprio), dtype=np.float64)
 
@@ -783,10 +863,14 @@ def fly_chunk(
 def _local_actor(
     spec: p8_adapter.PolicySpec,
 ) -> Callable[[p8_adapter.EvalConfigs, ObsContract], tuple[Actor, object]]:
-    """Return the in-worker actor factory for a spec: student if it has ``act_vision``."""
+    """Return the in-worker actor factory: student if it has ``act_modular``/``act_vision``."""
 
     def make(cfgs: p8_adapter.EvalConfigs, contract: ObsContract) -> tuple[Actor, object]:
         policy = spec.build(cfgs)
+        if is_modular(policy):
+            if not isinstance(policy, _ModularPolicy):
+                raise TypeError(f"{spec.method}: modular student lacks reset/act_modular")
+            return StudentActor(policy, contract), policy
         if is_student(policy):
             if not isinstance(policy, _VisionPolicy):
                 raise TypeError(f"{spec.method}: student lacks reset/act_vision")

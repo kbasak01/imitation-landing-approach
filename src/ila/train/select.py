@@ -5,7 +5,13 @@
   list is read anywhere in this module (``tests/test_render_access.py`` and
   ``tests/test_train_select.py`` guard it).
 * **Contract.** A checkpoint flies with the observation-contract variant it was trained on
-  (``obs_variant`` in the checkpoint; ``default`` for every Phase 4 arm).
+  (``obs_variant`` in the checkpoint; ``default`` for every core arm, ``plus_clock`` /
+  ``minus_last_action`` for those ablations). ``modular`` flies through ``act_modular``
+  (``ila.eval.runner.is_modular``) on the default contract, its estimator on the same CPU fp32
+  path and P8's frozen ``T_ppo`` on P8's CPU path.
+* **Rows.** The ``teacher`` column names the teacher whose labels trained the run
+  (:func:`training_teacher`: ``T_pid`` / ``T_mix`` for those ablations, else ``T_ppo``) and
+  ``tag`` in ``selection.json`` is the manifest's (``core``, ``ablation``, ...).
 * **Path.** Every candidate flies through :func:`ila.eval.runner.run_list_vision` on the **CPU
   fp32 single-sample path** (one torch thread per worker; rows are bit-identical for any worker
   count, P2-D3 item 1), render ``full``. Vision students take ``act_vision``; ``bc_state`` takes
@@ -86,6 +92,7 @@ __all__ = [
     "resummarise_run",
     "select_run",
     "summarise_rows",
+    "training_teacher",
     "write_rows_csv",
 ]
 
@@ -119,6 +126,35 @@ OUTCOME_ORDER: Final[tuple[str, ...]] = (
 )
 
 
+#: Demo-collection config (P3-D1 §2): collection -> its teacher.
+_DEMOS_YAML: Final[Path] = Path(__file__).resolve().parents[3] / "configs" / "data" / "demos.yaml"
+
+
+def training_teacher(config: Mapping[str, Any]) -> str:
+    """Return the teacher whose labels trained a run (``configs/data/demos.yaml``).
+
+    Args:
+        config: A run's resolved train config (``config_resolved`` of its manifest).
+
+    Returns:
+        ``T_ppo``, ``T_pid`` or ``T_mix`` (``dart``: ``T_ppo``); ``T_ppo`` for a config
+        without a demo collection (the iterated arms' and R1's start from ``ppo_2000``).
+
+    Raises:
+        ValueError: If the collection is not in ``demos.yaml``.
+    """
+    import yaml
+
+    collection = config.get("data", {}).get("collection")
+    if collection is None:
+        return "T_ppo"
+    demos: Mapping[str, Any] = yaml.safe_load(_DEMOS_YAML.read_text(encoding="utf-8"))
+    collections = demos["collections"]
+    if collection not in collections:
+        raise ValueError(f"collection {collection!r} not in {_DEMOS_YAML.name}")
+    return str(collections[collection]["teacher"])
+
+
 def checkpoint_policy(
     path: str,
     cfgs: p8_adapter.EvalConfigs,
@@ -141,7 +177,8 @@ def checkpoint_policy(
         The :data:`ila.policies.registry.Student` (``dp``: config defaults ``Ta = 8``,
         ``K = 10`` for selection), typed ``Any`` as P8's ``PolicySpec.build`` result (vision
         students satisfy P8's ``EvalPolicy`` shape through ``reset``/``act``; the runner calls
-        ``act_vision``).
+        ``act_vision``, or ``act_modular`` for ``modular``, whose student builds P8's frozen
+        ``T_ppo`` here, in the worker).
     """
     del cfgs
     student: Student = load_student(
@@ -421,6 +458,7 @@ def fly_checkpoint(
     workers: int,
     chunk: int = 10,
     inference: tuple[int, int, bool] | None = None,
+    teacher: str = "T_ppo",
 ) -> list[dict[str, Any]]:
     """Fly one checkpoint's EMA student on listed episodes (CPU fp32 single-sample path).
 
@@ -436,6 +474,7 @@ def fly_checkpoint(
         inference: ``dp`` only: ``(Ta, K, temporal_ensembling)``, also written to the rows'
             ``Ta``/``K``/``ensemble`` columns (the inference sweeps). ``None`` (selection):
             the config defaults, columns empty.
+        teacher: The rows' ``teacher`` column (:func:`training_teacher`).
 
     Returns:
         Runner rows, in episode order.
@@ -448,7 +487,7 @@ def fly_checkpoint(
     )
     if inference is None:
         build = base
-        tags = runner.RowTags(arm=arm, teacher="T_ppo", student_seed=run_seed, ckpt_sha256=sha256)
+        tags = runner.RowTags(arm=arm, teacher=teacher, student_seed=run_seed, ckpt_sha256=sha256)
     else:
         ta, k, ensemble = inference
         build = functools.partial(
@@ -459,7 +498,7 @@ def fly_checkpoint(
         )
         tags = runner.RowTags(
             arm=arm,
-            teacher="T_ppo",
+            teacher=teacher,
             student_seed=run_seed,
             Ta=int(ta),
             K=int(k),
@@ -545,6 +584,7 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
             run_seed=int(man["run_seed"]),
             sha256=c.sha256,
             workers=workers,
+            teacher=training_teacher(man.get("config_resolved", {})),
         )
         rows_file = out_dir / f"{Path(c.file).name if onnx else Path(c.file).stem}_rows.csv"
         write_rows_csv(rows_file, rows)
@@ -569,6 +609,8 @@ def select_run(run_dir: Path, *, workers: int = 24) -> dict[str, Any]:
         "inference": inference_settings(man),
         **({"excluded_by_parity": onnx_parity_exclusions(run_dir)} if onnx else {}),
         "tag": man.get("tag", "core"),
+        "obs_variant": man.get("obs_variant", "default"),
+        "teacher": training_teacher(man.get("config_resolved", {})),
         "render": "full",
         "workers": workers,
         "candidates": [_result_record(r) for r in results],

@@ -93,7 +93,7 @@ def test_pinned_layout(contract: obs_split.ObsContract) -> None:
 
 
 def test_split_selects_by_name(contract: obs_split.ObsContract) -> None:
-    proprio, priv, extras = contract.split(_ramp())
+    proprio, priv, extras = contract.split_privileged(_ramp())
     assert proprio.dtype == priv.dtype == extras.dtype == np.float32
     assert proprio.tolist() == [*range(0, 9), *range(21, 25)]
     assert priv.tolist() == list(range(9, 20))
@@ -102,16 +102,16 @@ def test_split_selects_by_name(contract: obs_split.ObsContract) -> None:
 
 def test_split_module_function_and_batches(contract: obs_split.ObsContract) -> None:
     batch = np.stack([_ramp(), _ramp() + 100.0])
-    proprio, priv, extras = obs_split.split(batch)
+    proprio, priv, extras = obs_split.split_privileged(batch)
     assert proprio.shape == (2, 13) and priv.shape == (2, 11) and extras.shape == (2, 1)
     assert proprio[1, 0] == 100.0 and priv[1, 0] == 109.0
-    np.testing.assert_array_equal(proprio[0], contract.split(_ramp())[0])
+    np.testing.assert_array_equal(proprio[0], contract.split_privileged(_ramp())[0])
 
 
 def test_split_rejects_wrong_width(contract: obs_split.ObsContract) -> None:
     for bad in (_ramp(24), _ramp(13), _ramp(26)):
         with pytest.raises(ValueError, match="25"):
-            contract.split(bad)
+            contract.split_privileged(bad)
 
 
 def test_split_on_real_observation(contract: obs_split.ObsContract) -> None:
@@ -124,7 +124,7 @@ def test_split_on_real_observation(contract: obs_split.ObsContract) -> None:
         obs, _ = env.reset(seed=listed.episode_seed)
     finally:
         env.close()
-    proprio, priv, _ = contract.split(obs)
+    proprio, priv, _ = contract.split_privileged(obs)
     np.testing.assert_array_equal(proprio[9:12], np.zeros(3, np.float32))  # last_action at t=0
     assert priv.shape == (11,)
 
@@ -222,6 +222,241 @@ def test_student_input_from_window_requires_full_obs(contract: obs_split.ObsCont
         contract.student_input(images[:1], np.zeros((2, 25), np.float32))
 
 
+# --------------------------------------------------------------------------- ModularInput
+# P3-D1 §3 `modular`, clock path (leak RISK 2): time_fraction reaches the frozen teacher only
+# through a ModularInput built in ila/obs/split.py; never the estimator.
+
+
+def _field(contract: obs_split.ObsContract, window: np.ndarray, name: str) -> np.ndarray:
+    """Write-access view of one named field in a window (tests only; offsets from P8)."""
+    offset, size = contract.layout[name]
+    return window[..., offset : offset + size]
+
+
+def _window(contract: obs_split.ObsContract, clock: tuple[float, ...]) -> np.ndarray:
+    """A random finite [To, 25] window whose time_fraction column is ``clock``."""
+    rng = np.random.default_rng(20261102)
+    window = rng.uniform(-1.0, 1.0, size=(len(clock), contract.obs_dim)).astype(np.float32)
+    _field(contract, window, "time_fraction")[:, 0] = np.asarray(clock, np.float32)
+    return window
+
+
+def _images(n: int) -> np.ndarray:
+    rng = np.random.default_rng(7)
+    return rng.integers(0, 256, size=(n, 96, 96, 3), dtype=np.uint8)
+
+
+def test_modular_input_fields_and_export() -> None:
+    assert "ModularInput" in obs_split.__all__
+    names = {f.name for f in dataclasses.fields(obs_split.ModularInput)}
+    assert names == {"student_input", "time_fraction"}
+    for name in names:
+        assert not any(p in name for p in ("priv", "obs", "state", *PRIVILEGED))
+
+
+def test_modular_input_clock_by_name_dtype_shape(contract: obs_split.ObsContract) -> None:
+    window = _window(contract, (0.25, 0.375))
+    x = contract.modular_input(_images(2), window)
+    assert x.time_fraction.dtype == np.float32
+    assert x.time_fraction.shape == (contract.n_obs_steps,) == (2,)
+    assert x.n_obs_steps == 2
+    np.testing.assert_array_equal(x.time_fraction, np.array([0.25, 0.375], np.float32))
+    # The same values P8's layout places under the name "time_fraction" (offset from obs_fields).
+    names = [f.name for f in p8_adapter.obs_fields()]
+    sizes = [int(f.size) for f in p8_adapter.obs_fields()]
+    offset = sum(sizes[: names.index("time_fraction")])
+    np.testing.assert_array_equal(x.time_fraction, window[:, offset])
+    with pytest.raises(ValueError):
+        x.time_fraction[0] = 0.0  # read-only
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        x.time_fraction = np.zeros(2, np.float32)  # type: ignore[misc]
+
+
+def test_modular_input_student_part_bit_identical(contract: obs_split.ObsContract) -> None:
+    window = _window(contract, (0.5, 0.5 + 1.0 / 360.0))
+    images = _images(2)
+    x = contract.modular_input(images, window)
+    ref = contract.student_input(images, window)
+    assert x.student_input.variant == ref.variant == "default"
+    assert x.student_input.proprio_fields == ref.proprio_fields == PROPRIO
+    assert x.student_input.images.tobytes() == ref.images.tobytes()
+    assert x.student_input.proprio.dtype == ref.proprio.dtype
+    assert x.student_input.proprio.tobytes() == ref.proprio.tobytes()
+    # The clock is not inside the student part.
+    assert "time_fraction" not in x.student_input.proprio_fields
+    assert not np.isin(x.time_fraction, x.student_input.proprio).any()
+
+
+def test_modular_input_privileged_fields_poisoned(contract: obs_split.ObsContract) -> None:
+    window = _window(contract, (0.0, 1.0 / 360.0))
+    clean = contract.modular_input(_images(2), window)
+    poisoned = window.copy()
+    for name in PRIVILEGED:
+        _field(contract, poisoned, name)[...] = np.nan
+    assert np.isnan(poisoned).sum() == 2 * 11
+    x = contract.modular_input(_images(2), poisoned)
+    assert not np.isnan(x.student_input.proprio).any()
+    assert not np.isnan(x.time_fraction).any()
+    assert x.student_input.proprio.tobytes() == clean.student_input.proprio.tobytes()
+    assert x.time_fraction.tobytes() == clean.time_fraction.tobytes()
+
+
+def test_modular_input_start_padding_matches_student(contract: obs_split.ObsContract) -> None:
+    """At t = 0 the window is [obs0, obs0] (indices < 0 repeat step 0) for both parts."""
+    from ila.policies.dp import chunking
+
+    obs0 = _window(contract, (0.0,))[0]
+    steps = chunking.obs_window_steps(0, contract.n_obs_steps)
+    assert steps == (0, 0)
+    window = np.stack([obs0 for _ in steps])
+    x = contract.modular_input(np.stack([_images(1)[0]] * 2), window)
+    np.testing.assert_array_equal(x.time_fraction, np.zeros(2, np.float32))
+    np.testing.assert_array_equal(x.student_input.proprio[0], x.student_input.proprio[1])
+
+
+def test_modular_input_on_real_env(contract: obs_split.ObsContract) -> None:
+    """Over real P8 steps, the clock equals the env observation's ``time_fraction`` by name."""
+    from ila.data.episodes import read_split
+    from ila.policies.dp import chunking
+
+    cfgs = p8_adapter.load_eval_configs()
+    listed = read_split("demos_0-1999")[0]  # a train-pool row (P1-D2 obligation 1)
+    env = p8_adapter.make_env(cfgs, listed)
+    try:
+        obs, _ = env.reset(seed=listed.episode_seed)
+        history = [np.asarray(obs, np.float32)]
+        for _ in range(3):
+            obs, *_ = env.step(np.zeros(3, np.float32))
+            history.append(np.asarray(obs, np.float32))
+    finally:
+        env.close()
+    frames = _images(len(history))
+    for t in range(len(history)):
+        steps = chunking.obs_window_steps(t, contract.n_obs_steps)
+        window = np.stack([history[s] for s in steps])
+        x = contract.modular_input(np.stack([frames[s] for s in steps]), window)
+        expected = contract.audit_field(window, "time_fraction")[:, 0]
+        np.testing.assert_array_equal(x.time_fraction, expected)
+        ref = contract.student_input(np.stack([frames[s] for s in steps]), window)
+        assert x.student_input.proprio.tobytes() == ref.proprio.tobytes()
+    clock = contract.audit_field(np.stack(history), "time_fraction")[:, 0]
+    assert clock[0] == 0.0 and np.all(np.diff(clock) > 0.0)  # a real, advancing clock
+
+
+def test_modular_input_refuses_bad_inputs(contract: obs_split.ObsContract) -> None:
+    images = _images(2)
+    window = _window(contract, (0.1, 0.2))
+    si = contract.student_input(images, window)
+    for bad in (
+        np.array([0.1, 0.2], np.float64),  # dtype
+        np.array([0.1], np.float32),  # To mismatch
+        np.array([[0.1], [0.2]], np.float32),  # rank
+        np.array([0.1, np.nan], np.float32),  # non-finite
+        np.array([0.1, 1.5], np.float32),  # outside [0, 1]
+    ):
+        with pytest.raises(ValueError):
+            obs_split.ModularInput(student_input=si, time_fraction=bad)
+    with pytest.raises(TypeError):
+        obs_split.ModularInput(
+            student_input=window,  # type: ignore[arg-type]
+            time_fraction=np.array([0.1, 0.2], np.float32),
+        )
+    with pytest.raises(ValueError, match="25"):
+        contract.modular_input(images, np.zeros((2, 13), np.float32))
+
+
+def test_assemble_teacher_obs_places_fields_by_name(contract: obs_split.ObsContract) -> None:
+    """Ramp blocks land at P8's offsets, in P8's order.
+
+    ``time_fraction`` sits between the privileged block and ``last_action`` in P8's vector, so
+    concatenating the three blocks would be wrong.
+    """
+    ramp = _ramp().copy()
+    _field(contract, ramp, "time_fraction")[...] = 0.5
+    proprio, priv, extras = contract.split_privileged(ramp)
+    out = obs_split.assemble_teacher_obs(contract, proprio, priv, extras[0])
+    assert out.dtype == np.float32 and out.shape == (25,)
+    assert out.tobytes() == ramp.tobytes()
+    for offset, size in PINNED_LAYOUT.values():
+        np.testing.assert_array_equal(out[offset : offset + size], ramp[offset : offset + size])
+    # scalar, (1,) and np.float32 clocks are all accepted
+    for clock in (0.5, np.float32(0.5), np.array([0.5], np.float32)):
+        assert obs_split.assemble_teacher_obs(contract, proprio, priv, clock).tobytes() == (
+            ramp.tobytes()
+        )
+
+
+def test_assemble_teacher_obs_reproduces_env_obs(contract: obs_split.ObsContract) -> None:
+    """True proprio + true priv + true clock == the env observation, bit for bit (P8 train row)."""
+    from ila.data.episodes import read_split
+
+    cfgs = p8_adapter.load_eval_configs()
+    listed = read_split("demos_0-1999")[0]  # a train-pool row (P1-D2 obligation 1)
+    env = p8_adapter.make_env(cfgs, listed)
+    observations = []
+    try:
+        obs, _ = env.reset(seed=listed.episode_seed)
+        observations.append(obs)
+        for action in (np.zeros(3), np.array([0.3, -0.2, -0.4]), np.array([-0.1, 0.4, -0.2])):
+            obs, *_ = env.step(action.astype(np.float32))
+            observations.append(obs)
+    finally:
+        env.close()
+    for obs in observations:
+        assert obs.dtype == np.float32 and obs.shape == (25,)
+        proprio, priv, extras = contract.split_privileged(obs)
+        out = obs_split.assemble_teacher_obs(contract, proprio, priv, extras[0])
+        assert out.tobytes() == obs.tobytes()
+    assert np.any(contract.audit_field(observations[-1], "last_action") != 0.0)
+
+
+def test_assemble_teacher_obs_from_modular_input(contract: obs_split.ObsContract) -> None:
+    """The intended modular path: proprio and clock from a ModularInput's step t."""
+    window = _window(contract, (0.25, 0.5))
+    _field(contract, window, "in_contact")[...] = 0.0
+    x = contract.modular_input(_images(2), window)
+    _, priv, _ = contract.split_privileged(window[-1])
+    out = obs_split.assemble_teacher_obs(
+        contract, x.student_input.proprio[-1], priv, x.time_fraction[-1]
+    )
+    assert out.tobytes() == window[-1].tobytes()
+
+
+def test_assemble_teacher_obs_refuses_bad_blocks(contract: obs_split.ObsContract) -> None:
+    proprio, priv, _ = contract.split_privileged(_window(contract, (0.5,))[0])
+    good = (proprio, priv, 0.5)
+    bad_cases = [
+        (proprio[:-1], priv, 0.5),  # short proprio
+        (proprio, priv[:-1], 0.5),  # short priv
+        (np.concatenate([proprio, priv]), priv, 0.5),  # a full-ish vector as proprio
+        (proprio, priv, np.array([0.5, 0.5], np.float32)),  # two clocks
+        (proprio[None], priv, 0.5),  # rank 2
+        (proprio, np.full_like(priv, np.nan), 0.5),  # NaN estimate
+        (np.where(np.arange(13) == 4, np.inf, proprio).astype(np.float32), priv, 0.5),  # inf
+        (proprio, priv, np.nan),  # NaN clock
+        (proprio, priv, 1.5),  # clock outside [0, 1]
+        (proprio.astype(np.int32), priv, 0.5),  # non-float
+    ]
+    obs_split.assemble_teacher_obs(contract, *good)
+    for case in bad_cases:
+        with pytest.raises(ValueError):
+            obs_split.assemble_teacher_obs(contract, *case)
+    other = obs_split.load_contract(obs_split.CONTRACT_PATH, "plus_clock")
+    with pytest.raises(ValueError, match="default"):
+        obs_split.assemble_teacher_obs(other, np.zeros(14, np.float32), priv, 0.5)
+
+
+@pytest.mark.parametrize("variant", ["plus_clock", "minus_last_action"])
+def test_modular_input_default_variant_only(variant: str) -> None:
+    other = obs_split.load_contract(obs_split.CONTRACT_PATH, variant)
+    window = _window(other, (0.1, 0.2))
+    with pytest.raises(ValueError, match="default"):
+        other.modular_input(_images(2), window)
+    si = other.student_input(_images(2), window)
+    with pytest.raises(ValueError, match="default"):
+        obs_split.ModularInput(student_input=si, time_fraction=np.array([0.1, 0.2], np.float32))
+
+
 # --------------------------------------------------------------------------- ablations
 
 
@@ -248,13 +483,15 @@ def test_ablation_changes_exactly_one_field(
 
 
 def test_plus_clock_appends_time_fraction() -> None:
-    proprio, _, extras = obs_split.load_contract(variant="plus_clock").split(_ramp())
+    proprio, _, extras = obs_split.load_contract(variant="plus_clock").split_privileged(_ramp())
     assert proprio.tolist() == [*range(0, 9), *range(21, 25), 20]
     assert extras.shape == (0,)
 
 
 def test_minus_last_action_drops_it() -> None:
-    proprio, _, extras = obs_split.load_contract(variant="minus_last_action").split(_ramp())
+    proprio, _, extras = obs_split.load_contract(variant="minus_last_action").split_privileged(
+        _ramp()
+    )
     assert proprio.tolist() == [*range(0, 9), 24]
     assert sorted(extras.tolist()) == [20, 21, 22, 23]
 
@@ -484,7 +721,7 @@ SCANNER_OK = [
     "obs[:, contract.slc]",
     "obs[...]",
     "np.take(obs, idx, axis=-1)",
-    "contract.split(obs)",
+    "contract.split_privileged(obs)",
     "statement = [1][0]",
 ]
 SCANNER_KNOWN_MISSES = ["x[9:12]", "IDX = (9, 10)\nobs[IDX]"]

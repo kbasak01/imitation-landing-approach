@@ -6,6 +6,11 @@ keys replacing the base's (one level, as the ablation headers state). The SHA-25
 run is the SHA-256 of the file named on the command line, of its base, if any, and of any file it
 references (``bc_dagger``'s ``dagger: {from: configs/data/demos.yaml#dagger}``).
 
+``modular.yaml`` (it has ``estimator_head``) is kind ``modular``: the shared encoder plus an 11-d
+privileged-block head trained with a Huber loss; its ``teacher`` block must name P8's frozen
+``T_ppo`` seed 0 with ``time_fraction`` as the only pass-through (P3-D1 §3), and it uses the
+default observation contract.
+
 ``bc_matched`` and ``bc_dagger`` parse to one :class:`IterationSchedule` (P3-D1 §3, skeptic B2;
 ``tests/test_train_dagger.py`` asserts equality); ``bc_dagger`` adds a :class:`DaggerConfig`.
 
@@ -374,13 +379,37 @@ def _dagger_schedule(
     return schedule, dagger, source
 
 
+#: ``modular.yaml``'s ``teacher`` block (P3-D1 §3): the frozen P8 ``T_ppo`` seed 0, clock only.
+_MODULAR_TEACHER: Final[dict[str, Any]] = {
+    "source": "p8_ppo",
+    "seed": 0,
+    "frozen": True,
+    "passthrough_to_teacher": ["time_fraction"],
+}
+
+
+def _check_modular(path: Path, raw: Mapping[str, Any]) -> None:
+    """Check ``modular.yaml``'s teacher block and contract (P3-D1 §3).
+
+    Raises:
+        ValueError: On another teacher, another pass-through, an ablation contract or a loss
+            other than Huber.
+    """
+    if dict(raw.get("teacher", {})) != _MODULAR_TEACHER:
+        raise ValueError(f"{path}: modular's teacher must be {_MODULAR_TEACHER}")
+    if str(raw.get("obs_variant", "default")) != "default":
+        raise ValueError(f"{path}: modular uses the default observation contract")
+    if not isinstance(raw.get("loss"), Mapping) or raw["loss"].get("name") != "huber":
+        raise ValueError(f"{path}: modular's loss is Huber (P3-D1 §3)")
+
+
 @dataclass(frozen=True)
 class TrainConfig:
     """One arm's frozen training config.
 
     Attributes:
         arm: Arm name.
-        kind: ``"bc"``, ``"dp"`` or ``"state"``.
+        kind: ``"bc"``, ``"dp"``, ``"state"`` or ``"modular"``.
         path: The YAML named on the command line.
         files_sha256: SHA-256 of every file read (the named file first, then its base).
         raw: The resolved mapping (read-only), stored in every checkpoint.
@@ -403,7 +432,7 @@ class TrainConfig:
     """
 
     arm: str
-    kind: Literal["bc", "dp", "state"]
+    kind: Literal["bc", "dp", "state", "modular"]
     path: Path
     files_sha256: tuple[tuple[str, str], ...]
     raw: Mapping[str, Any]
@@ -443,7 +472,10 @@ class TrainConfig:
         raw, files = load_train_yaml(path)
         data = raw["data"]
         if "horizons" in raw:
-            kind: Literal["bc", "dp", "state"] = "dp"
+            kind: Literal["bc", "dp", "state", "modular"] = "dp"
+        elif "estimator_head" in raw:
+            kind = "modular"
+            _check_modular(path, raw)
         elif data.get("input") == "teacher_obs":
             kind = "state"
         else:

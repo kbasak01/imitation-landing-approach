@@ -28,7 +28,7 @@ from rld.eval.episodes import ListedEpisode
 
 from ila import p8_adapter
 from ila.eval import batched, runner
-from ila.obs.split import load_contract
+from ila.obs.split import ModularInput, load_contract
 from ila.render import scene
 from ila.render.camera import Frame, RenderMeta
 from runner_support import build_pixel_student, build_tiny_list, pixel_action, replay_inputs
@@ -502,6 +502,184 @@ def test_student_receives_only_contract_input_and_pixels(
             assert images.tobytes() == exp_images.tobytes()
             assert proprio.tobytes() == exp_proprio.tobytes()
         start += n
+
+
+# --------------------------------------------------------------------------- modular clock path
+# P3-D1 §3 `modular`, clock path (leak RISK 2): a policy with act_modular receives a
+# ModularInput built by ObsContract.modular_input from the runner's own window: the
+# StudentInput plus the true time_fraction of the same steps, and nothing privileged.
+
+PRIVILEGED = ("rel_position", "rel_velocity", "deck_normal", "rel_tilt", "height")
+
+
+def _modular_action(images: Any, proprio: Any, clock: Any) -> np.ndarray:
+    """pixel_action plus a clock term, so the trajectory depends on the clock received."""
+    out = pixel_action(images, proprio)
+    out[2] += 0.1 * float(clock[-1])
+    return out
+
+
+class _ModularSpy:
+    """Records every ModularInput; flies _modular_action. act_vision/act must never be called."""
+
+    privileged = False
+    calls: list[ModularInput] = []
+
+    def reset(self, seed: int, context: Any = None) -> None:
+        del seed
+        if context is not None:
+            raise AssertionError("a modular student is never given a context")
+
+    def act_modular(self, mi: ModularInput) -> Any:
+        _ModularSpy.calls.append(mi)
+        si = mi.student_input
+        return _modular_action(si.images, si.proprio, mi.time_fraction)
+
+    def act_vision(self, image_stack: Any, proprio: Any) -> Any:
+        del image_stack, proprio
+        raise AssertionError("the runner called act_vision on a policy with act_modular")
+
+    def act(self, obs: Any) -> Any:
+        raise AssertionError(f"the runner called act() on a student with {np.shape(obs)}")
+
+
+def _build_modular_spy(cfgs: EvalConfigs) -> _ModularSpy:
+    del cfgs
+    return _ModularSpy()
+
+
+def _replay_modular(
+    listed: ListedEpisode, cfgs: EvalConfigs, n_steps: int
+) -> tuple[list[np.ndarray], list[tuple[np.ndarray, np.ndarray]]]:
+    """Re-fly one episode by hand with _modular_action.
+
+    Returns:
+        The env observation per step (0 ... n_steps) and the contract StudentInput
+        ``(images, proprio)`` per control step.
+
+    Window indices ``max(0, t-To+1+i)`` are written out here, independently of ``chunking``;
+    the clock is read from the env observation by P8 field name.
+    """
+    contract = load_contract()
+    to = contract.n_obs_steps
+    offset, _ = contract.layout["time_fraction"]
+    env = p8_adapter.make_env(cfgs, listed)
+    try:
+        p8_adapter.set_motion(env, cfgs, listed)
+        obs, _ = env.reset(seed=listed.episode_seed)
+        sc = scene.attach(env)
+        frames, observations = [sc.render().rgb], [np.array(obs, copy=True)]
+        inputs = []
+        for t in range(n_steps):
+            window = [max(0, i) for i in range(t - to + 1, t + 1)]
+            si = contract.student_input(
+                np.stack([frames[i] for i in window]), np.stack([observations[i] for i in window])
+            )
+            inputs.append((si.images, si.proprio))
+            clock = np.array([observations[i][offset] for i in window], np.float32)
+            obs, _, terminated, truncated, _ = env.step(
+                _modular_action(si.images, si.proprio, clock)
+            )
+            frames.append(sc.render().rgb)
+            observations.append(np.array(obs, copy=True))
+            if terminated or truncated:
+                break
+    finally:
+        env.close()
+    return observations, inputs
+
+
+def test_modular_student_receives_clock_of_step_t(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs
+) -> None:
+    contract = load_contract()
+    to = contract.n_obs_steps
+    offset, _ = contract.layout["time_fraction"]
+    episodes = tiny_list[:2]  # static, then a frigate realization: a hull switch
+    _ModularSpy.calls = []
+    spec = p8_adapter.callable_spec("modular_spy", _build_modular_spy, run_seed=0)
+    rows = runner.run_list_vision(episodes, spec, cfgs, workers=1, chunk=len(episodes))
+    assert len(_ModularSpy.calls) == sum(int(r["steps"]) for r in rows)
+    start = 0
+    for listed, row in zip(episodes, rows, strict=True):
+        n = int(row["steps"])
+        observations, expected_inputs = _replay_modular(listed, cfgs, n)
+        assert len(expected_inputs) == n
+        for t, mi in enumerate(_ModularSpy.calls[start : start + n]):
+            assert isinstance(mi, ModularInput)
+            window = [max(0, i) for i in range(t - to + 1, t + 1)]
+            assert mi.time_fraction.dtype == np.float32 and mi.time_fraction.shape == (to,)
+            assert mi.time_fraction[-1] == observations[t][offset]  # the clock of step t
+            exp_clock = np.array([observations[i][offset] for i in window], np.float32)
+            assert mi.time_fraction.tobytes() == exp_clock.tobytes()
+            exp_images, exp_proprio = expected_inputs[t]
+            assert mi.student_input.images.tobytes() == exp_images.tobytes()
+            assert mi.student_input.proprio.tobytes() == exp_proprio.tobytes()
+            assert mi.student_input.variant == "default"
+        assert _ModularSpy.calls[start + n - 1].time_fraction[-1] > 0.0  # the clock advanced
+        start += n
+
+
+def test_modular_student_never_sees_privileged_fields(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """NaN-poison the five privileged fields of every env observation: inputs and rows unchanged."""
+    contract = load_contract()
+    episodes = tiny_list[1:3]
+    spec = p8_adapter.callable_spec("modular_spy", _build_modular_spy, run_seed=0)
+    _ModularSpy.calls = []
+    clean_rows = runner.run_list_vision(episodes, spec, cfgs, workers=1, chunk=len(episodes))
+    clean_calls = list(_ModularSpy.calls)
+
+    real_make_env = p8_adapter.make_env
+    poisoned = [0]
+
+    def poison(obs: Any) -> np.ndarray:
+        out = np.array(obs, copy=True)
+        for name in PRIVILEGED:
+            offset, size = contract.layout[name]
+            out[offset : offset + size] = np.nan
+        poisoned[0] += 1
+        return out
+
+    def make_poisoned_env(cfgs_: Any, listed: Any) -> Any:
+        env = real_make_env(cfgs_, listed)
+        reset, step = env.reset, env.step
+
+        def poisoned_reset(*args: Any, **kwargs: Any) -> Any:
+            obs, info = reset(*args, **kwargs)
+            return poison(obs), info
+
+        def poisoned_step(action: Any) -> Any:
+            obs, *rest = step(action)
+            return (poison(obs), *rest)
+
+        env.reset, env.step = poisoned_reset, poisoned_step
+        return env
+
+    monkeypatch.setattr(p8_adapter, "make_env", make_poisoned_env)
+    _ModularSpy.calls = []
+    rows = runner.run_list_vision(episodes, spec, cfgs, workers=1, chunk=len(episodes))
+    assert poisoned[0] == sum(int(r["steps"]) + 1 for r in rows)  # every obs was poisoned
+    assert len(_ModularSpy.calls) == len(clean_calls)
+    for mi, ref in zip(_ModularSpy.calls, clean_calls, strict=True):
+        assert not np.isnan(mi.student_input.proprio).any()
+        assert not np.isnan(mi.time_fraction).any()
+        assert mi.student_input.proprio.tobytes() == ref.student_input.proprio.tobytes()
+        assert mi.student_input.images.tobytes() == ref.student_input.images.tobytes()
+        assert mi.time_fraction.tobytes() == ref.time_fraction.tobytes()
+    assert runner.vision_rows_csv(rows) == runner.vision_rows_csv(clean_rows)
+
+
+def test_modular_student_refused_off_default_and_on_batched_path(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs
+) -> None:
+    spec = p8_adapter.callable_spec("modular_spy", _build_modular_spy, run_seed=0)
+    with pytest.raises(ValueError, match="default"):
+        runner.run_list_vision(tiny_list[:1], spec, cfgs, workers=1, contract_variant="plus_clock")
+    with pytest.raises(TypeError, match="modular"):
+        batched.PerSlotPolicy(spec, cfgs, 1)
+    assert runner.is_modular(_ModularSpy()) and not runner.is_modular(build_pixel_student(cfgs))
 
 
 def test_student_needs_full_render_and_no_privilege(
