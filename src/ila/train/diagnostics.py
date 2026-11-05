@@ -178,29 +178,55 @@ def sample_indices(n: int, seed: int | Sequence[int], k: int = COPYCAT_SAMPLE) -
 
 
 def heldout_states(
-    data_root: Path, *, start: int = 1950, n: int = 50, every: int = HELDOUT_EVERY
+    data_root: Path,
+    *,
+    start: int = 1950,
+    n: int = 50,
+    every: int = HELDOUT_EVERY,
+    obs_variant: str = "default",
 ) -> BCWindowDataset:
     """P4-D5's held-out copycat states: ``ppo_2000`` ``start .. start+n-1``, every ``every``-th.
 
-    Read through the student path only (images, allowlisted proprio, labels).
+    Read through the student path only (images, the variant's allowlisted proprio, labels:
+    ``DemoStore.student_inputs`` via :meth:`FrameTable.from_store`).
+
+    Args:
+        data_root: ``${data_root}`` (holds ``demos/ppo_2000.h5``).
+        start: First stream index.
+        n: Stream indices taken (before thinning).
+        every: Keep every ``every``-th of them.
+        obs_variant: Observation-contract variant of the student measured on these states
+            (its checkpoint's ``obs_variant``): proprio width 13 (``default``), 10
+            (``minus_last_action``) or 14 (``plus_clock``, the labelled ``+clock`` ablation).
+
+    Returns:
+        The windows (``To`` from the variant's contract).
     """
     with DemoStore(data_root / "demos" / "ppo_2000.h5") as store:
         names = list(choose_episodes(store, n, False, start=start).names)[::every]
-        table = FrameTable.from_store(store, names)
-    return BCWindowDataset(table, _n_obs_steps())
+        table = FrameTable.from_store(store, names, obs_variant)
+    return BCWindowDataset(table, _n_obs_steps(obs_variant))
 
 
-def rollout_states(store_path: Path) -> BCWindowDataset:
-    """Every visited state of one DAgger iteration's store (student path only)."""
+def rollout_states(store_path: Path, *, obs_variant: str = "default") -> BCWindowDataset:
+    """Every visited state of one DAgger iteration's store (student path only).
+
+    Args:
+        store_path: The rollout store.
+        obs_variant: Observation-contract variant (as :func:`heldout_states`).
+
+    Returns:
+        The windows (``To`` from the variant's contract).
+    """
     with DemoStore(store_path) as store:
-        table = FrameTable.from_store(store, store.episodes())
-    return BCWindowDataset(table, _n_obs_steps())
+        table = FrameTable.from_store(store, store.episodes(), obs_variant)
+    return BCWindowDataset(table, _n_obs_steps(obs_variant))
 
 
-def _n_obs_steps() -> int:
+def _n_obs_steps(variant: str = "default") -> int:
     from ila.obs.split import load_contract  # lazy: the contract loads P8's field layout
 
-    return load_contract().n_obs_steps
+    return load_contract(variant=variant).n_obs_steps
 
 
 def copycat_record(
@@ -215,9 +241,18 @@ def copycat_record(
 
     Returns:
         ``{"diag": [x, y, z], "J": 3x3, "trace_over_3", "n", "units", "weights", "path"}``.
-    """
-    from ila.policies.registry import load_student  # lazy: builds the network
 
+    Raises:
+        ValueError: If ``states`` were read under another contract than the checkpoint's
+            ``obs_variant``.
+    """
+    from ila.policies.registry import load_student, read_checkpoint  # lazy: builds the net
+
+    variant = str(read_checkpoint(ckpt)["obs_variant"])
+    if variant != states.table.variant:
+        raise ValueError(
+            f"{ckpt}: trained on contract {variant!r}, states read as {states.table.variant!r}"
+        )
     student = load_student(ckpt, "cpu", weights="ema")
     net: Any = student.net
     net.eval()
