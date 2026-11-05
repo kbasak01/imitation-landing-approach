@@ -17,17 +17,25 @@ jobs:
       P8: external/rl-land-on-moving-deck
     steps:
       # P8's pins pull CUDA torch and TensorRT wheels; with the restored pip cache the runner's
-      # ~14 GB free disk ran out (Errno 28, Gate 1 incident). Drop toolchains this job never uses.
+      # ~14 GB free disk ran out (Errno 28, Gate 1 incident; again on 2026-11-05, run 41966956963,
+      # where the runner itself hit ENOSPC after the tests passed). Drop toolchains and images
+      # this job never uses; keep /opt/hostedtoolcache/Python for setup-python.
       - name: Free disk space
         run: |
           df -h /
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+            /usr/local/share/boost /usr/local/share/powershell /usr/share/swift \
+            /usr/local/lib/node_modules /usr/local/julia* /opt/microsoft /opt/google \
+            /opt/az /usr/share/miniconda /usr/local/share/chromium
+          sudo find /opt/hostedtoolcache -mindepth 1 -maxdepth 1 ! -name Python \
+            -exec rm -rf {} +
+          sudo docker image prune --all --force > /dev/null || true
           df -h /
       - uses: actions/checkout@v5
         with:
           submodules: recursive
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.12"
           cache: pip
@@ -45,7 +53,18 @@ jobs:
           pip freeze --exclude-editable > /tmp/p8_constraints.txt
           pip install -c /tmp/p8_constraints.txt -e ".[dev]"
           python -c "import rld, ila"
+      # On a cache hit the restored wheels are now duplicated in site-packages and setup-python
+      # will not re-save the cache, so the copy is dead weight (several GB of CUDA wheels). On a
+      # miss keep it: setup-python's post step saves it for the next run.
+      - name: Drop the restored pip cache (cache hit only)
+        if: steps.setup-python.outputs.cache-hit == 'true'
+        run: |
+          pip cache purge
+          df -h /
       - name: Lint
         run: make lint PY=python RUFF=ruff MYPY=mypy PYTEST=pytest
       - name: Test (CPU subset)
         run: pytest -m "not gpu and not checkpoints and not data and not slow"
+      - name: Disk after tests
+        if: always()
+        run: df -h /
