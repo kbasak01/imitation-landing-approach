@@ -3228,3 +3228,55 @@ NOTEs and their dispositions:
   at clean `576447c`, workers = 24.
 - **Scope of P5-D1's worker-count determinism:** it holds for a fixed checkout state. Re-running an
   iteration at another commit, or on a dirty tree, changes the store SHA through provenance alone.
+
+### Gate 7 passed (2026-11-05)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| Every planned run present with a manifest | All 38 planned runs are present, each with `manifest.json` and `selection.json` in `results/phase7/runs/` (`runs_summary.csv`): `modular` s0–s4 (core) and the 11 ablations of `configs/eval/matrix.yaml` × 3 seeds. Every run was `done` at 100 % of its steps on a clean tree with no resumes, and its config SHA matches P3-D1 §3 | PASS |
+| Diagnostician verdicts recorded | P7-D3 table: 26 TRUSTWORTHY, 12 CAVEAT, 0 EXCLUDE. The 3 investigations CLAUDE.md requires for results better than expected are recorded (`dp_mix`, `dp_pid`, `dp_minus_last_action`) | PASS |
+| Item 1: `modular` + estimation error vs P8's σ | `results/phase7/modular_estimation.{csv,json}`; P7-D2 (deviation), P7-D3 item 3 (against P8's 2 cm and 4 cm noise-arm rows); smoke `results/phase7/smoke_modular.json` passed | PASS |
+| Item 3: H2 touchdown plots on `select` | `results/phase7/h2/h2_touchdown_select.{png,csv,json}` (`T_mix`, `bc_mix`, `dp_mix`; plotted, not scored) | PASS |
+| CPU tests green | `make lint` clean (ruff, format, mypy --strict, 71 files). `make test`: 913 passed (13 min 48 s) at `5dbf2dc` on an unchanging tree. CI green on `phase-7` (run 41964884390, `5dbf2dc`) | PASS |
+
+*Reviewers.*
+- **`training-run-diagnostician`**, every run: verdicts as in the P7-D3 table.
+- **`privileged-leak-auditor`.**
+  - 2026-11-02, before training: no LEAK, no RISK (P7-D1).
+  - 2026-11-04, on the clock helpers and the diagnostics pass-through: no LEAK, no RISK (P7-D4).
+  - P7-D1's deferred NOTE 3 is closed (`902f852`).
+- **`results-skeptic`**, 2026-11-04: no BLOCKER; six SERIOUS and ten MINOR. All are addressed in the
+  revised P7-D3 (review response). The revision was not re-reviewed.
+
+*Deviations this phase.* P7-D2, the estimation-study data (user decision, 2026-11-02). No threshold
+was changed.
+
+## Phase 8
+
+*Before you start (from Phase 7).*
+- **Budget.** Training ended at 95.41 of 120 GPU-h (P7-D3 item 11). Phase 8 is evaluation only.
+- **Flying `modular`.**
+  - It flies only on the CPU fp32 single-sample path, because the batched path refuses it
+    (P7-D1 item 3).
+  - Budget for it on every list.
+  - Every ablation checkpoint carries its `obs_variant`, so evaluation must pass it through.
+- **Expected numbers.** Expect evaluation numbers below the selected `select` scores, most of all
+  for `dp` arms, where picks run 9–19 above candidate means (P7-D3 item 2).
+- **Hypothesis caveats to state with the result** (scoring rules unchanged):
+  - **H3:** the input-freshness confound from `dp_minus_last_action` (P7-D3 consequences);
+  - **H4:** P′ uses a `bc_plus_clock` that relies on the clock to a seed-dependent degree, and
+    `bc_state`'s clock reliance was not measured;
+  - **H2:** `dp_mix`'s gain over `dp` is not shown to come from multimodality, and `select` W₁ is
+    not H2 evidence.
+- **Teacher checks to repeat on frozen lists:**
+  - `dp_pid` and `bc_pid` against P8's `pid_feedforward` rows at `id` SS4–SS6;
+  - `dp_minus_last_action` and `modular` against `T_ppo`.
+- **Watch items:**
+  - `bc_n100`'s selected 5 k checkpoints, which carry the most timeouts;
+  - detector disagreements in the `dp_*` arms;
+  - the still-unrun binding GPU-acceptance test for `dp` (P6-D5).
+- **Process.** Do not commit in the checkout while `make test` runs there. Provenance-recording
+  tests compare store SHAs across runs (P7-D4 test fix).
+- **First task:** `eval-auditor` drafts `scripts/eval_matrix.py` and the arm definitions from
+  `configs/eval/matrix.yaml`, including ablation `obs_variant` pass-through and `modular`'s CPU path.
+  Then `privileged-leak-auditor` reviews it before any frozen list is flown.
