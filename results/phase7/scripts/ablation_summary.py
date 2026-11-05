@@ -101,6 +101,9 @@ def summarise(arm: str) -> tuple[dict, dict[int, np.ndarray] | None]:
             "closing_speed_m_s_p50_p95": [q(cs[np.isfinite(cs)], .5), q(cs[np.isfinite(cs)], .95)],
             "frac_closing_above_0p5_m_s": float((cs[np.isfinite(cs)] > 0.5).mean()),
             "n_tunnelled": sum(r["tunnelled"] in ("True", "true", "1") for r in pooled),
+            "n_success": int(succ.sum()),
+            "n_tunnelled_success": sum(r["tunnelled"] in ("True", "true", "1")
+                                       and r["outcome"] == "success" for r in pooled),
         }
         return rec, {"all": np.mean(per_ep_all, 0), "sel": np.mean(per_ep_sel, 0)}
     return rec, None
@@ -123,7 +126,24 @@ for arm in P7:
             "all_candidates_mean_ci95": boot(d_all),
             "selected_mean_ci95": boot(per_ep[arm]["sel"] - per_ep["dp"]["sel"]),
             "episodes_better_worse_equal": [int((d_all > 0).sum()), int((d_all < 0).sum()),
-                                            int((d_all == 0).sum())]}
+                                            int((d_all == 0).sum())],
+            "note": "episode-only resampling, conditional on these seeds and checkpoints; "
+                    "not P3-D1's paired bootstrap"}
+        # Touchdown-band decomposition of the all-candidate success difference vs dp
+        # (touched-down episodes; shares p_b, band success s_b). Composition effect is
+        # sum_b (p_b^arm - p_b^dp) * s_b evaluated at either arm's band rates; the
+        # remainder is the within-band rate difference.
+        a, b = res[arm]["all_candidates"], res["dp"]["all_candidates"]
+        diff = sum(a["band_share"][k] * (a["band_success"][k] or 0.0) for k in a["band_share"]) \
+            - sum(b["band_share"][k] * (b["band_success"][k] or 0.0) for k in b["band_share"])
+        comp = {}
+        for name, rates in (("at_arm_rates", a), ("at_dp_rates", b)):
+            comp[name] = sum((a["band_share"][k] - b["band_share"][k])
+                             * (rates["band_success"][k] or 0.0) for k in a["band_share"])
+        res[arm]["band_decomposition_vs_dp"] = {
+            "touched_down_success_diff": diff,
+            "composition_effect": comp,
+            "composition_share_of_diff": {k: v / diff for k, v in comp.items()}}
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps({"note": __doc__.strip().splitlines()[0], "bands_s": [FAST, SLOW],
                            "arms": res}, indent=1) + "\n")
