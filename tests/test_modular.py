@@ -171,7 +171,7 @@ def test_teacher_observation_is_p8_layout_with_the_true_clock() -> None:
     student.reset(1)
     student.act_modular(mi)
     seen = teacher.seen[-1]
-    proprio, priv, extras = CONTRACT.split(seen)
+    proprio, priv, extras = CONTRACT.split_privileged(seen)
     assert proprio.tobytes() == CONTRACT.proprio(obs[-1]).tobytes()  # step t's proprio
     assert student.last_estimate is not None
     assert priv.tobytes() == student.last_estimate.tobytes()  # the estimate, not the truth

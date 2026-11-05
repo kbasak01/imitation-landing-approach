@@ -65,7 +65,7 @@ __all__ = [
     "StudentInput",
     "assemble_teacher_obs",
     "load_contract",
-    "split",
+    "split_privileged",
 ]
 
 #: The committed observation contract.
@@ -198,10 +198,17 @@ class ObsContract:
             raise ValueError(f"expected a P8 observation of width {self.obs_dim}, got {arr.shape}")
         return arr
 
-    def split(
+    def split_privileged(
         self, obs: ArrayLike
     ) -> tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
         """Split P8 observation(s) into ``(proprio, priv, extras)`` by field name.
+
+        Not a student path: ``priv`` and ``extras`` are privileged and teacher-only. Data code
+        (the demo store) uses it to write its columns. Like :meth:`audit_field`, it is an audit
+        name (``tests/test_render_access.py``): forbidden in ``ila/train``, ``ila/policies``,
+        ``ila/deploy`` and ``ila/eval`` except by a reviewed allowlist entry. The distinctive
+        name lets the static scan find it (a bare ``split`` would also match ``str.split``).
+        A student path takes :meth:`proprio` or :meth:`student_input`.
 
         Args:
             obs: P8's observation(s), shape ``(..., 25)``, units and frames per field (module
@@ -707,7 +714,7 @@ def _proprio_dim(variant: str) -> int:
     return load_contract(CONTRACT_PATH, variant).proprio_dim
 
 
-def split(
+def split_privileged(
     obs: ArrayLike, contract: ObsContract | None = None
 ) -> tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
     """Split P8 observation(s) into ``(proprio, priv, extras)`` under a contract.
@@ -717,9 +724,9 @@ def split(
         contract: The contract; the committed default when ``None``.
 
     Returns:
-        See :meth:`ObsContract.split`.
+        See :meth:`ObsContract.split_privileged`.
     """
-    return (load_contract() if contract is None else contract).split(obs)
+    return (load_contract() if contract is None else contract).split_privileged(obs)
 
 
 def assemble_teacher_obs(
@@ -730,7 +737,7 @@ def assemble_teacher_obs(
 ) -> NDArray[np.float32]:
     """Assemble the ``modular`` arm's 25-d teacher observation at one step, by field name.
 
-    The inverse of :meth:`ObsContract.split` for the ``default`` contract: each block is
+    The inverse of :meth:`ObsContract.split_privileged` for the ``default`` contract: each block is
     written at the positions P8's layout gives its fields (``contract.layout``, from P8's
     ``obs_fields``), so the result is in P8's field order whatever the block order. Fed the
     true blocks of an env observation it reproduces that observation bit for bit; in the

@@ -360,7 +360,7 @@ class EpisodeRecord:
         """
         c = load_contract() if contract is None else contract
         obs = np.ascontiguousarray(teacher_obs, dtype=np.float32)
-        proprio, priv, _ = c.split(obs)
+        proprio, priv, _ = c.split_privileged(obs)
         record = cls(
             arrays={
                 "images": np.ascontiguousarray(images, dtype=np.uint8),
@@ -404,7 +404,7 @@ def validate(
         if key != "images" and not np.all(np.isfinite(arr)):
             raise StoreSchemaError(f"{key}: non-finite values")
     obs = arrays["teacher_obs"]
-    proprio, priv, _ = c.split(obs)
+    proprio, priv, _ = c.split_privileged(obs)
     if not (np.array_equal(arrays["proprio"], proprio) and np.array_equal(arrays["priv"], priv)):
         raise StoreSchemaError("proprio/priv are not the by-name selection of teacher_obs")
     last = c.audit_field(obs, "last_action")

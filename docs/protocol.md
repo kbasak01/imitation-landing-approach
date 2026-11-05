@@ -3203,7 +3203,13 @@ but cannot use it: the diagnostic refuses their variants, and `select.py`, `loop
   `NEVER_STUDENT` field.
 
 NOTEs and their dispositions:
-1. P7-D1's deferred NOTE 3 is closed: `ObsContract.split()` was renamed to a distinct name and
-   added to the audit name scan (see the commit that follows this entry).
+1. P7-D1's deferred NOTE 3 is closed: `ObsContract.split()` and the module function
+   `ila.obs.split.split()` were renamed `split_privileged` and added to `AUDIT_NAMES`
+   (`tests/test_render_access.py`; see the commit that follows this entry).
+   - A bare `split` could not be scanned, since it also matches `str.split`.
+   - `ila/train`, `ila/policies`, `ila/deploy` and `ila/eval` may not reference it.
+     `AUDIT_ALLOWLIST` is unchanged.
+   - Its one user, `ila/data/store.py`, which writes and validates `proprio`/`priv`, lies outside
+     the audit-scanned set, as for the other audit names.
 2. This entry records the diagnostic.
 3. `ClockInterventionTeacher` now refuses a student or `modular` inner policy (hardening).
