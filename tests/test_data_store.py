@@ -323,7 +323,7 @@ def test_bytes_are_deterministic(tmp_path: Path) -> None:
 
 def test_proprio_and_priv_are_by_name() -> None:
     r = synthetic_record()
-    proprio, priv, _ = CONTRACT.split(r.arrays["teacher_obs"])
+    proprio, priv, _ = CONTRACT.split_privileged(r.arrays["teacher_obs"])
     np.testing.assert_array_equal(r.arrays["proprio"], proprio)
     np.testing.assert_array_equal(r.arrays["priv"], priv)
     for i, name in enumerate(("attitude", "body_rates", "velocity", "last_action", "in_contact")):

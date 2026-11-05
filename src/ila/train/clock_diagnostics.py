@@ -363,7 +363,8 @@ class ClockInterventionTeacher:
     """A P8 teacher whose observation's ``time_fraction`` field is replaced; nothing else.
 
     Attributes:
-        inner: A P8 ``EvalPolicy`` (``reset``, ``act`` on the 25-d observation).
+        inner: A P8 ``EvalPolicy`` (``reset``, ``act`` on the 25-d observation); never a
+            student or a ``modular`` policy.
         contract: Any contract (only its P8 layout is used, by field name).
         intervention: What happens to ``time_fraction``.
     """
@@ -372,7 +373,18 @@ class ClockInterventionTeacher:
     needs_motion_feed: bool = False
 
     def __init__(self, inner: Any, contract: ObsContract, intervention: ClockIntervention) -> None:
-        """Hold the teacher."""
+        """Hold the teacher.
+
+        Raises:
+            TypeError: If ``inner`` is a vision student (``act_vision``) or a ``modular``
+                policy (``act_modular``): this wrapper feeds a 25-d P8 observation, which only a
+                P8 teacher may receive (non-negotiable 2).
+        """
+        if runner.is_student(inner) or runner.is_modular(inner):
+            raise TypeError(
+                "the teacher clock intervention wraps a P8 teacher, not a student or modular "
+                f"policy (got {type(inner).__name__})"
+            )
         self.inner = inner
         self.contract = contract
         self.intervention = intervention

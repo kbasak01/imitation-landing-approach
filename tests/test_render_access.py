@@ -26,10 +26,13 @@ whose name starts with ``pybullet`` (e.g. ``pybullet_utils.bullet_client``) coun
 
 Store audit accessors (leak audit, Phase 3, RISK 1)
 --------------------------------------------------
-``AUDIT_NAMES`` -- ``ObsContract.audit_field`` (any P8 field by name, privileged included) and
-the demo store's non-student accessors ``privileged_observations`` (``teacher_obs``),
-``model_times`` (``t_model_s``, the clock), ``audit_arrays`` (every dataset) and
-``estimator_targets`` (``priv``) -- may not be referenced in ``ila/train``, ``ila/policies``,
+``AUDIT_NAMES`` -- ``ObsContract.audit_field`` (any P8 field by name, privileged included),
+``split_privileged`` (``ObsContract.split_privileged`` and the module function of the same name in
+``ila.obs.split``: the ``(proprio, priv, extras)`` blocks; renamed from ``split`` so that the scan
+can name it without matching ``str.split``, P7-D1 NOTE 3, closed in P7-D4) and the demo store's
+non-student accessors ``privileged_observations`` (``teacher_obs``), ``model_times``
+(``t_model_s``, the clock), ``audit_arrays`` (every dataset) and ``estimator_targets``
+(``priv``) -- may not be referenced in ``ila/train``, ``ila/policies``,
 ``ila/deploy`` or ``ila/eval``, by the same reference rules (any Attribute on any object, a
 Name, an import, a literal-string ``getattr``/``attrgetter``/...). ``ila/data`` (the store and
 its audits) and ``ila/obs`` are where they live and are not scanned for them.
@@ -90,6 +93,7 @@ EXEMPT: frozenset[str] = frozenset({"eval/runner.py"})
 AUDIT_NAMES = frozenset(
     {
         "audit_field",
+        "split_privileged",
         "privileged_observations",
         "model_times",
         "audit_arrays",
@@ -264,6 +268,10 @@ PLANTED_AUDIT = [
     'get = operator.attrgetter("model_times")',
     'get = attrgetter("store.estimator_targets")',
     'call = methodcaller("audit_field", obs, "height")',
+    "proprio, priv, extras = contract.split_privileged(obs)",
+    "from ila.obs.split import split_privileged",
+    "blocks = obs_split.split_privileged(obs, contract)",
+    'f = getattr(contract, "split_privileged")',
     "from ila.data.store import DemoStore\nread = DemoStore.privileged_observations",
     "fn = (lambda s: s.audit_arrays)(store)",
 ]
@@ -273,6 +281,8 @@ ALLOWED_AUDIT = [
     "m = store.meta(name)",
     "p = contract.proprio(obs)",
     'f = getattr(store, "student_inputs")',
+    'parts = name.split("/")',
+    "train, test = sklearn.model_selection.train_test_split(x)",
 ]
 
 
@@ -451,10 +461,14 @@ def test_state_dataset_scan_flags_planted_use(line: str) -> None:
 def test_audit_names_exist_where_they_live() -> None:
     """The scanned names are the real accessor names (a rename would silently void the scan)."""
     from ila.data.store import DemoStore
+    from ila.obs import split as obs_split
     from ila.obs.split import ObsContract
 
     assert callable(ObsContract.audit_field)
-    for name in AUDIT_NAMES - {"audit_field"}:
+    assert callable(ObsContract.split_privileged)
+    assert callable(obs_split.split_privileged)
+    assert not hasattr(ObsContract, "split") and not hasattr(obs_split, "split")
+    for name in AUDIT_NAMES - {"audit_field", "split_privileged"}:
         assert callable(getattr(DemoStore, name)), name
 
 

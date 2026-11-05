@@ -93,7 +93,7 @@ def test_pinned_layout(contract: obs_split.ObsContract) -> None:
 
 
 def test_split_selects_by_name(contract: obs_split.ObsContract) -> None:
-    proprio, priv, extras = contract.split(_ramp())
+    proprio, priv, extras = contract.split_privileged(_ramp())
     assert proprio.dtype == priv.dtype == extras.dtype == np.float32
     assert proprio.tolist() == [*range(0, 9), *range(21, 25)]
     assert priv.tolist() == list(range(9, 20))
@@ -102,16 +102,16 @@ def test_split_selects_by_name(contract: obs_split.ObsContract) -> None:
 
 def test_split_module_function_and_batches(contract: obs_split.ObsContract) -> None:
     batch = np.stack([_ramp(), _ramp() + 100.0])
-    proprio, priv, extras = obs_split.split(batch)
+    proprio, priv, extras = obs_split.split_privileged(batch)
     assert proprio.shape == (2, 13) and priv.shape == (2, 11) and extras.shape == (2, 1)
     assert proprio[1, 0] == 100.0 and priv[1, 0] == 109.0
-    np.testing.assert_array_equal(proprio[0], contract.split(_ramp())[0])
+    np.testing.assert_array_equal(proprio[0], contract.split_privileged(_ramp())[0])
 
 
 def test_split_rejects_wrong_width(contract: obs_split.ObsContract) -> None:
     for bad in (_ramp(24), _ramp(13), _ramp(26)):
         with pytest.raises(ValueError, match="25"):
-            contract.split(bad)
+            contract.split_privileged(bad)
 
 
 def test_split_on_real_observation(contract: obs_split.ObsContract) -> None:
@@ -124,7 +124,7 @@ def test_split_on_real_observation(contract: obs_split.ObsContract) -> None:
         obs, _ = env.reset(seed=listed.episode_seed)
     finally:
         env.close()
-    proprio, priv, _ = contract.split(obs)
+    proprio, priv, _ = contract.split_privileged(obs)
     np.testing.assert_array_equal(proprio[9:12], np.zeros(3, np.float32))  # last_action at t=0
     assert priv.shape == (11,)
 
@@ -373,7 +373,7 @@ def test_assemble_teacher_obs_places_fields_by_name(contract: obs_split.ObsContr
     """
     ramp = _ramp().copy()
     _field(contract, ramp, "time_fraction")[...] = 0.5
-    proprio, priv, extras = contract.split(ramp)
+    proprio, priv, extras = contract.split_privileged(ramp)
     out = obs_split.assemble_teacher_obs(contract, proprio, priv, extras[0])
     assert out.dtype == np.float32 and out.shape == (25,)
     assert out.tobytes() == ramp.tobytes()
@@ -404,7 +404,7 @@ def test_assemble_teacher_obs_reproduces_env_obs(contract: obs_split.ObsContract
         env.close()
     for obs in observations:
         assert obs.dtype == np.float32 and obs.shape == (25,)
-        proprio, priv, extras = contract.split(obs)
+        proprio, priv, extras = contract.split_privileged(obs)
         out = obs_split.assemble_teacher_obs(contract, proprio, priv, extras[0])
         assert out.tobytes() == obs.tobytes()
     assert np.any(contract.audit_field(observations[-1], "last_action") != 0.0)
@@ -415,7 +415,7 @@ def test_assemble_teacher_obs_from_modular_input(contract: obs_split.ObsContract
     window = _window(contract, (0.25, 0.5))
     _field(contract, window, "in_contact")[...] = 0.0
     x = contract.modular_input(_images(2), window)
-    _, priv, _ = contract.split(window[-1])
+    _, priv, _ = contract.split_privileged(window[-1])
     out = obs_split.assemble_teacher_obs(
         contract, x.student_input.proprio[-1], priv, x.time_fraction[-1]
     )
@@ -423,7 +423,7 @@ def test_assemble_teacher_obs_from_modular_input(contract: obs_split.ObsContract
 
 
 def test_assemble_teacher_obs_refuses_bad_blocks(contract: obs_split.ObsContract) -> None:
-    proprio, priv, _ = contract.split(_window(contract, (0.5,))[0])
+    proprio, priv, _ = contract.split_privileged(_window(contract, (0.5,))[0])
     good = (proprio, priv, 0.5)
     bad_cases = [
         (proprio[:-1], priv, 0.5),  # short proprio
@@ -483,13 +483,15 @@ def test_ablation_changes_exactly_one_field(
 
 
 def test_plus_clock_appends_time_fraction() -> None:
-    proprio, _, extras = obs_split.load_contract(variant="plus_clock").split(_ramp())
+    proprio, _, extras = obs_split.load_contract(variant="plus_clock").split_privileged(_ramp())
     assert proprio.tolist() == [*range(0, 9), *range(21, 25), 20]
     assert extras.shape == (0,)
 
 
 def test_minus_last_action_drops_it() -> None:
-    proprio, _, extras = obs_split.load_contract(variant="minus_last_action").split(_ramp())
+    proprio, _, extras = obs_split.load_contract(variant="minus_last_action").split_privileged(
+        _ramp()
+    )
     assert proprio.tolist() == [*range(0, 9), 24]
     assert sorted(extras.tolist()) == [20, 21, 22, 23]
 
@@ -719,7 +721,7 @@ SCANNER_OK = [
     "obs[:, contract.slc]",
     "obs[...]",
     "np.take(obs, idx, axis=-1)",
-    "contract.split(obs)",
+    "contract.split_privileged(obs)",
     "statement = [1][0]",
 ]
 SCANNER_KNOWN_MISSES = ["x[9:12]", "IDX = (9, 10)\nobs[IDX]"]

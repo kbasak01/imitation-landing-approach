@@ -194,6 +194,36 @@ def test_refuses_non_plus_clock_students(tmp_path: Path) -> None:
         cd.selected_run(run)
 
 
+def test_teacher_wrapper_refuses_students_and_modular() -> None:
+    """The 25-d observation path wraps a P8 teacher only (fakes only: no env, no checkpoint)."""
+    contract = load_contract()
+    iv = cd.ClockIntervention("none")
+
+    class Teacher:
+        def reset(self, seed: int, context: Any = None) -> None:
+            pass
+
+        def act(self, _o: NDArray[np.float32]) -> NDArray[np.float32]:
+            return np.zeros(3, dtype=np.float32)
+
+    class Modular(Teacher):
+        def act_modular(self, _mi: Any) -> NDArray[np.float32]:
+            return np.zeros(3, dtype=np.float32)
+
+    class ModularStudent(Modular):
+        def act_vision(self, _images: Any, _proprio: Any) -> NDArray[np.float32]:
+            return np.zeros(3, dtype=np.float32)
+
+    cd.ClockInterventionTeacher(Teacher(), contract, iv)  # a teacher is accepted
+    for inner in (_Recorder(), Modular(), ModularStudent()):
+        with pytest.raises(TypeError, match="not a student or modular"):
+            cd.ClockInterventionTeacher(inner, contract, iv)
+    # an already-wrapped student is a student too
+    wrapped = cd.ClockInterventionStudent(_Recorder(), load_contract(variant="plus_clock"), iv)
+    with pytest.raises(TypeError, match="not a student or modular"):
+        cd.ClockInterventionTeacher(wrapped, contract, iv)
+
+
 # --------------------------------------------------------------------------- closed loop
 
 CLOCK_MEAN = 0.0842
