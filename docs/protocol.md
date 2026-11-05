@@ -3234,7 +3234,7 @@ NOTEs and their dispositions:
 | Criterion | Measured value / evidence | Result |
 |---|---|---|
 | Every planned run present with a manifest | All 38 planned runs are present, each with `manifest.json` and `selection.json` in `results/phase7/runs/` (`runs_summary.csv`): `modular` s0–s4 (core) and the 11 ablations of `configs/eval/matrix.yaml` × 3 seeds. Every run was `done` at 100 % of its steps on a clean tree with no resumes, and its config SHA matches P3-D1 §3 | PASS |
-| Diagnostician verdicts recorded | P7-D3 table: 26 TRUSTWORTHY, 12 CAVEAT, 0 EXCLUDE. The 3 investigations CLAUDE.md requires for results better than expected are recorded (`dp_mix`, `dp_pid`, `dp_minus_last_action`) | PASS |
+| Diagnostician verdicts recorded | P7-D3 table: 22 TRUSTWORTHY, 16 CAVEAT, 0 EXCLUDE. The 3 investigations CLAUDE.md requires for results better than expected are recorded (`dp_mix`, `dp_pid`, `dp_minus_last_action`) | PASS |
 | Item 1: `modular` + estimation error vs P8's σ | `results/phase7/modular_estimation.{csv,json}`; P7-D2 (deviation), P7-D3 item 3 (against P8's 2 cm and 4 cm noise-arm rows); smoke `results/phase7/smoke_modular.json` passed | PASS |
 | Item 3: H2 touchdown plots on `select` | `results/phase7/h2/h2_touchdown_select.{png,csv,json}` (`T_mix`, `bc_mix`, `dp_mix`; plotted, not scored) | PASS |
 | CPU tests green | `make lint` clean (ruff, format, mypy --strict, 71 files). `make test`: 913 passed (13 min 48 s) at `5dbf2dc` on an unchanging tree. CI green on `phase-7` (run 41964884390, `5dbf2dc`) | PASS |
