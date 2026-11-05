@@ -1,0 +1,337 @@
+{
+  "arm": "bc_n300",
+  "batch_size": 256,
+  "checkpoint_every_override": null,
+  "checkpoints": [
+    {
+      "bytes": 181401243,
+      "file": "s0_step005000.pt",
+      "global_step": 5000,
+      "kind": "full",
+      "sha256": "1be10436a740bc7ff8babe020bdb5180dfb7b6985bbd8c4284dc5dd7e5254e96",
+      "stage": 0,
+      "stage_step": 5000
+    },
+    {
+      "bytes": 181401243,
+      "file": "s0_step010000.pt",
+      "global_step": 10000,
+      "kind": "full",
+      "sha256": "71ea45aa4c4a278cffb0d10a2a851e0a8a9f8022906eda8a27f1c6e69ce3d897",
+      "stage": 0,
+      "stage_step": 10000
+    },
+    {
+      "bytes": 181401243,
+      "file": "s0_step015000.pt",
+      "global_step": 15000,
+      "kind": "full",
+      "sha256": "6b00cc92e4d18037b6564cac114d605c4c1ea46dec6439a999f2cffcec5ffa92",
+      "stage": 0,
+      "stage_step": 15000
+    },
+    {
+      "bytes": 181401243,
+      "file": "s0_step020000.pt",
+      "global_step": 20000,
+      "kind": "full",
+      "sha256": "86fa971195fcd65d3400bbe985ca421ee74390e2189d29fc5a22b304fb501caa",
+      "stage": 0,
+      "stage_step": 20000
+    },
+    {
+      "bytes": 181401243,
+      "file": "s0_step025000.pt",
+      "global_step": 25000,
+      "kind": "full",
+      "sha256": "e5d8087e2594549b829ed93f3ae8e2ba44f146aae41144dea03aeddb539d1a9a",
+      "stage": 0,
+      "stage_step": 25000
+    },
+    {
+      "bytes": 181401243,
+      "file": "s0_step030000.pt",
+      "global_step": 30000,
+      "kind": "full",
+      "sha256": "f2c6ad0cd9f7d3ce15294ec8b77fc4a7e07bfe5fd796dc4c607704b60dcb5529",
+      "stage": 0,
+      "stage_step": 30000
+    },
+    {
+      "bytes": 45345941,
+      "file": "ema_last.pt",
+      "global_step": 30000,
+      "kind": "ema_last",
+      "sha256": "b5613d2816990005e176e16b8e782e9d1adfcb5035b135c8468050e410edfc84",
+      "stage": 0,
+      "stage_step": 30000
+    }
+  ],
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "ed345e7f6b94afbc6af9e060b98c2a6b648788d35183f0cdc4d7a74ed9bea84b",
+        "matches": true,
+        "path": "configs/train/ablations/bc_n300.yaml",
+        "sha256": "ed345e7f6b94afbc6af9e060b98c2a6b648788d35183f0cdc4d7a74ed9bea84b"
+      },
+      {
+        "frozen_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+        "matches": true,
+        "path": "configs/train/bc.yaml",
+        "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+      }
+    ]
+  },
+  "config_resolved": {
+    "arm": "bc_n300",
+    "augment": {
+      "crop": {
+        "eval": "center",
+        "size": 88,
+        "train": "random"
+      }
+    },
+    "batch_size": 256,
+    "checkpoint_every": 5000,
+    "data": {
+      "collection": "ppo_2000",
+      "first_n": 300
+    },
+    "ema": 0.999,
+    "encoder": {
+      "groups": 16,
+      "norm": "groupnorm",
+      "pretrained": false,
+      "spatial_softmax_keypoints": 32,
+      "trunk": "resnet18"
+    },
+    "head": {
+      "activation": "tanh",
+      "hidden": [
+        256,
+        256
+      ],
+      "out": 3
+    },
+    "loss": "mse",
+    "optim": {
+      "lr": 0.0003,
+      "name": "adamw",
+      "schedule": "cosine",
+      "warmup_steps": 500,
+      "weight_decay": 0.0001
+    },
+    "precision": "bf16",
+    "proprio_mlp": [
+      64,
+      64
+    ],
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "selection": {
+      "list": "select",
+      "metric": "success",
+      "tie_break": [
+        "p95_closing_speed",
+        "lowest_step"
+      ]
+    },
+    "steps": 30000,
+    "success_filter": true
+  },
+  "data": {
+    "0": {
+      "choices": [
+        {
+          "attempted": 300,
+          "first_kept": 0,
+          "kept": 300,
+          "kept_fraction": 1.0,
+          "last_kept": 299,
+          "outcomes": {
+            "success": 300
+          },
+          "start": 0,
+          "store": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+          "success_filter": true
+        }
+      ],
+      "data_load_s": 9.347104956999829,
+      "heldout_frames": 3067,
+      "heldout_overlap_episodes": 0,
+      "kept_episodes": 300,
+      "labelled_episodes": 300,
+      "labelled_episodes_total": 300,
+      "stage": 0,
+      "stores": [
+        {
+          "collection": "ppo_2000",
+          "expected_sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+          "matches": true,
+          "path": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+          "sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd"
+        }
+      ],
+      "train_frames": 18511
+    }
+  },
+  "ema": {
+    "decay": 0.999,
+    "inv_gamma": 1.0,
+    "kind": "constant",
+    "max_value": 1.0,
+    "min_value": 0.0,
+    "power": 0.0
+  },
+  "finished_unix": 1793691224.2615452,
+  "first_n_override": null,
+  "git": {
+    "ila_commit": "d39cd4b56f93730ea2eaa9190b707d8359c9e28f",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "global_step": 30000,
+  "gpu_hours": 0.7529235597319429,
+  "gpu_mem_max_bytes": 2436262400,
+  "heldout": {
+    "collection": "ppo_2000",
+    "n": 50,
+    "start": 1950
+  },
+  "host": {
+    "cpu": "x86_64",
+    "cpu_count": 36,
+    "cuda": "13.0",
+    "device": "cuda",
+    "gpu": "NVIDIA RTX A4000",
+    "gpu_memory_bytes": 17170956288,
+    "hostname": "DATTA-BASAK",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130"
+  },
+  "init_from": null,
+  "invocations": [
+    {
+      "git": {
+        "ila_commit": "d39cd4b56f93730ea2eaa9190b707d8359c9e28f",
+        "ila_dirty": false,
+        "ila_dirty_paths": [],
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+      },
+      "host": {
+        "cpu": "x86_64",
+        "cpu_count": 36,
+        "cuda": "13.0",
+        "device": "cuda",
+        "gpu": "NVIDIA RTX A4000",
+        "gpu_memory_bytes": 17170956288,
+        "hostname": "DATTA-BASAK",
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130"
+      },
+      "numerics": {
+        "cudnn_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": false,
+        "device": "cuda",
+        "float32_matmul_precision": "highest",
+        "matmul_allow_tf32": false
+      },
+      "unix": 1793688339.3258147
+    }
+  ],
+  "kind": "bc",
+  "loop_s_total": 2700.781614817999,
+  "max_steps": null,
+  "normaliser": {
+    "proprio_mean": [
+      -0.0003775437653530389,
+      -0.004291220102459192,
+      0.003950406797230244,
+      -0.0037977350875735283,
+      0.0003424982714932412,
+      0.007518792524933815,
+      0.01229141466319561,
+      -0.0028450703248381615,
+      -0.38775956630706787,
+      -0.006244846154004335,
+      0.04806768149137497,
+      -0.29722484946250916,
+      0.24142402410507202
+    ],
+    "proprio_std": [
+      0.061405379325151443,
+      0.08437368273735046,
+      0.028257690370082855,
+      0.7778033018112183,
+      0.8674437999725342,
+      0.7370339035987854,
+      0.1985797882080078,
+      0.15172600746154785,
+      0.43257445096969604,
+      0.1857568323612213,
+      0.19669988751411438,
+      0.28633686900138855,
+      0.4279468059539795
+    ]
+  },
+  "numerics": {
+    "cudnn_allow_tf32": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": false,
+    "device": "cuda",
+    "float32_matmul_precision": "highest",
+    "matmul_allow_tf32": false
+  },
+  "obs_variant": "default",
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "grad_clip": null,
+    "lr": 0.0003,
+    "name": "adamw",
+    "schedule": "cosine (diffusers), linear warm-up from 0",
+    "weight_decay": 0.0001
+  },
+  "precision": "bf16",
+  "purpose": "train",
+  "resumes": [],
+  "run_seed": 1,
+  "segments": [
+    {
+      "first_step": 0,
+      "loader_wait_s": 0.26317991480755154,
+      "loop_s": 2700.781614817999,
+      "stage": 0,
+      "steps": 30000
+    }
+  ],
+  "selectable": true,
+  "sigma": null,
+  "stages": [
+    {
+      "checkpoint_every": 5000,
+      "index": 0,
+      "steps": 30000,
+      "warmup": 500
+    }
+  ],
+  "state": "done",
+  "steps_override": null,
+  "steps_per_s_loop": 11.107895520098038,
+  "steps_timed_total": 30000,
+  "tag": "ablation",
+  "total_steps": 30000,
+  "wall_clock_s": 2710.5248150349944
+}

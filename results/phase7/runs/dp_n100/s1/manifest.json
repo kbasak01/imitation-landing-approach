@@ -1,0 +1,420 @@
+{
+  "arm": "dp_n100",
+  "batch_size": 128,
+  "checkpoint_every_override": null,
+  "checkpoints": [
+    {
+      "bytes": 469978687,
+      "file": "s0_step010000.pt",
+      "global_step": 10000,
+      "kind": "full",
+      "sha256": "c0a430c1f4caf2df34620e554e5b59b584e252c92cc97db6a281b31e6c9f3b32",
+      "stage": 0,
+      "stage_step": 10000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step020000.pt",
+      "global_step": 20000,
+      "kind": "full",
+      "sha256": "3145a82ca94348290846967c27835e7924d748e7a3bab3142c99d4e2f83a84bf",
+      "stage": 0,
+      "stage_step": 20000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step030000.pt",
+      "global_step": 30000,
+      "kind": "full",
+      "sha256": "72fb1a13678e4c801c827f8fcdf8d0d6d180e2f772511054d56ffe4ddadd2654",
+      "stage": 0,
+      "stage_step": 30000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step040000.pt",
+      "global_step": 40000,
+      "kind": "full",
+      "sha256": "153a88195192f13ad2009edd75f4d8183c8317335303a7570529d95b32549b2c",
+      "stage": 0,
+      "stage_step": 40000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step050000.pt",
+      "global_step": 50000,
+      "kind": "full",
+      "sha256": "82b05cb7c715999c67ae116055aef27115c8d0d88e9c828a5e7c9f02ea0bcf66",
+      "stage": 0,
+      "stage_step": 50000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step060000.pt",
+      "global_step": 60000,
+      "kind": "full",
+      "sha256": "9ab0031f04bcef6a60ba0b4af3483b70c92a7df60af9369e2bb552378db13f94",
+      "stage": 0,
+      "stage_step": 60000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step070000.pt",
+      "global_step": 70000,
+      "kind": "full",
+      "sha256": "23a1547073a022789c82f837714a11cd55c7189e908cbc3136cc71ed770686f3",
+      "stage": 0,
+      "stage_step": 70000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step080000.pt",
+      "global_step": 80000,
+      "kind": "full",
+      "sha256": "7c995a82a283d15266053b3b10cbe6283a827694a8034b21c0b14c77a13a3db1",
+      "stage": 0,
+      "stage_step": 80000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step090000.pt",
+      "global_step": 90000,
+      "kind": "full",
+      "sha256": "80a737940add0c0a256bd7c0505363460486ef7c441deeadd326899b072c8175",
+      "stage": 0,
+      "stage_step": 90000
+    },
+    {
+      "bytes": 469978687,
+      "file": "s0_step100000.pt",
+      "global_step": 100000,
+      "kind": "full",
+      "sha256": "04b95d8f6704a5ad23ade6e8ef497d22d6eff085dffe96430c3508a06d7f2d9c",
+      "stage": 0,
+      "stage_step": 100000
+    },
+    {
+      "bytes": 117482413,
+      "file": "ema_last.pt",
+      "global_step": 100000,
+      "kind": "ema_last",
+      "sha256": "e6a9884899f5d0a4e121db200f3d34e39977444a6b4c47aa0c4e12ff033602de",
+      "stage": 0,
+      "stage_step": 100000
+    }
+  ],
+  "config": {
+    "all_frozen": true,
+    "files": [
+      {
+        "frozen_sha256": "b620251aec57de4a85723fe0a1beb72d96b4dcfca6b3054cdba25edba222ccc4",
+        "matches": true,
+        "path": "configs/train/ablations/dp_n100.yaml",
+        "sha256": "b620251aec57de4a85723fe0a1beb72d96b4dcfca6b3054cdba25edba222ccc4"
+      },
+      {
+        "frozen_sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913",
+        "matches": true,
+        "path": "configs/train/dp.yaml",
+        "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+      }
+    ]
+  },
+  "config_resolved": {
+    "action_normalisation": "identity",
+    "arm": "dp_n100",
+    "augment": {
+      "crop": {
+        "eval": "center",
+        "size": 88,
+        "train": "random"
+      }
+    },
+    "batch_size": 128,
+    "checkpoint_every": 10000,
+    "data": {
+      "collection": "ppo_2000",
+      "first_n": 100
+    },
+    "ema": {
+      "max_value": 0.9999,
+      "power": 0.75
+    },
+    "encoder": {
+      "groups": 16,
+      "norm": "groupnorm",
+      "pretrained": false,
+      "spatial_softmax_keypoints": 32,
+      "trunk": "resnet18"
+    },
+    "horizons": {
+      "horizon": 16,
+      "n_action_steps": 8,
+      "n_obs_steps": 2
+    },
+    "inference": {
+      "noise": "per_episode_generator",
+      "num_inference_steps": 10,
+      "sampler": "ddim",
+      "timestep_spacing": "trailing"
+    },
+    "inference_sweeps": {
+      "K": [
+        1,
+        2,
+        5,
+        10,
+        25,
+        100
+      ],
+      "Ta": [
+        1,
+        2,
+        4,
+        8,
+        12
+      ],
+      "temporal_ensembling": {
+        "m": 0.01
+      }
+    },
+    "noise_scheduler": {
+      "beta_schedule": "squaredcos_cap_v2",
+      "clip_sample": true,
+      "num_train_timesteps": 100,
+      "prediction_type": "epsilon",
+      "train": "ddpm"
+    },
+    "optim": {
+      "lr": 0.0001,
+      "name": "adamw",
+      "schedule": "cosine",
+      "warmup_steps": 500,
+      "weight_decay": 1e-06
+    },
+    "precision": "bf16",
+    "proprio_mlp": [
+      64,
+      64
+    ],
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "selection": {
+      "at": {
+        "K": 10,
+        "Ta": 8
+      },
+      "list": "select",
+      "metric": "success",
+      "tie_break": [
+        "p95_closing_speed",
+        "lowest_step"
+      ]
+    },
+    "steps": 100000,
+    "success_filter": true,
+    "unet": {
+      "cond": "film",
+      "diffusion_step_embed_dim": 128,
+      "down_dims": [
+        128,
+        256,
+        512
+      ],
+      "kernel_size": 5
+    }
+  },
+  "data": {
+    "0": {
+      "choices": [
+        {
+          "attempted": 100,
+          "first_kept": 0,
+          "kept": 100,
+          "kept_fraction": 1.0,
+          "last_kept": 99,
+          "outcomes": {
+            "success": 100
+          },
+          "start": 0,
+          "store": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+          "success_filter": true
+        }
+      ],
+      "data_load_s": 9.089895309007261,
+      "heldout_frames": 3067,
+      "heldout_overlap_episodes": 0,
+      "kept_episodes": 100,
+      "labelled_episodes": 100,
+      "labelled_episodes_total": 100,
+      "stage": 0,
+      "stores": [
+        {
+          "collection": "ppo_2000",
+          "expected_sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd",
+          "matches": true,
+          "path": "/home/kbasak/data/ila/demos/ppo_2000.h5",
+          "sha256": "35b70cbdbd6034b8128eef91a1cb9a9e61af5785641d00a3e2c13215df127cfd"
+        }
+      ],
+      "train_frames": 6209
+    }
+  },
+  "ema": {
+    "decay": 0.0,
+    "inv_gamma": 1.0,
+    "kind": "power",
+    "max_value": 0.9999,
+    "min_value": 0.0,
+    "power": 0.75
+  },
+  "finished_unix": 1793786893.205535,
+  "first_n_override": null,
+  "git": {
+    "ila_commit": "d39cd4b56f93730ea2eaa9190b707d8359c9e28f",
+    "ila_dirty": false,
+    "ila_dirty_paths": [],
+    "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+  },
+  "global_step": 100000,
+  "gpu_hours": 2.288070136815554,
+  "gpu_mem_max_bytes": 2594509312,
+  "heldout": {
+    "collection": "ppo_2000",
+    "n": 50,
+    "start": 1950
+  },
+  "host": {
+    "cpu": "x86_64",
+    "cpu_count": 36,
+    "cuda": "13.0",
+    "device": "cuda",
+    "gpu": "NVIDIA RTX A4000",
+    "gpu_memory_bytes": 17170956288,
+    "hostname": "DATTA-BASAK",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130"
+  },
+  "init_from": null,
+  "invocations": [
+    {
+      "git": {
+        "ila_commit": "d39cd4b56f93730ea2eaa9190b707d8359c9e28f",
+        "ila_dirty": false,
+        "ila_dirty_paths": [],
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075"
+      },
+      "host": {
+        "cpu": "x86_64",
+        "cpu_count": 36,
+        "cuda": "13.0",
+        "device": "cuda",
+        "gpu": "NVIDIA RTX A4000",
+        "gpu_memory_bytes": 17170956288,
+        "hostname": "DATTA-BASAK",
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130"
+      },
+      "numerics": {
+        "cudnn_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": false,
+        "device": "cuda",
+        "float32_matmul_precision": "highest",
+        "matmul_allow_tf32": false
+      },
+      "unix": 1793778656.182712
+    }
+  ],
+  "kind": "dp",
+  "loop_s_total": 8227.330151866016,
+  "max_steps": null,
+  "normaliser": {
+    "proprio_mean": [
+      0.0012596405576914549,
+      -0.0033719222992658615,
+      0.0030066785402595997,
+      -0.004680681508034468,
+      0.003376089036464691,
+      0.007628761697560549,
+      0.020304933190345764,
+      0.01024426519870758,
+      -0.39127278327941895,
+      0.0013728997437283397,
+      0.05784601718187332,
+      -0.29980483651161194,
+      0.24061845242977142
+    ],
+    "proprio_std": [
+      0.06401146203279495,
+      0.08587886393070221,
+      0.02858089841902256,
+      0.7786972522735596,
+      0.8700799942016602,
+      0.7410485744476318,
+      0.19800929725170135,
+      0.16312561929225922,
+      0.436907559633255,
+      0.1849026083946228,
+      0.20069383084774017,
+      0.2887818217277527,
+      0.4274590313434601
+    ]
+  },
+  "numerics": {
+    "cudnn_allow_tf32": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": false,
+    "device": "cuda",
+    "float32_matmul_precision": "highest",
+    "matmul_allow_tf32": false
+  },
+  "obs_variant": "default",
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "grad_clip": null,
+    "lr": 0.0001,
+    "name": "adamw",
+    "schedule": "cosine (diffusers), linear warm-up from 0",
+    "weight_decay": 1e-06
+  },
+  "precision": "bf16",
+  "purpose": "train",
+  "resumes": [],
+  "run_seed": 1,
+  "segments": [
+    {
+      "first_step": 0,
+      "loader_wait_s": 0.9240485732152592,
+      "loop_s": 8227.330151866016,
+      "stage": 0,
+      "steps": 100000
+    }
+  ],
+  "selectable": true,
+  "sigma": null,
+  "stages": [
+    {
+      "checkpoint_every": 10000,
+      "index": 0,
+      "steps": 100000,
+      "warmup": 500
+    }
+  ],
+  "state": "done",
+  "steps_override": null,
+  "steps_per_s_loop": 12.154611296025273,
+  "steps_timed_total": 100000,
+  "tag": "ablation",
+  "total_steps": 100000,
+  "wall_clock_s": 8237.052492535993
+}
