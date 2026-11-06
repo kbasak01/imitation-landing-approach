@@ -37,8 +37,10 @@ __all__ = [
     "LOSS_ABBREV",
     "RESULTS_MD",
     "ReportInputs",
+    "label_of",
     "load_inputs",
     "render",
+    "withheld_inputs",
     "write_report",
 ]
 
@@ -139,7 +141,7 @@ class ReportInputs:
     @property
     def withheld(self) -> frozenset[str]:
         """Labels of above-teacher cells not yet released by the review."""
-        return frozenset(_label(r) for r in self.above) - frozenset(self.released)
+        return frozenset(label_of(r) for r in self.above) - frozenset(self.released)
 
 
 def _csv(path: Path) -> list[dict[str, str]]:
@@ -196,7 +198,8 @@ def _group(r: Mapping[str, str]) -> sc.GroupKey:
     )
 
 
-def _label(r: Mapping[str, str]) -> str:
+def label_of(r: Mapping[str, str]) -> str:
+    """A CSV row's cell label (:attr:`ila.eval.score.GroupKey.label`)."""
     return _group(r).label
 
 
@@ -243,7 +246,7 @@ def _learned_cell(r: Mapping[str, str] | None, withheld: frozenset[str]) -> str:
     """``IQM [CI]; seeds min–max; losses/1 000`` (P8's learned-cell format)."""
     if r is None:
         return "—"
-    if _label(r) in withheld:
+    if label_of(r) in withheld:
         return "withheld (above teacher; under review)"
     if r["status"] != "complete":
         return f"missing ({r['n_seeds']}/{r['n_seeds_expected']} seeds)"
@@ -487,7 +490,7 @@ def _breakdown(inp: ReportInputs) -> list[str]:
                 r = agg.get(("core", arm, list_name, ss, *_inf(arm), ""))
                 if r is None:
                     continue
-                if _label(r) in withheld:
+                if label_of(r) in withheld:
                     rows.append([f"`{arm}`", list_name, ss, "withheld", *([""] * 6)])
                     continue
                 if r["status"] != "complete":
@@ -536,7 +539,7 @@ def _secondary(inp: ReportInputs) -> list[str]:
     for r in inp.summary:
         if r["tag"] != "core":
             continue
-        lab = _label(r)
+        lab = label_of(r)
         if lab not in per:
             order.append(lab)
         per.setdefault(lab, []).append(r)
@@ -587,7 +590,8 @@ def _secondary(inp: ReportInputs) -> list[str]:
     return lines
 
 
-def _is_withheld(inputs: str | Sequence[str], withheld: frozenset[str]) -> list[str]:
+def withheld_inputs(inputs: str | Sequence[str], withheld: frozenset[str]) -> list[str]:
+    """The entries of ``inputs`` (``; ``-joined labels, or a list) that are withheld."""
     items = inputs.split("; ") if isinstance(inputs, str) else list(inputs)
     return [i for i in items if i in withheld]
 
@@ -618,7 +622,7 @@ def _hypotheses(inp: ReportInputs) -> list[str]:
             if str(rec.get("cell", "")).endswith("SS6"):
                 lines += [f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.", ""]
             continue
-        held = _is_withheld(rec.get("inputs", []), withheld)
+        held = withheld_inputs(rec.get("inputs", []), withheld)
         if held:
             lines += [
                 "**withheld**: an input cell is above its teacher and under `results-skeptic` "
@@ -672,7 +676,7 @@ def _contrasts(inp: ReportInputs, kinds: Callable[[str], bool], title: str) -> l
     for r in inp.contrasts:
         if not kinds(r["kind"]):
             continue
-        held = _is_withheld(r.get("inputs", ""), withheld)
+        held = withheld_inputs(r.get("inputs", ""), withheld)
         value = "withheld (input under above-teacher review)" if held else _contrast_value(r)
         note = r["note"]
         if r["flip_floor"]:
@@ -842,7 +846,7 @@ def _above(inp: ReportInputs) -> list[str]:
         return [*lines, "No cell is above its teacher in the scored rows.", ""]
     rows = []
     for r in inp.above:
-        lab = _label(r)
+        lab = label_of(r)
         rel = inp.released.get(lab)
         status = (
             f"released by {rel.get('reviewed_by', '')} ({rel.get('date', '')}): "

@@ -199,6 +199,32 @@ def synthetic_baselines(n: int, list_cells: Mapping[str, Sequence[str]]) -> sc.B
     return sc.Baselines(rows=rows, provenance=({"synthetic": True},))
 
 
+def write_run_info(root: Path, m: ev_arms.Matrix) -> None:
+    """A minimal ``run_info.json`` with the keys the report reads (synthetic values)."""
+    jobs = {
+        j.rel_path.as_posix(): {"n_rows": 1, "wall_clock_s": 10.0, "workers": 1}
+        for j in m.jobs
+        if (root / j.rel_path).is_file()
+    }
+    record = {
+        "p8_commit": "synthetic",
+        "list_manifest_sha256": "synthetic",
+        "lists": {"id": {"sha256": "synthetic"}},
+        "success_yaml_sha256": "synthetic",
+        "camera_yaml_sha256": "synthetic",
+        "matrix_yaml_sha256": "synthetic",
+        "committed_rows": [],
+        "inference_path": "synthetic",
+        "skipped_blocks": dict(m.skipped),
+        "shared_cells": [s.record() for s in m.shared],
+        "invocations": [{"id": "1", "started_utc": "t0", "ila_commit": "synthetic"}],
+        "jobs_total": len(m.jobs),
+        "jobs_done": len(jobs),
+        "jobs": jobs,
+    }
+    (root / "run_info.json").write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+
+
 def synthetic_tree(
     root: Path,
     *,
@@ -243,6 +269,7 @@ def synthetic_tree(
             for e in listed_cell(job.list_name, ss, n)
         ]
         write_job(root, job, rows)
+    write_run_info(root, m)
     list_cells = ev_arms.frozen_list_cells()
     return sc.ScoreInputs(
         matrix=m,
