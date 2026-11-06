@@ -9,6 +9,7 @@ P8's ``cell_metrics`` accepts them. Speeds m/s, lengths m, times s, all model sc
 
 from __future__ import annotations
 
+import dataclasses
 import functools
 import hashlib
 import json
@@ -197,6 +198,14 @@ def synthetic_baselines(n: int, list_cells: Mapping[str, Sequence[str]]) -> sc.B
         for m in sc.BASELINE_METHODS
     }
     return sc.Baselines(rows=rows, provenance=({"synthetic": True},))
+
+
+def reduced_matrix(keep: Callable[[ev_arms.Job], bool]) -> ev_arms.Matrix:
+    """The frozen matrix restricted to the jobs ``keep`` accepts (and their shared cells)."""
+    m = ev_arms.load_matrix()
+    jobs = tuple(j for j in m.jobs if keep(j))
+    shared = tuple(s for s in m.shared if s.source in jobs)
+    return dataclasses.replace(m, jobs=jobs, shared=shared)
 
 
 def write_run_info(root: Path, m: ev_arms.Matrix) -> None:

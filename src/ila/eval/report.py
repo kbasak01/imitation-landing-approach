@@ -630,6 +630,8 @@ def _hypotheses(inp: ReportInputs) -> list[str]:
                 "`results/e08/above_teacher/audit.md`).",
                 "",
             ]
+            if str(rec.get("cell", "")).endswith("SS6"):
+                lines += [f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.", ""]
             continue
         mag = rec.get("magnitude")
         mag_txt = "D > 0" if mag is None else (
