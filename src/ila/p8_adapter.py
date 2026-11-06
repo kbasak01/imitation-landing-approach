@@ -34,6 +34,10 @@ Names taken from P8's source (pinned commit, P0-D1), not from memory:
   ``rld.eval.storage`` (``resolve``, ``read_bytes``, ``sha256_path``) and records the SHA-256s
   of what it read. :data:`FLIP_FLOOR_SS6` is P8's one-ulp outcome-flip floor, which P3-D1 §1
   prints beside every SS6 contrast.
+* P8's per-cell reduction (Phase 8): ``rld.eval.metrics.cell_metrics`` and its committed column
+  order ``CELL_METRIC_COLUMNS`` (outcome counts and fractions, Wilson 95 %, the touchdown audit
+  over contact-detected touchdowns, effort, jerk, detector disagreement, tunnelling), held by
+  reference so every per-cell summary this project writes is P8's own.
 """
 
 from __future__ import annotations
@@ -65,6 +69,7 @@ from rld.eval import stats as _p8_stats
 from rld.eval import storage as _p8_storage
 from rld.eval.envs import EvalConfigs, MotionKind, load_eval_configs, motion_for, pad_offset_for
 from rld.eval.envs import make_env as _p8_make_env
+from rld.eval.metrics import CELL_METRIC_COLUMNS, cell_metrics
 from rld.eval.episodes import (
     DEFAULT_PAD,
     EpisodeDraw,
@@ -98,6 +103,7 @@ from rld.rl.train import build_policy
 
 __all__ = [
     "ACTION_DIM",
+    "CELL_METRIC_COLUMNS",
     "COMMITTED_EPISODES",
     "DEFAULT_CHUNK",
     "DEFAULT_PAD",
@@ -132,6 +138,7 @@ __all__ = [
     "callable_spec",
     "canonical_csv",
     "check_ort",
+    "cell_metrics",
     "cell_order",
     "committed_rows",
     "compare_to_reference",
