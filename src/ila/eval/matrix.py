@@ -43,6 +43,10 @@ Outputs (under ``out``, default ``results/e08``)
 * ``run_info.json``: commits, list hashes, config hashes, committed-row provenance, host, the
   shared cells, the skipped blocks, every invocation, and per-job wall clocks
   (:func:`write_run_info`).
+* ``selection_pins.json``: ``{"<arm>/s<seed>": selection.json SHA-256}`` for every (arm, seed)
+  of the whole matrix, written by the first non-smoke invocation; every later invocation
+  re-resolves them and refuses to fly if any differs (:func:`check_or_pin_selections`;
+  privileged-leak review, Phase 8 RISK 2: no selection may change between invocations).
 * ``artifacts/runs/eval/status.json`` (:class:`ila.eval.jobs.JobStatus`): state, jobs and
   episodes done / total, ETA.
 
@@ -105,9 +109,12 @@ __all__ = [
     "PROJECTION_ASSUMPTIONS",
     "ROW_COLUMNS",
     "STATUS_DIR",
+    "PINS_FILE",
     "DirtyTreeError",
     "JobProjection",
     "RowCheckError",
+    "SelectionPinError",
+    "check_or_pin_selections",
     "check_rows",
     "diffusion_cost_ratio",
     "dirty_paths",
@@ -122,6 +129,7 @@ __all__ = [
     "read_rows_text",
     "rows_csv",
     "run_jobs",
+    "selection_pins",
     "shadow_groups",
     "smoke_jobs",
     "static_provenance",
@@ -132,6 +140,9 @@ __all__ = [
 
 #: Default output root (committed: rows, sidecars, ``run_info.json``).
 OUT_ROOT: Final[Path] = p8_adapter.REPO_ROOT / "results" / "e08"
+
+#: Selection pins, under the output root (module docstring).
+PINS_FILE: Final[str] = "selection_pins.json"
 
 #: ``status.json`` and the log of the background job.
 STATUS_DIR: Final[Path] = p8_adapter.REPO_ROOT / "artifacts" / "runs" / "eval"
@@ -174,6 +185,10 @@ class DirtyTreeError(RuntimeError):
 
 class RowCheckError(AssertionError):
     """A flown job's rows are not the job's episodes, cells or tags."""
+
+
+class SelectionPinError(RuntimeError):
+    """A selection record differs from the one pinned by the first invocation."""
 
 
 # --------------------------------------------------------------------------- rows out
@@ -686,6 +701,58 @@ def write_run_info(
 # --------------------------------------------------------------------------- run
 
 
+def selection_pins(matrix: ev_arms.Matrix) -> dict[str, str]:
+    """``{"<arm>/s<seed>": selection.json SHA-256}`` for every (arm, seed) of the matrix.
+
+    Each is resolved (and cross-checked) by :func:`ila.eval.arms.resolve_checkpoint`.
+    """
+    return {
+        f"{a.arm}/s{seed}": ev_arms.resolve_checkpoint(a, seed).selection_json_sha256
+        for a in matrix.arms
+        for seed in a.seeds
+    }
+
+
+def check_or_pin_selections(
+    out_root: Path, matrix: ev_arms.Matrix, *, write: bool
+) -> dict[str, Any]:
+    """Compare the matrix's selections with ``<out_root>/selection_pins.json``, or pin them.
+
+    Args:
+        out_root: Output root.
+        matrix: The expanded matrix (every arm and seed, whatever ``--only`` selects).
+        write: Write the pins when the file does not exist (the first non-smoke invocation).
+
+    Returns:
+        ``{"file", "sha256", "pins", "created"}`` (``file``/``sha256`` ``None`` when nothing
+        was pinned and ``write`` is off).
+
+    Raises:
+        SelectionPinError: If a pin file exists and any (arm, seed) is missing, extra, or has
+            another ``selection.json`` SHA-256.
+    """
+    current = selection_pins(matrix)
+    path = out_root / PINS_FILE
+    if path.is_file():
+        pinned = mf.read_json(path)["pins"]
+        diff = sorted(k for k in set(pinned) | set(current) if pinned.get(k) != current.get(k))
+        if diff:
+            raise SelectionPinError(
+                f"{path}: selections differ from the pins for {diff[:10]} "
+                f"({len(diff)} of {len(pinned)}); nothing flown"
+            )
+        return {
+            "file": rel(path),
+            "sha256": _sha(path.read_bytes()),
+            "pins": current,
+            "created": False,
+        }
+    if not write:
+        return {"file": None, "sha256": None, "pins": current, "created": False}
+    write_json(path, {"created_utc": now_utc(), "pins": dict(sorted(current.items()))})
+    return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pins": current, "created": True}
+
+
 def run_jobs(
     jobs: Sequence[ev_arms.Job],
     matrix: ev_arms.Matrix,
@@ -718,14 +785,19 @@ def run_jobs(
 
     Raises:
         DirtyTreeError: On a dirty tree without ``allow_dirty``.
+        SelectionPinError: If a selection differs from its pin (before anything is flown).
     """
     dirty = dirty_paths(exclude=out_root)
     if dirty and not allow_dirty:
         raise DirtyTreeError(f"uncommitted changes (use --allow-dirty for a smoke run): {dirty}")
+    pins = check_or_pin_selections(out_root, matrix, write=frozen)
     episodes_of = expected_episodes if episodes_of is None else episodes_of
     status = JobStatus(status_dir, "eval")
     ila_commit = _git("rev-parse", "HEAD").strip()
-    static = static_provenance(out_root)
+    static = {
+        **static_provenance(out_root),
+        "selection_pins": {"file": pins["file"], "sha256": pins["sha256"]},
+    }
     invocation = {
         "id": status.record["started_utc"],
         "started_utc": status.record["started_utc"],
@@ -736,6 +808,7 @@ def run_jobs(
         "workers": workers,
         "chunk": chunk,
         "jobs_requested": len(jobs),
+        "selection_pins_created": pins["created"],
     }
     provenance = {
         "ila_commit": ila_commit,
@@ -746,7 +819,6 @@ def run_jobs(
     total_eps = sum(len(episodes_of(j)) for j in jobs)
     done_jobs = done_eps = flown_eps = 0
     flown_s = 0.0
-    verified: set[tuple[str, int]] = set()
     status.update(
         "running", jobs_total=len(jobs), jobs_done=0, episodes_total=total_eps, episodes_done=0
     )
@@ -758,9 +830,9 @@ def run_jobs(
             if job_done(out_root, job, ckpt):
                 log(f"skip {job.rel_path} (done)")
             else:
-                if (job.arm, job.seed) not in verified:
-                    ev_arms.verify_checkpoint_bytes(ckpt)
-                    verified.add((job.arm, job.seed))
+                if pins["pins"][f"{job.arm}/s{job.seed}"] != ckpt.selection_json_sha256:
+                    raise SelectionPinError(f"{job.arm} s{job.seed}: selection changed mid-run")
+                ev_arms.verify_checkpoint_bytes(ckpt)  # bytes, arm, seed, obs_variant; every job
                 status.update(current_job=job.rel_path.as_posix())
                 t0 = time.perf_counter()
                 rows, plan = fly_job(job, ckpt, episodes, workers=workers, chunk=chunk)

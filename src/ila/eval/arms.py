@@ -80,6 +80,7 @@ from typing import Any, Final
 
 from ila import p8_adapter
 from ila.eval.stats import MATRIX_YAML, read_matrix_yaml
+from ila.policies.registry import read_checkpoint
 from ila.render.config import APPEARANCE_SHIFTS
 from ila.train import manifest as mf
 from ila.train import select as train_select
@@ -692,6 +693,9 @@ class Checkpoint:
         selection_workers: Worker processes the selection used.
         selection_steps: Control steps flown by the whole selection (sum over candidates of
             ``n x mean_steps``).
+        obs_variant: The contract variant the arm must fly (:func:`expected_obs_variant`;
+            ``default`` for R1's ONNX export), enforced on the checkpoint itself by
+            :func:`verify_checkpoint_bytes`.
     """
 
     arm: str
@@ -710,6 +714,7 @@ class Checkpoint:
     selection_wall_clock_s: float
     selection_workers: int
     selection_steps: float
+    obs_variant: str
 
     @property
     def cpu_s_per_step(self) -> float:
@@ -730,6 +735,7 @@ class Checkpoint:
             "global_step": self.global_step,
             "select_success": self.select_success,
             "select_n": self.select_n,
+            "obs_variant": self.obs_variant,
         }
 
 
@@ -847,19 +853,41 @@ def resolve_checkpoint(spec: ArmSpec, seed: int, results: Path = RESULTS_ROOT) -
         selection_wall_clock_s=wall,
         selection_workers=workers,
         selection_steps=steps,
+        obs_variant=spec.obs_variant,
     )
 
 
 def verify_checkpoint_bytes(ckpt: Checkpoint) -> None:
-    """Re-hash the checkpoint on disk against the recorded SHA-256.
+    """Re-hash the checkpoint on disk, then check it is the arm's, on the arm's contract.
+
+    Called before every flight (:func:`ila.eval.matrix.run_jobs`). The contract variant a flight
+    uses is read from the checkpoint by :func:`ila.train.select.fly_checkpoint`, so the
+    checkpoint's own ``arm``, ``run_seed`` and ``obs_variant`` must be the matrix arm's
+    (privileged-leak review, Phase 8 RISK 1: a ``plus_clock`` checkpoint at a core arm's path
+    would otherwise fly with the clock). An ONNX export (R1) always flies the ``default``
+    contract, so its arm must expect ``default``.
 
     Raises:
-        ArmResolutionError: If it is missing or its bytes differ.
+        ArmResolutionError: If it is missing, its bytes differ, or its ``arm``, ``run_seed`` or
+            ``obs_variant`` are not the arm's.
     """
+    where = f"{ckpt.arm} s{ckpt.seed}: {ckpt.path}"
     if not ckpt.path.exists():
-        raise ArmResolutionError(f"{ckpt.arm} s{ckpt.seed}: {ckpt.path} missing")
+        raise ArmResolutionError(f"{where} missing")
     actual = train_select.candidate_sha256(ckpt.path)
     if actual != ckpt.sha256:
+        raise ArmResolutionError(f"{where} SHA-256 {actual} != recorded {ckpt.sha256}")
+    want_variant = expected_obs_variant(ckpt.arm)
+    if ckpt.obs_variant != want_variant:
+        raise ArmResolutionError(f"{where}: expects obs_variant {ckpt.obs_variant!r}")
+    if ckpt.kind == train_select.ONNX_EXPORTS:
+        if want_variant != "default":
+            raise ArmResolutionError(f"{where}: an ONNX export flies 'default' only")
+        return
+    raw = read_checkpoint(ckpt.path)
+    got = (raw.get("arm"), raw.get("run_seed"), raw.get("obs_variant"))
+    if got[0] != ckpt.arm or got[1] is None or int(got[1]) != ckpt.seed or got[2] != want_variant:
         raise ArmResolutionError(
-            f"{ckpt.arm} s{ckpt.seed}: {ckpt.path} SHA-256 {actual} != recorded {ckpt.sha256}"
+            f"{where}: checkpoint (arm, run_seed, obs_variant) {got} != "
+            f"({ckpt.arm!r}, {ckpt.seed}, {want_variant!r})"
         )

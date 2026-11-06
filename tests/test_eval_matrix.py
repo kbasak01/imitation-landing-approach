@@ -9,6 +9,7 @@ Simulation only.
 from __future__ import annotations
 
 import gzip
+import json
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,7 @@ def _ckpt(teacher: str = "T_ppo") -> ev_arms.Checkpoint:
         selection_wall_clock_s=440.0,
         selection_workers=16,
         selection_steps=6 * 150 * 62.0,
+        obs_variant="default",
     )
 
 
@@ -266,3 +268,96 @@ def test_tmix_split_changes_no_row_but_teacher_agreement(tmp_path: Path) -> None
     ppo_pos = dict(groups)["ppo"][0]
     assert split[ppo_pos]["teacher_agreement"] == joint[ppo_pos]["teacher_agreement"]
     ev_matrix.check_rows(job, ck, split, eps, frozen=False)
+
+
+# --------------------------------------------------------------------------- RISK 1 / RISK 2
+
+
+def _fake_ckpt(arm: str, seed: int, shas: dict[str, str]) -> ev_arms.Checkpoint:
+    return ev_arms.Checkpoint(
+        **{
+            **_ckpt().__dict__,
+            "arm": arm,
+            "seed": seed,
+            "selection_json_sha256": shas.get(f"{arm}/s{seed}", "11" * 32),
+            "obs_variant": ev_arms.expected_obs_variant(arm),
+        }
+    )
+
+
+@pytest.fixture
+def fake_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, Any]:
+    """``run_jobs`` with every flight, hash and P8 read replaced by recorders (nothing flown)."""
+    state: dict[str, Any] = {"shas": {}, "verified": [], "flown": []}
+    eps = [e for e in ev_arms.list_episodes("id") if e.ss == "SS3"][:2]
+
+    def resolve(spec: ev_arms.ArmSpec, seed: int) -> ev_arms.Checkpoint:
+        return _fake_ckpt(spec.arm, seed, state["shas"])
+
+    def fly(job: ev_arms.Job, ck: Any, episodes: Any, **_: Any) -> Any:
+        state["flown"].append(job.rel_path.as_posix())
+        return _rows(job, list(episodes)), []
+
+    monkeypatch.setattr(ev_matrix, "dirty_paths", lambda **_: [])
+    monkeypatch.setattr(ev_matrix, "static_provenance", lambda _out: {"p8_commit": "p8"})
+    monkeypatch.setattr(ev_matrix, "host_info", lambda: {})
+    monkeypatch.setattr(ev_arms, "resolve_checkpoint", resolve)
+    monkeypatch.setattr(ev_arms, "verify_checkpoint_bytes", lambda c: state["verified"].append(c))
+    monkeypatch.setattr(ev_matrix, "fly_job", fly)
+    monkeypatch.setattr(ev_matrix, "check_rows", lambda *_, **__: None)
+    m = ev_arms.load_matrix()
+    jobs = [j for j in m.jobs if j.arm == "bc" and j.seed == 0][:2]
+    state.update(matrix=m, jobs=jobs, out=tmp_path / "e08", status=tmp_path / "status")
+
+    def run(frozen: bool = True) -> dict[str, Any]:
+        return ev_matrix.run_jobs(
+            state["jobs"],
+            m,
+            out_root=state["out"],
+            status_dir=state["status"],
+            workers=1,
+            episodes_of=lambda _j: eps,
+            frozen=frozen,
+            log=lambda _line: None,
+        )
+
+    state["run"] = run
+    return state
+
+
+def test_checkpoint_verified_before_every_flown_job(fake_run: dict[str, Any]) -> None:
+    fake_run["run"]()
+    assert len(fake_run["flown"]) == 2
+    assert [(c.arm, c.seed) for c in fake_run["verified"]] == [("bc", 0), ("bc", 0)]
+
+
+def test_selection_pins_written_once_then_enforced(fake_run: dict[str, Any]) -> None:
+    run, out = fake_run["run"], fake_run["out"]
+    # a smoke-style invocation never writes pins
+    run(frozen=False)
+    assert not (out / ev_matrix.PINS_FILE).exists()
+    fake_run["flown"].clear()
+    for side in out.rglob("*.json"):
+        side.unlink()
+    # first non-smoke invocation pins every (arm, seed) of the whole matrix, not just its jobs
+    info = run()
+    pins = json.loads((out / ev_matrix.PINS_FILE).read_text(encoding="utf-8"))["pins"]
+    assert len(pins) == 7 * 5 + 11 * 3 + 3 and set(pins) >= {"dp/s4", "R1_lerobot_dp/s2"}
+    assert info["selection_pins"]["sha256"] == ev_matrix._sha(
+        (out / ev_matrix.PINS_FILE).read_bytes()
+    )
+    assert info["invocations"][-1]["selection_pins_created"] is True
+    # a later invocation with the same selections passes (and skips the finished jobs)
+    fake_run["flown"].clear()
+    run()
+    assert fake_run["flown"] == []
+    # any changed selection (even of an arm not in this invocation's jobs) refuses to fly
+    fake_run["shas"]["bc_plus_clock/s2"] = "22" * 32
+    for p in out.rglob("*.csv.gz"):
+        p.unlink()
+    with pytest.raises(ev_matrix.SelectionPinError, match="bc_plus_clock/s2"):
+        run()
+    assert fake_run["flown"] == []
+    # the smoke path checks existing pins too
+    with pytest.raises(ev_matrix.SelectionPinError):
+        run(frozen=False)

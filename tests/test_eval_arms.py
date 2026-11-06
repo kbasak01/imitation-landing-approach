@@ -388,3 +388,80 @@ def test_ablation_obs_variant_is_the_checkpoints(matrix: ev_arms.Matrix, arm: st
     for seed in spec.seeds[:1]:
         ck = ev_arms.resolve_checkpoint(spec, seed)
         assert read_checkpoint(ck.path)["obs_variant"] == spec.obs_variant
+
+
+def _verify_with(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, ck: ev_arms.Checkpoint, raw: dict[str, Any]
+) -> None:
+    from ila.train import select
+
+    monkeypatch.setattr(select, "candidate_sha256", lambda _p: ck.sha256)
+    monkeypatch.setattr(ev_arms, "read_checkpoint", lambda _p: raw)
+    ev_arms.verify_checkpoint_bytes(ck)
+
+
+def test_verify_refuses_a_checkpoint_of_another_arm_or_contract(
+    matrix: ev_arms.Matrix, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Leak review RISK 1: the flight reads obs_variant from the checkpoint, so a plus_clock
+    # checkpoint sitting at a core arm's path must be refused before it flies.
+    path = tmp_path / "s0_step010000.pt"
+    path.write_bytes(b"fabricated")
+    base = ev_arms.resolve_checkpoint(matrix.arm("bc"), 0)
+    ck = ev_arms.Checkpoint(**{**base.__dict__, "path": path})
+    _verify_with(monkeypatch, tmp_path, ck, {"arm": "bc", "run_seed": 0, "obs_variant": "default"})
+    for raw in (
+        {"arm": "bc", "run_seed": 0, "obs_variant": "plus_clock"},
+        {"arm": "bc_plus_clock", "run_seed": 0, "obs_variant": "plus_clock"},
+        {"arm": "bc", "run_seed": 0, "obs_variant": "minus_last_action"},
+        {"arm": "bc", "run_seed": 3, "obs_variant": "default"},
+        {"arm": "bc", "obs_variant": "default"},
+    ):
+        with pytest.raises(ev_arms.ArmResolutionError, match="checkpoint"):
+            _verify_with(monkeypatch, tmp_path, ck, raw)
+    # the ablation's own checkpoint passes only with its variant
+    clock = ev_arms.Checkpoint(
+        **{**ev_arms.resolve_checkpoint(matrix.arm("bc_plus_clock"), 1).__dict__, "path": path}
+    )
+    assert clock.obs_variant == "plus_clock"
+    _verify_with(
+        monkeypatch,
+        tmp_path,
+        clock,
+        {"arm": "bc_plus_clock", "run_seed": 1, "obs_variant": "plus_clock"},
+    )
+    with pytest.raises(ev_arms.ArmResolutionError):
+        _verify_with(
+            monkeypatch,
+            tmp_path,
+            clock,
+            {"arm": "bc_plus_clock", "run_seed": 1, "obs_variant": "default"},
+        )
+    # a Checkpoint carrying a variant other than its arm's is refused before any read
+    with pytest.raises(ev_arms.ArmResolutionError, match="expects obs_variant"):
+        _verify_with(
+            monkeypatch,
+            tmp_path,
+            ev_arms.Checkpoint(**{**ck.__dict__, "obs_variant": "plus_clock"}),
+            {},
+        )
+
+
+def test_verify_onnx_export_flies_default_only(
+    matrix: ev_arms.Matrix, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    base = ev_arms.resolve_checkpoint(matrix.arm("R1_lerobot_dp"), 0)
+    assert base.kind == "onnx_exports" and base.obs_variant == "default"
+    ck = ev_arms.Checkpoint(**{**base.__dict__, "path": tmp_path})
+
+    def no_read(_p: Any) -> Any:
+        raise AssertionError("an ONNX export is not a torch checkpoint")
+
+    from ila.train import select
+
+    monkeypatch.setattr(select, "candidate_sha256", lambda _p: ck.sha256)
+    monkeypatch.setattr(ev_arms, "read_checkpoint", no_read)
+    ev_arms.verify_checkpoint_bytes(ck)
+    bad = ev_arms.Checkpoint(**{**ck.__dict__, "arm": "bc_plus_clock", "obs_variant": "plus_clock"})
+    with pytest.raises(ev_arms.ArmResolutionError, match="ONNX export flies 'default'"):
+        ev_arms.verify_checkpoint_bytes(bad)
