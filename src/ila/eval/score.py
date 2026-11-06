@@ -236,6 +236,7 @@ CONTRAST_COLUMNS: Final[tuple[str, ...]] = (
     "status",
     "flip_floor",
     "note",
+    "inputs",
 )
 
 HYPOTHESIS_COLUMNS: Final[tuple[str, ...]] = (
@@ -254,6 +255,7 @@ HYPOTHESIS_COLUMNS: Final[tuple[str, ...]] = (
     "n_seeds",
     "n_episodes",
     "flip_floor",
+    "inputs",
 )
 
 ABOVE_TEACHER_COLUMNS: Final[tuple[str, ...]] = (
@@ -1003,6 +1005,7 @@ class _Side:
     m: hy.ArmMatrix
     rows: Sequence[Row]
     seed_col: str
+    label: str = ""
 
     @property
     def speeds(self) -> FloatArray:
@@ -1013,11 +1016,17 @@ def _student_side(index: CellIndex, g: GroupKey | None) -> tuple[_Side | None, s
     m, why = _student(index, g)
     if m is None or g is None:
         return None, why
-    return _Side(m, index.group_rows(g) or [], "student_seed"), ""
+    return _Side(m, index.group_rows(g) or [], "student_seed", g.label), ""
 
 
 def _p8_side(rows: Sequence[Row], method: str, cell: tuple[str, str]) -> _Side:
-    return _Side(hy.p8_matrix(rows, method=method, cell=cell), rows, "run_seed")
+    label = f"P8 committed {method} {cell[0]} {cell[1]}"
+    return _Side(hy.p8_matrix(rows, method=method, cell=cell), rows, "run_seed", label)
+
+
+def _inputs(*sides: _Side) -> str:
+    """The input cells of a contrast (``GroupKey.label`` / P8 rows), ``; ``-joined."""
+    return "; ".join(s.label for s in sides)
 
 
 # --------------------------------------------------------------------------- contrasts
@@ -1106,6 +1115,7 @@ def _paired(
         reading=reading(c.lo, c.hi, a.m.arm, b.m.arm),
         status="computed",
         note=note,
+        inputs=_inputs(a, b),
     )
 
 
@@ -1129,6 +1139,7 @@ def _post_hoc_iqm(name: str, hypothesis: str, a: _Side, b: _Side) -> dict[str, A
         reading=reading(c.lo, c.hi, a.m.arm, b.m.arm),
         status="computed",
         note="printed beside the scored contrast as post hoc, not scored (P3-D1 §1)",
+        inputs=_inputs(a, b),
     )
 
 
@@ -1156,10 +1167,13 @@ def _rel_p95(name: str, hypothesis: str, a: _Side, b: _Side, *, note: str = "") 
             f"{b.m.arm} {fmt(r.p95_b)}; touchdowns {r.n_touchdowns_a} / {r.n_touchdowns_b}; "
             f"undefined replicates {r.n_reps_undefined}" + (f"; {note}" if note else "")
         ),
+        inputs=_inputs(a, b),
     )
 
 
-def _from_result(res: hy.HypothesisResult, cell: tuple[str, str], a: str, b: str) -> dict[str, Any]:
+def _from_result(
+    res: hy.HypothesisResult, cell: tuple[str, str], a: str, b: str, inputs: str
+) -> dict[str, Any]:
     return _contrast_record(
         res.hypothesis,
         "scored",
@@ -1178,10 +1192,13 @@ def _from_result(res: hy.HypothesisResult, cell: tuple[str, str], a: str, b: str
         reading=res.verdict_note,
         status="scored",
         note=f"verdict: {res.verdict}",
+        inputs=inputs,
     )
 
 
-def _from_unscored(u: hy.UnscoredContrast, kind: str, hypothesis: str) -> dict[str, Any]:
+def _from_unscored(
+    u: hy.UnscoredContrast, kind: str, hypothesis: str, inputs: str
+) -> dict[str, Any]:
     regime, ss = u.cell.split(" ")
     beside = "; ".join(f"{k}: {v}" for k, v in u.beside if k != "SS6 flip floor")
     return _contrast_record(
@@ -1202,6 +1219,7 @@ def _from_unscored(u: hy.UnscoredContrast, kind: str, hypothesis: str) -> dict[s
         reading=u.reading,
         status="computed",
         note=" ".join([*u.caveats, beside]).strip(),
+        inputs=inputs,
     )
 
 
@@ -1230,7 +1248,7 @@ def _hyp_missing(name: str, cell: str, why: str) -> dict[str, Any]:
     }
 
 
-def _hyp_row(res: hy.HypothesisResult) -> dict[str, Any]:
+def _hyp_row(res: hy.HypothesisResult, inputs: str) -> dict[str, Any]:
     return {
         "hypothesis": res.hypothesis,
         "cell": res.cell,
@@ -1247,12 +1265,14 @@ def _hyp_row(res: hy.HypothesisResult) -> dict[str, Any]:
         "n_seeds": "; ".join(f"{a} {n}" for a, n in res.n_seeds),
         "n_episodes": res.n_episodes,
         "flip_floor": _flip(res.cell.split(" ")[1]),
+        "inputs": inputs,
     }
 
 
-def _hyp_record(res: hy.HypothesisResult) -> dict[str, Any]:
+def _hyp_record(res: hy.HypothesisResult, inputs: str) -> dict[str, Any]:
     rec = asdict(res)
     rec["status"] = "scored"
+    rec["inputs"] = inputs.split("; ")
     rec["beside"] = [{"label": k, "text": v} for k, v in res.beside]
     rec["n_seeds"] = [{"arm": a, "seeds": n} for a, n in res.n_seeds]
     return rec
@@ -1314,14 +1334,17 @@ def _score_h1(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
         labelled_frames=inp.labelled_frames,
     )
     for res, (_, a, b, ss) in zip(results, pairs, strict=True):
-        out.hypotheses.append(_hyp_row(res))
-        out.records.append(_hyp_record(res))
-        out.contrasts.append(_from_result(res, (_ID, ss), a, b))
+        inputs = _inputs(sides[(a, ss)], sides[(b, ss)])
+        out.hypotheses.append(_hyp_row(res, inputs))
+        out.records.append(_hyp_record(res, inputs))
+        out.contrasts.append(_from_result(res, (_ID, ss), a, b, inputs))
 
 
 def _score_h2(index: CellIndex, inp: ScoreInputs, out: _Scored) -> hy.H2Reference | None:
-    bc, why_bc = _student(index, _g(index, "bc_mix", "SS4", tag="ablation"))
-    dp, why_dp = _student(index, _g(index, "dp_mix", "SS4", tag="ablation"))
+    g_bc = _g(index, "bc_mix", "SS4", tag="ablation")
+    g_dp = _g(index, "dp_mix", "SS4", tag="ablation")
+    bc, why_bc = _student(index, g_bc)
+    dp, why_dp = _student(index, g_dp)
     listed = inp.listed(_ID, "SS4")
     ref = hy.build_h2_reference(
         listed, inp.baselines.cell("ppo", _ID, "SS4"), inp.baselines.cell("gated", _ID, "SS4")
@@ -1335,9 +1358,12 @@ def _score_h2(index: CellIndex, inp: ScoreInputs, out: _Scored) -> hy.H2Referenc
         )
         return ref
     res = hy.score_h2(bc, dp, ref)
-    out.hypotheses.append(_hyp_row(res))
-    out.records.append(_hyp_record(res))
-    out.contrasts.append(_from_result(res, (_ID, "SS4"), "bc_mix", "dp_mix"))
+    inputs = "; ".join(
+        [*(g.label for g in (g_bc, g_dp) if g is not None), "T_mix reference id SS4 (P8 rows)"]
+    )
+    out.hypotheses.append(_hyp_row(res, inputs))
+    out.records.append(_hyp_record(res, inputs))
+    out.contrasts.append(_from_result(res, (_ID, "SS4"), "bc_mix", "dp_mix", inputs))
     return ref
 
 
@@ -1355,9 +1381,10 @@ def _score_h3(index: CellIndex, out: _Scored) -> None:
         )
         return
     res = hy.score_h3(s1.m, s8.m)
-    out.hypotheses.append(_hyp_row(res))
-    out.records.append(_hyp_record(res))
-    out.contrasts.append(_from_result(res, (_ID, "SS6"), "dp Ta=1", "dp Ta=8"))
+    inputs = _inputs(s1, s8)
+    out.hypotheses.append(_hyp_row(res, inputs))
+    out.records.append(_hyp_record(res, inputs))
+    out.contrasts.append(_from_result(res, (_ID, "SS6"), "dp Ta=1", "dp Ta=8", inputs))
     rel = _rel_p95(
         "H3 relative p95 closing speed",
         "H3",
@@ -1381,9 +1408,10 @@ def _score_h4(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
             out.contrasts.append(_missing_contrast(name, "scored", "H4", cell, "", "", why))
     else:
         res = hy.score_h4(s_state.m, s_bc.m, teacher.m)
-        out.hypotheses.append(_hyp_row(res))
-        out.records.append(_hyp_record(res))
-        out.contrasts.append(_from_result(res, cell, "P", "I"))
+        inputs = _inputs(s_state, s_bc, teacher)
+        out.hypotheses.append(_hyp_row(res, inputs))
+        out.records.append(_hyp_record(res, inputs))
+        out.contrasts.append(_from_result(res, cell, "P", "I", inputs))
         g = st.h4_three_arm_bootstrap(s_state.m.success, s_bc.m.success, teacher.m.success)
         for name, a, b, est, lo, hi in (
             ("H4 P", "bc_state", "bc", g.p, g.p_lo, g.p_hi),
@@ -1409,6 +1437,7 @@ def _score_h4(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                     reading=reading(lo, hi, a, b),
                     status="computed",
                     note="P = S(bc_state) - S(bc); I = S(teacher) - S(bc_state); D = P - I",
+                    inputs=inputs,
                 )
             )
     # P' (unscored, tag +clock) and modular vs best end-to-end (unscored, two-sided).
@@ -1428,7 +1457,12 @@ def _score_h4(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
         )
     else:
         out.contrasts.append(
-            _from_unscored(hy.h4_p_prime(s_state.m, s_clock.m), "descriptive, unscored", "H4")
+            _from_unscored(
+                hy.h4_p_prime(s_state.m, s_clock.m),
+                "descriptive, unscored",
+                "H4",
+                _inputs(s_state, s_clock),
+            )
         )
     best, reason = inp.best_end_to_end
     s_mod, why4 = _student_side(index, _g(index, "modular", "SS6", tag="core"))
@@ -1448,7 +1482,9 @@ def _score_h4(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
         )
     else:
         u = hy.modular_vs_best(s_mod.m, s_best.m, reason)
-        out.contrasts.append(_from_unscored(u, "descriptive, unscored", "H4"))
+        out.contrasts.append(
+            _from_unscored(u, "descriptive, unscored", "H4", _inputs(s_mod, s_best))
+        )
 
 
 def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
@@ -1466,10 +1502,12 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
             )
             continue
         u = hy.dart_vs_matched(sd.m, sm.m)
-        out.contrasts.append({**_from_unscored(u, "descriptive, unscored", "H1"), "name": name})
+        rec = _from_unscored(u, "descriptive, unscored", "H1", _inputs(sd, sm))
+        out.contrasts.append({**rec, "name": name})
         out.contrasts.append(_rel_p95(f"{name} relative p95 closing speed", "H1", sd, sm))
     # H2 secondary at id SS4 (unscored, P3-D1 §8): success drop T_ppo -> T_mix, bc vs dp.
     drops: dict[str, float] = {}
+    drop_inputs: list[str] = []
     for base, mix in (("bc", "bc_mix"), ("dp", "dp_mix")):
         sb, why1 = _student_side(index, _g(index, base, "SS4", tag="core"))
         sx, why2 = _student_side(index, _g(index, mix, "SS4", tag="ablation"))
@@ -1489,6 +1527,7 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
             note="different training data as well as teacher; 5 vs 3 seeds (P3-D1 §8)",
         )
         drops[base] = float(rec["estimate"])
+        drop_inputs.append(str(rec["inputs"]))
         out.contrasts.append(rec)
     name = "H2 secondary: drop(bc) - drop(dp) (unscored)"
     if len(drops) == 2:
@@ -1506,6 +1545,7 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                 reading=f"{UNPAIRED}: point estimate only, no CI (unscored, P3-D1 §8)",
                 status="computed",
                 note="plan §1.8's directional secondary, unscored by P3-D1 §8",
+                inputs="; ".join(drop_inputs),
             )
         )
     else:
