@@ -79,20 +79,31 @@ __all__ = [
     "OUTCOMES",
     "OUT_ROOT",
     "SUMMARY_COLUMNS",
+    "Baselines",
     "CellData",
     "CellIndex",
     "CellKey",
     "GroupKey",
     "ScoreInputError",
     "ScoreInputs",
+    "above_teacher_rows",
+    "aggregate_rows",
+    "as_bool",
+    "as_float",
+    "baseline_rows",
+    "cell_summary",
     "default_inputs",
+    "dump_json",
+    "expected_cells",
     "fmt",
     "load_baselines",
     "load_cells",
     "load_labelled_frames",
     "outside_training",
     "read_csv",
+    "reading",
     "run_score",
+    "summary_rows",
     "teacher_rows",
     "tmix_reference",
     "write_csv",
@@ -348,7 +359,8 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _f(value: Any) -> float:
+def as_float(value: Any) -> float:
+    """A row cell as a float (``""``/``None`` -> NaN; ``"nan"`` parses to NaN)."""
     if value is None:
         return math.nan
     if isinstance(value, str):
@@ -357,7 +369,8 @@ def _f(value: Any) -> float:
     return float(value)
 
 
-def _b(value: Any) -> bool:
+def as_bool(value: Any) -> bool:
+    """A row cell as a bool (``True``/``true``/``1``; anything else is False)."""
     return str(value).strip() in ("True", "true", "1")
 
 
@@ -781,7 +794,7 @@ def _diag_means(rows: Sequence[Row]) -> dict[str, float]:
         ("teacher_agreement", _DIAG_COLUMNS[0]),
         ("inference_calls", _DIAG_COLUMNS[1]),
     ):
-        vals = np.asarray([_f(r.get(col)) for r in rows], dtype=np.float64)
+        vals = np.asarray([as_float(r.get(col)) for r in rows], dtype=np.float64)
         finite = vals[np.isfinite(vals)]
         out[name] = float(finite.mean()) if finite.size else math.nan
     return out
@@ -974,7 +987,11 @@ def _speed_matrix(rows: Sequence[Row], seed_col: str, m: hy.ArmMatrix) -> FloatA
     """
     by: dict[tuple[int, int], float] = {}
     for r in rows:
-        v = max(0.0, -_f(r["rel_vz_normal_m_s"])) if _b(r["touchdown_contact"]) else math.nan
+        v = (
+            max(0.0, -as_float(r["rel_vz_normal_m_s"]))
+            if as_bool(r["touchdown_contact"])
+            else math.nan
+        )
         by[(int(float(r[seed_col])), int(r["index"]))] = v
     return np.asarray([[by[(s, i)] for i, _ in m.episodes] for s in m.seeds], dtype=np.float64)
 
@@ -1644,8 +1661,8 @@ def h2_time_rows(index: CellIndex, ref: hy.H2Reference) -> list[dict[str, Any]]:
                         "index": int(r["index"]),
                         "episode_seed": int(r["episode_seed"]),
                         "outcome": r["outcome"],
-                        "touchdown_contact": _b(r["touchdown_contact"]),
-                        "time_to_touchdown_s": _f(r["time_to_touchdown_s"]),
+                        "touchdown_contact": as_bool(r["touchdown_contact"]),
+                        "time_to_touchdown_s": as_float(r["time_to_touchdown_s"]),
                     }
                 )
     return out

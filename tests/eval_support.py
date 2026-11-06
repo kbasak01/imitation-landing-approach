@@ -15,7 +15,6 @@ import json
 import math
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
 
 from ila import p8_adapter
 from ila.eval import arms as ev_arms

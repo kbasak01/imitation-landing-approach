@@ -69,7 +69,6 @@ from rld.eval import stats as _p8_stats
 from rld.eval import storage as _p8_storage
 from rld.eval.envs import EvalConfigs, MotionKind, load_eval_configs, motion_for, pad_offset_for
 from rld.eval.envs import make_env as _p8_make_env
-from rld.eval.metrics import CELL_METRIC_COLUMNS, cell_metrics
 from rld.eval.episodes import (
     DEFAULT_PAD,
     EpisodeDraw,
@@ -82,6 +81,7 @@ from rld.eval.episodes import (
     read_list,
     resolve_draws,
 )
+from rld.eval.metrics import CELL_METRIC_COLUMNS, cell_metrics
 from rld.eval.reproduce import compare_to_reference
 from rld.eval.runner import (
     DEFAULT_CHUNK,
