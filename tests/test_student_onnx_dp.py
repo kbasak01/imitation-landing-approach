@@ -200,6 +200,17 @@ def test_determinism_and_reset(bundle: Path) -> None:
     assert not np.array_equal(first[0], a.act_vision(*wins[0]))  # the seed keys the noise
 
 
+def test_inference_calls_count_chunks_sampled(bundle: Path) -> None:
+    """R1 ONNX: one call per chunk sampled (Ta = 8: steps 0, 8, 16 of 20); reset zeroes it."""
+    st = load_onnx_student(bundle, run_seed=1, num_inference_steps=2)
+    st.reset(4)
+    for img, prop in _windows(20):
+        st.act_vision(img, prop)
+    assert st.inference_calls == 3
+    st.reset(5)
+    assert st.inference_calls == 0
+
+
 def test_temporal_ensembling_ta_1_equals_plain(bundle: Path) -> None:
     wins = _windows(5, seed=8)
     plain = load_onnx_student(bundle, 0, n_action_steps=1)

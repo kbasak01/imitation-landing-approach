@@ -68,6 +68,7 @@ from ila.policies.onnx_dp import (
     read_meta,
 )
 from ila.policies.registry import Student, load_student, read_checkpoint
+from ila.render.config import APPEARANCE_SHIFTS
 from ila.train import manifest as mf
 from ila.train.config import sha256_file
 
@@ -459,6 +460,7 @@ def fly_checkpoint(
     chunk: int = 10,
     inference: tuple[int, int, bool] | None = None,
     teacher: str = "T_ppo",
+    appearance_shift: str | None = None,
 ) -> list[dict[str, Any]]:
     """Fly one checkpoint's EMA student on listed episodes (CPU fp32 single-sample path).
 
@@ -475,10 +477,21 @@ def fly_checkpoint(
             ``Ta``/``K``/``ensemble`` columns (the inference sweeps). ``None`` (selection):
             the config defaults, columns empty.
         teacher: The rows' ``teacher`` column (:func:`training_teacher`).
+        appearance_shift: ``None`` (the committed look; selection always) or one of
+            :data:`ila.render.config.APPEARANCE_SHIFTS`, an evaluation-only render variant
+            (P3-D1 §3; Phase 8 flies it on ``id`` SS5-SS6). Passed to the runner, which loads
+            the shifted render config and writes its ``render_cfg_sha256``.
 
     Returns:
         Runner rows, in episode order.
+
+    Raises:
+        ValueError: If ``appearance_shift`` is not ``None`` and not a committed variant.
     """
+    if appearance_shift is not None and appearance_shift not in APPEARANCE_SHIFTS:
+        raise ValueError(
+            f"unknown appearance shift {appearance_shift!r}; have {list(APPEARANCE_SHIFTS)}"
+        )
     onnx = Path(path).is_dir()
     base = (
         functools.partial(onnx_checkpoint_policy, str(path), int(run_seed))
@@ -516,6 +529,7 @@ def fly_checkpoint(
         render="full",
         workers=workers,
         chunk=chunk,
+        appearance_shift=appearance_shift,
         contract_variant=variant,
     )
 

@@ -392,10 +392,6 @@ def _e2e_rows(
 # --------------------------------------------------------------------------- projection
 
 
-def _rows_csv(path: Path) -> list[dict[str, str]]:
-    return list(csv.DictReader(io.StringIO(p8_adapter.read_text(path))))
-
-
 def episode_lengths() -> dict[str, float]:
     """Mean control steps per episode from P8's committed rows (the projection's lengths).
 
@@ -404,12 +400,9 @@ def episode_lengths() -> dict[str, float]:
         ``ppo_id_ss4_ss6``, ``ppo_id_ss5``, ``ppo_id_ss5_ss6``, ``pid_train_like`` and
         ``gated_train_like`` (e01, ``id`` SS3-SS5), steps.
     """
-    e07 = [
-        r
-        for r in _rows_csv(p8_adapter.P8_ROOT / "results/e07/matrix/episodes.csv")
-        if r["method"] == "ppo" and r["run_seed"] == "0"
-    ]
-    e01 = _rows_csv(p8_adapter.P8_ROOT / "results/e01/episodes.csv")
+    e07 = list(p8_adapter.committed_rows("e07", "ppo", 0).rows)
+    pid = list(p8_adapter.committed_rows("e01", "pid_feedforward").rows)
+    gated = list(p8_adapter.committed_rows("e01", "gated").rows)
 
     def mean(rows: Sequence[dict[str, str]]) -> float:
         return float(np.mean([int(r["steps"]) for r in rows]))
@@ -426,12 +419,8 @@ def episode_lengths() -> dict[str, float]:
         "ppo_id_ss4_ss6": mean(cell(e07, "id", ("SS4", "SS5", "SS6"))),
         "ppo_id_ss5": mean(cell(e07, "id", ("SS5",))),
         "ppo_id_ss5_ss6": mean(cell(e07, "id", ("SS5", "SS6"))),
-        "pid_train_like": mean(
-            [r for r in cell(e01, "id", train_like) if r["method"] == "pid_feedforward"]
-        ),
-        "gated_train_like": mean(
-            [r for r in cell(e01, "id", train_like) if r["method"] == "gated"]
-        ),
+        "pid_train_like": mean(cell(pid, "id", train_like)),
+        "gated_train_like": mean(cell(gated, "id", train_like)),
     }
 
 

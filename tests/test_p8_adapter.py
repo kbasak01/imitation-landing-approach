@@ -265,3 +265,152 @@ def test_set_motion_matches_p8_run_chunk() -> None:
             assert float(env.record.t0_model_s) == listed.t0_model_s
     finally:
         env.close()
+
+
+@pytest.mark.parametrize("name", ["ppo", "pid_feedforward", "gated"])
+def test_teacher_spec_builds_the_teacher(name: str) -> None:
+    import functools
+    import pickle
+
+    spec = p8_adapter.teacher_spec(name)
+    assert spec.method == name and spec.run_seed == 0
+    assert spec.privileged is False and spec.needs_motion_feed is False
+    assert isinstance(spec.build, functools.partial)
+    assert spec.build.func is p8_adapter.teacher and spec.build.args == (name, 0)
+    assert pickle.loads(pickle.dumps(spec)).build.args == (name, 0)  # spawn-pool safe
+
+
+@pytest.mark.parametrize(("name", "seed"), [("ppo", 1), ("oracle_gated", 0), ("bc", 0)])
+def test_teacher_spec_rejects_unavailable(name: str, seed: int) -> None:
+    with pytest.raises(ValueError, match="teacher"):
+        p8_adapter.teacher_spec(name, seed)
+
+
+# --------------------------------------------------------------------------- committed rows
+# P8's committed rows are read-only evaluation references (P3-D1 §4 allows reading them at any
+# time). The ceilings below are P3-D1 §6's, "measured before any student exists".
+
+_COMMITTED = [
+    *(("e07", "ppo", s) for s in range(5)),
+    *(("e01", m, 0) for m in ("pid_feedforward", "pid_track_descend", "gated", "oracle_gated")),
+]
+
+
+@pytest.mark.parametrize(("experiment", "method", "seed"), _COMMITTED)
+def test_committed_rows_shape_and_order(experiment: str, method: str, seed: int) -> None:
+    got = p8_adapter.committed_rows(experiment, method, seed)
+    assert len(got.rows) == 2800
+    assert got.columns == p8_adapter.EPISODE_COLUMNS
+    assert all(tuple(r) == p8_adapter.EPISODE_COLUMNS for r in got.rows)
+    assert {r["method"] for r in got.rows} == {method}
+    assert {r["run_seed"] for r in got.rows} == {str(seed)}
+    assert {r["pad"] for r in got.rows} == {"aft"}
+    # File order is P8's list order: the five lists in MANIFEST order, 200 per cell.
+    cells = list(dict.fromkeys((r["regime"], r["ss"]) for r in got.rows))
+    assert [c[0] for c in cells][0] == "id" and cells[-1] == ("static", "static")
+    assert len(cells) == 14
+    listed = [
+        e for n in p8_adapter.list_names() for e in p8_adapter.read_list(p8_adapter.list_path(n))
+    ]
+    assert [(r["regime"], r["ss"], r["index"]) for r in got.rows] == [
+        (e.regime, e.ss, str(e.index)) for e in listed
+    ]
+
+
+def test_committed_rows_records_what_it_read() -> None:
+    e07 = p8_adapter.committed_rows("e07", "ppo", 0)
+    assert e07.logical_path == "results/e07/matrix/episodes.csv"
+    assert e07.file == "results/e07/matrix/episodes.csv.gz"
+    sidecar = (p8_adapter.P8_ROOT / "results/e07/matrix/episodes.csv.sha256").read_text()
+    assert e07.text_sha256 == sidecar.split()[0]
+    assert e07.file_sha256 == p8_adapter.sha256_file(p8_adapter.P8_ROOT / e07.file)
+    e01 = p8_adapter.committed_rows("e01", "gated")
+    assert e01.file == e01.logical_path == "results/e01/episodes.csv"
+    assert (
+        e01.file_sha256
+        == e01.text_sha256
+        == p8_adapter.sha256_file(p8_adapter.P8_ROOT / "results/e01/episodes.csv")
+    )
+    prov = e07.provenance()
+    assert prov["n_rows"] == 2800 and prov["text_sha256"] == e07.text_sha256
+    assert "rows" not in prov
+
+
+def test_committed_rows_are_fresh_copies() -> None:
+    first = p8_adapter.committed_rows("e01", "gated", 0, regime="id", ss="SS3")
+    first.rows[0]["outcome"] = "tampered"
+    again = p8_adapter.committed_rows("e01", "gated", 0, regime="id", ss="SS3")
+    assert again.rows[0]["outcome"] != "tampered"
+
+
+def test_committed_rows_all_seeds_and_errors() -> None:
+    every = p8_adapter.committed_rows("e07", "ppo")
+    assert len(every.rows) == 5 * 2800 and every.run_seed is None
+    assert [r["run_seed"] for r in every.rows][::2800] == ["0", "1", "2", "3", "4"]
+    with pytest.raises(ValueError, match="experiment"):
+        p8_adapter.committed_rows("e99", "ppo")
+    with pytest.raises(ValueError, match="no rows"):
+        p8_adapter.committed_rows("e07", "pid_feedforward")
+    with pytest.raises(ValueError, match="no rows"):
+        p8_adapter.committed_rows("e01", "gated", 1)
+
+
+def _successes(rows: tuple[dict[str, str], ...]) -> int:
+    return sum(r["outcome"] == "success" for r in rows)
+
+
+def test_committed_ppo_ceiling() -> None:
+    """P3-D1 §6: T_ppo s0 100 % at id SS3-SS5; 197/200 at id SS6, the 3 losses hard landings."""
+    for ss in ("SS3", "SS4", "SS5"):
+        assert (
+            _successes(p8_adapter.committed_rows("e07", "ppo", 0, regime="id", ss=ss).rows) == 200
+        )
+    ss6 = p8_adapter.committed_rows("e07", "ppo", 0, regime="id", ss="SS6").rows
+    assert len(ss6) == 200 and _successes(ss6) == 197
+    assert sorted(r["outcome"] for r in ss6 if r["outcome"] != "success") == ["hard_landing"] * 3
+
+
+@pytest.mark.parametrize(
+    ("method", "per_ss"),
+    [("gated", (200, 197, 179, 126)), ("pid_feedforward", (200, 200, 198, 181))],
+)
+def test_committed_baseline_ceilings(method: str, per_ss: tuple[int, ...]) -> None:
+    """P3-D1 §6: gated 100 / 98.5 / 89.5 / 63.0 %; pid_feedforward 100 / 100 / 99.0 / 90.5 %."""
+    for ss, expected in zip(("SS3", "SS4", "SS5", "SS6"), per_ss, strict=True):
+        rows = p8_adapter.committed_rows("e01", method, 0, regime="id", ss=ss).rows
+        assert len(rows) == 200 and _successes(rows) == expected, (ss, _successes(rows))
+
+
+# --------------------------------------------------------------------------- flip floor
+
+
+def test_flip_floor_matches_p8_and_p3_d1() -> None:
+    floor = p8_adapter.FLIP_FLOOR_SS6
+    assert (floor.flipped, floor.of, floor.draws) == (53, 800, 20)
+    assert floor.single_draw_median_pct == 1.9
+    assert floor.rate == 53 / 800 and f"{100 * floor.rate:.1f} %" == "6.6 %"
+    p8_lines = (
+        (p8_adapter.P8_ROOT / "docs" / "protocol.md").read_text(encoding="utf-8").splitlines()
+    )
+    assert "median 1.9 %" in p8_lines[5311 - 1]
+    assert "53 of 800" in p8_lines[5314 - 1] and "6.6 %" in p8_lines[5314 - 1]
+    assert "53 of 800" in p8_lines[5455 - 1]
+    # P3-D1 §1's sentence, verbatim (the protocol wraps it; compare with whitespace folded).
+    ours = (p8_adapter.REPO_ROOT / "docs" / "protocol.md").read_text(encoding="utf-8")
+    start = ours.index("### P3-D1")
+    block = " ".join(ours[start : ours.index("\n### ", start + 1)].split())
+    assert f'"{floor.sentence}"' in block
+
+
+def test_determinism_floor_is_the_adapter_constant() -> None:
+    from ila.eval import determinism
+
+    floor = p8_adapter.FLIP_FLOOR_SS6
+    assert {
+        "flipped": floor.flipped,
+        "of": floor.of,
+        "rate": floor.rate,
+        "cell": floor.cell,
+        "definition": floor.definition,
+        "source": floor.source,
+    } == determinism.P8_FLOOR

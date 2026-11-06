@@ -726,3 +726,286 @@ def test_ppo_teacher_reproduces_committed_rows(cfgs: EvalConfigs) -> None:
     )
     assert result["all_identical"], result
     assert result["methods"]["ppo"]["n_compared"] == 2
+
+
+# --------------------------------------------------------------------------- Phase 8 diagnostics
+# inference_calls (the policy's own counter, read after each episode) and teacher_agreement
+# (a frozen teacher flown in lockstep on the student's own states). Every episode here is a
+# train-pool realization (tiny_list[1:4], P8's dev-pool train; the PPO test reads the
+# committed `demos` split, also train only), never a frozen list.
+
+
+def _no_diag(row: dict[str, Any]) -> dict[str, Any]:
+    return {c: row[c] for c in runner.VISION_EPISODE_COLUMNS}
+
+
+def _dummy_student(
+    arm: str, ta: int | None, k: int | None, ensemble: bool, cfgs: EvalConfigs
+) -> Any:
+    del cfgs
+    from ila.policies.registry import build_dummy
+
+    if arm == "bc":
+        return build_dummy("bc", 0, "cpu")
+    return build_dummy(
+        arm, 0, "cpu", n_action_steps=ta, num_inference_steps=k, temporal_ensembling=ensemble
+    )
+
+
+class _Constant:
+    """A non-student P8-shaped policy with a fixed raw action (normalised units)."""
+
+    privileged = False
+    needs_motion_feed = False
+
+    def __init__(self, action: tuple[float, float, float]) -> None:
+        self.action = np.asarray(action, dtype=np.float64)
+
+    def reset(self, seed: int, context: Any = None) -> None:
+        del seed, context
+
+    def act(self, obs: Any) -> np.ndarray:
+        assert np.shape(obs) == (25,)
+        return self.action.copy()
+
+
+def _constant(action: tuple[float, float, float], cfgs: EvalConfigs) -> _Constant:
+    del cfgs
+    return _Constant(action)
+
+
+def test_diagnostics_off_by_default_and_append_only(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs
+) -> None:
+    student = p8_adapter.callable_spec("pixel", build_pixel_student, run_seed=0)
+    plain = runner.run_list_vision(tiny_list[1:3], student, cfgs, workers=1)
+    diag = runner.run_list_vision(tiny_list[1:3], student, cfgs, workers=1, diagnostics=True)
+    assert runner.EVAL_EPISODE_COLUMNS[: len(runner.VISION_EPISODE_COLUMNS)] == (
+        runner.VISION_EPISODE_COLUMNS
+    )
+    assert runner.EVAL_EPISODE_COLUMNS[-2:] == ("inference_calls", "teacher_agreement")
+    assert all(tuple(r) == runner.VISION_EPISODE_COLUMNS for r in plain)
+    assert all(tuple(r) == runner.EVAL_EPISODE_COLUMNS for r in diag)
+    assert [_no_diag(r) for r in diag] == plain
+    assert _p8_csv(diag) == _p8_csv(plain)
+    # PixelStudent has no counter -> empty cell; no shadow -> NaN.
+    assert all(r["inference_calls"] is None for r in diag)
+    assert all(math.isnan(r["teacher_agreement"]) for r in diag)
+    text = runner.vision_rows_csv(diag).splitlines()
+    assert text[0].endswith(",inference_calls,teacher_agreement")
+    assert text[1].endswith(",,nan")
+    with pytest.raises(ValueError, match="mix"):
+        runner.vision_rows_csv([diag[0], plain[1]])
+
+
+def test_inference_calls_bc_is_steps(tiny_list: list[ListedEpisode], cfgs: EvalConfigs) -> None:
+    from functools import partial
+
+    spec = p8_adapter.callable_spec("dummy_bc", partial(_dummy_student, "bc", None, None, False), 0)
+    rows = runner.run_list_vision(tiny_list[1:3], spec, cfgs, workers=1, diagnostics=True)
+    assert [r["inference_calls"] for r in rows] == [int(r["steps"]) for r in rows]
+
+
+@pytest.mark.parametrize("ensemble", [False, True])
+def test_inference_calls_dp_follows_chunking(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs, ensemble: bool
+) -> None:
+    from functools import partial
+
+    from ila.policies.dp import chunking
+
+    ta = 8
+    spec = p8_adapter.callable_spec("dummy_dp", partial(_dummy_student, "dp", ta, 2, ensemble), 0)
+    episodes = tiny_list[1:3] if not ensemble else tiny_list[1:2]
+    rows = runner.run_list_vision(episodes, spec, cfgs, workers=1, chunk=5, diagnostics=True)
+    for row in rows:
+        n = int(row["steps"])
+        if ensemble:
+            assert row["inference_calls"] == n  # one chunk sampled every step
+        else:
+            replans = sum(chunking.is_replan_step(t, ta) for t in range(n))
+            assert row["inference_calls"] == replans == math.ceil(n / ta), n
+
+
+def test_inference_calls_none_for_p8_controllers(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs
+) -> None:
+    rows = runner.run_list_vision(
+        tiny_list[1:2],
+        p8_adapter.controller_spec("pid_feedforward"),
+        cfgs,
+        render="off",
+        workers=1,
+        diagnostics=True,
+    )
+    assert rows[0]["inference_calls"] is None
+
+
+@pytest.mark.parametrize("teacher", ["pid_feedforward", "gated"])
+def test_stateful_shadow_agrees_with_itself(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs, teacher: str
+) -> None:
+    """The teacher flown as the policy, shadowed by itself: 0 on every step of every episode.
+
+    Three episodes in one chunk (one env, one shadow): the shadow must be reset per episode and
+    stepped in lockstep on the same observation, or its integrators/latches drift from the
+    flown policy's.
+    """
+    rows = runner.run_list_vision(
+        tiny_list[1:4],
+        p8_adapter.controller_spec(teacher),
+        cfgs,
+        render="off",
+        workers=1,
+        chunk=5,
+        diagnostics=True,
+        shadow_teacher=p8_adapter.teacher_spec(teacher),
+    )
+    assert [r["teacher_agreement"] for r in rows] == [0.0, 0.0, 0.0]
+
+
+@pytest.mark.parametrize("fault", ["reset_once_per_chunk", "two_acts_per_step"])
+def test_shadow_lockstep_faults_are_caught(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs, monkeypatch: pytest.MonkeyPatch, fault: str
+) -> None:
+    """Negative controls for the test above: break the lockstep and P8's controller refuses.
+
+    P8's controllers keep a ``StepClock`` cross-checked against ``time_fraction``; a skipped
+    per-episode ``reset`` or a second ``act`` in one step raises instead of drifting silently.
+    """
+    original_begin, original_step = runner.ShadowTeacher.begin, runner.ShadowTeacher.step
+    seen: list[int] = []
+
+    def begin_once(self: runner.ShadowTeacher, listed: ListedEpisode) -> None:
+        if not seen:
+            original_begin(self, listed)
+        seen.append(listed.episode_seed)
+        self.distances = []
+
+    def step_twice(self: runner.ShadowTeacher, obs: Any, action: Any) -> None:
+        self.policy.act(np.array(obs, copy=True))
+        original_step(self, obs, action)
+
+    if fault == "reset_once_per_chunk":
+        monkeypatch.setattr(runner.ShadowTeacher, "begin", begin_once)
+    else:
+        monkeypatch.setattr(runner.ShadowTeacher, "step", step_twice)
+    with pytest.raises(RuntimeError, match="controller clock"):
+        runner.run_list_vision(
+            tiny_list[1:4],
+            p8_adapter.controller_spec("pid_feedforward"),
+            cfgs,
+            render="off",
+            workers=1,
+            chunk=5,
+            diagnostics=True,
+            shadow_teacher=p8_adapter.teacher_spec("pid_feedforward"),
+        )
+
+
+@pytest.mark.parametrize("shadow", ["pid_feedforward", "gated"])
+def test_shadow_does_not_change_student_rows(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs, shadow: str
+) -> None:
+    student = p8_adapter.callable_spec("pixel", build_pixel_student, run_seed=0)
+    bare = runner.run_list_vision(tiny_list[1:4], student, cfgs, workers=1, diagnostics=True)
+    shadowed = runner.run_list_vision(
+        tiny_list[1:4],
+        student,
+        cfgs,
+        workers=1,
+        diagnostics=True,
+        shadow_teacher=p8_adapter.teacher_spec(shadow),
+    )
+    for a, b in zip(bare, shadowed, strict=True):
+        assert {c: v for c, v in a.items() if c != "teacher_agreement"} == {
+            c: v for c, v in b.items() if c != "teacher_agreement"
+        }
+        assert math.isnan(a["teacher_agreement"])
+        assert math.isfinite(b["teacher_agreement"]) and b["teacher_agreement"] > 0.0
+    assert _p8_csv(bare) == _p8_csv(shadowed)
+
+
+def test_teacher_agreement_arithmetic(tiny_list: list[ListedEpisode], cfgs: EvalConfigs) -> None:
+    """Constant policy vs constant shadow: ||clip(s) - clip(c)||_2 on every step, clipped."""
+    from functools import partial
+
+    s, c = (0.3, -0.2, -1.4), (1.5, 0.0, 0.0)
+    rows = runner.run_list_vision(
+        tiny_list[1:2],
+        p8_adapter.callable_spec("const", partial(_constant, s), run_seed=0),
+        cfgs,
+        render="off",
+        workers=1,
+        diagnostics=True,
+        shadow_teacher=p8_adapter.callable_spec("const_t", partial(_constant, c), run_seed=0),
+    )
+    expected = math.sqrt((0.3 - 1.0) ** 2 + 0.2**2 + (-1.0) ** 2)
+    assert rows[0]["teacher_agreement"] == pytest.approx(expected, rel=1e-12)
+
+
+def test_shadow_refusals(tiny_list: list[ListedEpisode], cfgs: EvalConfigs) -> None:
+    student = p8_adapter.callable_spec("pixel", build_pixel_student, run_seed=0)
+    with pytest.raises(ValueError, match="diagnostics"):
+        runner.run_list_vision(
+            tiny_list[1:2],
+            student,
+            cfgs,
+            workers=1,
+            shadow_teacher=p8_adapter.teacher_spec("gated"),
+        )
+    with pytest.raises(ValueError, match="non-privileged"):
+        runner.run_list_vision(
+            tiny_list[1:2],
+            student,
+            cfgs,
+            workers=1,
+            diagnostics=True,
+            shadow_teacher=p8_adapter.controller_spec("oracle_gated"),
+        )
+    task = runner.VisionTask(
+        tiny_list[1:2],
+        student,
+        cfgs,
+        runner.RowTags("pixel"),
+        shadow_teacher=p8_adapter.teacher_spec("gated"),
+    )
+    with pytest.raises(ValueError, match="diagnostics"):
+        runner.run_chunk_vision(task)
+
+
+def test_diagnostic_rows_do_not_depend_on_workers_or_chunk(
+    tiny_list: list[ListedEpisode], cfgs: EvalConfigs
+) -> None:
+    student = p8_adapter.callable_spec("pixel", build_pixel_student, run_seed=0)
+    kw: dict[str, Any] = {
+        "diagnostics": True,
+        "shadow_teacher": p8_adapter.teacher_spec("pid_feedforward"),
+    }
+    one = runner.run_list_vision(tiny_list, student, cfgs, workers=1, chunk=5, **kw)
+    two = runner.run_list_vision(tiny_list, student, cfgs, workers=2, chunk=1, **kw)
+    assert runner.vision_rows_csv(one) == runner.vision_rows_csv(two)
+
+
+@pytest.mark.checkpoints
+def test_ppo_shadowing_itself_agrees_exactly(cfgs: EvalConfigs) -> None:
+    """P8's ppo s0 flown as the policy, shadowed by ppo s0: teacher_agreement exactly 0.
+
+    Two `train`-pool episodes of the committed demos split (never a frozen list); P8's SB3
+    path with its frozen VecNormalize (training=False) on both sides.
+    """
+    from ila.data.episodes import read_split
+
+    episodes = read_split("demos_0-1999")[:2]
+    rows = runner.run_list_vision(
+        episodes,
+        p8_adapter.teacher_spec("ppo"),
+        cfgs,
+        workers=1,
+        diagnostics=True,
+        shadow_teacher=p8_adapter.teacher_spec("ppo"),
+    )
+    assert [r["teacher_agreement"] for r in rows] == [0.0, 0.0]
+    assert all(r["inference_calls"] is None for r in rows)  # P8's policy has no counter
+    plain = runner.run_list_vision(episodes, p8_adapter.teacher_spec("ppo"), cfgs, workers=1)
+    assert [_no_diag(r) for r in rows] == plain

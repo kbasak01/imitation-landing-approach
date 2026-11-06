@@ -616,9 +616,11 @@ class ChunkedDiffusionStudent(VisionStudentBase):
                 self._t, spec.n_obs_steps, spec.horizon, spec.n_action_steps
             )
             action = self._ensembled(img, prop, key, sources)
+            self.inference_calls += 1  # one chunk sampled every step
         else:
             if chunking.is_replan_step(self._t, spec.n_action_steps):
                 chunk = self.sample_batch(img[None], prop[None], [key])[0]
+                self.inference_calls += 1
                 self._queue.clear()
                 self._queue.extend(chunk[spec.executed])
             action = self._queue.popleft().copy()

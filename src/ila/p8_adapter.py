@@ -29,12 +29,19 @@ Names taken from P8's source (pinned commit, P0-D1), not from memory:
   (``dmf.data.splits``), the very object P8's runner imports. All are held by reference
   (``tests/test_p8_adapter.py`` asserts ``is``-identity). :func:`set_motion` is the one
   helper added here, a transcription of the ``set_motion`` call in P8's ``run_chunk``.
+* P8's committed episode rows (Phase 8): :func:`committed_rows` reads P8's committed
+  ``results/e07/matrix/episodes.csv(.gz)`` and ``results/e01/episodes.csv`` read-only through
+  ``rld.eval.storage`` (``resolve``, ``read_bytes``, ``sha256_path``) and records the SHA-256s
+  of what it read. :data:`FLIP_FLOOR_SS6` is P8's one-ulp outcome-flip floor, which P3-D1 §1
+  prints beside every SS6 contrast.
 """
 
 from __future__ import annotations
 
+import csv
 import functools
 import hashlib
+import io
 import re
 import subprocess
 from collections.abc import Mapping
@@ -91,6 +98,7 @@ from rld.rl.train import build_policy
 
 __all__ = [
     "ACTION_DIM",
+    "COMMITTED_EPISODES",
     "DEFAULT_CHUNK",
     "DEFAULT_PAD",
     "DEFAULT_WORKERS",
@@ -110,6 +118,9 @@ __all__ = [
     "EpisodeListMismatchError",
     "EvalConfigs",
     "EvalPolicy",
+    "FLIP_FLOOR_SS6",
+    "CommittedRows",
+    "FlipFloor",
     "ListedEpisode",
     "MotionKind",
     "ObsField",
@@ -122,6 +133,7 @@ __all__ = [
     "canonical_csv",
     "check_ort",
     "cell_order",
+    "committed_rows",
     "compare_to_reference",
     "content_sha256",
     "controller_spec",
@@ -159,6 +171,7 @@ __all__ = [
     "success_yaml_sha256",
     "td_in_quiescent_window",
     "teacher",
+    "teacher_spec",
     "touchdown_rule",
 ]
 
@@ -454,6 +467,268 @@ def teacher(name: str, seed: int = 0, cfgs: EvalConfigs | None = None) -> EvalPo
     if spec.privileged or spec.needs_motion_feed:
         raise ValueError(f"{name!r} is privileged or needs a motion feed; not a teacher here")
     return spec.build(cfgs)
+
+
+def teacher_spec(name: str, seed: int = 0) -> PolicySpec:
+    """Return a picklable P8 ``PolicySpec`` that builds :func:`teacher` ``(name, seed)``.
+
+    The spec is ``callable_spec(name, functools.partial(teacher, name, seed), run_seed=seed)``,
+    the construction this project has used for ``ppo`` since Phase 2 (``ila.eval.reproduce``).
+    It is never privileged and never fed. ``ppo`` gets P8's frozen ``VecNormalize``
+    (``training=False``) through ``rld.rl.train.build_policy``; ``pid_feedforward`` and ``gated``
+    are stateful, so whoever flies the spec must ``reset`` them every episode and call ``act``
+    once per step, in order (``ila.eval.runner``'s shadow teacher does).
+
+    Args:
+        name: ``"ppo"``, ``"pid_feedforward"`` or ``"gated"``.
+        seed: Teacher seed (0 is the only one available, P0-D1).
+
+    Returns:
+        The spec; its ``method`` is ``name``.
+
+    Raises:
+        ValueError: If ``name`` is not a teacher or ``seed`` is not available for it.
+    """
+    if name not in TEACHERS:
+        raise ValueError(f"unknown teacher {name!r}; expected one of {sorted(TEACHERS)}")
+    if seed not in TEACHERS[name]:
+        raise ValueError(f"teacher {name!r} seed {seed} is not available ({TEACHERS[name]})")
+    return callable_spec(name, functools.partial(teacher, name, seed), run_seed=seed)
+
+
+# --------------------------------------------------------------------------- committed rows
+
+#: P8's committed per-episode files, by experiment: logical path relative to P8's root (P8
+#: reads the ``.csv.gz`` beside a logical path when present, P7-D1a §12). ``e07``: the learned
+#: matrix (``ppo`` seeds 0-4 and P8's other learned methods); ``e01``: the controllers, run
+#: seed 0 (``pid_track_descend``, ``pid_feedforward``, ``pid_feedforward_lowvz``, ``gated``,
+#: ``oracle_gated``). Both cover all 2 800 frozen-list episodes per method and seed (except
+#: P8's forecast methods in e07, 2 600), aft pad, in P8's file order.
+COMMITTED_EPISODES: Final[Mapping[str, str]] = {
+    "e01": "results/e01/episodes.csv",
+    "e07": "results/e07/matrix/episodes.csv",
+}
+
+
+@dataclass(frozen=True)
+class CommittedRows:
+    """P8's committed episode rows for one method (and seed), with what was read.
+
+    Values are P8's CSV text, unparsed (``"True"``, ``"nan"``, ``repr`` floats), so a caller
+    can compare them as text exactly as P8's ``compare_to_reference`` does, or parse them.
+    Units are P8's: times seconds model scale, lengths metres model scale, speeds m/s model
+    scale, angles degrees, actions normalised (model scale lambda = 1/25).
+
+    Attributes:
+        experiment: ``"e01"`` or ``"e07"`` (:data:`COMMITTED_EPISODES`).
+        method: P8's ``method`` column value.
+        run_seed: The run seed filtered on, or ``None`` for every seed of the method.
+        regime: The regime filtered on (``"id"``, ...), or ``None``.
+        ss: The sea-state cell filtered on (``"SS3"`` ... ``"SS6"``, ``"static"``), or ``None``.
+        logical_path: P8-relative logical CSV path (what P8's tables name).
+        file: P8-relative path of the bytes actually read (the ``.csv.gz`` when present).
+        file_sha256: SHA-256 of those bytes (the ``.gz`` for e07).
+        text_sha256: SHA-256 of the uncompressed CSV (P8's authority for compressed files);
+            equal to ``file_sha256`` for an uncompressed file.
+        columns: The file's header; always P8's ``EPISODE_COLUMNS``.
+        rows: One dict per matching row (``columns`` keys, in order), in P8's file order.
+    """
+
+    experiment: str
+    method: str
+    run_seed: int | None
+    regime: str | None
+    ss: str | None
+    logical_path: str
+    file: str
+    file_sha256: str
+    text_sha256: str
+    columns: tuple[str, ...]
+    rows: tuple[dict[str, str], ...]
+
+    def provenance(self) -> dict[str, Any]:
+        """Return everything but the rows, for a ``run_info.json`` (JSON-serialisable)."""
+        return {
+            "experiment": self.experiment,
+            "method": self.method,
+            "run_seed": self.run_seed,
+            "regime": self.regime,
+            "ss": self.ss,
+            "logical_path": self.logical_path,
+            "file": self.file,
+            "file_sha256": self.file_sha256,
+            "text_sha256": self.text_sha256,
+            "n_rows": len(self.rows),
+        }
+
+
+@dataclass(frozen=True)
+class _CommittedFile:
+    """One parsed committed file (cached; the rows are immutable tuples of cells)."""
+
+    logical_path: str
+    file: str
+    file_sha256: str
+    text_sha256: str
+    columns: tuple[str, ...]
+    cells: tuple[tuple[str, ...], ...]
+
+
+@functools.cache
+def _committed_file(experiment: str) -> _CommittedFile:
+    """Read, hash, verify and parse one committed file (once per process).
+
+    Raises:
+        ValueError: For an unknown experiment.
+        RuntimeError: If the header is not P8's ``EPISODE_COLUMNS``, a row is ragged, or the
+            uncompressed SHA-256 differs from P8's ``.sha256`` sidecar (when one exists).
+    """
+    if experiment not in COMMITTED_EPISODES:
+        raise ValueError(
+            f"unknown experiment {experiment!r}; expected one of {sorted(COMMITTED_EPISODES)}"
+        )
+    logical = P8_ROOT / COMMITTED_EPISODES[experiment]
+    actual = _p8_storage.resolve(logical)
+    file_sha = sha256_file(actual)
+    data = _p8_storage.read_bytes(logical)
+    text_sha = hashlib.sha256(data).hexdigest()
+    sidecar = _p8_storage.sha256_path(logical)
+    if sidecar.is_file():
+        recorded = sidecar.read_text(encoding="utf-8").split()[0]
+        if recorded != text_sha:
+            raise RuntimeError(f"{logical}: uncompressed SHA-256 {text_sha} != sidecar {recorded}")
+    reader = csv.reader(io.StringIO(data.decode("utf-8"), newline=""))
+    header = tuple(next(reader))
+    if header != EPISODE_COLUMNS:
+        raise RuntimeError(f"{logical}: header {header} != P8's EPISODE_COLUMNS")
+    cells = tuple(tuple(r) for r in reader)
+    ragged = [i for i, r in enumerate(cells) if len(r) != len(header)]
+    if ragged:
+        raise RuntimeError(f"{logical}: rows {ragged[:5]} do not have {len(header)} cells")
+    return _CommittedFile(
+        logical_path=logical.relative_to(P8_ROOT).as_posix(),
+        file=actual.relative_to(P8_ROOT).as_posix(),
+        file_sha256=file_sha,
+        text_sha256=text_sha,
+        columns=header,
+        cells=cells,
+    )
+
+
+def committed_rows(
+    experiment: str,
+    method: str,
+    run_seed: int | None = None,
+    *,
+    regime: str | None = None,
+    ss: str | None = None,
+) -> CommittedRows:
+    """Return P8's committed episode rows for one method, read-only, in P8's file order.
+
+    The teacher (``committed_rows("e07", "ppo", 0)``) and the baselines
+    (``committed_rows("e01", name)`` for ``pid_feedforward``, ``pid_track_descend``,
+    ``oracle_gated``, and ``gated``) printed beside every student (P3-D1 §3). Reading these
+    rows is allowed before selection (P3-D1 §4, leak NOTE 3); nothing here flies anything.
+
+    Args:
+        experiment: ``"e01"`` or ``"e07"`` (:data:`COMMITTED_EPISODES`).
+        method: P8's ``method`` value, e.g. ``"ppo"`` or ``"pid_feedforward"``.
+        run_seed: Keep only this run seed; ``None`` keeps every seed (file order).
+        regime: Keep only this regime (``"id"``, ``"unseen_seastate"``, ``"unseen_heading"``,
+            ``"unseen_vessel"``, ``"static"``); ``None`` keeps all.
+        ss: Keep only this cell (``"SS3"`` ... ``"SS6"``, or ``"static"``); ``None`` keeps all.
+
+    Returns:
+        The :class:`CommittedRows` (fresh dicts; the cached parse is never exposed).
+
+    Raises:
+        ValueError: For an unknown experiment, or if no row has this method (and run seed).
+        RuntimeError: If the file fails its header, shape or SHA-256 checks.
+    """
+    f = _committed_file(experiment)
+    col = {name: i for i, name in enumerate(f.columns)}
+    i_method, i_seed, i_regime, i_ss = col["method"], col["run_seed"], col["regime"], col["ss"]
+    seed_text = None if run_seed is None else str(int(run_seed))
+    selected = [
+        r
+        for r in f.cells
+        if r[i_method] == method and (seed_text is None or r[i_seed] == seed_text)
+    ]
+    if not selected:
+        seeds = "" if run_seed is None else f" run_seed {run_seed}"
+        raise ValueError(f"{f.logical_path}: no rows for method {method!r}{seeds}")
+    selected = [
+        r
+        for r in selected
+        if (regime is None or r[i_regime] == regime) and (ss is None or r[i_ss] == ss)
+    ]
+    return CommittedRows(
+        experiment=experiment,
+        method=method,
+        run_seed=None if run_seed is None else int(run_seed),
+        regime=regime,
+        ss=ss,
+        logical_path=f.logical_path,
+        file=f.file,
+        file_sha256=f.file_sha256,
+        text_sha256=f.text_sha256,
+        columns=f.columns,
+        rows=tuple(dict(zip(f.columns, r, strict=True)) for r in selected),
+    )
+
+
+# --------------------------------------------------------------------------- flip floor
+
+
+@dataclass(frozen=True)
+class FlipFloor:
+    """P8's one-ulp outcome-flip floor at ``id`` SS6 (P8 ``docs/protocol.md``).
+
+    Measured by P8 on its own MLPs (4 policies x 200 ``id`` SS6 episodes), not on this
+    project's students. P3-D1 §1 prints it beside every SS6 contrast as :attr:`sentence`.
+
+    Attributes:
+        flipped: Policy-episodes whose outcome class flips under at least one of the draws.
+        of: Policy-episodes examined.
+        draws: One-ulp input-perturbation draws per episode.
+        single_draw_median_pct: Median flip rate of a single draw, percent.
+        cell: Where it was measured.
+        definition: What a flip is.
+        source: Where P8 records it (P8-relative path and lines at the pinned commit).
+        sentence: P3-D1 §1's wording, verbatim.
+    """
+
+    flipped: int
+    of: int
+    draws: int
+    single_draw_median_pct: float
+    cell: str
+    definition: str
+    source: str
+    sentence: str
+
+    @property
+    def rate(self) -> float:
+        """Any-of-draws flip fraction, ``flipped / of`` (0.06625)."""
+        return self.flipped / self.of
+
+
+#: P8's one-ulp floor: 53 of 800 ``id`` SS6 policy-episodes (6.6 %) flip under at least one of
+#: 20 one-ulp draws; a single draw flips a median 1.9 % (P8 docs/protocol.md L5311, L5314,
+#: L5455). P3-D1 §1 carries it beside every SS6 contrast.
+FLIP_FLOOR_SS6: Final[FlipFloor] = FlipFloor(
+    flipped=53,
+    of=800,
+    draws=20,
+    single_draw_median_pct=1.9,
+    cell="id SS6 (4 policies x 200 episodes)",
+    definition="outcome class flips under at least one of 20 one-ulp input perturbations",
+    source="external/rl-land-on-moving-deck/docs/protocol.md L5311, L5314, L5455",
+    sentence=(
+        "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws "
+        "(single-draw median 1.9 %), measured on P8's MLPs, not on these students"
+    ),
+)
 
 
 # --------------------------------------------------------------------------- scene handles

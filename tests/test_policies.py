@@ -446,6 +446,46 @@ def test_dp_ensembling_averages_the_window_and_replans_every_step() -> None:
     np.testing.assert_array_equal(np.stack(again), np.stack(actions))
 
 
+def test_inference_calls_count_network_invocations_per_episode() -> None:
+    """``inference_calls``: bc one per step; dp one per chunk sampled; zeroed by ``reset``.
+
+    The counter is diagnostic only: a counted and an uncounted replay are bit-identical.
+    """
+    from ila.policies.state_mlp import StateMLP, StateMLPStudent
+
+    img, prop = _window(seed=4)
+    bc = registry.build_dummy("bc", 0)
+    assert bc.inference_calls == 0
+    bc.reset(1)
+    first = [bc.act_vision(img, prop) for _ in range(5)]
+    assert bc.inference_calls == 5
+    bc.reset(2)
+    assert bc.inference_calls == 0
+    np.testing.assert_array_equal(np.stack(first), np.stack([bc.act_vision(img, prop)] * 5))
+    for ta, steps, ensemble, calls in ((8, 20, False, 3), (1, 5, False, 5), (4, 7, True, 7)):
+        dp = registry.build_dummy(
+            "dp", 3, n_action_steps=ta, num_inference_steps=2, temporal_ensembling=ensemble
+        )
+        dp.reset(9)
+        a = np.stack([dp.act_vision(img, prop) for _ in range(steps)])
+        assert dp.inference_calls == calls, (ta, ensemble)
+        dp.reset(9)
+        assert dp.inference_calls == 0
+        np.testing.assert_array_equal(a, np.stack([dp.act_vision(img, prop) for _ in range(steps)]))
+        dp.sample_batch(img[None], prop[None], [(3, 9, 0)])  # the batched entry does not count
+        assert dp.inference_calls == calls
+    net = registry.build_net("bc_state", 0)
+    assert isinstance(net, StateMLP)
+    state = StateMLPStudent(net)
+    state.reset(0)
+    obs = np.zeros(net.cfg.obs_dim, np.float32)
+    for _ in range(3):
+        state.act(obs)
+    assert state.inference_calls == 3
+    state.reset(1)
+    assert state.inference_calls == 0
+
+
 def test_ensembling_refused_for_a_non_diffusion_arm() -> None:
     with pytest.raises(ValueError, match="not a diffusion arm"):
         registry.build_dummy("bc", 0, temporal_ensembling=True)

@@ -193,10 +193,13 @@ class StateMLPStudent:
         device: Where inference runs.
         privileged: False (P8's spec flag: no ``PrivilegedContext``).
         needs_motion_feed: False.
+        inference_calls: ``act`` calls since the last ``reset`` (one MLP call each; a
+            diagnostic counter, never read by the policy; ``act_batch`` does not count).
     """
 
     privileged: bool = False
     needs_motion_feed: bool = False
+    inference_calls: int = 0
 
     def __init__(self, net: StateMLP, device: torch.device | str = "cpu") -> None:
         """Wrap a network for closed-loop evaluation.
@@ -224,6 +227,7 @@ class StateMLPStudent:
         del seed
         if context is not None or motion_feed is not None:
             raise ValueError("bc_state never receives a privileged context or motion feed")
+        self.inference_calls = 0
 
     def act(self, obs: NDArray[Any]) -> NDArray[np.float32]:
         """Return the action for one P8 observation.
@@ -239,6 +243,7 @@ class StateMLPStudent:
         """
         x = np.asarray(obs, dtype=np.float32).reshape(1, -1)
         action: NDArray[np.float32] = self.act_batch(x)[0]
+        self.inference_calls += 1
         return action
 
     def act_batch(self, obs: NDArray[Any]) -> NDArray[np.float32]:

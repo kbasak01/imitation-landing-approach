@@ -272,6 +272,52 @@ def test_fly_checkpoint_uses_the_checkpoints_contract_variant(
         assert seen["contract_variant"] == variant and seen["render"] == "full"
 
 
+def test_fly_checkpoint_passes_the_appearance_shift_through(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Phase 8: an evaluation-only appearance shift reaches the runner; an unknown one raises.
+
+    The row tags (``ckpt_sha256``, ``Ta``/``K``/``ensemble``) do not depend on the shift, and
+    the runner's ``render_cfg_sha256`` cell differs for every shifted config.
+    """
+    import torch
+
+    from ila.eval import runner
+    from ila.policies.registry import CHECKPOINT_FORMAT
+    from ila.render.config import APPEARANCE_SHIFTS
+    from ila.train import select
+
+    seen: dict[str, Any] = {}
+
+    def fake(episodes: Any, spec: Any, cfgs: Any, tags: Any, **kwargs: Any) -> list[Any]:
+        seen.clear()
+        seen.update(kwargs, tags=tags)
+        return []
+
+    monkeypatch.setattr(runner, "run_list_vision", fake)
+    path = tmp_path / "dp.pt"
+    torch.save({"format": CHECKPOINT_FORMAT, "obs_variant": "default"}, path)
+    kw: dict[str, Any] = {"arm": "dp", "run_seed": 4, "sha256": "abc", "workers": 1}
+    select.fly_checkpoint(path, [], **kw)
+    assert seen["appearance_shift"] is None
+    plain = seen["tags"]
+    for shift in APPEARANCE_SHIFTS:
+        select.fly_checkpoint(path, [], appearance_shift=shift, **kw)
+        assert seen["appearance_shift"] == shift and seen["render"] == "full"
+        assert seen["contract_variant"] == "default"
+        assert seen["tags"] == plain and plain.ckpt_sha256 == "abc"
+        select.fly_checkpoint(path, [], appearance_shift=shift, inference=(8, 10, False), **kw)
+        t = seen["tags"]
+        assert (t.Ta, t.K, t.ensemble, t.ckpt_sha256) == (8, 10, False, "abc")
+    shas = {runner.render_cfg_sha256("full", s) for s in (None, *APPEARANCE_SHIFTS)}
+    assert len(shas) == 1 + len(APPEARANCE_SHIFTS)
+    seen.clear()
+    for bad in ("nope", "", "LIGHT_ROT_60"):
+        with pytest.raises(ValueError, match="unknown appearance shift"):
+            select.fly_checkpoint(path, [], appearance_shift=bad, **kw)
+    assert not seen  # refused before anything flew
+
+
 def test_smoke_records_repo_relative_checkpoint_paths() -> None:
     from ila.policies.registry import REPO_ROOT
     from ila.train.smoke import _repo_relative

@@ -14,11 +14,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import numpy as np
+import numpy.typing as npt
 
 __all__ = ["wasserstein_1"]
 
 
-def wasserstein_1(a: Sequence[float], b: Sequence[float]) -> float:
+def wasserstein_1(
+    a: Sequence[float] | npt.NDArray[np.float64], b: Sequence[float] | npt.NDArray[np.float64]
+) -> float:
     """Exact 1-D Wasserstein-1 distance between two empirical distributions.
 
     Each sample carries weight ``1/len`` of its own set. The distance is
