@@ -461,6 +461,8 @@ def fly_checkpoint(
     inference: tuple[int, int, bool] | None = None,
     teacher: str = "T_ppo",
     appearance_shift: str | None = None,
+    diagnostics: bool = False,
+    shadow_teacher: p8_adapter.PolicySpec | None = None,
 ) -> list[dict[str, Any]]:
     """Fly one checkpoint's EMA student on listed episodes (CPU fp32 single-sample path).
 
@@ -481,6 +483,11 @@ def fly_checkpoint(
             :data:`ila.render.config.APPEARANCE_SHIFTS`, an evaluation-only render variant
             (P3-D1 §3; Phase 8 flies it on ``id`` SS5-SS6). Passed to the runner, which loads
             the shifted render config and writes its ``render_cfg_sha256``.
+        diagnostics: Passed to the runner: append ``runner.DIAGNOSTIC_COLUMNS``
+            (``inference_calls``, ``teacher_agreement``). Off (selection, sweeps) by default;
+            such rows have ``runner.EVAL_EPISODE_COLUMNS``, not :func:`write_rows_csv`'s.
+        shadow_teacher: Passed to the runner: a non-privileged teacher spec flown in lockstep
+            for ``teacher_agreement`` (needs ``diagnostics``; ``runner.check_shadow``).
 
     Returns:
         Runner rows, in episode order.
@@ -531,6 +538,8 @@ def fly_checkpoint(
         chunk=chunk,
         appearance_shift=appearance_shift,
         contract_variant=variant,
+        diagnostics=diagnostics,
+        shadow_teacher=shadow_teacher,
     )
 
 

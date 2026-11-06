@@ -26,9 +26,11 @@ REPORT  ?=
 # dp-sweeps / dp-diagnostics take SWEEP / DIAG (e.g. SWEEP="--arm dp --seeds 0 1 2 3 4").
 SWEEP   ?= --arm dp --seeds 0 1 2 3 4
 DIAG    ?= --arm dp --seeds 0 1 2 3 4
+# eval / eval-bg take EVAL (e.g. EVAL="--dry-run", EVAL="--only core s0").
+EVAL    ?=
 
 .PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
-        select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval bench report figures gifs all
+        select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg bench report figures gifs all
 
 # --- implemented ------------------------------------------------------------------
 
@@ -120,11 +122,19 @@ r1-dataset: ; .venv-lerobot/bin/python scripts/r1/build_lerobot_dataset.py
 # R1 smoke: make train-smoke ARM=R1_lerobot_dp (background; see the train-smoke comment).
 r1-train: ; .venv-lerobot/bin/python scripts/r1/train_r1.py --seed $(SEED) $(ARGS)
 
+# Phase 8 evaluation matrix (P8-D1; background, prepare with /train-job; ~1 day of CPU wall clock
+# at 24 workers, `EVAL=--dry-run` prints the jobs and the projection). Every arm on P8's frozen
+# lists through the selection path (CPU fp32 single-sample) -> results/e08/rows/<arm>/s<seed>/,
+# results/e08/run_info.json, status in artifacts/runs/eval/status.json. Resumable per job (re-run
+# the same command); refuses a dirty tree. EVAL takes --only <tags/arms/s<n>>, --order, --workers.
+#   mkdir -p artifacts/runs/eval && nohup make eval-bg > artifacts/runs/eval/run.log 2>&1 &
+eval: ; $(PY) scripts/eval_matrix.py $(EVAL)
+eval-bg: ; $(PY) scripts/eval_matrix.py $(EVAL)
+
 # --- not yet implemented ----------------------------------------------------------
 # One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.
 # Replace the stub in its own phase.
 
-eval:         ; @echo "not implemented: phase 8"
 bench:        ; @echo "not implemented: phase 9"
 report:       ; @echo "not implemented: phase 8"
 figures:      ; @echo "not implemented: phase 8"

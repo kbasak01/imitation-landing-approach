@@ -62,6 +62,7 @@ __all__ = [
     "paired_contrast",
     "paired_iqm_contrast",
     "quantile",
+    "read_matrix_yaml",
     "relative_p95",
     "w1_bootstrap",
     "wilson",
@@ -98,6 +99,33 @@ class MatrixStatistics:
     paired_reps: int
 
 
+def read_matrix_yaml(path: Path = MATRIX_YAML) -> dict[str, Any]:
+    """Parse the evaluation matrix, refusing the committed file unless it is P3-D1's.
+
+    The one loader of ``configs/eval/matrix.yaml`` (:func:`matrix_statistics` here and
+    :func:`ila.eval.arms.load_matrix` read it through this). A fresh dict is returned on every
+    call, so no caller can alter another's copy.
+
+    Args:
+        path: ``configs/eval/matrix.yaml`` (another path, e.g. a test fixture, is parsed
+            without the SHA-256 check).
+
+    Returns:
+        The parsed YAML mapping.
+
+    Raises:
+        ValueError: If ``path`` is the committed matrix and its SHA-256 is not
+            :data:`MATRIX_SHA256` (P3-D1 §1), or the file is not a mapping.
+    """
+    sha = p8_adapter.sha256_file(path)
+    if path == MATRIX_YAML and sha != MATRIX_SHA256:
+        raise ValueError(f"{path}: SHA-256 {sha} != P3-D1's {MATRIX_SHA256}")
+    raw: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path}: not a mapping")
+    return raw
+
+
 @functools.cache
 def matrix_statistics(path: Path = MATRIX_YAML) -> MatrixStatistics:
     """Read the bootstrap seed and replicate counts from the frozen evaluation matrix.
@@ -111,10 +139,7 @@ def matrix_statistics(path: Path = MATRIX_YAML) -> MatrixStatistics:
     Raises:
         ValueError: If the file's SHA-256 is not P3-D1's or its seed is not 20261023.
     """
-    sha = p8_adapter.sha256_file(path)
-    if path == MATRIX_YAML and sha != MATRIX_SHA256:
-        raise ValueError(f"{path}: SHA-256 {sha} != P3-D1's {MATRIX_SHA256}")
-    raw: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
+    raw = read_matrix_yaml(path)
     out = MatrixStatistics(
         bootstrap_seed=int(raw["bootstrap_seed"]),
         iqm_reps=int(raw["replicates"]["iqm_ci"]),

@@ -275,7 +275,9 @@ def test_fly_checkpoint_uses_the_checkpoints_contract_variant(
 def test_fly_checkpoint_passes_the_appearance_shift_through(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Phase 8: an evaluation-only appearance shift reaches the runner; an unknown one raises.
+    """Phase 8: an appearance shift, ``diagnostics`` and ``shadow_teacher`` reach the runner.
+
+    An unknown shift raises before anything flies.
 
     The row tags (``ckpt_sha256``, ``Ta``/``K``/``ensemble``) do not depend on the shift, and
     the runner's ``render_cfg_sha256`` cell differs for every shifted config.
@@ -300,7 +302,11 @@ def test_fly_checkpoint_passes_the_appearance_shift_through(
     kw: dict[str, Any] = {"arm": "dp", "run_seed": 4, "sha256": "abc", "workers": 1}
     select.fly_checkpoint(path, [], **kw)
     assert seen["appearance_shift"] is None
+    assert seen["diagnostics"] is False and seen["shadow_teacher"] is None
     plain = seen["tags"]
+    shadow = object()  # any spec: fly_checkpoint forwards it unchanged
+    select.fly_checkpoint(path, [], diagnostics=True, shadow_teacher=shadow, **kw)  # type: ignore[arg-type]
+    assert seen["diagnostics"] is True and seen["shadow_teacher"] is shadow
     for shift in APPEARANCE_SHIFTS:
         select.fly_checkpoint(path, [], appearance_shift=shift, **kw)
         assert seen["appearance_shift"] == shift and seen["render"] == "full"
