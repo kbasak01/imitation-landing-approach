@@ -1,0 +1,7 @@
+tag,arm,list,ss,Ta,K,ensemble,appearance_shift,teacher,teacher_source,teacher_k,teacher_n,teacher_rate,status,success_iqm,iqm_margin,iqm_above,seeds_above,max_margin,audit_file
+core,bc_state,id,SS6,,,,,T_ppo,P8 e07 ppo run_seed 0,197,200,0.985,complete,0.985,0,False,s4:0.005,0.005,above_teacher/core__bc_state__id__SS6.json
+core,bc_state,unseen_seastate,SS6,,,,,T_ppo,P8 e07 ppo run_seed 0,195,200,0.975,complete,0.971666666667,-0.00333333333333,False,s3:0.01,0.01,above_teacher/core__bc_state__unseen_seastate__SS6.json
+core,bc_state,unseen_heading,SS6,,,,,T_ppo,P8 e07 ppo run_seed 0,182,200,0.91,complete,0.888333333333,-0.0216666666667,False,s2:0.01,0.01,above_teacher/core__bc_state__unseen_heading__SS6.json
+ablation,bc_mix,id,SS5,,,,,T_mix,assign_rows(20261023): ppo s0 (e07) / gated (e01),187,200,0.935,complete,0.925,-0.01,False,s1:0.015,0.015,above_teacher/ablation__bc_mix__id__SS5.json
+ablation,bc_mix,id,SS6,,,,,T_mix,assign_rows(20261023): ppo s0 (e07) / gated (e01),166,200,0.83,complete,0.876666666667,0.0466666666667,True,s0:0.03|s1:0.07|s2:0.04,0.07,above_teacher/ablation__bc_mix__id__SS6.json
+appearance_shift,bc_dagger,id,SS6,,,,mount_tilt_m2,T_ppo,P8 e07 ppo run_seed 0,197,200,0.985,complete,0.956666666667,-0.0283333333333,False,s0:0.005,0.005,above_teacher/appearance_shift__bc_dagger__id__SS6__shift-mount_tilt_m2.json

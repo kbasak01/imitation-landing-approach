@@ -1,0 +1,540 @@
+{
+  "above_teacher_row": {
+    "K": "",
+    "Ta": "",
+    "appearance_shift": "",
+    "arm": "bc_state",
+    "audit_file": "above_teacher/core__bc_state__id__SS6.json",
+    "ensemble": "",
+    "iqm_above": "False",
+    "iqm_margin": "0",
+    "list": "id",
+    "max_margin": "0.005",
+    "seeds_above": "s4:0.005",
+    "ss": "SS6",
+    "status": "complete",
+    "success_iqm": "0.985",
+    "tag": "core",
+    "teacher": "T_ppo",
+    "teacher_k": "197",
+    "teacher_n": "200",
+    "teacher_rate": "0.985",
+    "teacher_source": "P8 e07 ppo run_seed 0"
+  },
+  "cell": {
+    "K": null,
+    "Ta": null,
+    "appearance_shift": null,
+    "arm": "bc_state",
+    "ensemble": null,
+    "list": "id",
+    "ss": "SS6",
+    "tag": "core"
+  },
+  "label": "core bc_state id SS6",
+  "near_fraction": 0.05,
+  "outcome_shift": {
+    "table_teacher_by_student_pooled_over_seeds": [
+      {
+        "n": 9,
+        "student": "hard_landing",
+        "teacher": "hard_landing"
+      },
+      {
+        "n": 6,
+        "student": "success",
+        "teacher": "hard_landing"
+      },
+      {
+        "n": 6,
+        "student": "hard_landing",
+        "teacher": "success"
+      },
+      {
+        "n": 1,
+        "student": "bounce",
+        "teacher": "success"
+      },
+      {
+        "n": 978,
+        "student": "success",
+        "teacher": "success"
+      }
+    ],
+    "teacher_failure_to_student_success": [
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "success",
+        "seed": 0,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "outcome": "success",
+        "seed": 2,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 0,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 1,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 3,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 4,
+        "teacher_outcome": "hard_landing"
+      }
+    ],
+    "teacher_success_to_student_failure": [
+      {
+        "episode_seed": 1760349828,
+        "index": 12,
+        "outcome": "bounce",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1558505032,
+        "index": 38,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 857261509,
+        "index": 146,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1450410311,
+        "index": 178,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      }
+    ]
+  },
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "simulation_only": "PyBullet physics; model scale lambda = 1/25",
+  "status": "for results-skeptic review; not reported until reviewed",
+  "student": {
+    "detectors_disagree": [],
+    "metrics": {
+      "closing_speed_normal_m_s": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            1,
+            450,
+            549
+          ]
+        },
+        "max": 0.39893381976616454,
+        "n_over_threshold": 0,
+        "p50": 0.24733177889697044,
+        "p95": 0.28734120448252565,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "closing_speed_world_z_m_s": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            2,
+            483,
+            515
+          ]
+        },
+        "max": 0.4128641100979087,
+        "n_over_threshold": 0,
+        "p50": 0.24926627057468725,
+        "p95": 0.2897966755142579,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "lateral_offset_m": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            1,
+            0,
+            1,
+            8,
+            990
+          ]
+        },
+        "max": 0.09693853167022677,
+        "n_over_threshold": 0,
+        "p50": 0.013794937149654404,
+        "p95": 0.032245344707630144,
+        "threshold": 0.1,
+        "unit": "m model scale"
+      },
+      "rel_tilt_deg": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            15,
+            5,
+            2,
+            32,
+            126,
+            820
+          ]
+        },
+        "max": 22.93433509499108,
+        "n_over_threshold": 15,
+        "p50": 3.9968265157485527,
+        "p95": 11.387840295876309,
+        "threshold": 15.0,
+        "unit": "deg"
+      }
+    },
+    "n_detectors_disagree": 0,
+    "n_episodes": 1000,
+    "n_successes_near_threshold": 5,
+    "n_touchdowns": 1000,
+    "n_tunnelled": 10,
+    "outcomes": {
+      "bounce": 1,
+      "crash": 0,
+      "hard_landing": 15,
+      "off_pad": 0,
+      "success": 984,
+      "timeout": 0
+    },
+    "success_min_dwell_s": 0.5,
+    "successes": 984,
+    "successes_near_threshold": [
+      {
+        "episode_seed": 1145804141,
+        "index": 24,
+        "margin_fraction": 0.0064632876990459685,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "margin_fraction": 0.04714977485984224,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "margin_fraction": 0.009478223910566777,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "margin_fraction": 0.04015332098837009,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 1646836629,
+        "index": 86,
+        "margin_fraction": 0.015655473189382128,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 4
+      }
+    ],
+    "tunnelled": [
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "outcome": "hard_landing",
+        "seed": 0
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "hard_landing",
+        "seed": 0
+      },
+      {
+        "episode_seed": 1712242685,
+        "index": 49,
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "outcome": "hard_landing",
+        "seed": 1
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "hard_landing",
+        "seed": 2
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "outcome": "hard_landing",
+        "seed": 3
+      },
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "hard_landing",
+        "seed": 4
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "outcome": "hard_landing",
+        "seed": 4
+      },
+      {
+        "episode_seed": 1646836629,
+        "index": 86,
+        "outcome": "success",
+        "seed": 4
+      }
+    ]
+  },
+  "success_yaml_sha256": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+  "teacher": "T_ppo",
+  "teacher_rows": {
+    "detectors_disagree": [],
+    "metrics": {
+      "closing_speed_normal_m_s": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            86,
+            114
+          ]
+        },
+        "max": 0.31572718285456497,
+        "n_over_threshold": 0,
+        "p50": 0.247269394000022,
+        "p95": 0.2818113647317609,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "closing_speed_world_z_m_s": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            92,
+            108
+          ]
+        },
+        "max": 0.30739354546856007,
+        "n_over_threshold": 0,
+        "p50": 0.24925623690394128,
+        "p95": 0.28298190821142216,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "lateral_offset_m": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            2,
+            198
+          ]
+        },
+        "max": 0.06189916394687604,
+        "n_over_threshold": 0,
+        "p50": 0.012835659772954625,
+        "p95": 0.033913862327913706,
+        "threshold": 0.1,
+        "unit": "m model scale"
+      },
+      "rel_tilt_deg": {
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            3,
+            0,
+            2,
+            7,
+            23,
+            165
+          ]
+        },
+        "max": 18.644021328183985,
+        "n_over_threshold": 3,
+        "p50": 4.016321028269496,
+        "p95": 11.89886369877752,
+        "threshold": 15.0,
+        "unit": "deg"
+      }
+    },
+    "n_detectors_disagree": 0,
+    "n_episodes": 200,
+    "n_successes_near_threshold": 0,
+    "n_touchdowns": 200,
+    "n_tunnelled": 0,
+    "outcomes": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 3,
+      "off_pad": 0,
+      "success": 197,
+      "timeout": 0
+    },
+    "success_min_dwell_s": 0.5,
+    "successes": 197,
+    "successes_near_threshold": [],
+    "tunnelled": []
+  },
+  "teacher_source": "P8 e07 ppo run_seed 0",
+  "thresholds_success_yaml": {
+    "contact_dwell_min_s": 0.5,
+    "lateral_offset_max_m": 0.1,
+    "rel_vertical_velocity_max_m_s": 0.5,
+    "relative_tilt_max_deg": 15.0
+  }
+}

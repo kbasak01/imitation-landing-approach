@@ -1,0 +1,374 @@
+{
+  "flip_floor_ss6": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students",
+  "hypotheses": [
+    {
+      "beside": [
+        {
+          "label": "post hoc, not scored: paired_iqm_difference",
+          "text": "+2.3 points [+0.3, +5.2] (1 decimal)"
+        },
+        {
+          "label": "reference arm success (mean over seeds x episodes)",
+          "text": "bc_matched 96.0 % (960/1000)"
+        },
+        {
+          "label": "labelled frames",
+          "text": "bc_dagger: 616,053 (per seed 123,216, 123,013, 123,359, 123,223, 123,242); bc_matched: 614,365 (per seed 122,873, 122,873, 122,873, 122,873, 122,873)"
+        }
+      ],
+      "caveats": [
+        "P8's paired_bootstrap treats seeds as unpaired, which is conservative here, because bc_dagger and bc_matched share iteration 0 (P3-D1 §6 H1).",
+        "bc_dagger and bc_matched share iteration 0, the loop, the step count, the candidate set and the 2 000 starting conditions; they differ only in who chose the actions on the second 1 000 (P3-D1 §6 H1).",
+        "bc_matched is above 95 % in id SS5 (the ceiling of P3-D1 §6).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS5",
+      "ci_hi": 0.04799999999999999,
+      "ci_lo": 0.005999999999999998,
+      "contrast": "success(bc_dagger) - success(bc_matched)",
+      "estimate": 0.026000000000000023,
+      "hypothesis": "H1",
+      "inputs": [
+        "core bc_dagger id SS5",
+        "core bc_matched id SS5"
+      ],
+      "magnitude": 0.05,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "bc_dagger",
+          "seeds": 5
+        },
+        {
+          "arm": "bc_matched",
+          "seeds": 5
+        }
+      ],
+      "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "inconclusive",
+      "verdict_note": "inconclusive (CI excludes 0; estimate positive but below +5 points)"
+    },
+    {
+      "beside": [
+        {
+          "label": "post hoc, not scored: paired_iqm_difference",
+          "text": "+6.2 points [+1.7, +10.3] (1 decimal)"
+        },
+        {
+          "label": "reference arm success (mean over seeds x episodes)",
+          "text": "bc_matched 89.3 % (893/1000)"
+        },
+        {
+          "label": "labelled frames",
+          "text": "bc_dagger: 616,053 (per seed 123,216, 123,013, 123,359, 123,223, 123,242); bc_matched: 614,365 (per seed 122,873, 122,873, 122,873, 122,873, 122,873)"
+        },
+        {
+          "label": "SS6 flip floor",
+          "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
+        }
+      ],
+      "caveats": [
+        "P8's paired_bootstrap treats seeds as unpaired, which is conservative here, because bc_dagger and bc_matched share iteration 0 (P3-D1 §6 H1).",
+        "bc_dagger and bc_matched share iteration 0, the loop, the step count, the candidate set and the 2 000 starting conditions; they differ only in who chose the actions on the second 1 000 (P3-D1 §6 H1).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS6",
+      "ci_hi": 0.09699999999999999,
+      "ci_lo": 0.023000000000000003,
+      "contrast": "success(bc_dagger) - success(bc_matched)",
+      "estimate": 0.05899999999999994,
+      "hypothesis": "H1-SS6",
+      "inputs": [
+        "core bc_dagger id SS6",
+        "core bc_matched id SS6"
+      ],
+      "magnitude": 0.05,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "bc_dagger",
+          "seeds": 5
+        },
+        {
+          "arm": "bc_matched",
+          "seeds": 5
+        }
+      ],
+      "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "supported",
+      "verdict_note": "supported"
+    },
+    {
+      "beside": [
+        {
+          "label": "post hoc, not scored: paired_iqm_difference",
+          "text": "+3.7 points [+1.5, +6.0] (1 decimal)"
+        },
+        {
+          "label": "reference arm success (mean over seeds x episodes)",
+          "text": "bc 95.7 % (957/1000)"
+        },
+        {
+          "label": "labelled frames",
+          "text": "bc_dart: 304,535 (per seed 60,907, 60,907, 60,907, 60,907, 60,907); bc: 307,590 (per seed 61,518, 61,518, 61,518, 61,518, 61,518)"
+        }
+      ],
+      "caveats": [
+        "bc_dart and bc are both at N = 1 000 labelled episodes on the same 1 000 starting conditions; bc_dart - bc_matched (1 000 vs 2 000) is reported descriptively, unscored (P3-D1 §6 H1).",
+        "bc is above 95 % in id SS5 (the ceiling of P3-D1 §6).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS5",
+      "ci_hi": 0.05799999999999999,
+      "ci_lo": 0.016999999999999998,
+      "contrast": "success(bc_dart) - success(bc)",
+      "estimate": 0.03600000000000003,
+      "hypothesis": "H1-DART-SS5",
+      "inputs": [
+        "core bc_dart id SS5",
+        "core bc id SS5"
+      ],
+      "magnitude": 0.05,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "bc_dart",
+          "seeds": 5
+        },
+        {
+          "arm": "bc",
+          "seeds": 5
+        }
+      ],
+      "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "inconclusive",
+      "verdict_note": "inconclusive (CI excludes 0; estimate positive but below +5 points)"
+    },
+    {
+      "beside": [
+        {
+          "label": "post hoc, not scored: paired_iqm_difference",
+          "text": "+8.0 points [+4.2, +12.3] (1 decimal)"
+        },
+        {
+          "label": "reference arm success (mean over seeds x episodes)",
+          "text": "bc 88.9 % (889/1000)"
+        },
+        {
+          "label": "labelled frames",
+          "text": "bc_dart: 304,535 (per seed 60,907, 60,907, 60,907, 60,907, 60,907); bc: 307,590 (per seed 61,518, 61,518, 61,518, 61,518, 61,518)"
+        },
+        {
+          "label": "SS6 flip floor",
+          "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
+        }
+      ],
+      "caveats": [
+        "bc_dart and bc are both at N = 1 000 labelled episodes on the same 1 000 starting conditions; bc_dart - bc_matched (1 000 vs 2 000) is reported descriptively, unscored (P3-D1 §6 H1).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS6",
+      "ci_hi": 0.11900000000000001,
+      "ci_lo": 0.046,
+      "contrast": "success(bc_dart) - success(bc)",
+      "estimate": 0.08099999999999996,
+      "hypothesis": "H1-DART-SS6",
+      "inputs": [
+        "core bc_dart id SS6",
+        "core bc id SS6"
+      ],
+      "magnitude": 0.05,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "bc_dart",
+          "seeds": 5
+        },
+        {
+          "arm": "bc",
+          "seeds": 5
+        }
+      ],
+      "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "supported",
+      "verdict_note": "supported"
+    },
+    {
+      "beside": [
+        {
+          "label": "fraction without touchdown",
+          "text": "bc_mix 0.000; dp_mix 0.000; reference 0.010"
+        },
+        {
+          "label": "W1 to reference, s model scale",
+          "text": "bc_mix 0.2934; dp_mix 0.2056"
+        },
+        {
+          "label": "undefined replicates (empty pool, excluded)",
+          "text": "0 of 10000"
+        },
+        {
+          "label": "reference",
+          "text": "assign_rows(20261023, id SS4): 100 ppo (P8 e07, seed 0) / 100 gated (P8 e01); 198 touched down"
+        }
+      ],
+      "caveats": [
+        "Scored on 3 seeds per arm, the ablation count (P3-D1 §6 H2).",
+        "The training mixture is 500 : 478 episodes after filtering, but about 1 : 2 by frames (gated episodes are longer) (P3-D1 §6 H2).",
+        "All 22 filtered episodes are gated, mostly its longest waits (P3-D1 §6 H2).",
+        "last_action in the proprio can reveal the mode after the first step (P3-D1 §6 H2).",
+        "W1's bias grows as touchdowns get fewer, which works against an arm that times out (P3-D1 §6 H2).",
+        "dp_mix's gain over dp is not shown to come from multimodality (Phase 8 before-you-start).",
+        "select W1 (results/phase7/h2) is not H2 evidence (Phase 8 before-you-start).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS4",
+      "ci_hi": 0.2630021969046132,
+      "ci_lo": -0.10014063026094286,
+      "contrast": "W1(bc_mix, ref) - W1(dp_mix, ref), touched-down time_to_touchdown_s",
+      "estimate": 0.08777356902356898,
+      "hypothesis": "H2",
+      "inputs": [
+        "ablation bc_mix id SS4",
+        "ablation dp_mix id SS4 Ta8 K10 ens0",
+        "T_mix reference id SS4 (P8 rows)"
+      ],
+      "magnitude": 0.033,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "bc_mix",
+          "seeds": 3
+        },
+        {
+          "arm": "dp_mix",
+          "seeds": 3
+        }
+      ],
+      "statistic": "W1 bootstrap (ila.eval.stats.w1_bootstrap; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "seconds, model scale (lambda = 1/25; x5 full scale)",
+      "verdict": "not supported",
+      "verdict_note": "not supported (CI includes 0)"
+    },
+    {
+      "beside": [
+        {
+          "label": "dp at Ta = 8 (mean over seeds x episodes)",
+          "text": "33.8 %"
+        },
+        {
+          "label": "SS6 flip floor",
+          "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
+        }
+      ],
+      "caveats": [
+        "Checkpoints were selected at Ta = 8 (P3-D1 §6 H3).",
+        "Ta = 1 without ensembling can switch modes between replans; so a null cannot separate 'chunking is harmless' from 'replanning causes mode switching' (P3-D1 §6 H3).",
+        "dp_minus_last_action (P7-D3 item 7) is a competing explanation for dp recovering at Ta = 1: an input-freshness effect, stale last_action, alongside chunk length; any sentence that says dp fails 'because of chunking' must name it (P7-D3, Phase 8 before-you-start).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS6",
+      "ci_hi": 0.5379999999999999,
+      "ci_lo": 0.41,
+      "contrast": "success(dp, Ta = 1) - success(dp, Ta = 8), same checkpoints, K = 10",
+      "estimate": 0.47400000000000003,
+      "hypothesis": "H3",
+      "inputs": [
+        "dp_Ta dp id SS6 Ta1 K10 ens0",
+        "dp_Ta dp id SS6 Ta8 K10 ens0"
+      ],
+      "magnitude": 0.05,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "dp",
+          "seeds": 5
+        }
+      ],
+      "statistic": "joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "supported",
+      "verdict_note": "supported"
+    },
+    {
+      "beside": [
+        {
+          "label": "perception gap P",
+          "text": "+9.5 points [+6.1, +13.3] (1 decimal)"
+        },
+        {
+          "label": "imitation gap I",
+          "text": "+0.1 points [-1.1, +1.4] (1 decimal)"
+        },
+        {
+          "label": "success (mean over seeds x episodes)",
+          "text": "teacher 98.5 %; bc_state 98.4 %; bc 88.9 %"
+        },
+        {
+          "label": "SS6 flip floor",
+          "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
+        }
+      ],
+      "caveats": [
+        "P includes the effect of withholding time_fraction, which bc_state sees and bc does not; P' = S(bc_state) - S(bc_plus_clock) is reported beside it, unscored (P3-D1 §6 H4).",
+        "P' uses a bc_plus_clock that relies on the clock to a seed-dependent degree, and bc_state's clock reliance was not measured (Phase 8 before-you-start).",
+        "P also includes bc_state's fp32 training against bc's bf16 (P3-D1 §3, §6 H4).",
+        "H4 is conditional on teacher seed 0 (P8 ppo s0) (P3-D1 §1, §6 H4).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "cell": "id SS6",
+      "ci_hi": 0.13500000000000012,
+      "ci_lo": 0.05599999999999994,
+      "contrast": "D = P - I; P = S(bc_state) - S(bc), I = S(teacher) - S(bc_state)",
+      "estimate": 0.09399999999999997,
+      "hypothesis": "H4",
+      "inputs": [
+        "core bc_state id SS6",
+        "core bc id SS6",
+        "P8 committed ppo id SS6"
+      ],
+      "magnitude": null,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "bc_state",
+          "seeds": 5
+        },
+        {
+          "arm": "bc",
+          "seeds": 5
+        },
+        {
+          "arm": "teacher ppo s0",
+          "seeds": 1
+        }
+      ],
+      "statistic": "three-arm bootstrap (ila.eval.stats.h4_three_arm_bootstrap; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "supported",
+      "verdict_note": "supported"
+    },
+    {
+      "cell": "exported dp (K = 10), batch 1",
+      "hypothesis": "H5(a)",
+      "status": "not scored in Phase 8 (Phase 9): p99 latency on this machine needs Phase 9's export, parity and latency study (P3-D1 §6 H5(a))"
+    },
+    {
+      "cell": "id SS5",
+      "hypothesis": "H5(b)",
+      "status": "not scored in Phase 8 (Phase 9): the latency arm's delay d comes from H5(a) (P3-D1 §6 H5(b), §7, §8); matrix.yaml's latency_arm block is not flown here"
+    }
+  ],
+  "no_multiplicity": "No multiplicity correction is applied (P3-D1 §1)."
+}
