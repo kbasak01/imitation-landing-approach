@@ -9,6 +9,7 @@ Examples (see the Makefile ``bench-*`` targets; long stages run in the backgroun
     .venv/bin/python scripts/deploy/bench.py latency --batches 1
     .venv/bin/python scripts/deploy/bench.py score
     .venv/bin/python scripts/deploy/bench.py check
+    .venv/bin/python scripts/deploy/bench.py recheck-reference --arms bc_dagger dp
 """
 
 from __future__ import annotations
@@ -43,6 +44,9 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--batches", nargs="*", type=int, default=None)
     sub.add_parser("score")
     sub.add_parser("check")
+    p = sub.add_parser("recheck-reference")
+    p.add_argument("--arms", nargs="*", default=["bc_dagger", "dp"])
+    p.add_argument("--allow-dirty", action="store_true", help="smoke runs only")
     a = ap.parse_args(argv)
     s = load_settings(a.settings)
 
@@ -80,6 +84,9 @@ def main(argv: list[str] | None = None) -> int:
             allow_dirty=a.allow_dirty,
             log=log,
         )
+    elif a.stage == "recheck-reference":
+        pipeline.stage_recheck_reference(s, arms=a.arms, allow_dirty=a.allow_dirty, log=log)
+        log((s.results_dir / "closed_loop.csv").read_text("utf-8"))
     elif a.stage == "score":
         log(json.dumps(pipeline.stage_score(s), indent=2))
     else:

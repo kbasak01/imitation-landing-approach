@@ -18,6 +18,11 @@ commit, the dirty flag, the environment stamp, the graph hashes, its wall clock)
 ``check``: every CSV and ``delay.json`` re-rendered from the committed records and compared byte
 for byte (no flight, no timing).
 
+``recheck-reference``: :func:`ila.deploy.closed_loop.recheck_reference_rows` re-decides the
+reference records' ``reference_equals_selection_rows`` from the files' bytes (no flight),
+re-renders ``closed_loop.csv`` and records itself in ``run_info.json``
+(``closed_loop_recheck``).
+
 Every stage but ``check`` refuses a dirty tree (outside ``results/latency/``) unless told
 otherwise, because each output records the commit it ran at.
 """
@@ -49,6 +54,7 @@ __all__ = [
     "stage_inputs",
     "stage_latency",
     "stage_parity",
+    "stage_recheck_reference",
     "stage_score",
 ]
 
@@ -298,6 +304,36 @@ def stage_closed_loop(
             "env": _env(),
             "graphs": _graph_hashes(settings),
             "wall_s": time.perf_counter() - t0,
+        },
+    )
+    return res
+
+
+def stage_recheck_reference(
+    settings: BenchSettings,
+    *,
+    arms: Sequence[str] = ("bc_dagger", "dp"),
+    allow_dirty: bool = False,
+    log: Callable[[str], None] = print,
+) -> dict[str, Any]:
+    """Re-check the reference records without re-flying (module docstring)."""
+    git = _git_checked(settings, allow_dirty)
+    res = cl.recheck_reference_rows(settings, arms=arms, log=log)
+    (settings.results_dir / "closed_loop.csv").write_text(cl.closed_loop_csv(settings), "utf-8")
+    _run_info(
+        settings,
+        "closed_loop_recheck",
+        {
+            "time_utc": _now(),
+            "git": git,
+            "what": "reference_equals_selection_rows re-decided from file bytes; nothing flown",
+            "arms": {
+                arm: {
+                    "reference_equals_selection_rows": rec["reference_equals_selection_rows"],
+                    "previous": rec["reference_equals_selection_rows_recheck"]["previous"],
+                }
+                for arm, rec in res.items()
+            },
         },
     )
     return res

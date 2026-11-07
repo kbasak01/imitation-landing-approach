@@ -31,7 +31,8 @@ EVAL    ?=
 
 .PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all \
-        bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check
+        bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check \
+        bench-recheck-reference
 
 # --- implemented ------------------------------------------------------------------
 
@@ -167,6 +168,8 @@ bench-latency:     ; $(PY) scripts/deploy/bench.py latency $(BENCH)
 bench-score:       ; $(PY) scripts/deploy/bench.py score
 # --check mode: every results/latency table re-rendered from its committed records, byte for byte.
 bench-check:       ; $(PY) scripts/deploy/bench.py check
+# Re-decides reference_equals_selection_rows of the reference records from file bytes (no flight).
+bench-recheck-reference: ; $(PY) scripts/deploy/bench.py recheck-reference $(BENCH)
 bench: bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score
 
 # The project in methodology order. Long jobs (collect, train-bg, dagger-bg) are launched by
