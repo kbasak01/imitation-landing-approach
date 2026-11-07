@@ -8,7 +8,11 @@ outcome flips against the CPU single-sample path <= 3"; §7 the same for ``bc_da
   per worker, render ``full``, ``dp`` at the config defaults ``Ta = 8``, ``K = 10``). Its rows
   are compared with the committed selection rows of the same checkpoint
   (``results/phase{5,6}/runs/<arm>/s0/select/<rows_file>``); P2-D3 item 1 says they are
-  byte-identical, and the record says whether they are.
+  byte-identical, and the record says whether they are, comparing the two files' bytes
+  (:func:`rows_files_identical`). Both are written by ``csv`` with CRLF row endings; text
+  read back with newline translation is not the text written (the records of the 3b2ae85
+  flight said ``false`` for byte-identical files; :func:`recheck_reference_rows` corrects
+  such a record without re-flying).
 * **Provider flights**: the same episodes, tags, render and contract through the same runner
   (:func:`ila.eval.runner.run_list_vision`; its semantics are unchanged), with a student whose
   networks run on the provider (:class:`ProviderBCStudent`, :class:`ProviderDPStudent`, built
@@ -32,6 +36,7 @@ steps are 1/30 s model scale.
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import functools
 import io
 import json
@@ -63,6 +68,8 @@ __all__ = [
     "count_flips",
     "fly_provider",
     "provider_policy",
+    "recheck_reference_rows",
+    "rows_files_identical",
     "rows_text",
     "run_closed_loop",
 ]
@@ -196,6 +203,17 @@ def _read_rows(text: str) -> list[dict[str, str]]:
     return list(csv.DictReader(io.StringIO(text)))
 
 
+def _read_exact(path: Path) -> str:
+    """A CSV file's text exactly as written (no newline translation: CRLF survives)."""
+    with Path(path).open(encoding="utf-8", newline="") as f:
+        return f.read()
+
+
+def rows_files_identical(a: Path, b: Path) -> bool:
+    """Whether two rows files are byte-identical (P2-D3 item 1's claim; as ``cmp``)."""
+    return Path(a).read_bytes() == Path(b).read_bytes()
+
+
 def count_flips(
     rows: Sequence[Mapping[str, Any]], reference: Sequence[Mapping[str, Any]]
 ) -> dict[str, Any]:
@@ -228,15 +246,21 @@ def count_flips(
     return {"flips": len(flips), "flipped": flips, "rows_text_differ": differ}
 
 
-def _selection_rows(ckpt: ev_arms.Checkpoint) -> tuple[Path, str]:
-    sel = json.loads((p8_adapter.REPO_ROOT / ckpt.selection_json).read_text("utf-8"))
-    rows_file = sel["selected"]["rows_file"]
-    path = (p8_adapter.REPO_ROOT / ckpt.selection_json).parent / "select" / rows_file
+def _selection_rows_path(selection_json: Path) -> Path:
+    """The selected checkpoint's ``select`` rows file, from its ``selection.json``."""
+    sel: dict[str, Any] = json.loads(Path(selection_json).read_text("utf-8"))
+    rows_file = str(sel["selected"]["rows_file"])
+    path = Path(selection_json).parent / "select" / rows_file
     if not path.is_file():
         # Phase 5 committed only selection.json; its per-candidate rows stayed in the run
         # directory (`selection.json` `run_dir`), as Phase 6 did not.
-        path = Path(sel["run_dir"]) / "select" / rows_file
-    return path, path.read_text("utf-8")
+        path = Path(str(sel["run_dir"])) / "select" / rows_file
+    return path
+
+
+def _selection_rows(ckpt: ev_arms.Checkpoint) -> tuple[Path, str]:
+    path = _selection_rows_path(p8_adapter.REPO_ROOT / ckpt.selection_json)
+    return path, _read_exact(path)
 
 
 def fly_provider(
@@ -359,6 +383,7 @@ def run_closed_loop(
             )
             ref_text = rows_text(ref_rows)
             ref_path.write_text(ref_text, "utf-8")
+            same = rows_files_identical(ref_path, sel_path)
             _write_record(
                 adir,
                 settings.reference,
@@ -369,7 +394,8 @@ def run_closed_loop(
                     "n": len(ref_rows),
                     "flips": 0,
                     "rows_text_differ": 0,
-                    "reference_equals_selection_rows": ref_text == sel_text,
+                    "reference_equals_selection_rows": same,
+                    "reference_rows_sha256": sha256_file(ref_path),
                     "selection_rows_file": ev_arms._rel(sel_path),
                     "selection_rows_sha256": sha256_file(sel_path),
                     "selection_rows_flips": count_flips(ref_rows, _read_rows(sel_text))["flips"],
@@ -380,7 +406,6 @@ def run_closed_loop(
                     "checkpoint_sha256": loaded.ckpt.sha256,
                 },
             )
-            same = ref_text == sel_text
             log(f"{arm} reference: {len(ref_rows)} rows; equals selection rows: {same}")
         reference = _read_rows(ref_path.read_text("utf-8"))
         results[arm] = {}
@@ -436,6 +461,85 @@ def run_closed_loop(
             results[arm][provider] = _write_record(adir, provider, arm, settings, rec)
             log(f"{arm} {provider}: {fl['flips']} flips, {fl['rows_text_differ']} rows differ")
     return results
+
+
+#: Why :func:`recheck_reference_rows` exists (written into each record it corrects).
+RECHECK_REASON: Final[str] = (
+    "the flight compared the reference rows text as written (csv, CRLF row endings) with the "
+    "selection rows file read back with newline translation (LF), so byte-identical files "
+    "were recorded as different; re-checked by comparing the two files' bytes, nothing re-flown"
+)
+
+
+def recheck_reference_rows(
+    settings: BenchSettings,
+    *,
+    arms: Sequence[str] = ("bc_dagger", "dp"),
+    selection_rows: Mapping[str, Path] | None = None,
+    log: Callable[[str], None] = print,
+) -> dict[str, dict[str, Any]]:
+    """Re-decide ``reference_equals_selection_rows`` from the files on disk, without re-flying.
+
+    For each arm, reads ``closed_loop/<arm>/<reference>.json`` and ``<reference>_rows.csv``
+    and the selection rows file (located again from the arm's committed ``selection.json``;
+    its SHA-256 must equal the record's ``selection_rows_sha256``), compares the two files'
+    bytes, and rewrites the record with only ``reference_equals_selection_rows`` changed, plus
+    a ``reference_equals_selection_rows_recheck`` entry saying that it did so (method, previous
+    value, both files' SHA-256, time, commit, reason). Every other field, the flight's ``git``
+    included, is kept as flown. A record re-checked twice keeps its first ``previous``.
+
+    Args:
+        settings: Bench settings (``results_dir``, ``reference``, ``arm_seeds``).
+        arms: Arms to re-check.
+        selection_rows: Arm -> selection rows file, overriding the lookup (tests).
+        log: Progress sink.
+
+    Returns:
+        ``{arm: re-written record}``.
+
+    Raises:
+        ValueError: If a record is not a reference record, or the selection rows file's
+            SHA-256 differs from the record's.
+        FileNotFoundError: If a record or rows file is missing.
+    """
+    out: dict[str, dict[str, Any]] = {}
+    commit = git_state()["ila_commit"]
+    for arm in arms:
+        adir = settings.results_dir / "closed_loop" / arm
+        rec_path = adir / f"{settings.reference}.json"
+        ref_path = adir / f"{settings.reference}_rows.csv"
+        rec: dict[str, Any] = json.loads(rec_path.read_text("utf-8"))
+        if rec.get("status") != "reference":
+            raise ValueError(f"{rec_path}: status {rec.get('status')!r}, not a reference record")
+        if selection_rows is not None and arm in selection_rows:
+            sel_path = Path(selection_rows[arm])
+        else:
+            sel_json = ev_arms.selection_path(arm, int(settings.arm_seeds[arm]))
+            sel_path = _selection_rows_path(sel_json)
+        sel_sha = sha256_file(sel_path)
+        if sel_sha != rec.get("selection_rows_sha256"):
+            raise ValueError(
+                f"{arm}: {sel_path} SHA-256 {sel_sha} != the record's "
+                f"selection_rows_sha256 {rec.get('selection_rows_sha256')}"
+            )
+        same = rows_files_identical(ref_path, sel_path)
+        previous = rec.get("reference_equals_selection_rows")
+        first: Mapping[str, Any] = rec.get("reference_equals_selection_rows_recheck") or {}
+        rec["reference_equals_selection_rows"] = same
+        rec["reference_equals_selection_rows_recheck"] = {
+            "method": "bytes (Path.read_bytes equality, as cmp)",
+            "previous": first.get("previous", previous),
+            "fields_changed": ["reference_equals_selection_rows"],
+            "reference_rows_sha256": sha256_file(ref_path),
+            "selection_rows_sha256": sel_sha,
+            "time_utc": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat(),
+            "ila_commit": commit,
+            "reason": RECHECK_REASON,
+        }
+        rec_path.write_text(json.dumps(rec, indent=2, sort_keys=True) + "\n", "utf-8")
+        out[arm] = rec
+        log(f"{arm} reference: equals selection rows: {previous} -> {same} (bytes)")
+    return out
 
 
 def _write_record(
