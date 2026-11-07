@@ -3620,3 +3620,213 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
   - H5(b) compares `dp` with itself, so this low baseline does not invalidate the contrast. State it with the result.
 - **README (Phase 10).** Any `dp` sentence says "this `dp`, distilled from P8 `ppo` s0" (P8-D1 item 11). `hypotheses.csv` is never quoted without `hypotheses.json`'s caveats.
 - **First task:** `deploy-benchmarker` exports `dp` (seed 0's selected checkpoint; encoder, one denoise step, unrolled K = 10 with noise as input) and `bc_dagger`, and runs open-loop parity on the 1 000 `select` inputs.
+
+### P9-D1 — Export, parity, latency and latency-arm choices P3-D1 leaves open (2026-11-07)
+*Status: draft by `deploy-benchmarker`, for review before the closed-loop flights, the latency
+sweep or any latency-arm flight. Written after the open-loop parity numbers below were measured
+and before any closed-loop, latency or latency-arm number existed.*
+
+*Decision.* The choices below are not fixed by P3-D1 §6 H5, §7 or §8. They are implementation
+choices inside the frozen protocol, not deviations; no threshold, list or criterion changes.
+Everything is simulation (PyBullet physics, TinyRenderer frames). Times are model scale (λ =
+1/25): one 30 Hz control step is 33.333 ms model (166.7 ms full scale). Latencies are wall clock
+on this workstation (RTX A4000, i9-10980XE, WSL2) and transfer to no embedded target.
+
+1. **Exported checkpoints.** Seed 0's selected checkpoint per arm: `bc_dagger` `s5_step005000.pt`
+   (`d7f9f281…258c`, global step 45 000) and `dp` `s0_step100000.pt` (`b459f276…d581`), EMA
+   weights, eval mode. Before export each is resolved from its committed `selection.json`, whose
+   SHA-256 must equal its pin in `results/e08/selection_pins.json` (`bc_dagger/s0` `98e2451f…`,
+   `dp/s0` `6163f0d0…`), and its bytes are re-hashed (`ila.eval.arms.verify_checkpoint_bytes`).
+   The verdicts apply to all five seeds (P3-D1 §3).
+2. **Graphs** (`ila.deploy.export`; `configs/deploy/bench.yaml`, frozen dataclass
+   `BenchSettings`, which refuses any threshold looser than P3-D1).
+   - `bc_dagger.onnx` (images uint8, proprio → action, tanh inside); `dp_encoder.onnx`;
+     `dp_denoise_step.onnx` (x_k, k int64, global_cond → ε̂); `dp_K10.onnx` (global_cond,
+     initial noise → chunk). `/255`, the centre 88 px crop, the proprio standardisation, DDIM's
+     per-step `clip_sample` and the final clip to [−1, 1] are inside the graphs.
+   - `dp_K10.onnx` unrolls ten DDIM-trailing steps (k = 99, 89, …, 9; η = 0;
+     `set_alpha_to_one`) with diffusers' `DDIMScheduler.step` arithmetic and coefficients as
+     float32 constants. In torch fp32 on the CPU the unrolled module equals `ddim_sample`
+     **bit for bit** (max-abs 0.0; checked at every export, and in tests at K ∈ {1, 5, 10, 25}).
+   - Exporter: `torch.onnx.export(dynamo=False)`, opset 17, constant folding, batch axis
+     dynamic (`.venv` has no onnxscript, as for R1). ONNX Runtime's symbolic shape inference is
+     stored on every graph; the TensorRT EP needs shapes on its subgraph inputs.
+   - fp16: `onnxruntime.transformers.float16.convert_float_to_float16(keep_io_types=True)`,
+     topologically re-sorted (the converter emits its input casts after their consumers). I/O
+     names and dtypes are those of fp32.
+   - No graph holds an RNG op (`ila.deploy.r1_parity.rng_ops`). Every SHA-256 is in
+     `artifacts/deploy/graphs/meta.json` and `results/latency/graphs.json`.
+3. **The 1 000 open-loop inputs.** P3-D1 §6 says "1 000 `select` inputs" without saying whose
+   states. Reading adopted: P8's `ppo` s0 teacher flies the 150 `select` episodes (CPU path,
+   render `full`). At every step the student input of that physics state is built by
+   `runner.StudentWindow` (`ObsContract.student_input`: images and the proprio allowlist, no
+   privileged field, no clock), giving 9 218 windows. 1 000 are drawn by
+   `default_rng(20261023).choice(9218, 1000, replace=False)`, sorted. The teacher's flight:
+   149 success, 1 hard landing. The inputs are the same for both arms and every provider, and
+   are the training distribution of every core arm. Store `artifacts/deploy/inputs/
+   select_inputs.npz` (`d217ea89…b75c`), record `results/latency/inputs.json`.
+   - Input i's initial noise is `initial_noise` keyed (run_seed = 0, −100, i). A negative
+     episode slot is never a P8 seed (as P6-D1's −1, −2).
+4. **Open-loop parity** (`ila.deploy.parity`), TF32 off throughout, batch 1.
+   - *Reference:* torch fp32, CPU, batch 1, one intra-op thread, recording at each of the ten
+     steps the sample x_s the U-Net received and its ε̂ (`results/latency/reference.json`).
+   - *Judged, `dp`:* for every step s, max over inputs and elements of |ε̂_p(x_s^ref, k_s,
+     cond_p) − ε̂_ref| ≤ 1e-4. cond_p is the provider's own encoder output (end to end, as
+     R1's check, P6-D3), and every provider is fed the reference path's x_s, so a step's gap is
+     the network's, not an accumulated trajectory difference.
+   - *Judged, `bc_dagger`:* max |action_p − action_ref| ≤ 1e-4 (all three axes).
+   - *Reported, not judged:* the final-chunk max-abs of the provider's unrolled K = 10 network
+     and of `ila`'s host loop around its denoise step, beside 1e-3 (P3-D1 §6 and §8; plan
+     Phase 9 item 2 judged it, and the protocol wins); global_cond max-abs; ε̂ with the reference
+     global_cond; the count of inputs whose chunk gap exceeds 1e-3.
+   - fp16 providers are judged by the same tests.
+5. **Providers** (`ila.deploy.backends`).
+   - `ort_cpu_fp32`: CPU EP, one intra-op and one inter-op thread, sequential, `ORT_ENABLE_ALL`.
+   - `ort_cuda_fp32`: CUDA EP with P8's options (`use_tf32 = 0`; cuDNN algorithm search left at
+     ORT's default, as P8), CPU EP after it, as P8 lists them.
+   - `torch_cuda_fp32`: torch eager, TF32 off, `cudnn.benchmark` off
+     (`configure_torch_numerics`).
+   - `ort_trt_fp16`: the fp16 graphs on the TensorRT EP with `trt_fp16_enable`. **Provider
+     order TensorRT → CUDA → CPU**, where P8 used TensorRT → CPU. TensorRT does not take the
+     uint8 image input's first Reshape/Transpose, and those nodes run on the CUDA EP, not the
+     CPU. No explicit optimisation profile: the engine is built for the one batch size a
+     session runs, with engine and timing caches per provider and batch in
+     `artifacts/deploy/trt_cache/<provider>/b<B>/`. An explicit profile would have to name the
+     partitioned subgraphs' inputs. `NVIDIA_TF32_OVERRIDE = 0` (dmf's `disable_tf32`) holds
+     TensorRT's fp32 layers to fp32.
+   - Unscored, reported beside: `ort_trt_fp32` (the fp32 graphs on TensorRT, TF32 held off) and
+     `ort_cuda_fp16` (the fp16 graphs on the CUDA EP).
+   - Every ORT session must realize its first requested provider, or the provider is refused
+     (dmf's guard against ORT's silent CPU fallback).
+6. **Closed-loop parity** (`ila.deploy.closed_loop`), binding, ≤ 3 flips of 150.
+   - The reference is **re-flown** on the CPU fp32 single-sample path exactly as selection flew
+     it (`ila.train.select.fly_checkpoint`). Its rows are compared with the committed selection
+     rows, and whether they are byte-identical is recorded (P2-D3 item 1 says they are).
+   - Each provider flies the same episodes, tags, render and contract through the unchanged
+     runner, batch 1 per worker: `ProviderBCStudent`, and `ProviderDPStudent`, which keeps
+     `ChunkedDiffusionStudent`'s executor, its noise keys and Ta = 8, with chunk = `dp_e2e`
+     (encoder → `dp_K10.onnx`; torch: `DiffusionPolicyNet.sample`). Workers: 24 for CPU
+     providers, 6 for GPU providers (one CUDA context each). TensorRT engines are built once
+     in the parent before the workers start.
+   - A flip is an episode whose `outcome` differs from the re-flown reference's.
+   - A provider whose open-loop parity failed is not flown (`--include-failed` flies it,
+     labelled, and it still fails parity).
+7. **What "parity passed" gates.**
+   - A latency configuration is **launched** only if its arm's open-loop parity passed on that
+     provider (refused rows carry no number).
+   - H5(a) and d count a provider only if it passed open-loop **and** closed-loop parity.
+   - So the latency sweep and the closed-loop flights can run in either order; scoring needs
+     both.
+8. **Latency** (`ila.deploy.latency`; P8's method through `p8_adapter.latency_harness()`).
+   - One fresh child process per configuration under dmf's `tf32_environment()`, one at a
+     time.
+   - ≥ 200 warm-up calls, a `torch.cuda.synchronize()`, then ≥ 2 000 timed calls. Each is
+     bracketed by `perf_counter` with a `synchronize()` inside the bracket on GPU providers.
+     Every call is host to host.
+   - Inputs cycle through `max(1, 1000 // B)` fixed distinct batches (dmf's rule) of the
+     1 000 windows, with the reference's global_cond, noise and x_k.
+   - dmf's `_stats` gives p50/p90/p99/mean/std; the **max** is added (Phase 9 rule 4).
+   - Rows: `bc_e2e`, `dp_encoder`, `dp_denoise_step` (k = 99), `dp_loop_K{1,5,10,25}`
+     (`ila`'s DDIM loop around the denoise step: global_cond and noise in, chunk out; ORT
+     samples on the host, torch on the device), `dp_unrolled_K10`, and `dp_e2e` (images +
+     proprio + noise → chunk: encoder then `dp_K10.onnx`; torch `DiffusionPolicyNet.sample`).
+   - **Batch sizes 1 and 24.** "The eval batch size" is not defined anywhere. Phase 8 flew
+     every arm single-sample at 24 workers, and 24 is the largest lockstep batch cap
+     (`BATCH_CAPS`, P2-D2).
+   - The reference `torch_cpu_fp32` is timed at batch 1 only: it exists for P3-D1 §6's
+     fallback.
+   - P8's child timeout is 3 600 s. Ours is 8 h, because `ort_cpu_fp32` `dp_loop_K25` at
+     batch 24 needs more than an hour at 2 200 calls.
+9. **Scoring** (`ila.deploy.latency.score` → `h5a.csv`, `delay.json`).
+   - *H5(a)* uses the `dp_e2e` row at batch 1. It is supported iff some scored provider that
+     passed both parities has p99 < **33.3 ms**, the number §6 writes. §7's d uses **33.333
+     ms**, as written. They differ only for a p99 in [33.3, 33.333) ms, and each test uses its
+     own literal (the P8-D1 item 3 precedent for H2's 0.033 s).
+   - A scored provider whose parity passed but whose row failed, or whose closed-loop record
+     is missing, makes H5(a) "not scored – …". It is never dropped silently.
+   - *d per arm* uses the arm's end-to-end row (`bc_e2e`, `dp_e2e`) at batch 1. The provider
+     is the parity-passing scored provider with the **lowest p99**: "fastest" is read on the
+     quantity d is computed from. With none, the `torch_cpu_fp32` batch-1 p99 is used.
+     Unscored variants are never chosen.
+   - `delay.json` records d, the provider, its p99 and the fallback flag.
+10. **Latency-arm semantics** (`ila.deploy.latency_arm`; §7 is implemented as written).
+    - Within a step: (1) a result due now lands; (2) if nothing is in flight and the rule holds,
+      a request is issued with this step's observation (with d = 0 it lands at once); (3) the
+      action is chosen.
+    - `dp` issues a request when the executing chunk has ≤ d steps left, and at the first step
+      of an episode. Its noise key is (run_seed, episode_seed, t of issue), the synchronous
+      student's key at d = 0.
+    - Indices come from `chunking.delayed_chunk_index` = min((To − 1) + d + offset, Tp − 1).
+      That function was added to `ila/policies/dp/chunking.py`, the one place chunk indices are
+      computed.
+    - "Its last action is held" when a chunk runs out is read as the last executed action. At
+      Ta = 8 a chunk runs out only when d > 8, and its last executed action is then already
+      chunk index Tp − 1, so the two readings coincide.
+    - Tests: d = 0 is row for row the synchronous arm through the runner (`bc`, `dp`); the
+      timelines at d = 2 and d = 9 (the hold path) are pinned step by step; requests never
+      overlap for d in 0…19.
+    - The latency arm flies the CPU fp32 single-sample path, as the synchronous `dp` row it is
+      contrasted with (P3-D1 §3 "both sides of every scored contrast fly the same path").
+11. **Adapter.** `p8_adapter.latency_harness()` holds by reference dmf's `BenchConfig`,
+    `BenchResult`, `_stats`, `environment_stamp`, memory helpers, `disable_tf32`,
+    `preload_gpu_libraries`, `session_providers`, `tf32_environment`, `CUDA_PROVIDER_OPTIONS`,
+    and P8's `CONTROL_PERIOD_MS` (`is`-identity tested). `ila.p8_adapter` stays the only
+    `rld` importer.
+12. **Provenance.** Every stage but `check` refuses a tree dirty outside `results/latency/`. Each
+    stage records the `ila` commit, the dirty flag, dmf's environment stamp and the graph hashes
+    in `results/latency/run_info.json`, and every latency and closed-loop record carries its own
+    `ila_commit`. `make bench-check` re-renders every CSV and `delay.json` from the committed
+    records, byte for byte.
+
+*Reason.* P3-D1 §6 H5 and §7 fix the thresholds, the providers, the reference and the latency
+rule, but not the input source, the provider settings, what "fastest" ranks on, the eval batch,
+what parity gates, or the order of events inside a delayed step. Each choice above is the
+smallest that makes those rules executable. Where two literal readings exist, each test uses
+the literal it states.
+
+*Evidence.* All at `cdee30a` on a clean tree (P8 at `7237b70`), recorded in
+`results/latency/run_info.json`.
+- **Graphs** (`results/latency/graphs.json`): `bc_dagger.onnx` `23ce916d…3294`,
+  `dp_encoder.onnx` `2d0001f5…a2ca`, `dp_denoise_step.onnx` `a553183d…0f8a`, `dp_K10.onnx`
+  `a0bf2c88…5759`; fp16 `8368aa78…9c2c`, `b1c0911d…41ef`, `a4b3f1b2…79e7`, `6610c876…7339`.
+  A second export into a scratch directory gave the same eight SHA-256s, so the export is
+  byte-deterministic.
+- **Inputs** (`inputs.json`, `bcfe08b2…`): 1 000 of 9 218 windows, store `d217ea89…b75c`.
+- **Reference** (`reference.json`): arrays `3b6f8a55…`, 200 s on one CPU thread.
+- **Open-loop parity** (`parity.csv` `0bccd8ee…`, `parity_steps.csv`, `parity.json`
+  `8bb36add…`), 1 000 inputs, batch 1, TF32 off:
+
+  | Provider | Scored | `bc_dagger` action max-abs | `dp` per-step ε̂ max-abs (worst step) | Open loop | `dp` chunk max-abs (unrolled / loop), reported | Inputs with chunk gap > 1e-3 |
+  |---|---|---|---|---|---|---|
+  | `ort_cpu_fp32` | yes | 3.04e-6 | 2.96e-5 (k = 9) | **pass** | 2.77e-5 / 2.77e-5 | 0 |
+  | `ort_cuda_fp32` | yes | 1.88e-6 | 2.86e-5 | **pass** | 2.50e-5 / 2.50e-5 | 0 |
+  | `torch_cuda_fp32` | yes | 1.67e-6 | 2.91e-5 | **pass** | 2.27e-5 / 2.28e-5 | 0 |
+  | `ort_trt_fp16` | yes | 9.65e-4 | 6.38e-2 | **fail** (both arms) | 3.21e-2 / 3.50e-2 | 799 |
+  | `ort_trt_fp32` | no | 1.88e-6 | 2.91e-5 | pass | 2.12e-5 / 2.61e-5 | 0 |
+  | `ort_cuda_fp16` | no | 1.24e-3 | 6.45e-2 | fail | 2.70e-2 / 3.83e-2 | 741 |
+
+  - For every fp32 provider the per-step gap grows monotonically along the schedule, from
+    about 1.7e-6 at k = 99 to about 3e-5 at k = 9 (`parity_steps.csv`). The worst step is
+    3.4 times inside the 1e-4 bound.
+  - The fp32 chunk gaps (≤ 2.8e-5) are far below P3-D1 §8's prediction of 1e-3 to 1e-2 for a
+    trained network. A likely reason, not measured: at k = 99 the first step's ε̂ gap is only
+    about 1.7e-6. Nearly every element of x̂₀ = (x − √(1 − ᾱ) ε̂) / √ᾱ then lies far outside
+    [−1, 1] and is clipped (`clip_sample`), so the ×2 029 gain does not reach the chunk.
+  - The fp16 providers fail both judged quantities by factors of 640 (`dp`) and about 10
+    (`bc_dagger`).
+
+*Consequence.*
+- **`ort_trt_fp16` fails open-loop parity for both arms.** P3-D1 §6 says "fp16 passes only
+  under the same tests", so its latency rows are written `refused` with no number, it is not
+  flown closed loop by default, and it cannot count for H5(a) or d. The unscored
+  `ort_trt_fp32` passes open loop. It is timed and reported beside the scored providers, never
+  scored or chosen for d.
+- Three scored providers (`ort_cpu_fp32`, `ort_cuda_fp32`, `torch_cuda_fp32`) go on to the
+  binding closed-loop test. H5(a) and d wait for it and for the latency sweep. Neither has been
+  run.
+- The latency arm's wrapper and its interface exist (`ila.deploy.latency_arm`). Enabling the
+  `latency_arm` block (`ila.eval.arms.SKIPPED_BLOCKS`) is `eval-auditor`'s change and is
+  reviewed by `privileged-leak-auditor` before flight (Phase 9 "Before you start").
+- Files outside `ila/deploy`: `ila/p8_adapter.py` (`latency_harness`, a re-export) and
+  `ila/policies/dp/chunking.py` (`delayed_chunk_index`, a new pure function; nothing existing
+  changed).
