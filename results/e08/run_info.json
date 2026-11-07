@@ -93,10 +93,20 @@
     "file": "results/e08/selection_pins.json",
     "sha256": "987fa14af1a9b657d66bcf47fba45a080c9b1a3b60289964c00144d79bd4c4d5"
   },
-  "inference_path": "CPU fp32 single-sample for every arm (R1: ONNX Runtime CPU, one thread); the batched GPU path is not wired for trained checkpoints and refuses modular, so no arm uses it",
-  "skipped_blocks": {
-    "latency_arm": "not flown in Phase 8: its delay d = ceil(p99_ms / 33.333) comes from Phase 9's latency study (P3-D1 \u00a76 H5(a), \u00a77); P3-D1 \u00a78 moves H5(b) and the latency arm to Phase 9"
+  "latency_pins": {
+    "file": "results/e08/latency_pins.json",
+    "sha256": "203e8a90e4784258ebbd2a784ca6216ef93e46fd691a9b8ac1c7c285bf31ca14"
   },
+  "delay_json": {
+    "file": "results/latency/delay.json",
+    "sha256": "846fbf6873b808ef5f8dedad74f33e19c5277f207ff2170acf247908c867dd8f",
+    "delays": {
+      "bc_dagger": 1,
+      "dp": 6
+    }
+  },
+  "inference_path": "CPU fp32 single-sample for every arm (R1: ONNX Runtime CPU, one thread); the batched GPU path is not wired for trained checkpoints and refuses modular, so no arm uses it",
+  "skipped_blocks": {},
   "shared_cells": [
     {
       "tag": "dp_Ta",
@@ -362,10 +372,44 @@
       "finished_utc": "2026-11-06T22:51:32+00:00",
       "episodes_flown": 179200,
       "flight_wall_clock_s": 78365.58993697312
+    },
+    {
+      "id": "2026-11-07T18:46:17+00:00",
+      "started_utc": "2026-11-07T18:46:17+00:00",
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14",
+      "ila_dirty": false,
+      "ila_dirty_paths": [],
+      "host": {
+        "host": "DATTA-BASAK",
+        "cpu_count": 36,
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "processor": "x86_64",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130",
+        "gpu": "NVIDIA RTX A4000",
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+        "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14",
+        "ila_dirty_paths": [
+          "?? results/e08/latency_pins.json"
+        ],
+        "env_threads": {
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": null
+        }
+      },
+      "workers": 24,
+      "chunk": 10,
+      "jobs_requested": 10,
+      "selection_pins_created": false,
+      "latency_pins_created": true,
+      "jobs_done": 10,
+      "finished_utc": "2026-11-07T19:16:53+00:00",
+      "episodes_flown": 6000,
+      "flight_wall_clock_s": 1790.626230652997
     }
   ],
-  "jobs_total": 351,
-  "jobs_done": 351,
+  "jobs_total": 361,
+  "jobs_done": 361,
   "jobs": {
     "rows/bc_state/s0/static.csv.gz": {
       "n_rows": 200,
@@ -2823,6 +2867,76 @@
       "wall_clock_s": 124.60444273400935,
       "workers": 24,
       "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id-SS4-SS5-SS6__latency-d1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "b7b292d1bf063e5959d9f67a38e5ab24f169db15202d9ad8e42dcf856f318602",
+      "wall_clock_s": 216.29465401000925,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/bc_dagger/s1/id-SS4-SS5-SS6__latency-d1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "f6333a426f98f7966ed2c03cfc8c6449ed4c8236003fecd47911bf283260115a",
+      "wall_clock_s": 218.52748290399904,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/bc_dagger/s2/id-SS4-SS5-SS6__latency-d1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "809b586c7e990e9e8afd3a36eb8793e687dcde67b64b5b05e40ae165efdd7646",
+      "wall_clock_s": 220.0467207779875,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/bc_dagger/s3/id-SS4-SS5-SS6__latency-d1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "941aec0d5410abd4d5566d1967b6258537ff8a3fbb532d744a5885b7778d13af",
+      "wall_clock_s": 218.44870325899683,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/bc_dagger/s4/id-SS4-SS5-SS6__latency-d1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "0dfd11cdea359381899835630c2d05ba267f8beba729e9c4d56cd701ca2d5a50",
+      "wall_clock_s": 211.5777219349984,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta8_K10_ens0__latency-d6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "c79ea793e265b10361101f766996e34739d3e67f91c3e406fec9fd7d18b29b60",
+      "wall_clock_s": 142.44992339398596,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta8_K10_ens0__latency-d6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "b1a25ab2a1a48320003f2078eb58b5b490926fba2b7698a50a1c4d5950964577",
+      "wall_clock_s": 143.11668503901456,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta8_K10_ens0__latency-d6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "4be25d33011c95dfc8e840f7513230f04375cd766f34d2090d395e6f0cb81c70",
+      "wall_clock_s": 141.58367014702526,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta8_K10_ens0__latency-d6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "23a2ea64191756f889d04f681da6913d2616f62aa57d4e440b09d728b44702d2",
+      "wall_clock_s": 139.6126754609868,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta8_K10_ens0__latency-d6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "0e362f79c203c3c842e4ffca1b93897401f2fc557cfd4fa0702a6c5271852881",
+      "wall_clock_s": 138.96799372599344,
+      "workers": 24,
+      "ila_commit": "ae71f033afdaa46be19ba7964bccf5787cbbec14"
     }
   }
 }
