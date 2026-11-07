@@ -14,8 +14,10 @@ Rules, as P3-D1 §7 states them:
   result arrives; the next request is issued at ``t + d``.
 * **dp** (:class:`DelayedDiffusionStudent`): a request is issued when the executing chunk has
   ``d`` steps left (immediately if fewer, and at the first step of an episode, when no chunk is
-  executing). The returned chunk executes from index ``(To - 1) + d``, aligned in time, for
-  ``Ta`` steps (:func:`ila.policies.dp.chunking.delayed_chunk_index`); past ``Tp - 1`` the last
+  executing; :func:`ila.policies.dp.chunking.delayed_request_due`). The returned chunk
+  executes from index ``(To - 1) + d``, aligned in time, for ``Ta`` steps
+  (:func:`~ila.policies.dp.chunking.delayed_chunk_offset`,
+  :func:`~ila.policies.dp.chunking.delayed_chunk_index`); past ``Tp - 1`` the last
   chunk action is held (from ``d > 7`` at ``To = 2``, ``Tp = 16``, ``Ta = 8``). If the
   executing chunk runs out before the next result arrives, its last executed action is held.
   The request's noise key is ``(run_seed, episode_seed, t)`` with ``t`` the step it is issued
@@ -169,8 +171,8 @@ class DelayedDiffusionStudent(VisionStudentBase):
         if self._pending is not None and self._pending[0] == t:
             self._chunk, self._start = self._pending[1], t
             self._pending = None
-        left = self._start + ta - t if self._chunk is not None else 0
-        if self._pending is None and left <= d:
+        start = self._start if self._chunk is not None else None
+        if self._pending is None and chunking.delayed_request_due(start, ta, d, t):
             # The clock and episode seed: noise key and schedule only (P2-D3 item 4).
             key = (self.inner.run_seed, self._seed, t)
             chunk = self.inner.sample_batch(img[None], prop[None], [key])[0]
@@ -179,8 +181,10 @@ class DelayedDiffusionStudent(VisionStudentBase):
                 self._chunk, self._start = chunk, t
             else:
                 self._pending = (t + d, chunk)
-        if self._chunk is not None and t < self._start + ta:
-            j = chunking.delayed_chunk_index(spec.n_obs_steps, spec.horizon, ta, d, t - self._start)
+        start = self._start if self._chunk is not None else None
+        offset = chunking.delayed_chunk_offset(start, ta, t)
+        if self._chunk is not None and offset is not None:
+            j = chunking.delayed_chunk_index(spec.n_obs_steps, spec.horizon, ta, d, offset)
             self._last = np.asarray(self._chunk[j], np.float32)
         self._t += 1
         return self._last.copy()
@@ -189,14 +193,19 @@ class DelayedDiffusionStudent(VisionStudentBase):
 def wrap_delayed(student: Any, delay: int) -> DelayedBCStudent | DelayedDiffusionStudent:
     """Wrap a synchronous BC or chunked diffusion student.
 
+    Only :class:`ila.policies.bc.BCStudent` takes the BC path and only
+    :class:`ila.policies.dp.policy.ChunkedDiffusionStudent` the ``dp`` path; any other
+    ``VisionStudentBase`` is refused rather than silently delayed as BC: ``modular`` is flown
+    by the runner through ``act_modular`` (``ila.eval.runner.is_modular``), never through
+    ``act_vision``, and P3-D1 §7's latency arm covers ``bc_dagger`` and ``dp`` only.
+
     Raises:
-        TypeError: For any other student (``modular``, ``bc_state``).
+        TypeError: For any other student (``modular``, ``bc_state``, a bare
+            ``VisionStudentBase``).
     """
     if isinstance(student, ChunkedDiffusionStudent):
         return DelayedDiffusionStudent(student, delay)
-    if isinstance(student, BCStudent) or (
-        isinstance(student, VisionStudentBase) and not hasattr(student, "chunk_spec")
-    ):
+    if isinstance(student, BCStudent):
         return DelayedBCStudent(student, delay)
     raise TypeError(f"no latency-arm wrapper for {type(student).__name__}")
 
