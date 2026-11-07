@@ -576,6 +576,10 @@ def test_h4_supported() -> None:
     assert r.n_seeds == (("bc_state", 5), ("bc", 5), ("teacher ppo s0", 1))
     for fragment in ("time_fraction", "fp32", "teacher seed 0", "seed-dependent", "-0.015"):
         assert any(fragment in c for c in r.caveats), fragment
+    # ceiling_limited is P3-D1 §6's reference-arm ceiling only; H4's I-floor is a note.
+    assert not r.ceiling_limited
+    assert len(r.notes) == 1 and "I >= -1.5 points" in r.notes[0]
+    assert "ceiling_limited is False" in r.notes[0]
 
 
 def test_h4_imitation_gap_larger() -> None:

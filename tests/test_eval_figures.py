@@ -8,6 +8,7 @@ on synthetic outcomes over the frozen ``id`` list's keys (keys only); the one re
 from __future__ import annotations
 
 import csv
+import dataclasses
 import json
 from collections.abc import Mapping
 from pathlib import Path
@@ -28,9 +29,13 @@ REPO = p8_adapter.REPO_ROOT
 
 
 def _keep(job: object) -> bool:
+    """Core bc / dp on id, dp on static (H3's P6-D5 caveat needs it), the dp_Ta / dp_K blocks."""
     tag, arm = getattr(job, "tag", ""), getattr(job, "arm", "")
-    return (tag == "core" and arm in ("bc", "dp") and getattr(job, "list_name", "") == "id") or (
-        tag in ("dp_Ta", "dp_K") and getattr(job, "seed", -1) >= 0
+    list_name = getattr(job, "list_name", "")
+    return (
+        (tag == "core" and arm in ("bc", "dp") and list_name == "id")
+        or (tag == "core" and arm == "dp" and list_name == "static")
+        or (tag in ("dp_Ta", "dp_K") and getattr(job, "seed", -1) >= 0)
     )
 
 
@@ -79,9 +84,47 @@ def test_h4_caption_and_oracle_label(scored: Path) -> None:
         f"({teacher['n_success']}/{teacher['n_episodes']}) at id SS6, so I >= "
         f"{100.0 * (rate - 1.0):+.1f} points."
     )
-    assert cap[-1] == f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}."
+    assert cap[-1] == figures.plain(f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.")
     assert "commit-timing oracle, not a bound" in figures._BASE_NAME["oracle_gated"]
     assert "privileged oracle" not in figures._BASE_NAME["oracle_gated"]
+
+
+def test_h3_caption_is_the_scorers_caveats(scored: Path) -> None:
+    """MINOR 2: h3_ta_curve's caption is H3's selection and P6-D5 caveats, verbatim (computed)."""
+    from ila.eval import hypotheses as hy
+    from ila.eval import report as rp
+
+    inp = rp.load_inputs(scored)
+    rec = next(h for h in inp.hypotheses["hypotheses"] if h["hypothesis"] == "H3")
+    deck = next(c for c in rec["caveats"] if c.startswith(hy.H3_DECK_MOTION))
+    cap = figures.h3_caption(inp)
+    assert cap == [hy.H3_SELECTED_AT, figures.plain(deck)]
+    assert "SS4 / SS5 / SS6" in cap[1] and "static-deck episodes" in cap[1]
+    # A scored H3 record without its P6-D5 caveat is refused, never captioned short.
+    broken = {**rec, "caveats": [c for c in rec["caveats"] if c != deck]}
+    hyps = [broken if h is rec else h for h in inp.hypotheses["hypotheses"]]
+    bad = dataclasses.replace(inp, hypotheses={**inp.hypotheses, "hypotheses": hyps})
+    with pytest.raises(ValueError, match="P6-D5"):
+        figures.h3_caption(bad)
+
+
+class _FakeFig:
+    def __init__(self) -> None:
+        self.texts: list[str] = []
+
+    def text(self, *args: object, **_: object) -> None:
+        self.texts.append(str(args[2]))  # (x, y, s): the string drawn
+
+
+def test_figure_text_has_no_markdown_backticks(scored: Path) -> None:
+    """NOTE 5: no literal backticks in any figure's caption (every footnote goes through plain)."""
+    from ila.eval import report as rp
+
+    inp = rp.load_inputs(scored)
+    fig = _FakeFig()
+    figures._footnote(fig, [*figures.h4_caption(inp), *figures.h3_caption(inp), "`dp` x"])
+    assert fig.texts and all("`" not in t for t in fig.texts)
+    assert "dp x" in fig.texts[0]
 
 
 def test_rule_md_states_the_rule_verbatim() -> None:

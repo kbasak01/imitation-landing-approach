@@ -70,6 +70,7 @@ __all__ = [
     "ABOVE_TEACHER_COLUMNS",
     "BASELINE_COLUMNS",
     "BASELINE_METHODS",
+    "CAVEATS_SEE",
     "CONTRAST_COLUMNS",
     "GROUP_COLUMNS",
     "HYPOTHESIS_COLUMNS",
@@ -249,6 +250,13 @@ CONTRAST_COLUMNS: Final[tuple[str, ...]] = (
     "inputs",
 )
 
+#: Where ``hypotheses.csv``'s caveats are (the sentences are long and carry commas and quotes;
+#: the CSV points to the record instead of flattening them).
+CAVEATS_SEE: Final[str] = "hypotheses.json"
+
+#: ``ceiling_limited`` is P3-D1 §6's reference-arm ceiling only
+#: (:attr:`ila.eval.hypotheses.HypothesisResult.ceiling_limited`); ``notes`` carries reading aids
+#: such as H4's I-floor; ``caveats_see`` names the file with every caveat verbatim.
 HYPOTHESIS_COLUMNS: Final[tuple[str, ...]] = (
     "hypothesis",
     "cell",
@@ -266,6 +274,9 @@ HYPOTHESIS_COLUMNS: Final[tuple[str, ...]] = (
     "n_episodes",
     "flip_floor",
     "inputs",
+    "ceiling_limited",
+    "notes",
+    "caveats_see",
 )
 
 ABOVE_TEACHER_COLUMNS: Final[tuple[str, ...]] = (
@@ -1286,6 +1297,9 @@ def _hyp_row(res: hy.HypothesisResult, inputs: str) -> dict[str, Any]:
         "n_episodes": res.n_episodes,
         "flip_floor": _flip(res.cell.split(" ")[1]),
         "inputs": inputs,
+        "ceiling_limited": res.ceiling_limited,
+        "notes": " ".join(res.notes),
+        "caveats_see": CAVEATS_SEE,
     }
 
 
@@ -1401,16 +1415,27 @@ def _score_h3(index: CellIndex, out: _Scored) -> None:
         )
         return
     # P6-D5's caveat: the same-checkpoint gain at id SS4 and SS5 and dp's static-deck rate at
-    # Ta = 8 (numbers for the caveat only; the statistic is the SS6 contrast).
+    # Ta = 8 (numbers for the caveat only; the statistic is the SS6 contrast). The caveat is
+    # binding, so a missing pair or static cell is an error, never a shortened caveat.
     other: list[tuple[hy.ArmMatrix, hy.ArmMatrix]] = []
     for ss in ("SS4", "SS5"):
-        m1, _ = _student(index, _g(index, "dp", ss, tag="dp_Ta", inference=(1, 10, False)))
-        m8, _ = _student(index, _g(index, "dp", ss, tag="dp_Ta", inference=(8, 10, False)))
-        if m1 is not None and m8 is not None:
-            other.append((m1, m8))
-    static, _ = _student(
+        m1, w1 = _student(index, _g(index, "dp", ss, tag="dp_Ta", inference=(1, 10, False)))
+        m8, w8 = _student(index, _g(index, "dp", ss, tag="dp_Ta", inference=(8, 10, False)))
+        if m1 is None or m8 is None:
+            why = "; ".join(w for w in (w1, w8) if w)
+            raise hy.RowError(
+                f"H3's P6-D5 caveat needs dp Ta = 1 and Ta = 8 at id {ss} ({why}); the SS6 "
+                "contrast is present, so the caveat would be silently shortened"
+            )
+        other.append((m1, m8))
+    static, ws = _student(
         index, index.find("dp", "static", "static", tag="core", inference=(8, 10, False))
     )
+    if static is None:
+        raise hy.RowError(
+            f"H3's P6-D5 caveat needs dp at Ta = 8 on the static list ({ws}); the SS6 contrast "
+            "is present, so the caveat would be silently shortened"
+        )
     res = hy.score_h3(s1.m, s8.m, other_ss=other, static_ta8=static)
     inputs = _inputs(s1, s8)
     out.hypotheses.append(_hyp_row(res, inputs))
@@ -1857,6 +1882,11 @@ def run_score(inp: ScoreInputs, out_dir: Path | None = None) -> dict[str, Any]:
 
     Returns:
         ``score_info.json``'s record.
+
+    Raises:
+        ila.eval.hypotheses.RowError: If H3's ``id`` SS6 contrast is present but a cell its
+            binding P6-D5 caveat needs is not (``dp`` Ta = 1 / Ta = 8 at ``id`` SS4 or SS5, or
+            ``dp`` Ta = 8 on ``static``). Every other missing cell is listed, not raised.
     """
     out = inp.root if out_dir is None else out_dir
     index = load_cells(inp.root, inp.matrix, episodes_per_cell=inp.episodes_per_cell)

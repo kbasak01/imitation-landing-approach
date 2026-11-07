@@ -25,10 +25,11 @@ from pathlib import Path
 from typing import Any, Final
 
 from ila import p8_adapter
+from ila.eval import hypotheses as hy
 from ila.eval import report as rp
 from ila.eval import score as sc
 
-__all__ = ["FIGURES", "FIG_DIR", "h4_caption", "make_figures"]
+__all__ = ["FIGURES", "FIG_DIR", "h3_caption", "h4_caption", "make_figures", "plain"]
 
 FIG_DIR: Final[str] = "figures"
 
@@ -104,12 +105,17 @@ def _save(fig: Any, path: Path) -> None:
     _plt().close(fig)
 
 
+def plain(text: str) -> str:
+    """Figure text without markdown code spans: backticks are dropped, the words kept."""
+    return text.replace("`", "")
+
+
 def _footnote(fig: Any, notes: Sequence[str]) -> None:
     text = (
         "Simulation only (PyBullet; rendered by PyBullet TinyRenderer); model scale, λ = 1/25. "
         + " ".join(notes)
     )
-    fig.text(0.01, 0.005, text, fontsize=6.5, ha="left", va="bottom", wrap=True)
+    fig.text(0.01, 0.005, plain(text), fontsize=6.5, ha="left", va="bottom", wrap=True)
 
 
 def _rc() -> dict[str, Any]:
@@ -343,7 +349,35 @@ def h4_caption(inp: rp.ReportInputs) -> list[str]:
                 f"({b['n_success']}/{b['n_episodes']}) at id SS6, so I >= "
                 f"{100.0 * (rate - 1.0):+.1f} points."
             )
-    out.append(f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.")
+    out.append(plain(f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}."))
+    return out
+
+
+def h3_caption(inp: rp.ReportInputs) -> list[str]:
+    """H3's caveats for ``h3_ta_curve.png``, verbatim from the scorer's committed record.
+
+    The selection caveat (:data:`ila.eval.hypotheses.H3_SELECTED_AT`) and P6-D5's deck-motion
+    caveat (the sentence starting :data:`ila.eval.hypotheses.H3_DECK_MOTION`, with the
+    same-checkpoint gains per ``id`` sea state and ``dp``'s static-deck rate at Ta = 8 that the
+    H3 scorer computed from the rows) are taken from ``hypotheses.json``; nothing is recomputed,
+    so the caption and the scored record cannot disagree. Backticks are dropped (:func:`plain`).
+
+    Raises:
+        ValueError: If H3 is scored but either caveat is absent from its record (a caption is
+            never silently shortened).
+    """
+    rec = next(
+        (h for h in inp.hypotheses.get("hypotheses", []) if h.get("hypothesis") == "H3"), None
+    )
+    if rec is None or rec.get("status") != "scored":
+        return ["H3 is not scored (missing cells); its caveats are not available."]
+    caveats = [str(c) for c in rec.get("caveats", [])]
+    out = []
+    for head in (hy.H3_SELECTED_AT, hy.H3_DECK_MOTION):
+        found = [c for c in caveats if c.startswith(head)]
+        if len(found) != 1:
+            raise ValueError(f"hypotheses.json H3: expected one caveat starting {head!r}")
+        out.append(plain(found[0]))
     return out
 
 
@@ -377,7 +411,7 @@ def _draw_bars(
 
 
 def _draw_sweep(rows: Sequence[Mapping[str, Any]], path: Path, *, title: str, xlabel: str,
-                log: bool) -> None:  # fmt: skip
+                log: bool, caption: Sequence[str] = ()) -> None:  # fmt: skip
     plt = _plt()
     panels = list(dict.fromkeys(r["panel"] for r in rows)) or ["(no rows)"]
     colours = {
@@ -387,7 +421,8 @@ def _draw_sweep(rows: Sequence[Mapping[str, Any]], path: Path, *, title: str, xl
     }
     width = max(3.4 * len(panels), 5.0)  # inches; a single panel needs room for its labels
     with plt.rc_context(_rc()):
-        fig, axes = plt.subplots(1, len(panels), figsize=(width, 3.8), sharey=True,
+        height = 4.6 if caption else 3.8  # inches; a caption needs room below the axes
+        fig, axes = plt.subplots(1, len(panels), figsize=(width, height), sharey=True,
                                  squeeze=False)  # fmt: skip
         for ax, panel in zip(axes[0], panels, strict=True):
             if panel.endswith("SS6"):
@@ -409,8 +444,10 @@ def _draw_sweep(rows: Sequence[Mapping[str, Any]], path: Path, *, title: str, xl
         axes[0, 0].set_ylabel("success, % (IQM over 5 seeds, 95 % CI)")
         axes[0, 0].legend(fontsize=7, frameon=False)
         fig.suptitle(title, fontsize=9, wrap=True)
-        _footnote(fig, _notes(rows))
-        fig.subplots_adjust(left=0.75 / width, right=0.98, top=0.82, bottom=0.2, wspace=0.08)
+        _footnote(fig, [*caption, *_notes(rows)])
+        bottom = 0.3 if caption else 0.2
+        fig.subplots_adjust(left=0.75 / width, right=0.98, top=0.84 if caption else 0.82,
+                            bottom=bottom, wspace=0.08)  # fmt: skip
         _save(fig, path)
 
 
@@ -487,6 +524,7 @@ def make_figures(root: Path = sc.OUT_ROOT) -> dict[str, Path]:
         title="H3 curve (unscored): dp success vs executed chunk length Ta (same checkpoints)",
         xlabel="Ta (control steps of 33.3 ms model scale)",
         log=False,
+        caption=h3_caption(inp),
     )
     _draw_h2(tables["h2_touchdown_times"], paths["h2_touchdown_times"])
     _draw_sweep(

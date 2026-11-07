@@ -53,6 +53,7 @@
           "seeds": 5
         }
       ],
+      "notes": [],
       "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
       "status": "scored",
       "units": "success difference, dimensionless (x100 = points)",
@@ -110,6 +111,7 @@
           "seeds": 5
         }
       ],
+      "notes": [],
       "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
       "status": "scored",
       "units": "success difference, dimensionless (x100 = points)",
@@ -167,6 +169,7 @@
           "seeds": 5
         }
       ],
+      "notes": [],
       "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
       "status": "scored",
       "units": "success difference, dimensionless (x100 = points)",
@@ -223,6 +226,7 @@
           "seeds": 5
         }
       ],
+      "notes": [],
       "statistic": "P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023)",
       "status": "scored",
       "units": "success difference, dimensionless (x100 = points)",
@@ -282,6 +286,7 @@
           "seeds": 3
         }
       ],
+      "notes": [],
       "statistic": "W1 bootstrap (ila.eval.stats.w1_bootstrap; 10 000 reps, seed 20261023)",
       "status": "scored",
       "units": "seconds, model scale (lambda = 1/25; x5 full scale)",
@@ -325,6 +330,7 @@
           "seeds": 5
         }
       ],
+      "notes": [],
       "statistic": "joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, seed 20261023)",
       "status": "scored",
       "units": "success difference, dimensionless (x100 = points)",
@@ -385,6 +391,9 @@
           "arm": "teacher ppo s0",
           "seeds": 1
         }
+      ],
+      "notes": [
+        "I is ceiling-limited (teacher at 98.5 % at id SS6, so I >= -1.5 points). That is not P3-D1 §6's reference-arm ceiling, which needs a magnitude H4 does not have, so ceiling_limited is False; the verdict is unchanged."
       ],
       "statistic": "three-arm bootstrap (ila.eval.stats.h4_three_arm_bootstrap; 10 000 reps, seed 20261023)",
       "status": "scored",

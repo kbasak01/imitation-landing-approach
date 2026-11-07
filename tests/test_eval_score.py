@@ -7,6 +7,7 @@ P3-D1 §4 / §8). Speeds m/s, times s, model scale.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from pathlib import Path
 
@@ -16,6 +17,8 @@ import rld.eval.metrics as p8_metrics
 import eval_support as es
 from ila import p8_adapter
 from ila.eval import above_teacher as at
+from ila.eval import hypotheses as hy
+from ila.eval import report as rp
 from ila.eval import score as sc
 from ila.eval.metrics import mcnemar_exact_p
 
@@ -266,6 +269,56 @@ def test_labelled_frames_from_committed_manifests() -> None:
     assert all(len(v) == 5 for v in frames.values())
     assert frames["bc_dagger"][0] == 123_216  # results/phase5/dagger_iterations.csv, s0 it 5
     assert "results/phase5/dagger_iterations.csv" in sources
+
+
+def _h3_job(job: object, *, static: bool) -> bool:
+    """Keep core dp on id (the shared Ta = 8 side), dp_Ta Ta = 1 unensembled, optionally static."""
+    if getattr(job, "arm", "") != "dp":
+        return False
+    tag, list_name = getattr(job, "tag", ""), getattr(job, "list_name", "")
+    inf = getattr(job, "inference", None)
+    if tag == "core":
+        return list_name == "id" or (static and list_name == "static")
+    return tag == "dp_Ta" and inf is not None and (inf.Ta, inf.ensemble) == (1, False)
+
+
+def test_h3_caveat_cells_complete(tmp_path: Path) -> None:
+    """With every cell P6-D5's caveat needs, H3 is scored and its caveat carries all of them."""
+    inp = es.synthetic_tree(
+        tmp_path, n=N, matrix=es.reduced_matrix(lambda j: _h3_job(j, static=True))
+    )
+    sc.run_score(inp)
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(tmp_path / "hypotheses.csv")}
+    assert hyp["H3"]["status"] == "scored"
+    assert hyp["H3"]["ceiling_limited"] in ("True", "False")
+    assert hyp["H3"]["caveats_see"] == sc.CAVEATS_SEE
+    rec = next(
+        h for h in rp.load_inputs(tmp_path).hypotheses["hypotheses"] if h["hypothesis"] == "H3"
+    )
+    deck = [c for c in rec["caveats"] if c.startswith(hy.H3_DECK_MOTION)]
+    assert len(deck) == 1 and "SS4 / SS5 / SS6" in deck[0] and "static-deck" in deck[0]
+
+
+def test_h3_missing_static_is_an_error(tmp_path: Path) -> None:
+    """SS6 contrast present, static cell absent: RowError, not a shortened caveat."""
+    inp = es.synthetic_tree(
+        tmp_path, n=N, matrix=es.reduced_matrix(lambda j: _h3_job(j, static=False))
+    )
+    with pytest.raises(hy.RowError, match="static list"):
+        sc.run_score(inp)
+
+
+def test_h3_missing_other_sea_state_is_an_error(tmp_path: Path) -> None:
+    """SS6 contrast present, Ta = 1 at SS4/SS5 absent: RowError, not a shortened caveat."""
+    m = es.reduced_matrix(lambda j: _h3_job(j, static=True))
+    jobs = tuple(
+        dataclasses.replace(j, sea_states=("SS6",), full_list=False) if j.tag == "dp_Ta" else j
+        for j in m.jobs
+    )
+    shared = tuple(s for s in m.shared if s.source in jobs)
+    inp = es.synthetic_tree(tmp_path, n=N, matrix=dataclasses.replace(m, jobs=jobs, shared=shared))
+    with pytest.raises(hy.RowError, match="id SS4"):
+        sc.run_score(inp)
 
 
 def test_corrupt_rows_file_is_refused(tmp_path: Path) -> None:

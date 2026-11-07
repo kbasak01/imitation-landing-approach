@@ -75,6 +75,7 @@ __all__ = [
     "FLIP_FLOOR",
     "H2_MAGNITUDE_S",
     "H3_DECK_MOTION",
+    "H3_SELECTED_AT",
     "MAGNITUDE_TOL",
     "NO_MULTIPLICITY",
     "SUCCESS_MAGNITUDE",
@@ -186,8 +187,14 @@ class HypothesisResult:
         caveats: Sentences P3-D1 requires stated with the result.
         beside: ``(label, text)`` printed beside the result (unscored numbers, counts, the flip
             floor).
-        ceiling_limited: Whether the reference arm is above :data:`CEILING` in the scored cell
-            (P3-D1 §6 ceilings): "supported" was then unattainable.
+        ceiling_limited: P3-D1 §6's *reference-arm* ceiling only: whether the reference arm's
+            point estimate in the scored cell exceeds 100 % - magnitude (:data:`CEILING`), so
+            that "supported" was unattainable (H1 family, H3). Hypotheses without a magnitude
+            (H2 in seconds, H4) never set it. In particular H4's imitation gap I is bounded
+            below by the teacher's own rate (I >= S(teacher) - 1); that is a different ceiling,
+            stated in ``caveats`` and ``notes``, and leaves this field False.
+        notes: Short reading aids printed with the result, not part of the rule (e.g. H4's
+            I-floor and why ``ceiling_limited`` is False there).
     """
 
     hypothesis: str
@@ -206,6 +213,7 @@ class HypothesisResult:
     caveats: tuple[str, ...]
     beside: tuple[tuple[str, str], ...]
     ceiling_limited: bool = False
+    notes: tuple[str, ...] = ()
 
     @property
     def separates(self) -> bool:
@@ -945,8 +953,11 @@ def score_h2(bc_mix: ArmMatrix, dp_mix: ArmMatrix, reference: H2Reference) -> Hy
 # --------------------------------------------------------------------------- H3
 
 
+#: H3's selection caveat (P3-D1 §6 H3); also the first line of ``h3_ta_curve.png``'s caption.
+H3_SELECTED_AT: Final[str] = "Checkpoints were selected at Ta = 8 (P3-D1 §6 H3)."
+
 _H3_CAVEATS: Final[tuple[str, ...]] = (
-    "Checkpoints were selected at Ta = 8 (P3-D1 §6 H3).",
+    H3_SELECTED_AT,
     "Ta = 1 without ensembling can switch modes between replans; so a null cannot separate "
     "'chunking is harmless' from 'replanning causes mode switching' (P3-D1 §6 H3).",
     "dp_minus_last_action (P7-D3 item 7) is a competing explanation for dp recovering at "
@@ -1093,6 +1104,15 @@ def _h4_ceiling(s_teacher: float) -> str:
     )
 
 
+def _h4_ceiling_note(s_teacher: float) -> str:
+    """Why H4's ``ceiling_limited`` is False although I is ceiling-limited (a reading aid)."""
+    return (
+        f"I is ceiling-limited (teacher at {100.0 * s_teacher:.1f} % at id SS6, so I >= "
+        f"{_pts(s_teacher - 1.0)} points). That is not P3-D1 §6's reference-arm ceiling, which "
+        "needs a magnitude H4 does not have, so ceiling_limited is False; the verdict is unchanged."
+    )
+
+
 def score_h4(bc_state: ArmMatrix, bc: ArmMatrix, teacher: ArmMatrix) -> HypothesisResult:
     """Score H4 (P3-D1 §6 H4) at ``id`` SS6: D = P - I.
 
@@ -1157,6 +1177,8 @@ def score_h4(bc_state: ArmMatrix, bc: ArmMatrix, teacher: ArmMatrix) -> Hypothes
             ),
             *_flip(bc_state),
         ),
+        ceiling_limited=False,
+        notes=(_h4_ceiling_note(g.s_teacher),),
     )
 
 
