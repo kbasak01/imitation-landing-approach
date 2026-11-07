@@ -166,6 +166,7 @@
       "seed": 0,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 195,
@@ -175,6 +176,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 197,
@@ -191,6 +193,7 @@
       "seed": 1,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 2,
         "successes": 197,
@@ -200,6 +203,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 197,
@@ -216,6 +220,7 @@
       "seed": 2,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 2,
         "successes": 197,
@@ -225,6 +230,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 197,
@@ -241,6 +247,7 @@
       "seed": 3,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 197,
@@ -250,6 +257,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 197,
@@ -266,6 +274,7 @@
       "seed": 4,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 198,
@@ -275,6 +284,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 197,
@@ -295,6 +305,14 @@
   "status": "for results-skeptic review; not reported until reviewed",
   "student": {
     "detectors_disagree": [],
+    "grace_used_successes": [
+      {
+        "episode_seed": 1657229134,
+        "index": 33,
+        "outcome": "success",
+        "seed": 1
+      }
+    ],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -415,6 +433,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 1000,
+    "n_grace_used_successes": 1,
     "n_successes_near_threshold": 5,
     "n_touchdowns": 1000,
     "n_tunnelled": 10,
@@ -607,6 +626,7 @@
   "teacher": "T_ppo",
   "teacher_rows": {
     "detectors_disagree": [],
+    "grace_used_successes": [],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -727,6 +747,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 200,
+    "n_grace_used_successes": 0,
     "n_successes_near_threshold": 0,
     "n_touchdowns": 200,
     "n_tunnelled": 0,

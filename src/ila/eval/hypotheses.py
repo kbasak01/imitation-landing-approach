@@ -20,18 +20,22 @@ Scorers and their rules (P3-D1 §6, verbatim in substance)
   ``bc_dart - bc`` at SS5 and SS6 (DART secondaries); P8 ``paired_bootstrap``; +5 points.
   Supported: estimate >= +5 points and the CI excludes 0. Inconclusive: the CI excludes 0 and
   the estimate is positive but below +5. Not supported: every other case; a CI wholly below 0
-  is "an effect in the opposite direction". A null whose reference arm (``bc_matched`` /
-  ``bc``) has a point estimate above 95 % in that cell is printed "not supported
-  (ceiling-limited: the largest attainable gain is below +5 points)", with the SS6 secondary
-  beside it. ``paired_iqm_difference`` is printed beside as "post hoc, not scored";
-  labelled-frame counts are printed beside.
+  is "an effect in the opposite direction". When the reference arm (``bc_matched`` / ``bc``)
+  has a point estimate above 95 % in that cell the ceiling applies: the rule's verdict is kept
+  (a null with a CI that includes 0 is printed "not supported (ceiling-limited: the largest
+  attainable gain is below +5 points)"), a caveat states the largest attainable gain computed
+  from the reference arm's rate, and the SS6 secondary is printed beside it (P8-D1 item 3).
+  ``paired_iqm_difference`` is printed beside as "post hoc, not scored"; labelled-frame counts
+  and the success difference with P8-tunnelled successes removed (descriptive) are printed
+  beside.
 * :func:`score_h2`: ``id`` SS4, ``bc_mix`` and ``dp_mix``, 3 seeds each; D = W1(bc_mix, ref) -
   W1(dp_mix, ref) (:func:`ila.eval.stats.w1_bootstrap`); supported: D >= 0.033 s and the CI
   excludes 0; inconclusive: the CI excludes 0 and 0 < D < 0.033 s; not supported otherwise.
   The reference comes from :func:`build_h2_reference` (P8's committed rows, nothing flown).
 * :func:`score_h3`: ``id`` SS6, ``dp`` ``Ta = 1`` minus ``Ta = 8`` on the same checkpoints
   (:func:`ila.eval.stats.joint_seed_contrast`); H1's rule at +5 points; ceiling when ``dp`` at
-  ``Ta = 8`` is above 95 %.
+  ``Ta = 8`` is above 95 %. P6-D5's deck-motion caveat is stated with it, with the same-checkpoint
+  gain at every ``id`` sea state given and ``dp``'s static-deck rate at ``Ta = 8``.
 * :func:`score_h4`: ``id`` SS6; D = P - I (:func:`ila.eval.stats.h4_three_arm_bootstrap`);
   supported: D > 0 and the CI excludes 0; not supported otherwise, a CI wholly below 0 printed
   as "imitation gap larger".
@@ -70,6 +74,7 @@ __all__ = [
     "END_TO_END_ARMS",
     "FLIP_FLOOR",
     "H2_MAGNITUDE_S",
+    "H3_DECK_MOTION",
     "MAGNITUDE_TOL",
     "NO_MULTIPLICITY",
     "SUCCESS_MAGNITUDE",
@@ -181,6 +186,8 @@ class HypothesisResult:
         caveats: Sentences P3-D1 requires stated with the result.
         beside: ``(label, text)`` printed beside the result (unscored numbers, counts, the flip
             floor).
+        ceiling_limited: Whether the reference arm is above :data:`CEILING` in the scored cell
+            (P3-D1 §6 ceilings): "supported" was then unattainable.
     """
 
     hypothesis: str
@@ -198,6 +205,7 @@ class HypothesisResult:
     verdict_note: str
     caveats: tuple[str, ...]
     beside: tuple[tuple[str, str], ...]
+    ceiling_limited: bool = False
 
     @property
     def separates(self) -> bool:
@@ -260,6 +268,8 @@ class ArmMatrix:
         Ta: ``Ta`` of the rows (``None`` when not a chunked policy).
         K: DDIM steps (``None`` when not applicable).
         ensemble: Temporal ensembling (``None`` when not applicable).
+        tunnelled: ``(n_seeds, n_episodes)`` 1.0 where P8's ``tunnelled`` flag is set, else
+            0.0; ``None`` when the rows carry no ``tunnelled`` column.
     """
 
     arm: str
@@ -273,6 +283,7 @@ class ArmMatrix:
     Ta: int | None = None
     K: int | None = None
     ensemble: bool | None = None
+    tunnelled: FloatArray | None = None
 
     @property
     def rate(self) -> float:
@@ -339,6 +350,7 @@ def _assemble(
     seeds = tuple(sorted(by_seed))
     episodes: tuple[tuple[int, int], ...] | None = None
     succ, td, outs, ckpts = [], [], [], []
+    tun: list[list[float]] | None = []
     for s in seeds:
         rows = sorted(by_seed[s], key=lambda r: int(r["index"]))
         keys = tuple((int(r["index"]), int(r["episode_seed"])) for r in rows)
@@ -354,6 +366,10 @@ def _assemble(
         outs.append(o)
         succ.append([1.0 if x == "success" else 0.0 for x in o])
         td.append([_time(r["time_to_touchdown_s"]) for r in rows])
+        if tun is not None and all("tunnelled" in r for r in rows):
+            tun.append([1.0 if _opt_bool(r["tunnelled"]) else 0.0 for r in rows])
+        else:
+            tun = None
         if ckpt_column is None:
             ckpts.append("")
         else:
@@ -374,6 +390,7 @@ def _assemble(
         Ta=tags[0],
         K=tags[1],
         ensemble=tags[2],
+        tunnelled=None if tun is None else np.asarray(tun, dtype=np.float64),
     )
 
 
@@ -576,6 +593,43 @@ def _frames_text(frames: Mapping[str, Sequence[int]]) -> str:
     return "; ".join(parts)
 
 
+def _ceiling_caveat(ref: ArmMatrix, what: str) -> str:
+    """The ceiling caveat with the largest attainable gain computed from ``ref``'s rows.
+
+    The gain is ``1 - rate(ref)`` (mean over seeds x episodes), in points.
+    """
+    k, n = int(ref.success.sum()), ref.success.size
+    return (
+        f"Ceiling-limited: {what} is at {100.0 * ref.rate:.1f} % ({k}/{n}) in {ref.cell_label}, "
+        f"so the largest attainable gain is {100.0 * (1.0 - ref.rate):.1f} points, below +5; "
+        "'supported' was unattainable. The rule's verdict is kept (P3-D1 §6 ceilings; P8-D1 "
+        "item 3)."
+    )
+
+
+def _tunnel_removed(a: ArmMatrix, b: ArmMatrix) -> tuple[str, str] | None:
+    """Success difference with P8-tunnelled successes removed, descriptive (no CI).
+
+    Returns:
+        ``(label, text)`` to print beside the contrast, or ``None`` when a side's rows carry no
+        ``tunnelled`` column.
+    """
+    if a.tunnelled is None or b.tunnelled is None:
+        return None
+    parts, rates = [], []
+    for m in (a, b):
+        assert m.tunnelled is not None
+        tun = int((m.success * m.tunnelled).sum())
+        k = int(m.success.sum()) - tun
+        rates.append(k / m.success.size)
+        parts.append(f"{m.arm} {k}/{m.success.size} (tunnelled successes removed: {tun})")
+    return (
+        "descriptive, not scored: success minus tunnelled successes",
+        f"{'; '.join(parts)}; difference {_pts(rates[0] - rates[1])} points (point estimate "
+        "only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it)",
+    )
+
+
 def _success_contrast(
     hypothesis: str,
     a: ArmMatrix,
@@ -592,16 +646,10 @@ def _success_contrast(
     verdict, note = magnitude_rule(c.diff, c.lo, c.hi, SUCCESS_MAGNITUDE, unit="+5 points")
     extra: tuple[str, ...] = ()
     ceiling = b.rate > CEILING
-    if ceiling and verdict == "not supported":
-        if note == _OPPOSITE:
-            extra = (
-                f"{b.arm} is above 95 % in {b.cell_label}: ceiling-limited (the largest "
-                "attainable gain is below +5 points).",
-            )
-        else:
+    if ceiling:
+        if verdict == "not supported" and note != _OPPOSITE:
             note = _CEILING_NOTE
-    elif ceiling:
-        extra = (f"{b.arm} is above 95 % in {b.cell_label} (the ceiling of P3-D1 §6).",)
+        extra = (_ceiling_caveat(b, b.arm),)
     beside: list[tuple[str, str]] = [
         (
             "post hoc, not scored: paired_iqm_difference",
@@ -614,6 +662,9 @@ def _success_contrast(
     ]
     if labelled_frames is not None:
         beside.append(("labelled frames", _frames_text(labelled_frames)))
+    tunnel = _tunnel_removed(a, b)
+    if tunnel is not None:
+        beside.append(tunnel)
     beside.extend(_flip(a))
     return HypothesisResult(
         hypothesis=hypothesis,
@@ -632,11 +683,13 @@ def _success_contrast(
         verdict_note=note,
         caveats=(*caveats, *extra, NO_MULTIPLICITY),
         beside=tuple(beside),
+        ceiling_limited=ceiling,
     )
 
 
 def _with_ss6_beside(primary: HypothesisResult, ss6: HypothesisResult) -> HypothesisResult:
-    if primary.verdict_note != _CEILING_NOTE:
+    """Attach the SS6 secondary beside ``primary`` whenever the ceiling applies to it."""
+    if not primary.ceiling_limited:
         return primary
     text = f"{_ci_pts(ss6.estimate, ss6.ci_lo, ss6.ci_hi)}: {ss6.verdict_note}"
     return replace(primary, beside=(*primary.beside, (f"{ss6.hypothesis} beside it", text)))
@@ -901,16 +954,65 @@ _H3_CAVEATS: Final[tuple[str, ...]] = (
     "that says dp fails 'because of chunking' must name it (P7-D3, Phase 8 before-you-start).",
 )
 
+#: P6-D5's binding H3 caveat (docs/protocol.md P6-D5 item 5, "Reading (revised after review)").
+H3_DECK_MOTION: Final[str] = "P6-D5: a Ta contrast cannot attribute the loss to deck motion."
 
-def score_h3(ta1: ArmMatrix, ta8: ArmMatrix) -> HypothesisResult:
+
+def _check_dp(m: ArmMatrix, cell: Cell, ta: int, ckpts: tuple[str, ...]) -> None:
+    if (m.arm, m.cell, m.Ta, m.K, m.ensemble) != ("dp", cell, ta, 10, False):
+        raise RowError(
+            f"H3 needs dp at {cell[0]} {cell[1]}, Ta={ta}, K=10, no ensembling; got {m.arm} "
+            f"{m.cell_label} Ta={m.Ta} K={m.K} ensemble={m.ensemble}"
+        )
+    _require_seeds(m, CORE_SEEDS)
+    if m.ckpt_sha256 != ckpts:
+        raise RowError(f"H3: {m.cell_label} Ta={ta} is not on the same checkpoints")
+
+
+def _h3_deck_motion(
+    pairs: Sequence[tuple[ArmMatrix, ArmMatrix]], static_ta8: ArmMatrix | None
+) -> str:
+    """P6-D5's caveat with the same-checkpoint gains per sea state and the static-deck rate."""
+    text = H3_DECK_MOTION
+    if pairs:
+        gains = " / ".join(_pts(t1.rate - t8.rate) for t1, t8 in pairs)
+        cells = " / ".join(t1.cell[1] for t1, _ in pairs)
+        text += (
+            f" On the frozen lists the gain is {gains} points at {cells} (Ta = 1 minus Ta = 8, "
+            "mean over seeds x episodes, same checkpoints; comparing the gains across sea "
+            "states is an unpaired reading)"
+        )
+        if static_ta8 is None:
+            text += "."
+    if static_ta8 is not None:
+        k, n = int(static_ta8.success.sum()), static_ta8.success.size
+        text += (", and" if pairs else "") + (
+            f" `dp` at Ta = 8 succeeds on {100.0 * static_ta8.rate:.1f} % ({k}/{n}) of the "
+            "static-deck episodes."
+        )
+    return text
+
+
+def score_h3(
+    ta1: ArmMatrix,
+    ta8: ArmMatrix,
+    *,
+    other_ss: Sequence[tuple[ArmMatrix, ArmMatrix]] = (),
+    static_ta8: ArmMatrix | None = None,
+) -> HypothesisResult:
     """Score H3 (P3-D1 §6 H3): ``dp`` success at ``Ta = 1`` minus ``Ta = 8``, ``id`` SS6.
 
     Same-checkpoint contrast (:func:`ila.eval.stats.joint_seed_contrast`); H1's rule at +5
-    points; ceiling-limited when ``dp`` at ``Ta = 8`` is above 95 %.
+    points; ceiling-limited when ``dp`` at ``Ta = 8`` is above 95 %. P6-D5's caveat (a ``Ta``
+    contrast cannot attribute the loss to deck motion) is always stated; ``other_ss`` and
+    ``static_ta8`` supply its numbers and do not enter the statistic.
 
     Args:
         ta1: ``dp`` at ``Ta = 1``, K = 10, no ensembling, ``id`` SS6, seeds 0-4.
         ta8: ``dp`` at ``Ta = 8``, K = 10, no ensembling, same cell and seeds.
+        other_ss: ``(Ta = 1, Ta = 8)`` pairs of the same checkpoints at other ``id`` sea states
+            (descriptive gains beside the SS6 one).
+        static_ta8: ``dp`` at ``Ta = 8`` on the ``static`` list, same checkpoints.
 
     Returns:
         The H3 :class:`HypothesisResult`.
@@ -918,29 +1020,27 @@ def score_h3(ta1: ArmMatrix, ta8: ArmMatrix) -> HypothesisResult:
     Raises:
         RowError: If the sides are not the same ``dp`` checkpoints at the stated settings.
     """
-    for m, ta in ((ta1, 1), (ta8, 8)):
-        if (m.arm, m.cell, m.Ta, m.K, m.ensemble) != ("dp", ("id", "SS6"), ta, 10, False):
-            raise RowError(
-                f"H3 needs dp at id SS6, Ta={ta}, K=10, no ensembling; got {m.arm} "
-                f"{m.cell_label} Ta={m.Ta} K={m.K} ensemble={m.ensemble}"
-            )
-        _require_seeds(m, CORE_SEEDS)
+    ckpts = ta1.ckpt_sha256
+    _check_dp(ta1, ("id", "SS6"), 1, ckpts)
+    _check_dp(ta8, ("id", "SS6"), 8, ckpts)
     _same_episodes(ta1, ta8)
-    if ta1.ckpt_sha256 != ta8.ckpt_sha256:
-        raise RowError("H3 compares the same checkpoints; ckpt_sha256 differs per seed")
+    for t1, t8 in other_ss:
+        if t1.cell[0] != "id" or t1.cell[1] == "SS6":
+            raise RowError(f"H3's other sea states are id cells other than SS6, got {t1.cell}")
+        _check_dp(t1, t1.cell, 1, ckpts)
+        _check_dp(t8, t1.cell, 8, ckpts)
+        _same_episodes(t1, t8)
+    if static_ta8 is not None:
+        _check_dp(static_ta8, ("static", "static"), 8, ckpts)
+    pairs = sorted((*other_ss, (ta1, ta8)), key=lambda p: p[0].cell[1])
     c = st.joint_seed_contrast(ta1.success, ta8.success)
     verdict, note = magnitude_rule(c.diff, c.lo, c.hi, SUCCESS_MAGNITUDE, unit="+5 points")
     extra: tuple[str, ...] = ()
-    if ta8.rate > CEILING and verdict == "not supported":
-        if note == _OPPOSITE:
-            extra = (
-                "dp at Ta = 8 is above 95 % at id SS6: ceiling-limited (the largest attainable "
-                "gain is below +5 points).",
-            )
-        else:
+    ceiling = ta8.rate > CEILING
+    if ceiling:
+        if verdict == "not supported" and note != _OPPOSITE:
             note = _CEILING_NOTE
-    elif ta8.rate > CEILING:
-        extra = ("dp at Ta = 8 is above 95 % at id SS6 (the ceiling of P3-D1 §6).",)
+        extra = (_ceiling_caveat(ta8, "dp at Ta = 8"),)
     return HypothesisResult(
         hypothesis="H3",
         cell="id SS6",
@@ -956,11 +1056,17 @@ def score_h3(ta1: ArmMatrix, ta8: ArmMatrix) -> HypothesisResult:
         magnitude=SUCCESS_MAGNITUDE,
         verdict=verdict,
         verdict_note=note,
-        caveats=(*_H3_CAVEATS, *extra, NO_MULTIPLICITY),
+        caveats=(
+            *_H3_CAVEATS,
+            _h3_deck_motion(pairs, static_ta8),
+            *extra,
+            NO_MULTIPLICITY,
+        ),
         beside=(
             ("dp at Ta = 8 (mean over seeds x episodes)", f"{100.0 * ta8.rate:.1f} %"),
             *_flip(ta1),
         ),
+        ceiling_limited=ceiling,
     )
 
 

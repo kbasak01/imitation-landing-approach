@@ -24,10 +24,11 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final
 
+from ila import p8_adapter
 from ila.eval import report as rp
 from ila.eval import score as sc
 
-__all__ = ["FIGURES", "FIG_DIR", "make_figures"]
+__all__ = ["FIGURES", "FIG_DIR", "h4_caption", "make_figures"]
 
 FIG_DIR: Final[str] = "figures"
 
@@ -60,7 +61,7 @@ _BASE_NAME: Final[Mapping[str, str]] = {
     "ppo": "teacher ppo s0 (P8)",
     "pid_feedforward": "pid_feedforward (P8)",
     "pid_track_descend": "pid_track_descend (P8)",
-    "oracle_gated": "oracle_gated (P8, privileged oracle)",
+    "oracle_gated": "oracle_gated (P8; commit-timing oracle, not a bound)",
 }
 _SHADE: Final[str] = "0.9"
 _PLOT_COLUMNS: Final[tuple[str, ...]] = (
@@ -327,10 +328,35 @@ def _draw_success(rows: Sequence[Mapping[str, Any]], path: Path) -> None:
         _save(fig, path)
 
 
-def _draw_bars(rows: Sequence[Mapping[str, Any]], path: Path, title: str, ylabel: str) -> None:
+def h4_caption(inp: rp.ReportInputs) -> list[str]:
+    """H4's caption: I's ceiling (from the teacher's committed ``id`` SS6 rate) and the flip floor.
+
+    I = S(teacher) - S(bc_state) >= S(teacher) - 1, in points; the teacher's rate is P8 ``ppo``
+    s0's ``id`` SS6 row of ``baselines.csv``.
+    """
+    out = []
+    for b in inp.baselines:
+        if (b["method"], b["list"], b["ss"]) == ("ppo", "id", "SS6"):
+            rate = _x(b["success_rate"])
+            out.append(
+                f"I is ceiling-limited: the teacher (P8 ppo s0) is at {100.0 * rate:.1f} % "
+                f"({b['n_success']}/{b['n_episodes']}) at id SS6, so I >= "
+                f"{100.0 * (rate - 1.0):+.1f} points."
+            )
+    out.append(f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.")
+    return out
+
+
+def _draw_bars(
+    rows: Sequence[Mapping[str, Any]],
+    path: Path,
+    title: str,
+    ylabel: str,
+    caption: Sequence[str] = (),
+) -> None:
     plt = _plt()
     with plt.rc_context(_rc()):
-        fig, ax = plt.subplots(figsize=(5.0, 3.6))
+        fig, ax = plt.subplots(figsize=(6.0, 4.2))
         ok = [r for r in rows if r.get("point") is not None]
         if ok:
             xs = list(range(len(ok)))
@@ -345,8 +371,8 @@ def _draw_bars(rows: Sequence[Mapping[str, Any]], path: Path, title: str, ylabel
         ax.set_ylabel(ylabel)
         ax.set_title(title, fontsize=8)
         ax.grid(True, axis="y", lw=0.3, alpha=0.6)
-        _footnote(fig, _notes(rows))
-        fig.subplots_adjust(left=0.14, right=0.98, top=0.88, bottom=0.2)
+        _footnote(fig, [*caption, *_notes(rows)])
+        fig.subplots_adjust(left=0.14, right=0.98, top=0.88, bottom=0.3)
         _save(fig, path)
 
 
@@ -359,8 +385,9 @@ def _draw_sweep(rows: Sequence[Mapping[str, Any]], path: Path, *, title: str, xl
         "ensembling": "#D55E00",
         "Ta = 8, no ensembling": "#CC79A7",
     }
+    width = max(3.4 * len(panels), 5.0)  # inches; a single panel needs room for its labels
     with plt.rc_context(_rc()):
-        fig, axes = plt.subplots(1, len(panels), figsize=(3.4 * len(panels), 3.6), sharey=True,
+        fig, axes = plt.subplots(1, len(panels), figsize=(width, 3.8), sharey=True,
                                  squeeze=False)  # fmt: skip
         for ax, panel in zip(axes[0], panels, strict=True):
             if panel.endswith("SS6"):
@@ -381,9 +408,9 @@ def _draw_sweep(rows: Sequence[Mapping[str, Any]], path: Path, *, title: str, xl
             ax.grid(True, lw=0.3, alpha=0.6)
         axes[0, 0].set_ylabel("success, % (IQM over 5 seeds, 95 % CI)")
         axes[0, 0].legend(fontsize=7, frameon=False)
-        fig.suptitle(title, fontsize=9)
+        fig.suptitle(title, fontsize=9, wrap=True)
         _footnote(fig, _notes(rows))
-        fig.subplots_adjust(left=0.08, right=0.99, top=0.85, bottom=0.2, wspace=0.08)
+        fig.subplots_adjust(left=0.75 / width, right=0.98, top=0.82, bottom=0.2, wspace=0.08)
         _save(fig, path)
 
 
@@ -452,6 +479,7 @@ def make_figures(root: Path = sc.OUT_ROOT) -> dict[str, Path]:
         paths["h4_gaps"],
         "H4 at id SS6: perception gap P, imitation gap I, D = P - I (points, 95 % CI)",
         "points of success (simulated)",
+        h4_caption(inp),
     )
     _draw_sweep(
         tables["h3_ta_curve"],

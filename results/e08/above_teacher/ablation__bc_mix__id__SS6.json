@@ -1631,6 +1631,7 @@
       "seed": 0,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 8,
         "successes": 172,
@@ -1640,6 +1641,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 166,
@@ -1672,6 +1674,7 @@
       "seed": 1,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 7,
         "successes": 180,
@@ -1681,6 +1684,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 166,
@@ -1713,6 +1717,7 @@
       "seed": 2,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 8,
         "successes": 174,
@@ -1722,6 +1727,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 166,
@@ -1740,6 +1746,14 @@
   "status": "for results-skeptic review; not reported until reviewed",
   "student": {
     "detectors_disagree": [],
+    "grace_used_successes": [
+      {
+        "episode_seed": 614825645,
+        "index": 82,
+        "outcome": "success",
+        "seed": 0
+      }
+    ],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -1860,6 +1874,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 600,
+    "n_grace_used_successes": 1,
     "n_successes_near_threshold": 23,
     "n_touchdowns": 600,
     "n_tunnelled": 14,
@@ -2244,6 +2259,7 @@
   "teacher": "T_mix",
   "teacher_rows": {
     "detectors_disagree": [],
+    "grace_used_successes": [],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -2364,6 +2380,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 200,
+    "n_grace_used_successes": 0,
     "n_successes_near_threshold": 0,
     "n_touchdowns": 169,
     "n_tunnelled": 0,

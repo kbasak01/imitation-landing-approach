@@ -64,6 +64,26 @@ def test_success_plot_table_has_baselines_and_marks(scored: Path) -> None:
     assert all(r["point"] == "" for r in rows if r["note"] in ("withheld", "missing"))
 
 
+def test_h4_caption_and_oracle_label(scored: Path) -> None:
+    """M2/M3: the H4 caption states I's ceiling (computed) and the flip floor; oracle wording."""
+    from ila.eval import report as rp
+
+    inp = rp.load_inputs(scored)
+    teacher = next(
+        b for b in inp.baselines if (b["method"], b["list"], b["ss"]) == ("ppo", "id", "SS6")
+    )
+    rate = float(teacher["success_rate"])
+    cap = figures.h4_caption(inp)
+    assert cap[0] == (
+        f"I is ceiling-limited: the teacher (P8 ppo s0) is at {100.0 * rate:.1f} % "
+        f"({teacher['n_success']}/{teacher['n_episodes']}) at id SS6, so I >= "
+        f"{100.0 * (rate - 1.0):+.1f} points."
+    )
+    assert cap[-1] == f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}."
+    assert "commit-timing oracle, not a bound" in figures._BASE_NAME["oracle_gated"]
+    assert "privileged oracle" not in figures._BASE_NAME["oracle_gated"]
+
+
 def test_rule_md_states_the_rule_verbatim() -> None:
     text = (REPO / "results" / "e08" / "gifs" / "RULE.md").read_text(encoding="utf-8")
     assert gifs.rule_from_md(text) == gifs.RULE

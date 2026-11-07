@@ -27,6 +27,9 @@ criteria read from P8's ``configs/env/success.yaml`` (closing speed along the de
   and detector-disagreement successes, then also minus near-threshold successes; and the exact
   McNemar p (:func:`ila.eval.metrics.mcnemar_exact_p`) from each seed's discordant counts
   against the teacher, descriptive only;
+* grace-used successes: successes with more than one contact event (``contact_events > 1``;
+  P8 counts a new event only when contact returns after a gap longer than ``success.yaml``'s
+  ``contact_loss_grace_s``, 50 ms model scale); counted, not removed from any recount;
 * the outcome-class shift: a teacher-class x student-class table pooled over seeds, and every
   episode the student turned from a teacher failure into a success, and vice versa. For ``T_mix``
   cells each such episode also carries its assigned policy (``ppo`` or ``gated``) and the other
@@ -58,12 +61,16 @@ __all__ = [
     "BINS",
     "DWELL_NOTE",
     "NEAR_FRACTION",
+    "REVIEWED_JSON",
     "audit",
     "recount",
     "render_md",
     "run_audits",
     "thresholds",
 ]
+
+#: The committed results-skeptic review record beside the audits; never an audit file.
+REVIEWED_JSON: Final[str] = "reviewed.json"
 
 #: A success is "near" a threshold when its margin is below this fraction of the threshold.
 NEAR_FRACTION: Final[float] = 0.05
@@ -204,7 +211,14 @@ def _side(
     ]
     out["n_tunnelled"] = len(out["tunnelled"])
     out["n_detectors_disagree"] = len(out["detectors_disagree"])
+    out["grace_used_successes"] = [_ep(r, seed_col) for r in succ if _grace_used(r)]
+    out["n_grace_used_successes"] = len(out["grace_used_successes"])
     return out
+
+
+def _grace_used(row: Mapping[str, Any]) -> bool:
+    """A success with more than one P8 contact event (``contact_events > 1``)."""
+    return str(row["outcome"]) == "success" and int(float(row["contact_events"])) > 1
 
 
 def audit(
@@ -389,14 +403,17 @@ def recount(rows: Sequence[Mapping[str, Any]], limits: Mapping[str, float]) -> d
     Returns:
         ``successes``; tunnelled and detector-disagreement successes; ``successes`` minus the
         union of those two; near-threshold successes (touchdown criteria only, module
-        docstring); and ``successes`` minus the union of all three.
+        docstring); ``successes`` minus the union of all three; and grace-used successes
+        (``contact_events > 1``, counted only, removed from nothing).
     """
     succ = {int(r["index"]) for r in rows if str(r["outcome"]) == "success"}
     tun = {int(r["index"]) for r in rows if sc.as_bool(r["tunnelled"])} & succ
     dis = {int(r["index"]) for r in rows if sc.as_bool(r["detectors_disagree"])} & succ
     near = _near_episodes(rows, limits)
+    grace = {int(r["index"]) for r in rows if _grace_used(r)}
     return {
         "n_episodes": len(rows),
+        "grace_used_successes": len(grace),
         "successes": len(succ),
         "tunnelled_successes": len(tun),
         "disagreement_successes": len(dis),
@@ -416,11 +433,14 @@ def _recount_md(a: Mapping[str, Any]) -> list[str]:
         "",
         "Per-seed recount (successes of N; student / teacher). A = as scored; B = minus "
         "tunnelled and detector-disagreement successes; C = B also minus near-threshold "
-        "successes. McNemar: exact two-sided p from the discordant counts (teacher failure -> "
-        "student success / the reverse), descriptive, no multiplicity correction.",
+        "successes. Grace-used: successes with contact_events > 1 (P8 counts a new contact "
+        "event only after a gap longer than the contact-loss grace), counted only, removed "
+        "from nothing. McNemar: exact two-sided p from the "
+        "discordant counts (teacher failure -> student success / the reverse), descriptive, no "
+        "multiplicity correction.",
         "",
-        "| seed | flagged | A | B | C | discordant +/- | McNemar p |",
-        "|---|---|---|---|---|---|---|",
+        "| seed | flagged | A | B | C | grace-used | discordant +/- | McNemar p |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for p in a["per_seed_recount"]:
         s, t = p["student"], p["teacher"]
@@ -431,6 +451,7 @@ def _recount_md(a: Mapping[str, Any]) -> list[str]:
             f"{t['successes_minus_tunnelled_or_disagreement']} | "
             f"{s['successes_minus_tunnelled_disagreement_or_near']} / "
             f"{t['successes_minus_tunnelled_disagreement_or_near']} | "
+            f"{s['grace_used_successes']} / {t['grace_used_successes']} | "
             f"+{p['discordant_teacher_failure_to_student_success']} / "
             f"-{p['discordant_teacher_success_to_student_failure']} | "
             f"{p['mcnemar_exact_p_two_sided']:.3f} |"
@@ -505,7 +526,9 @@ def render_md(audits: Sequence[Mapping[str, Any]]) -> str:
             f"{sc.fmt(t['success_min_dwell_s'])} s.",
             f"- Tunnelling: student {s['n_tunnelled']}, teacher {t['n_tunnelled']}. Detector "
             f"disagreement: student {s['n_detectors_disagree']}, teacher "
-            f"{t['n_detectors_disagree']}.",
+            f"{t['n_detectors_disagree']}. Grace-used successes (contact_events > 1): student "
+            f"{s['n_grace_used_successes']} of {s['successes']}, teacher "
+            f"{t['n_grace_used_successes']} of {t['successes']}.",
             f"- Teacher failure -> student success: "
             f"{len(a['outcome_shift']['teacher_failure_to_student_success'])} seed-episodes; "
             f"teacher success -> student failure: "
@@ -556,7 +579,7 @@ def run_audits(inp: sc.ScoreInputs, out_dir: Path | None = None) -> list[dict[st
     target.mkdir(parents=True, exist_ok=True)
     slugs = [r["audit_file"].removeprefix("above_teacher/").removesuffix(".json") for r in rows]
     for stale in sorted(target.glob("*.json")):
-        if stale.stem not in slugs:
+        if stale.name != REVIEWED_JSON and stale.stem not in slugs:
             stale.unlink()  # a cell no longer above its teacher keeps no audit
     for r, slug in zip(rows, slugs, strict=True):
         a = audit(by_label[slug], index, inp, r)

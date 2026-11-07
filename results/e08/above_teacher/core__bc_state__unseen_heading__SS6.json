@@ -731,6 +731,7 @@
       "seed": 0,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 2,
         "successes": 172,
@@ -740,6 +741,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 182,
@@ -756,6 +758,7 @@
       "seed": 1,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 3,
         "n_episodes": 200,
         "near_threshold_successes": 2,
         "successes": 171,
@@ -765,6 +768,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 182,
@@ -781,6 +785,7 @@
       "seed": 2,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 4,
         "successes": 184,
@@ -790,6 +795,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 182,
@@ -806,6 +812,7 @@
       "seed": 3,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 3,
         "successes": 182,
@@ -815,6 +822,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 182,
@@ -831,6 +839,7 @@
       "seed": 4,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 3,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 179,
@@ -840,6 +849,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 1,
         "successes": 182,
@@ -860,6 +870,56 @@
   "status": "for results-skeptic review; not reported until reviewed",
   "student": {
     "detectors_disagree": [],
+    "grace_used_successes": [
+      {
+        "episode_seed": 433242115,
+        "index": 46,
+        "outcome": "success",
+        "seed": 0
+      },
+      {
+        "episode_seed": 981337911,
+        "index": 94,
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 766486903,
+        "index": 157,
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 373504614,
+        "index": 174,
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 1899082347,
+        "index": 2,
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 2099038340,
+        "index": 47,
+        "outcome": "success",
+        "seed": 4
+      },
+      {
+        "episode_seed": 1349353291,
+        "index": 64,
+        "outcome": "success",
+        "seed": 4
+      },
+      {
+        "episode_seed": 1307455403,
+        "index": 75,
+        "outcome": "success",
+        "seed": 4
+      }
+    ],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -980,6 +1040,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 1000,
+    "n_grace_used_successes": 8,
     "n_successes_near_threshold": 12,
     "n_touchdowns": 1000,
     "n_tunnelled": 55,
@@ -1768,6 +1829,7 @@
   "teacher": "T_ppo",
   "teacher_rows": {
     "detectors_disagree": [],
+    "grace_used_successes": [],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -1888,6 +1950,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 200,
+    "n_grace_used_successes": 0,
     "n_successes_near_threshold": 1,
     "n_touchdowns": 200,
     "n_tunnelled": 8,

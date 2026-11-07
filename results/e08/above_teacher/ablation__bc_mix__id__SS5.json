@@ -896,6 +896,7 @@
       "seed": 0,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 5,
         "successes": 185,
@@ -905,6 +906,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 187,
@@ -937,6 +939,7 @@
       "seed": 1,
       "student": {
         "disagreement_successes": 1,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 5,
         "successes": 190,
@@ -946,6 +949,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 187,
@@ -978,6 +982,7 @@
       "seed": 2,
       "student": {
         "disagreement_successes": 0,
+        "grace_used_successes": 0,
         "n_episodes": 200,
         "near_threshold_successes": 7,
         "successes": 180,
@@ -987,6 +992,7 @@
       },
       "teacher": {
         "disagreement_successes": 0,
+        "grace_used_successes": 1,
         "n_episodes": 200,
         "near_threshold_successes": 0,
         "successes": 187,
@@ -1016,6 +1022,14 @@
         "seed": 1,
         "td_t_episode_analytic_s": 0.95,
         "td_t_episode_contact_s": 0.9
+      }
+    ],
+    "grace_used_successes": [
+      {
+        "episode_seed": 2080088503,
+        "index": 50,
+        "outcome": "success",
+        "seed": 1
       }
     ],
     "metrics": {
@@ -1138,6 +1152,7 @@
     },
     "n_detectors_disagree": 1,
     "n_episodes": 600,
+    "n_grace_used_successes": 1,
     "n_successes_near_threshold": 17,
     "n_touchdowns": 600,
     "n_tunnelled": 10,
@@ -1426,6 +1441,14 @@
   "teacher": "T_mix",
   "teacher_rows": {
     "detectors_disagree": [],
+    "grace_used_successes": [
+      {
+        "episode_seed": 450399838,
+        "index": 119,
+        "outcome": "success",
+        "seed": 0
+      }
+    ],
     "metrics": {
       "closing_speed_normal_m_s": {
         "in_near_test": true,
@@ -1546,6 +1569,7 @@
     },
     "n_detectors_disagree": 0,
     "n_episodes": 200,
+    "n_grace_used_successes": 1,
     "n_successes_near_threshold": 0,
     "n_touchdowns": 187,
     "n_tunnelled": 0,

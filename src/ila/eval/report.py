@@ -249,27 +249,43 @@ def _losses(r: Mapping[str, str], prefix: str) -> str:
     return " · ".join(parts) if parts else "0"
 
 
-def _learned_cell(r: Mapping[str, str] | None, withheld: frozenset[str]) -> str:
-    """``IQM [CI]; seeds min–max; losses/1 000`` (P8's learned-cell format)."""
+def _learned_cell(
+    r: Mapping[str, str] | None, withheld: frozenset[str], *, show_n: bool = False
+) -> str:
+    """``IQM [CI]; seeds min–max; losses/1 000`` (P8's learned-cell format).
+
+    With ``show_n`` the cell also prints N = seeds × episodes per seed (from the aggregate row),
+    so a per-1 000 loss rate over 600 seed-episodes is not read as a count.
+    """
     if r is None:
         return "—"
     if label_of(r) in withheld:
         return "withheld (above teacher; under review)"
     if r["status"] != "complete":
         return f"missing ({r['n_seeds']}/{r['n_seeds_expected']} seeds)"
+    n_txt = ""
+    if show_n:
+        n_seeds, n_eps = int(r["n_seeds"]), int(r["n_episodes_per_seed"])
+        n_txt = f"; N = {n_seeds * n_eps} ({n_seeds} seeds × {n_eps})"
     return (
         f"**{_pct(r['success_iqm'])}** [{_pct(r['success_iqm_lo'])}, "
         f"{_pct(r['success_iqm_hi'])}]; seeds {_pct(r['success_seed_min'])}–"
-        f"{_pct(r['success_seed_max'])}; losses/1 000: {_losses(r, 'per_1000_')}"
+        f"{_pct(r['success_seed_max'])}; losses/1 000: {_losses(r, 'per_1000_')}{n_txt}"
     )
 
 
-def _cell(r: Mapping[str, str] | None, inp: ReportInputs, notes: list[str] | None = None) -> str:
+def _cell(
+    r: Mapping[str, str] | None,
+    inp: ReportInputs,
+    notes: list[str] | None = None,
+    *,
+    show_n: bool = False,
+) -> str:
     """:func:`_learned_cell`, marked ``‡`` when it is a released above-teacher cell.
 
     The marked cell's label is appended to ``notes`` (once) for :func:`_footnotes`.
     """
-    text = _learned_cell(r, inp.withheld)
+    text = _learned_cell(r, inp.withheld, show_n=show_n)
     if r is not None and label_of(r) in inp.released:
         text = f"{text} {_RELEASED}"
         if notes is not None and label_of(r) not in notes:
@@ -652,6 +668,20 @@ def _hyp_estimate(rec: Mapping[str, Any]) -> str:
     return f"{_pts(est)} points [{_pts(lo)}, {_pts(hi)}]"
 
 
+def verdict_line(verdict: str, note: str) -> str:
+    """The bold verdict with its note, the note only where it adds a reason.
+
+    ``supported`` / ``supported`` prints the verdict alone; a note that starts with the verdict
+    word prints only its remainder; any other note follows a dash.
+    """
+    head = f"**Verdict: {verdict}**"
+    if note == verdict or not note:
+        return f"{head}."
+    if note.startswith(verdict):
+        return f"{head} {note[len(verdict) :].strip()}."
+    return f"{head} — {note}."
+
+
 def _hypotheses(inp: ReportInputs) -> list[str]:
     withheld = inp.withheld
     lines = [
@@ -687,7 +717,7 @@ def _hypotheses(inp: ReportInputs) -> list[str]:
             else f"+{100.0 * _x(mag):.0f} points"
         )  # fmt: skip
         lines += [
-            f"- **Verdict: {rec['verdict']}** — {rec['verdict_note']}.",
+            f"- {verdict_line(str(rec['verdict']), str(rec['verdict_note']))}",
             f"- Estimate: {_hyp_estimate(rec)}; magnitude {mag_txt}; in simulation.",
             f"- Contrast: {rec['contrast']}; statistic: {rec['statistic']}.",
             f"- N: {rec['n_episodes']} paired episodes; seeds "
@@ -720,11 +750,49 @@ def _contrast_value(r: Mapping[str, str]) -> str:
     return f"{_f3(r['estimate'])} [{_f3(r['ci_lo'])}, {_f3(r['ci_hi'])}]"
 
 
-def _contrasts(inp: ReportInputs, kinds: Callable[[str], bool], title: str) -> list[str]:
+#: Input tags that never enter a core section (P3-D1 §3 reporting rules; skill
+#: landing-protocol-p8): their contrasts go to §6b.
+TAGGED_INPUTS: Final[frozenset[str]] = frozenset(
+    ("ablation", "appearance_shift", "reference_external", "latency_arm")
+)
+
+
+def contrast_tags(inputs: str) -> list[str]:
+    """The tags of a contrast's input cells, in input order (``P8 rows`` for P8's rows).
+
+    ``+clock`` is added when ``bc_plus_clock`` is an input (the labelled ``+clock`` ablation).
+    """
+    tags: list[str] = []
+    for lab in (i for i in inputs.split("; ") if i):
+        first = lab.split(" ")[0]
+        tag = "P8 rows" if first in ("P8", "T_mix") else first
+        if tag not in tags:
+            tags.append(tag)
+    if " bc_plus_clock " in f" {inputs} ":
+        tags.append("+clock")
+    return tags
+
+
+def is_tagged(inputs: str) -> bool:
+    """Whether any input cell carries a tag that is never mixed into a core section."""
+    return any(t in TAGGED_INPUTS or t == "+clock" for t in contrast_tags(inputs))
+
+
+def _contrast_n(r: Mapping[str, str]) -> str:
+    """``seeds a / seeds b × episodes`` of a contrast row (blank when missing)."""
+    a, b, n = r.get("n_seeds_a", ""), r.get("n_seeds_b", ""), r.get("n_episodes", "")
+    if "" in (a, b, n):
+        return ""
+    return f"{a} / {b} × {n}"
+
+
+def _contrasts(
+    inp: ReportInputs, keep: Callable[[Mapping[str, str]], bool], title: str
+) -> list[str]:
     withheld = inp.withheld
     rows = []
     for r in inp.contrasts:
-        if not kinds(r["kind"]):
+        if not keep(r):
             continue
         held = withheld_inputs(r.get("inputs", ""), withheld)
         value = "withheld (input under above-teacher review)" if held else _contrast_value(r)
@@ -734,16 +802,57 @@ def _contrasts(inp: ReportInputs, kinds: Callable[[str], bool], title: str) -> l
         rows.append(
             [
                 r["name"],
+                ", ".join(f"`{t}`" for t in contrast_tags(r.get("inputs", ""))),
                 f"{r['list']} {r['ss']}",
+                _contrast_n(r),
                 value,
                 "" if held or r["status"].startswith("missing") else r["reading"],
                 note,
             ]
         )
     lines = [title, ""]
-    lines += _table(("contrast", "cell", "estimate [95 % CI]", "reading", "notes"), rows)
-    lines += ["", "Sources: `results/e08/contrasts.csv`.", ""]
+    if not rows:
+        return [*lines, "None.", ""]
+    header = (
+        "contrast",
+        "input tags",
+        "cell",
+        "N: seeds a / b × episodes",
+        "estimate [95 % CI]",
+        "reading",
+        "notes",
+    )
+    lines += _table(header, rows)
+    lines += ["", "Sources: `results/e08/contrasts.csv` (`inputs` column for the tags).", ""]
     return lines
+
+
+def _unscored(inp: ReportInputs) -> list[str]:
+    """§6: unscored contrasts, core inputs (6a) apart from tagged inputs (6b)."""
+
+    def unscored(r: Mapping[str, str]) -> bool:
+        return r["kind"] not in ("scored", "component of the scored H4")
+
+    lines = [
+        "## 6. Unscored contrasts: post hoc, descriptive and teacher checks (no verdicts)",
+        "",
+    ]
+    lines += _contrasts(
+        inp,
+        lambda r: unscored(r) and not is_tagged(r.get("inputs", "")),
+        "### 6a. Core inputs (tags `core`, `dp_Ta`; P8's committed rows)",
+    )
+    lines += _contrasts(
+        inp,
+        lambda r: unscored(r) and is_tagged(r.get("inputs", "")),
+        "### 6b. Contrasts with a tagged input (ablation, `+clock`; never mixed into 6a)",
+    )
+    return lines
+
+
+def _tcell(r: Mapping[str, str] | None, inp: ReportInputs, notes: list[str] | None = None) -> str:
+    """A §7 learned cell: :func:`_cell` with N printed (ablations and R1 have 3 seeds)."""
+    return _cell(r, inp, notes, show_n=True)
 
 
 def _tagged(inp: ReportInputs) -> list[str]:
@@ -767,7 +876,8 @@ def _tagged(inp: ReportInputs) -> list[str]:
         "and the selected `select` scores are optimistic; and held-out denoising loss is not a "
         "selection proxy (success does not follow it). H3 (§5) scores Ta = 1 − Ta = 8 at `id` "
         "SS6 with its caveats: checkpoints selected at Ta = 8, mode switching between replans, "
-        "and the `dp_minus_last_action` input-freshness confound.",
+        "the `dp_minus_last_action` input-freshness confound, and P6-D5's: a Ta contrast cannot "
+        "attribute the loss to deck motion.",
         "",
     ]
     tas = sorted({int(r["Ta"]) for r in inp.aggregate if r["tag"] == "dp_Ta"})
@@ -782,7 +892,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
             [
                 f"Ta = {ta}",
                 *(
-                    _cell(agg.get(("dp_Ta", "dp", "id", ss, str(ta), "10", e, "")), inp, notes)
+                    _tcell(agg.get(("dp_Ta", "dp", "id", ss, str(ta), "10", e, "")), inp, notes)
                     for e in ("False", "True")
                 ),
             ]
@@ -811,7 +921,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
     for k in ks:
         r = agg.get(("dp_K", "dp", "id", "SS5", "8", str(k), "False", ""))
         name = f"K = {k}" + (" (schedule-limited)" if k in (1, 2) else "")
-        k_rows.append([name, _cell(r, inp, notes)])
+        k_rows.append([name, _tcell(r, inp, notes)])
     k_rows += _baseline_rows(inp, "id", ("SS5",))
     lines += _table(("K", "id SS5"), k_rows)
     lines += _footnotes(inp, notes)
@@ -828,7 +938,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
         shift_rows.append(
             [f"{_student_name(arm, teacher)}, committed look"]
             + [
-                _cell(agg.get(("core", arm, "id", ss, *inf, "")), inp, notes)
+                _tcell(agg.get(("core", arm, "id", ss, *inf, "")), inp, notes)
                 for ss in ("SS5", "SS6")
             ]
         )
@@ -843,7 +953,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
             shift_rows.append(
                 [f"`{arm}`, `{v}`"]
                 + [
-                    _cell(agg.get(("appearance_shift", arm, "id", ss, *inf, v)), inp, notes)
+                    _tcell(agg.get(("appearance_shift", arm, "id", ss, *inf, v)), inp, notes)
                     for ss in ("SS5", "SS6")
                 ]
             )
@@ -868,7 +978,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
         abl_rows.append(
             [_student_name(arm, teacher)]
             + [
-                _cell(agg.get(("ablation", arm, "id", ss, *_inf_abl(arm), "")), inp, notes)
+                _tcell(agg.get(("ablation", arm, "id", ss, *_inf_abl(arm), "")), inp, notes)
                 for ss in ("SS4", "SS5", "SS6")
             ]
         )
@@ -889,7 +999,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
         ref_rows.append(
             [_student_name(arm, teacher)]
             + [
-                _cell(
+                _tcell(
                     agg.get(("reference_external", arm, "id", ss, "8", "10", "False", "")),
                     inp,
                     notes,
@@ -900,7 +1010,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
     ref_rows.append(
         [_student_name("dp", "T_ppo") + " (core, beside it)"]
         + [
-            _cell(agg.get(("core", "dp", "id", ss, "8", "10", "False", "")), inp, notes)
+            _tcell(agg.get(("core", "dp", "id", ss, "8", "10", "False", "")), inp, notes)
             for ss in ("SS3", "SS4", "SS5", "SS6")
         ]
     )
@@ -987,11 +1097,7 @@ def render(inp: ReportInputs) -> str:
     lines += _breakdown(inp)
     lines += _secondary(inp)
     lines += _hypotheses(inp)
-    lines += _contrasts(
-        inp,
-        lambda k: k not in ("scored", "component of the scored H4"),
-        "## 6. Unscored contrasts: post hoc, descriptive and teacher checks (no verdicts)",
-    )
+    lines += _unscored(inp)
     lines += _tagged(inp)
     lines += _above(inp)
     lines += _missing(inp)

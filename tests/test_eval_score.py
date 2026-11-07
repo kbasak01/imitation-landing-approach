@@ -71,6 +71,15 @@ def test_cell_metrics_is_p8s_own() -> None:
     assert set(p8_adapter.CELL_METRIC_COLUMNS) <= set(sc.SUMMARY_COLUMNS)
 
 
+def test_no_duplicate_summary_columns(small: tuple[sc.ScoreInputs, Path]) -> None:
+    """M8: ``n_success`` (six counts and P8's columns) is written once."""
+    _, root = small
+    for cols, name in ((sc.SUMMARY_COLUMNS, "summary.csv"), (sc.BASELINE_COLUMNS, "baselines.csv")):
+        assert len(cols) == len(set(cols)), name
+        header = (root / name).read_text(encoding="utf-8").splitlines()[0].split(",")
+        assert len(header) == len(set(header)) and header.count("n_success") == 1, name
+
+
 def test_score_is_byte_deterministic(small: tuple[sc.ScoreInputs, Path], tmp_path: Path) -> None:
     inp, root = small
     sc.run_score(inp, tmp_path)
@@ -193,10 +202,16 @@ def test_above_teacher_scan_and_audit(small: tuple[sc.ScoreInputs, Path]) -> Non
         )
         assert p["mcnemar_exact_p_two_sided"] == mcnemar_exact_p(b, c)
         assert p["student"]["successes"] - p["teacher"]["successes"] == b - c
-    # Re-running is byte-identical.
+    assert a["student"]["n_grace_used_successes"] == 0  # synthetic rows: one contact event
+    assert "| grace-used |" in (root / "above_teacher" / "audit.md").read_text(encoding="utf-8")
+    # Re-running is byte-identical, and the committed review record is never deleted.
+    reviewed = root / "above_teacher" / at.REVIEWED_JSON
+    reviewed.write_text('{"released": []}', encoding="utf-8")
     before = (root / "above_teacher" / "audit.md").read_bytes()
     at.run_audits(inp)
     assert (root / "above_teacher" / "audit.md").read_bytes() == before
+    assert reviewed.read_text(encoding="utf-8") == '{"released": []}'
+    reviewed.unlink()
 
 
 def _row(index: int, outcome: str, **kw: object) -> dict[str, object]:
@@ -206,6 +221,7 @@ def _row(index: int, outcome: str, **kw: object) -> dict[str, object]:
         "touchdown_contact": "True",
         "tunnelled": "False",
         "detectors_disagree": "False",
+        "contact_events": "1",
         "rel_vz_normal_m_s": -0.2,
         "rel_vz_world_z_m_s": -0.2,
         "lateral_offset_m": 0.01,
@@ -228,12 +244,13 @@ def test_recount_known_answer() -> None:
         _row(2, "success", detectors_disagree="True", tunnelled="True"),
         _row(3, "success", rel_tilt_deg=14.5),  # margin 3.3 % -> near
         _row(4, "success", rel_vz_world_z_m_s=-0.49),  # world z only: not a criterion
-        _row(5, "success", lateral_offset_m=0.0951),  # margin 4.9 % -> near
-        _row(6, "hard_landing", rel_vz_normal_m_s=-0.6, tunnelled="True"),
-        _row(7, "timeout", touchdown_contact="False"),
+        _row(5, "success", lateral_offset_m=0.0951, contact_events="2"),  # near; grace-used
+        _row(6, "hard_landing", rel_vz_normal_m_s=-0.6, tunnelled="True", contact_events="3"),
+        _row(7, "timeout", touchdown_contact="False", contact_events="0"),
     ]
     assert at.recount(rows, limits) == {
         "n_episodes": 8,
+        "grace_used_successes": 1,  # successes only: the hard landing's 3 events do not count
         "successes": 6,
         "tunnelled_successes": 2,
         "disagreement_successes": 1,

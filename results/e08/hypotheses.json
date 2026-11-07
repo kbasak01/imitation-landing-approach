@@ -14,14 +14,23 @@
         {
           "label": "labelled frames",
           "text": "bc_dagger: 616,053 (per seed 123,216, 123,013, 123,359, 123,223, 123,242); bc_matched: 614,365 (per seed 122,873, 122,873, 122,873, 122,873, 122,873)"
+        },
+        {
+          "label": "descriptive, not scored: success minus tunnelled successes",
+          "text": "bc_dagger 986/1000 (tunnelled successes removed: 0); bc_matched 959/1000 (tunnelled successes removed: 1); difference +2.7 points (point estimate only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it)"
+        },
+        {
+          "label": "H1-SS6 beside it",
+          "text": "+5.9 points [+2.3, +9.7] (1 decimal): supported"
         }
       ],
       "caveats": [
         "P8's paired_bootstrap treats seeds as unpaired, which is conservative here, because bc_dagger and bc_matched share iteration 0 (P3-D1 §6 H1).",
         "bc_dagger and bc_matched share iteration 0, the loop, the step count, the candidate set and the 2 000 starting conditions; they differ only in who chose the actions on the second 1 000 (P3-D1 §6 H1).",
-        "bc_matched is above 95 % in id SS5 (the ceiling of P3-D1 §6).",
+        "Ceiling-limited: bc_matched is at 96.0 % (960/1000) in id SS5, so the largest attainable gain is 4.0 points, below +5; 'supported' was unattainable. The rule's verdict is kept (P3-D1 §6 ceilings; P8-D1 item 3).",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": true,
       "cell": "id SS5",
       "ci_hi": 0.04799999999999999,
       "ci_lo": 0.005999999999999998,
@@ -65,6 +74,10 @@
           "text": "bc_dagger: 616,053 (per seed 123,216, 123,013, 123,359, 123,223, 123,242); bc_matched: 614,365 (per seed 122,873, 122,873, 122,873, 122,873, 122,873)"
         },
         {
+          "label": "descriptive, not scored: success minus tunnelled successes",
+          "text": "bc_dagger 938/1000 (tunnelled successes removed: 14); bc_matched 887/1000 (tunnelled successes removed: 6); difference +5.1 points (point estimate only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it)"
+        },
+        {
           "label": "SS6 flip floor",
           "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
         }
@@ -74,6 +87,7 @@
         "bc_dagger and bc_matched share iteration 0, the loop, the step count, the candidate set and the 2 000 starting conditions; they differ only in who chose the actions on the second 1 000 (P3-D1 §6 H1).",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": false,
       "cell": "id SS6",
       "ci_hi": 0.09699999999999999,
       "ci_lo": 0.023000000000000003,
@@ -115,13 +129,22 @@
         {
           "label": "labelled frames",
           "text": "bc_dart: 304,535 (per seed 60,907, 60,907, 60,907, 60,907, 60,907); bc: 307,590 (per seed 61,518, 61,518, 61,518, 61,518, 61,518)"
+        },
+        {
+          "label": "descriptive, not scored: success minus tunnelled successes",
+          "text": "bc_dart 992/1000 (tunnelled successes removed: 1); bc 952/1000 (tunnelled successes removed: 5); difference +4.0 points (point estimate only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it)"
+        },
+        {
+          "label": "H1-DART-SS6 beside it",
+          "text": "+8.1 points [+4.6, +11.9] (1 decimal): supported"
         }
       ],
       "caveats": [
         "bc_dart and bc are both at N = 1 000 labelled episodes on the same 1 000 starting conditions; bc_dart - bc_matched (1 000 vs 2 000) is reported descriptively, unscored (P3-D1 §6 H1).",
-        "bc is above 95 % in id SS5 (the ceiling of P3-D1 §6).",
+        "Ceiling-limited: bc is at 95.7 % (957/1000) in id SS5, so the largest attainable gain is 4.3 points, below +5; 'supported' was unattainable. The rule's verdict is kept (P3-D1 §6 ceilings; P8-D1 item 3).",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": true,
       "cell": "id SS5",
       "ci_hi": 0.05799999999999999,
       "ci_lo": 0.016999999999999998,
@@ -165,6 +188,10 @@
           "text": "bc_dart: 304,535 (per seed 60,907, 60,907, 60,907, 60,907, 60,907); bc: 307,590 (per seed 61,518, 61,518, 61,518, 61,518, 61,518)"
         },
         {
+          "label": "descriptive, not scored: success minus tunnelled successes",
+          "text": "bc_dart 966/1000 (tunnelled successes removed: 4); bc 881/1000 (tunnelled successes removed: 8); difference +8.5 points (point estimate only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it)"
+        },
+        {
           "label": "SS6 flip floor",
           "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
         }
@@ -173,6 +200,7 @@
         "bc_dart and bc are both at N = 1 000 labelled episodes on the same 1 000 starting conditions; bc_dart - bc_matched (1 000 vs 2 000) is reported descriptively, unscored (P3-D1 §6 H1).",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": false,
       "cell": "id SS6",
       "ci_hi": 0.11900000000000001,
       "ci_lo": 0.046,
@@ -230,6 +258,7 @@
         "select W1 (results/phase7/h2) is not H2 evidence (Phase 8 before-you-start).",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": false,
       "cell": "id SS4",
       "ci_hi": 0.2630021969046132,
       "ci_lo": -0.10014063026094286,
@@ -274,8 +303,10 @@
         "Checkpoints were selected at Ta = 8 (P3-D1 §6 H3).",
         "Ta = 1 without ensembling can switch modes between replans; so a null cannot separate 'chunking is harmless' from 'replanning causes mode switching' (P3-D1 §6 H3).",
         "dp_minus_last_action (P7-D3 item 7) is a competing explanation for dp recovering at Ta = 1: an input-freshness effect, stale last_action, alongside chunk length; any sentence that says dp fails 'because of chunking' must name it (P7-D3, Phase 8 before-you-start).",
+        "P6-D5: a Ta contrast cannot attribute the loss to deck motion. On the frozen lists the gain is +53.3 / +53.2 / +47.4 points at SS4 / SS5 / SS6 (Ta = 1 minus Ta = 8, mean over seeds x episodes, same checkpoints; comparing the gains across sea states is an unpaired reading), and `dp` at Ta = 8 succeeds on 41.0 % (410/1000) of the static-deck episodes.",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": false,
       "cell": "id SS6",
       "ci_hi": 0.5379999999999999,
       "ci_lo": 0.41,
@@ -327,6 +358,7 @@
         "I is ceiling-limited: the teacher is at 98.5 % at id SS6, so I = S(teacher) - S(bc_state) >= S(teacher) - 1 = -0.015; an imitation gap in bc_state's favour larger than that cannot be observed, which bounds how much of D can come from a negative I.",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
+      "ceiling_limited": false,
       "cell": "id SS6",
       "ci_hi": 0.13500000000000012,
       "ci_lo": 0.05599999999999994,

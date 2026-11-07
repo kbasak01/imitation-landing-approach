@@ -171,7 +171,17 @@ GROUP_COLUMNS: Final[tuple[str, ...]] = tuple(c for c in KEY_COLUMNS if c != "se
 _COUNT_COLUMNS: Final[tuple[str, ...]] = tuple(f"n_{o}" for o in OUTCOMES)
 _DIAG_COLUMNS: Final[tuple[str, ...]] = ("teacher_agreement_mean", "inference_calls_mean")
 
-SUMMARY_COLUMNS: Final[tuple[str, ...]] = (
+
+def _unique(*columns: str) -> tuple[str, ...]:
+    """Drop repeated column names, keeping the first occurrence.
+
+    ``n_success`` is both one of the six outcome counts and one of P8's
+    ``CELL_METRIC_COLUMNS``; the CSV carries it once (same value).
+    """
+    return tuple(dict.fromkeys(columns))
+
+
+SUMMARY_COLUMNS: Final[tuple[str, ...]] = _unique(
     *KEY_COLUMNS,
     "status",
     "rows_from",
@@ -182,7 +192,7 @@ SUMMARY_COLUMNS: Final[tuple[str, ...]] = (
     *_DIAG_COLUMNS,
 )
 
-BASELINE_COLUMNS: Final[tuple[str, ...]] = (
+BASELINE_COLUMNS: Final[tuple[str, ...]] = _unique(
     "method",
     "role",
     "experiment",
@@ -1390,7 +1400,18 @@ def _score_h3(index: CellIndex, out: _Scored) -> None:
             _missing_contrast("H3", "scored", "H3", (_ID, "SS6"), "dp Ta=1", "dp Ta=8", why)
         )
         return
-    res = hy.score_h3(s1.m, s8.m)
+    # P6-D5's caveat: the same-checkpoint gain at id SS4 and SS5 and dp's static-deck rate at
+    # Ta = 8 (numbers for the caveat only; the statistic is the SS6 contrast).
+    other: list[tuple[hy.ArmMatrix, hy.ArmMatrix]] = []
+    for ss in ("SS4", "SS5"):
+        m1, _ = _student(index, _g(index, "dp", ss, tag="dp_Ta", inference=(1, 10, False)))
+        m8, _ = _student(index, _g(index, "dp", ss, tag="dp_Ta", inference=(8, 10, False)))
+        if m1 is not None and m8 is not None:
+            other.append((m1, m8))
+    static, _ = _student(
+        index, index.find("dp", "static", "static", tag="core", inference=(8, 10, False))
+    )
+    res = hy.score_h3(s1.m, s8.m, other_ss=other, static_ta8=static)
     inputs = _inputs(s1, s8)
     out.hypotheses.append(_hyp_row(res, inputs))
     out.records.append(_hyp_record(res, inputs))

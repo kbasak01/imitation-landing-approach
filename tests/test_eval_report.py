@@ -122,6 +122,66 @@ def test_ss6_rows_carry_the_flip_floor(scored: Path) -> None:
             assert p8_adapter.FLIP_FLOOR_SS6.sentence in block
 
 
+def test_verdict_line_suppresses_redundant_notes() -> None:
+    """M9: the note is printed only where it adds a reason."""
+    assert rp.verdict_line("supported", "supported") == "**Verdict: supported**."
+    assert rp.verdict_line("inconclusive", "inconclusive (CI excludes 0; below +5)") == (
+        "**Verdict: inconclusive** (CI excludes 0; below +5)."
+    )
+    assert rp.verdict_line("not supported", "not supported (CI includes 0)") == (
+        "**Verdict: not supported** (CI includes 0)."
+    )
+    assert rp.verdict_line("not supported", "odd note") == "**Verdict: not supported** — odd note."
+
+
+def test_hypotheses_print_no_redundant_verdict(scored: Path) -> None:
+    hyp = _section(rp.render(rp.load_inputs(scored)), "## 5. Hypotheses")
+    for verdict in ("supported", "not supported", "inconclusive"):
+        assert f"**Verdict: {verdict}** — {verdict}" not in hyp
+
+
+def test_section6_splits_tagged_inputs() -> None:
+    """M5: contrasts with an ablation / +clock input never sit in the core subsection."""
+    assert rp.contrast_tags("core bc id SS5; core bc_matched id SS5") == ["core"]
+    assert rp.contrast_tags("ablation dp_pid id SS4 Ta8 K10 ens0; P8 committed ppo id SS4") == [
+        "ablation",
+        "P8 rows",
+    ]
+    assert rp.contrast_tags("core bc_state id SS6; ablation bc_plus_clock id SS6") == [
+        "core",
+        "ablation",
+        "+clock",
+    ]
+    assert not rp.is_tagged("dp_Ta dp id SS6 Ta1 K10 ens0; dp_Ta dp id SS6 Ta8 K10 ens0")
+    assert rp.is_tagged("core bc id SS4; ablation bc_mix id SS4")
+
+
+@pytest.mark.slow
+def test_full_matrix_section6_and_section7_n(tmp_path: Path) -> None:
+    """M5 and M6 on the full synthetic matrix: 6a core only, 6b tagged; section 7 prints N."""
+    inp = es.synthetic_tree(tmp_path, n=N)
+    sc.run_score(inp)
+    text = rp.render(rp.load_inputs(tmp_path))
+    six = _section(text, "## 6. Unscored contrasts")
+    a, b = six.split("### 6b.")
+    rows_a = [ln for ln in a.splitlines() if ln.startswith("| ") and "---" not in ln][1:]
+    rows_b = [ln for ln in b.splitlines() if ln.startswith("| ") and "---" not in ln][1:]
+    assert rows_a and rows_b
+    assert not any("`ablation`" in ln for ln in rows_a)
+    assert all("`ablation`" in ln for ln in rows_b)
+    assert any(ln.startswith("| teacher check: dp_pid") for ln in rows_b)
+    assert any("`+clock`" in ln for ln in rows_b)
+    assert any(" 5 / 5 × 10 |" in ln for ln in rows_a)
+    seven = _section(text, "## 7. Tagged sections")
+    learned = [ln for ln in seven.splitlines() if "losses/1 000" in ln]
+    assert learned and all("; N = " in ln for ln in learned)
+    abl = seven.split("### 7d.")[1].split("### 7e.")[0]
+    assert "; N = 30 (3 seeds × 10)" in abl
+    assert "; N = 50 (5 seeds × 10)" in seven.split("### 7a.")[1]
+    core = _section(text, "## 2. Success per list")
+    assert "; N = " not in core
+
+
 def test_missing_cells_are_reported(scored: Path) -> None:
     text = rp.render(rp.load_inputs(scored))
     assert "**PARTIAL MATRIX:**" in text

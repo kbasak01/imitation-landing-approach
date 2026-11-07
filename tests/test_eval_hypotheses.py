@@ -45,17 +45,25 @@ def _rows(
     render: str = SHA,
     ckpt: str = "c",
     n: int = N,
+    tunnelled: int | None = None,
+    regime: str = "id",
 ) -> list[Row]:
-    """Rows where seed s succeeds on episodes 0..k(s)-1 and times out on the rest."""
+    """Rows where seed s succeeds on episodes 0..k(s)-1 and times out on the rest.
+
+    With ``tunnelled`` set, rows carry P8's ``tunnelled`` column, True on episodes
+    0..tunnelled-1 of every seed.
+    """
     out = []
     for s in seeds:
         ks = k(s) if callable(k) else k
         for i in range(n):
             ok = i < ks
             t = td(s, i) if td is not None else (1.5 if ok else math.nan)
+            extra = {} if tunnelled is None else {"tunnelled": str(i < tunnelled)}
             out.append(
                 {
-                    "regime": "id",
+                    **extra,
+                    "regime": regime,
                     "ss": ss,
                     "index": str(i),
                     "episode_seed": str(5000 + i),
@@ -203,19 +211,79 @@ def test_h1_opposite_direction() -> None:
 
 def test_h1_ceiling_limited_with_ss6_beside() -> None:
     h1, ss6, _, _ = _h1(197, 196, dagger6=170, matched6=150)
-    assert h1.verdict == "not supported"
+    assert h1.verdict == "not supported" and h1.ceiling_limited
     assert h1.verdict_note == (
         "not supported (ceiling-limited: the largest attainable gain is below +5 points)"
     )
     beside = _beside(h1)["H1-SS6 beside it"]
     assert beside.endswith(": supported") and beside.startswith("+10.0 points")
-    assert ss6.verdict == "supported"
+    assert ss6.verdict == "supported" and not ss6.ceiling_limited
+    # 196/200 per seed -> 980/1000 -> largest attainable gain 2.0 points (computed).
+    assert any("largest attainable gain is 2.0 points" in c for c in h1.caveats)
+
+
+def test_h1_inconclusive_under_the_ceiling_keeps_its_verdict() -> None:
+    """S1: an inconclusive verdict under the ceiling keeps its verdict.
+
+    The computed ceiling caveat and the SS6 secondary are attached (P8-D1 item 3).
+    """
+    h1, ss6, _, _ = _h1(200, 192, dagger6=170, matched6=150)
+    assert h1.ci_lo > 0 and h1.estimate == pytest.approx(0.04)
+    assert h1.verdict == "inconclusive" and h1.ceiling_limited
+    assert h1.verdict_note.startswith("inconclusive (CI excludes 0")
+    cav = [c for c in h1.caveats if c.startswith("Ceiling-limited")]
+    assert cav == [
+        "Ceiling-limited: bc_matched is at 96.0 % (960/1000) in id SS5, so the largest "
+        "attainable gain is 4.0 points, below +5; 'supported' was unattainable. The rule's "
+        "verdict is kept (P3-D1 §6 ceilings; P8-D1 item 3)."
+    ]
+    beside = _beside(h1)["H1-SS6 beside it"]
+    assert beside.startswith(f"{100.0 * ss6.estimate:+.1f} points") and beside.endswith(
+        ": supported"
+    )
+    # No ceiling: no caveat and nothing attached.
+    h1b = _h1(178, 170)[0]
+    assert not h1b.ceiling_limited and "H1-SS6 beside it" not in _beside(h1b)
+    assert not any(c.startswith("Ceiling-limited") for c in h1b.caveats)
+
+
+def test_h1_tunnel_removed_difference_beside() -> None:
+    """M10: success minus P8-tunnelled successes, descriptive, computed from the rows."""
+    a = hy.student_matrix(
+        _rows("bc_dagger", "SS6", CORE, 190, tunnelled=3), arm="bc_dagger", cell=("id", "SS6")
+    )
+    b = hy.student_matrix(
+        _rows("bc_matched", "SS6", CORE, 170, tunnelled=1), arm="bc_matched", cell=("id", "SS6")
+    )
+    assert a.tunnelled is not None and int(a.tunnelled.sum()) == 15
+    res = hy.score_h1(
+        dagger_ss5=_m("bc_dagger", "SS5", 150),
+        matched_ss5=_m("bc_matched", "SS5", 150),
+        dagger_ss6=a,
+        matched_ss6=b,
+        dart_ss5=_m("bc_dart", "SS5", 150),
+        bc_ss5=_m("bc", "SS5", 150),
+        dart_ss6=_m("bc_dart", "SS6", 150),
+        bc_ss6=_m("bc", "SS6", 150),
+        labelled_frames=FRAMES,
+    )[1]
+    text = _beside(res)["descriptive, not scored: success minus tunnelled successes"]
+    # (950 - 15) - (850 - 5) = 90 of 1000 -> +9.0 points; the verdict is unchanged.
+    assert text.startswith(
+        "bc_dagger 935/1000 (tunnelled successes removed: 15); bc_matched 845/1000 (tunnelled "
+        "successes removed: 5); difference +9.0 points"
+    )
+    assert res.estimate == pytest.approx(0.10)
+    # Rows without the column print nothing.
+    assert "descriptive, not scored: success minus tunnelled successes" not in _beside(
+        _h1(190, 170)[0]
+    )
 
 
 def test_h1_ceiling_does_not_hide_an_opposite_effect() -> None:
     h1 = _h1(180, 199)[0]
     assert "opposite direction" in h1.verdict_note
-    assert any("ceiling-limited" in c for c in h1.caveats)
+    assert any("ceiling-limited" in c.lower() for c in h1.caveats)
 
 
 def test_h1_dart_secondaries_ceiling_uses_bc() -> None:
@@ -422,10 +490,12 @@ def _assign(listed: list[p8_adapter.ListedEpisode]) -> list[str]:
 # --------------------------------------------------------------------------- H3
 
 
-def _dp(ta: int, k: int, ckpt: str = "c") -> hy.ArmMatrix:
-    rows = _rows("dp", "SS6", CORE, k, ta=ta, kk=10, ensemble=False, ckpt=ckpt)
-    rows += _rows("dp", "SS6", CORE, 0, ta=ta, kk=10, ensemble=True, ckpt=ckpt)  # filtered out
-    return hy.student_matrix(rows, arm="dp", cell=("id", "SS6"), ta=ta, k=10, ensemble=False)
+def _dp(ta: int, k: int, ckpt: str = "c", ss: str = "SS6", regime: str = "id") -> hy.ArmMatrix:
+    rows = _rows("dp", ss, CORE, k, ta=ta, kk=10, ensemble=False, ckpt=ckpt, regime=regime)
+    rows += _rows(
+        "dp", ss, CORE, 0, ta=ta, kk=10, ensemble=True, ckpt=ckpt, regime=regime
+    )  # filtered out
+    return hy.student_matrix(rows, arm="dp", cell=(regime, ss), ta=ta, k=10, ensemble=False)
 
 
 def test_h3_supported_with_flip_floor() -> None:
@@ -436,6 +506,32 @@ def test_h3_supported_with_flip_floor() -> None:
     assert any("selected at Ta = 8" in c for c in r.caveats)
     assert any("switch modes" in c for c in r.caveats)
     assert any("dp_minus_last_action" in c for c in r.caveats)
+    assert any(c.startswith(hy.H3_DECK_MOTION) for c in r.caveats)  # P6-D5, always stated
+
+
+def test_h3_deck_motion_caveat_is_computed() -> None:
+    """B1: P6-D5's caveat with the per-sea-state gains and the static-deck rate, from rows."""
+    r = hy.score_h3(
+        _dp(1, 180),
+        _dp(8, 160),
+        other_ss=((_dp(1, 190, ss="SS5"), _dp(8, 150, ss="SS5")), (_dp(1, 195, ss="SS4"),
+                  _dp(8, 145, ss="SS4"))),
+        static_ta8=_dp(8, 82, ss="static", regime="static"),
+    )  # fmt: skip
+    assert r.verdict == "supported" and r.estimate == pytest.approx(0.10)
+    assert (
+        "P6-D5: a Ta contrast cannot attribute the loss to deck motion. On the frozen lists the "
+        "gain is +25.0 / +20.0 / +10.0 points at SS4 / SS5 / SS6 (Ta = 1 minus Ta = 8, mean "
+        "over seeds x episodes, same checkpoints; comparing the gains across sea states is an "
+        "unpaired reading), and `dp` at Ta = 8 succeeds on 41.0 % (410/1000) of the "
+        "static-deck episodes."
+    ) in r.caveats
+    with pytest.raises(hy.RowError, match="same checkpoints"):
+        hy.score_h3(
+            _dp(1, 180), _dp(8, 160), static_ta8=_dp(8, 82, "x", ss="static", regime="static")
+        )
+    with pytest.raises(hy.RowError, match="other than SS6"):
+        hy.score_h3(_dp(1, 180), _dp(8, 160), other_ss=((_dp(1, 180), _dp(8, 160)),))
 
 
 def test_h3_inconclusive_not_supported_opposite_ceiling() -> None:
@@ -448,6 +544,9 @@ def test_h3_inconclusive_not_supported_opposite_ceiling() -> None:
     assert r.verdict_note == (
         "not supported (ceiling-limited: the largest attainable gain is below +5 points)"
     )
+    assert r.ceiling_limited
+    assert any("dp at Ta = 8 is at 98.5 % (985/1000)" in c for c in r.caveats)
+    assert any("largest attainable gain is 1.5 points" in c for c in r.caveats)
 
 
 def test_h3_same_checkpoints_and_settings_only() -> None:
