@@ -1,0 +1,15 @@
+arm,provider,scored,status,n,flips,max_flips,closed_loop_pass,rows_text_differ,success,outcomes,reference_equals_selection_rows,workers,wall_s,ila_commit
+bc_dagger,torch_cpu_fp32,False,reference,150,0,3,reference,0,149,hard_landing=1;success=149,False,24,65.3,3b2ae853487678c16d40b9e813f4edb43435983b
+bc_dagger,ort_cpu_fp32,True,flown,150,2,3,True,150,149,hard_landing=1;success=149,,24,35.9,3b2ae853487678c16d40b9e813f4edb43435983b
+bc_dagger,ort_cuda_fp32,True,flown,150,2,3,True,150,149,hard_landing=1;success=149,,6,42.5,3b2ae853487678c16d40b9e813f4edb43435983b
+bc_dagger,torch_cuda_fp32,True,flown,150,0,3,True,150,149,hard_landing=1;success=149,,6,39.4,3b2ae853487678c16d40b9e813f4edb43435983b
+bc_dagger,ort_trt_fp16,True,refused (open-loop parity not passed),0,,3,False,,,,,,,
+bc_dagger,ort_trt_fp32,False,flown,150,2,3,True,150,149,hard_landing=1;success=149,,6,34.1,3b2ae853487678c16d40b9e813f4edb43435983b
+bc_dagger,ort_cuda_fp16,False,refused (open-loop parity not passed),0,,3,False,,,,,,,
+dp,torch_cpu_fp32,False,reference,150,0,3,reference,0,63,bounce=6;hard_landing=10;off_pad=71;success=63,False,24,44.9,3b2ae853487678c16d40b9e813f4edb43435983b
+dp,ort_cpu_fp32,True,flown,150,33,3,False,150,67,bounce=4;hard_landing=10;off_pad=69;success=67,,24,39.9,3b2ae853487678c16d40b9e813f4edb43435983b
+dp,ort_cuda_fp32,True,flown,150,44,3,False,150,58,bounce=6;hard_landing=16;off_pad=70;success=58,,6,79.6,3b2ae853487678c16d40b9e813f4edb43435983b
+dp,torch_cuda_fp32,True,flown,150,32,3,False,150,61,bounce=6;crash=1;hard_landing=11;off_pad=71;success=61,,6,73.5,3b2ae853487678c16d40b9e813f4edb43435983b
+dp,ort_trt_fp16,True,refused (open-loop parity not passed),0,,3,False,,,,,,,
+dp,ort_trt_fp32,False,flown,150,46,3,False,150,58,bounce=10;hard_landing=9;off_pad=73;success=58,,6,54.3,3b2ae853487678c16d40b9e813f4edb43435983b
+dp,ort_cuda_fp16,False,refused (open-loop parity not passed),0,,3,False,,,,,,,

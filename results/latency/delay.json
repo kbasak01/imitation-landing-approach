@@ -1,0 +1,27 @@
+{
+  "arms": {
+    "bc_dagger": {
+      "candidates": {
+        "ort_cpu_fp32": 17.78320291050477,
+        "ort_cuda_fp32": 5.994668873026967,
+        "torch_cuda_fp32": 4.323704550624825
+      },
+      "d": 1,
+      "fallback": false,
+      "p99_ms": 4.323704550624825,
+      "provider": "torch_cuda_fp32",
+      "row": "bc_e2e"
+    },
+    "dp": {
+      "candidates": {},
+      "d": 6,
+      "fallback": true,
+      "p99_ms": 181.33390504546696,
+      "provider": "torch_cpu_fp32",
+      "row": "dp_e2e"
+    }
+  },
+  "control_period_ms": 33.333,
+  "h5a_verdict": "not supported",
+  "rule": "d = ceil(p99_ms / 33.333), batch-1 full call, fastest (lowest p99) scored provider passing open- and closed-loop parity; else torch_cpu_fp32 (P3-D1 \u00a76, \u00a77)"
+}

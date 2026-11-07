@@ -1,0 +1,7 @@
+hypothesis,row,provider,scored,batch_size,latency_status,p50_ms,p99_ms,max_ms,open_loop_pass,closed_loop_pass,parity_pass,threshold_ms,p99_below_threshold,verdict
+H5a,dp_e2e,ort_cpu_fp32,True,1,timed,111.596,122.911,128.633,True,False,False,33.3,False,not supported
+H5a,dp_e2e,ort_cuda_fp32,True,1,timed,48.2704,52.6441,54.159,True,False,False,33.3,False,not supported
+H5a,dp_e2e,torch_cuda_fp32,True,1,timed,80.6775,89.3851,93.4996,True,False,False,33.3,False,not supported
+H5a,dp_e2e,ort_trt_fp16,True,1,refused (open-loop parity not passed),,,,False,,False,33.3,,not supported
+H5a,dp_e2e,ort_trt_fp32,False,1,timed,19.832,25.7171,31.3325,True,False,False,33.3,True,context (not scored)
+H5a,dp_e2e,ort_cuda_fp16,False,1,refused (open-loop parity not passed),,,,False,,False,33.3,,context (not scored)
