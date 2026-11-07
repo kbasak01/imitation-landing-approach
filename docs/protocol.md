@@ -3295,7 +3295,10 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
 
 1. **Matrix, provenance, wall clock.**
    - 351 jobs, 179 200 episodes, all flown at `6a8623d` on a clean tree, P8 at `7237b70`, in one
-     invocation at 24 workers (`run_info.json` `invocations`).
+     invocation at 24 workers (`run_info.json` `invocations`). The main checkout stayed at
+     `6a8623d` for the whole flight (git reflog: phase-8 moved to `ec1172d` at
+     2026-11-07T00:23:40Z, after the last job at 2026-11-06T22:51:32Z); the reporting commits
+     `fe1641a`–`ec1172d` were made in a separate worktree, so every job ran the recorded code.
    - **Wall clock.** Projection 24.17 h (580.1 CPU-h) before the run (`projection_dry_run.txt`;
      the same dry run printed it at `9c7ed79`). Actual: 2026-11-06T01:10:59Z to 22:51:32Z, a
      span of 21 h 40 min (78 033 s); summed per-job flight time `flight_wall_clock_s` 78 366 s
@@ -3339,7 +3342,11 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
        +5, so "supported" was unattainable (`hypotheses.json` caveats);
      - the SS6 secondary is attached whenever the ceiling applies, whatever the verdict: H1-SS6
        beside H1, H1-DART-SS6 beside H1-DART-SS5 (before the review, only beside a "not
-       supported"). `hypotheses.json` records `ceiling_limited` per hypothesis.
+       supported"). `hypotheses.json` and `hypotheses.csv` record `ceiling_limited` per
+       hypothesis. It is P3-D1 §6's reference-arm ceiling only (reference arm above 100 % −
+       magnitude). H4 has no magnitude, so it is False there; H4's I is bounded by the teacher's
+       own rate instead (item 8), which `notes` states. `hypotheses.csv`'s `caveats_see` points
+       to `hypotheses.json`, which holds every caveat verbatim.
    - Touched down = finite `time_to_touchdown_s`. P′ and `modular` vs best end-to-end: P8
      `paired_bootstrap`, two-sided, unscored. H1's labelled frames are per arm per seed.
    - Seed counts are enforced (core 0–4, ablations 0–2).
@@ -3367,7 +3374,10 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
    selected or scored): `tests/test_eval_arms.py` (frozen-list cells, matrix fixture, `T_mix`
    split), `tests/test_eval_matrix.py` (synthetic rows on frozen keys),
    `tests/test_eval_hypotheses.py::test_h2_reference_from_committed_p8_rows` (`id` SS4 keys, P8
-   e07 `ppo` s0 and e01 `gated` rows), `tests/test_p8_adapter.py` (`committed_rows`).
+   e07 `ppo` s0 and e01 `gated` rows), `tests/test_p8_adapter.py` (`committed_rows`),
+   `tests/eval_support.py:41-43` `listed_cell` (frozen-list keys for the synthetic trees used by
+   `tests/test_eval_score.py`, `test_eval_report.py` and `test_eval_figures.py`), and the GIF-rule
+   tests in `tests/test_eval_figures.py` (`id` keys).
 6. **GIF rule.** Committed in `9a589b3` (2026-11-05 23:40 −0500) before any GIF existed; the GIFs
    landed in `6a4d0f2` (2026-11-06 19:29 −0500). Hand-picked by the stated rule
    (`results/e08/gifs/RULE.md`); picks (`gifs/manifest.json`): (a) all four succeed `id` SS5
@@ -3427,6 +3437,8 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
        "not above ppo s0, the better of its two teachers" (`bc_mix` is above `gated` alone), and
        "unpaired reading" added to the SS5 `gated` comparison.
      - NOTE: H4's I is ceiling-limited (item 8).
+     - Not a review item: the H3 relative-p95 row's reading said "dp softer than dp"; it now
+       names "dp Ta=1" and "dp Ta=8" (`contrasts.csv`; estimate unchanged).
    - **Changes after the pre-gate review** (results-skeptic, 2026-11-06):
      - The audit reports grace-used successes (`contact_events > 1` among successes; P8 counts a
        new contact event only after a gap longer than the 50 ms contact-loss grace), per cell and
@@ -3443,8 +3455,6 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
        P8's flip-floor sentence, stated as measured on `id` SS6 only (M7); in the `bc_mix` id SS5
        finding, "Unpaired reading:" now opens the IQM sentence, so it covers all three
        IQM-vs-reference comparisons (`T_mix`, `ppo` s0, `gated`).
-     - Not a review item: the H3 relative-p95 row's reading said "dp softer than dp"; it now
-       names "dp Ta=1" and "dp Ta=8" (`contrasts.csv`; estimate unchanged).
 8. **Hypotheses** (`hypotheses.csv`; verdict words P3-D1's; no multiplicity correction; every
    SS6 contrast carries P8's flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one
    of 20 one-ulp draws, single-draw median 1.9 %, measured on P8's MLPs, not on these students).
