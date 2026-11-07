@@ -1,0 +1,2828 @@
+{
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "list_manifest_sha256": "e6f30e55e478d39061b94e38de33959ca99b16e8cac38a3bd99b34f6543ad4a2",
+  "lists": {
+    "id": {
+      "file": "external/rl-land-on-moving-deck/results/episodes/id.parquet",
+      "sha256": "919be99d2d25b2aea2200482dfc5de7840918845e1a8dc0b2bc4c2c1926dc64d"
+    },
+    "unseen_seastate": {
+      "file": "external/rl-land-on-moving-deck/results/episodes/unseen_seastate.parquet",
+      "sha256": "b8cf656e854ce38b670bd145d2e4ce6f029b25dfa3389370e3a7fcb9fd36524f"
+    },
+    "unseen_heading": {
+      "file": "external/rl-land-on-moving-deck/results/episodes/unseen_heading.parquet",
+      "sha256": "1eba3df5096279d30ab99beaeb716e4cab1d1820122d836188e41504dcbde0ee"
+    },
+    "unseen_vessel": {
+      "file": "external/rl-land-on-moving-deck/results/episodes/unseen_vessel.parquet",
+      "sha256": "3b9293febb7b7c24ed22a98c4933c73c9fdc46d7c269815bbee1ac5120b87d26"
+    },
+    "static": {
+      "file": "external/rl-land-on-moving-deck/results/episodes/static.parquet",
+      "sha256": "90741add5e21a9d91a8e9d48bf3101bae7dbd291da664c3f617ef5dddfd0ca1c"
+    }
+  },
+  "success_yaml_sha256": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+  "camera_yaml_sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380",
+  "matrix_yaml_sha256": "4d8a78fdfc59ddfb5cc51add8bba121af8da43ee0e35787ffd0e2611d7e1e96a",
+  "committed_rows": [
+    {
+      "experiment": "e07",
+      "method": "ppo",
+      "run_seed": 0,
+      "regime": null,
+      "ss": null,
+      "logical_path": "results/e07/matrix/episodes.csv",
+      "file": "results/e07/matrix/episodes.csv.gz",
+      "file_sha256": "1ab1fc844e1fd7dcb65f7aa8eefa35fadd77b40dfed89ab7b534d41f407fa280",
+      "text_sha256": "6d14b05af2dc195ed281fc3d5f454d923c6227b17d6cbfcf93697cab6ff11152",
+      "n_rows": 2800
+    },
+    {
+      "experiment": "e01",
+      "method": "pid_feedforward",
+      "run_seed": null,
+      "regime": null,
+      "ss": null,
+      "logical_path": "results/e01/episodes.csv",
+      "file": "results/e01/episodes.csv",
+      "file_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "text_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "n_rows": 2800
+    },
+    {
+      "experiment": "e01",
+      "method": "pid_track_descend",
+      "run_seed": null,
+      "regime": null,
+      "ss": null,
+      "logical_path": "results/e01/episodes.csv",
+      "file": "results/e01/episodes.csv",
+      "file_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "text_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "n_rows": 2800
+    },
+    {
+      "experiment": "e01",
+      "method": "oracle_gated",
+      "run_seed": null,
+      "regime": null,
+      "ss": null,
+      "logical_path": "results/e01/episodes.csv",
+      "file": "results/e01/episodes.csv",
+      "file_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "text_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "n_rows": 2800
+    },
+    {
+      "experiment": "e01",
+      "method": "gated",
+      "run_seed": null,
+      "regime": null,
+      "ss": null,
+      "logical_path": "results/e01/episodes.csv",
+      "file": "results/e01/episodes.csv",
+      "file_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "text_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+      "n_rows": 2800
+    }
+  ],
+  "output_root": "results/e08",
+  "selection_pins": {
+    "file": "results/e08/selection_pins.json",
+    "sha256": "987fa14af1a9b657d66bcf47fba45a080c9b1a3b60289964c00144d79bd4c4d5"
+  },
+  "inference_path": "CPU fp32 single-sample for every arm (R1: ONNX Runtime CPU, one thread); the batched GPU path is not wired for trained checkpoints and refuses modular, so no arm uses it",
+  "skipped_blocks": {
+    "latency_arm": "not flown in Phase 8: its delay d = ceil(p99_ms / 33.333) comes from Phase 9's latency study (P3-D1 \u00a76 H5(a), \u00a77); P3-D1 \u00a78 moves H5(b) and the latency arm to Phase 9"
+  },
+  "shared_cells": [
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 0,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 1,
+      "K": 10,
+      "ensemble": true,
+      "rows_from": "rows/dp/s0/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz",
+      "reason": "Ta = 1 with ensembling is bit-identical to Ta = 1 without (one source of weight 1.0, same noise keys; chunking.ensemble_sources, P6-D1 item 3 alias)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 0,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s0/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 1,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 1,
+      "K": 10,
+      "ensemble": true,
+      "rows_from": "rows/dp/s1/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz",
+      "reason": "Ta = 1 with ensembling is bit-identical to Ta = 1 without (one source of weight 1.0, same noise keys; chunking.ensemble_sources, P6-D1 item 3 alias)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 1,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s1/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 2,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 1,
+      "K": 10,
+      "ensemble": true,
+      "rows_from": "rows/dp/s2/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz",
+      "reason": "Ta = 1 with ensembling is bit-identical to Ta = 1 without (one source of weight 1.0, same noise keys; chunking.ensemble_sources, P6-D1 item 3 alias)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 2,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s2/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 3,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 1,
+      "K": 10,
+      "ensemble": true,
+      "rows_from": "rows/dp/s3/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz",
+      "reason": "Ta = 1 with ensembling is bit-identical to Ta = 1 without (one source of weight 1.0, same noise keys; chunking.ensemble_sources, P6-D1 item 3 alias)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 3,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s3/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 4,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 1,
+      "K": 10,
+      "ensemble": true,
+      "rows_from": "rows/dp/s4/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz",
+      "reason": "Ta = 1 with ensembling is bit-identical to Ta = 1 without (one source of weight 1.0, same noise keys; chunking.ensemble_sources, P6-D1 item 3 alias)"
+    },
+    {
+      "tag": "dp_Ta",
+      "arm": "dp",
+      "seed": 4,
+      "list": "id",
+      "sea_states": [
+        "SS4",
+        "SS5",
+        "SS6"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s4/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_K",
+      "arm": "dp",
+      "seed": 0,
+      "list": "id",
+      "sea_states": [
+        "SS5"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s0/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_K",
+      "arm": "dp",
+      "seed": 1,
+      "list": "id",
+      "sea_states": [
+        "SS5"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s1/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_K",
+      "arm": "dp",
+      "seed": 2,
+      "list": "id",
+      "sea_states": [
+        "SS5"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s2/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_K",
+      "arm": "dp",
+      "seed": 3,
+      "list": "id",
+      "sea_states": [
+        "SS5"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s3/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    },
+    {
+      "tag": "dp_K",
+      "arm": "dp",
+      "seed": 4,
+      "list": "id",
+      "sea_states": [
+        "SS5"
+      ],
+      "Ta": 8,
+      "K": 10,
+      "ensemble": false,
+      "rows_from": "rows/dp/s4/id__Ta8_K10_ens0.csv.gz",
+      "reason": "the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)"
+    }
+  ],
+  "invocations": [
+    {
+      "id": "2026-11-06T01:10:59+00:00",
+      "started_utc": "2026-11-06T01:10:59+00:00",
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc",
+      "ila_dirty": false,
+      "ila_dirty_paths": [],
+      "host": {
+        "host": "DATTA-BASAK",
+        "cpu_count": 36,
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "processor": "x86_64",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130",
+        "gpu": "NVIDIA RTX A4000",
+        "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+        "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc",
+        "ila_dirty_paths": [
+          "?? results/e08/"
+        ],
+        "env_threads": {
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": null
+        }
+      },
+      "workers": 24,
+      "chunk": 10,
+      "jobs_requested": 351,
+      "selection_pins_created": true,
+      "jobs_done": 351,
+      "finished_utc": "2026-11-06T22:51:32+00:00",
+      "episodes_flown": 179200,
+      "flight_wall_clock_s": 78365.58993697312
+    }
+  ],
+  "jobs_total": 351,
+  "jobs_done": 351,
+  "jobs": {
+    "rows/bc_state/s0/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "f337b41d68c42108cbcc2d11edd50c006b28b0c32cf008cadde9a0148a509427",
+      "wall_clock_s": 16.799982524999905,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s0/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "f16d45d084ef065ce496b960b827ddb9927a421b848ef5f8879ec294e2d8dc98",
+      "wall_clock_s": 46.66653259400027,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s0/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "00d1a2b888ce0ff48390d3b803b558ce0285e59b975eeeb5d82c542ae84998d5",
+      "wall_clock_s": 18.350659457000802,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s0/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "af8969c7a96355491c337db7f42125927b6cb1190498f800f85038d2600672f1",
+      "wall_clock_s": 45.316149540999504,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s0/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "649bee16446de082452e1486f9b52cd6270c8dd248d81d953742b154f4d61553",
+      "wall_clock_s": 50.645863905000624,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s1/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "6b00b63956ef42a2910f563e62aa0a05ddce65339f72bf34e305a4bf295559b2",
+      "wall_clock_s": 19.393680495999433,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s1/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "cea42371c079e87a6b70d1b4446f99b641250606080606e2f3a4baf48c237cb4",
+      "wall_clock_s": 56.010163542000555,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s1/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "1e2706e66548f78237d3b7fc0775afee6942b60e268317d66a70a775b7ea9d14",
+      "wall_clock_s": 20.68299388899959,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s1/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b5cbaea085475234aad2307b9d19c4a77ea6f2e1f41aa9c07958e029df06bd5f",
+      "wall_clock_s": 56.029201628999544,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s1/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "5f3f49860a5289fd91aee8563261f41a902ecadc64182fa03e7dbbdba862c133",
+      "wall_clock_s": 53.997171697999875,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s2/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a6410ab43824f5c1e6ffffc8f92033c16b7da16e847c5bfe58370f95d60d6e8c",
+      "wall_clock_s": 16.403939212000296,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s2/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "8b882123a4efeb332236f3005122257cc0f3da5c4d1e9222a7ba51085d057bfd",
+      "wall_clock_s": 45.974790182000106,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s2/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "f46af48223f15bb87f60b2db1bc9251f9a7756d3f4f9dafc75a4a0c6bdfd2d69",
+      "wall_clock_s": 18.61040595400027,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s2/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "e1a9f8f24300e3bb0438caf9de98978942ad05309bee55116c8a172e5cc0f322",
+      "wall_clock_s": 46.97330714399959,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s2/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "704549e59f9e41501f11c580769ffa33b8cd326ad16bb5fda88d927eaf59c283",
+      "wall_clock_s": 46.43211382200025,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s3/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "ba22fb000e642ad1bf8b4d8c462ff5aa4be9e6deb9fd01f331980b2429b30063",
+      "wall_clock_s": 16.423964473000524,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s3/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1f2ebb0c3388f2b1e76c3a16561ce39d79c0f0de11fd75f2bccb292d497acf3f",
+      "wall_clock_s": 47.92216733999976,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s3/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "670388df6faf526ea1ba2fef4b3e4ff546f0b6a00e4790e8aca41abe5fcf7e30",
+      "wall_clock_s": 18.37083542399978,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s3/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b9c874a37adf367c4f094d21d86e772046edb83874f69ac63e0572ea6bd11097",
+      "wall_clock_s": 46.52389795500039,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s3/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1dc16f770c6248dd0ef82c2bc88aef99e50a52d3170335a135394b97f64ce67c",
+      "wall_clock_s": 44.869571616999565,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s4/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "0b14080908dde3fd312ea8f7f3f2e447b7ea0f4cc1a2f7e9f71acc4edf84f0fe",
+      "wall_clock_s": 16.700974596999913,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s4/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "8d0fb754f121fed76c600bf1b7489e629716db5855d7f432ca87631f75b42fbc",
+      "wall_clock_s": 45.502983598000355,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s4/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "daa88e0208fcc7aa082104f4b799044991bd8430ae5a6a8a89f8d5324a0f95f8",
+      "wall_clock_s": 17.807499085000018,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s4/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "af95a9bcc5afce31a0dcdc2b9f0b4742b3730fe480b4f84dfdaf91006f0e5b6c",
+      "wall_clock_s": 48.061801305999325,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_state/s4/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "2fcf84bf2316afb204d629693bbf28843232a1ef4f2deeee8ab5bd4733cc56a8",
+      "wall_clock_s": 44.59737680999933,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s0/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "da472a89a745f378e734a9b2780d26e2fbe4137fb37f74f19a8ffa54d1302db2",
+      "wall_clock_s": 82.96520112500002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s0/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "70e5a2915973b3142e246a7d5ef7ed68602cf0b77520256cf189a5909fb8085b",
+      "wall_clock_s": 328.83314614400115,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s0/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "57486022c981cbe72c8ad762ceaaa058ac59d8d2d485e9909db19e6d835188ef",
+      "wall_clock_s": 94.17315558799964,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s0/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "08ee3d26b6765035d8654212f68ee58f2080271e70aadc0f5140747d2ab077da",
+      "wall_clock_s": 322.64545920899945,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s0/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "da19c2882bb968308c00058fe34a426974ca7f766dacf6fbf3949d074897268b",
+      "wall_clock_s": 324.20138666599996,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s1/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "2ec08e9da14934893da3768898d9b7a21c962f34f633195748d8aad5c70beea5",
+      "wall_clock_s": 79.38373038099962,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s1/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "459fdf08f380571718533f81f264b46a72563b17107a5b2b25e8e1287214801e",
+      "wall_clock_s": 323.60182707400054,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s1/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "81254740e8ce979f1f06e3b1acc19f5db7213c3e1d40a218e5a99a0abebe2645",
+      "wall_clock_s": 85.2134181450001,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s1/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c8f8e8ac8ce60d37e8641182d37d040840d5117f4753bd8416a54f3d64c640dd",
+      "wall_clock_s": 316.45661865500006,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s1/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1f1d856553f8729ef8efe11b3a9de43b12ce3fe92919253d98e6baf785521be2",
+      "wall_clock_s": 315.4260877939996,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s2/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "b53370324b0098eaa336b7e227a401a2a39b1be37d8bf56529f292e2ad56dc15",
+      "wall_clock_s": 85.58630178600106,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s2/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "47db9cf20a31a492d9fecfc0b542bb4697d0b8bcc3bf9873211c30246d9cd4b6",
+      "wall_clock_s": 318.2887689390009,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s2/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "938c2297a3a466f64eef70fddf77456383712212635a556aada887429d064a6e",
+      "wall_clock_s": 94.49861636399874,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s2/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "21ec51f3203cda2b0a22bf4e0c3a43f90d3526946885ff9aa6fca0dca8b24ba3",
+      "wall_clock_s": 319.2325713090013,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s2/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "be4a689ab7d8cff2141b9a49b1859bb830a0b97c8fbd7084eac3caf285720acc",
+      "wall_clock_s": 321.1913790689996,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s3/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "3e652a05500607775498ed2b7621ba565114c073223ca961f6b2e65337cdda03",
+      "wall_clock_s": 82.58723628500047,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s3/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "9c1f66149571525420bc4d507061c696a2fb52736fab5afa51d1d8c4f17520c2",
+      "wall_clock_s": 333.40240134800115,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s3/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "b1fc7eb5fa505996ef8e0820931cf4a39132026529abe4953ce3d8632d6298c4",
+      "wall_clock_s": 88.30247850200067,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s3/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "3c8df7726de6cf800d8652022b2c98525192df8223cb226ae9ba762dd49138ca",
+      "wall_clock_s": 328.1969589720011,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s3/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "08fbfae341ba3269eafc3d98b649a7488e02f14bf717a2c1d9cde59271598319",
+      "wall_clock_s": 323.8224380800002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s4/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "c72f6be9439e269bb8950369811d5a6b7b069133cd1814e6e397a929b24e19fb",
+      "wall_clock_s": 86.70987414800038,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s4/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "7610e88c6c491b8035a007db5e44cf31594ab02f62ebb0fb5ae945e795ae00d1",
+      "wall_clock_s": 329.80981576699924,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s4/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "9b3032b63f992ce18447825a7537b5f562cdec9378f83c6e53198f6767d5aee4",
+      "wall_clock_s": 87.94409558099869,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s4/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "bf51df5afbea0d70dc60bff76a16482dfb1b0b45faae11cf4c06cc48718390e3",
+      "wall_clock_s": 317.37458019800033,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc/s4/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "0d10f770a1b300b288099acefd7033bcac62658479a82a1a8d0b0a00a42f2ec2",
+      "wall_clock_s": 326.04009774299993,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s0/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "32b1bebdefdc122c950f2df9285532c4794c481cbd45fc4322558c02f5698bc0",
+      "wall_clock_s": 86.17735622600048,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s0/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "7f95797ca78f8b183fa2b7d154db2f747fa8a6cd00f8b3673c4ee52e6b0dd14f",
+      "wall_clock_s": 306.32793653099907,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s0/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "060986313704b7209fdd0dc909eac45edd686e5c55a935af6b48114deced0efa",
+      "wall_clock_s": 82.86625333200027,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s0/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c46962f46ad2ddddaaff463b095e3f5c5139f9ecdd71418ec8b6c70f34fbb185",
+      "wall_clock_s": 308.76916266899934,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s0/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c11516cff84ee70323d83fde630f9fa060d96380d6e733b717ff20dab344b5ac",
+      "wall_clock_s": 318.53160155099977,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s1/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "68bcf7b56a47ba843d9a64adeb1fa2c01de185deec82c6444cabe2a307e874ba",
+      "wall_clock_s": 81.20464598599938,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s1/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b0a58ed6fb5e4295a174d1293e135a703b4e316787c9c84b6f584c91b693d289",
+      "wall_clock_s": 310.85559954400014,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s1/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "6a744b9d2e4366aa1a16efb20dba58236c69f910ba722f576e1e8fae94a3b0a7",
+      "wall_clock_s": 82.4245420590014,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s1/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1873f1cea110c7861aa112c03b9debe444a694f2c2b84a40e4edfca5398c0cee",
+      "wall_clock_s": 303.0459581089999,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s1/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "3c93cb058dbde424616709826eae8efab26b923c78c9699b78e7280b4dbc736f",
+      "wall_clock_s": 316.8876944980002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s2/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "04280fc0234299a2f4fa162489bef2891757ecf0760ba37aca8fa85dbdbae27b",
+      "wall_clock_s": 83.56988401800118,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s2/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "7a799f30332764fcc0e0adfaa4fb3b65ba441356891153512f90ca5e5e59683d",
+      "wall_clock_s": 316.7987380729992,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s2/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "7ad1cc10c318d912c81f3420cf1192d8fd3e29f7f61a0fe07268bf76fed2dc99",
+      "wall_clock_s": 85.34972500599906,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s2/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1806ce2278e2b115d7800bc17a00913a4c338054f927eccc07d0a1fdf230a501",
+      "wall_clock_s": 312.2072870760021,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s2/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c1630fac8ca09efcd11446896f8d5ffeaf0d167eb7de6f64ba4b7a6c544db3fd",
+      "wall_clock_s": 318.606856295999,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s3/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a2f9a91c641515ef929639842c25ccde039b9f96cc52dc18f0144a48a73ec366",
+      "wall_clock_s": 83.5871194600004,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s3/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "2637d6b38fba0ddd3d374a9fe7b95bfb7248d467bc2aa4ce4ca846dfb9a79595",
+      "wall_clock_s": 322.9866564420008,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s3/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a3a286987e3cf5eb130cf8b3ac20580b704299004046b289555726946c01c3d0",
+      "wall_clock_s": 84.36211489700145,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s3/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "0ba595231c1964b0e9988454eb272696bb6e1e17ffbdf46d978287c3e465ead7",
+      "wall_clock_s": 312.2239524350007,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s3/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "39da94e341b375838415bc136125edfe2431d2de753d8221acab24203eef3769",
+      "wall_clock_s": 311.21025553399886,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s4/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "8dc7a8ff7211d7297bdc09c7f4ee008d650243e09ff9af010902a0dab74f9e3e",
+      "wall_clock_s": 83.57310636400143,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s4/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "527b5867cf99481f167ea76c21b1dae6bca3527e61c43ea0c016a323164098ec",
+      "wall_clock_s": 316.67714871899807,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s4/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "90fd3c12971c611b68f22da88985858d168537b66b15408fb3bd7b9178c1f04a",
+      "wall_clock_s": 87.41072466499827,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s4/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "f791512b906d0a78be9712058c2b4c980acc1a7695eac358f6f193b34496f781",
+      "wall_clock_s": 318.599892344002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_matched/s4/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "fcc1238086fb4f654023dd97538b24d30763aeee0a0b12ec0a17ec661e6bb5e9",
+      "wall_clock_s": 325.3704156089989,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s0/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a93c472d41c30759a865054d0beaa4a588ec813fe814d31c28d736075cfaaf94",
+      "wall_clock_s": 80.41769778999878,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s0/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b5175f2919ab1dedba967e896c546be808f0e310f18cc45c0d66c01587800f9f",
+      "wall_clock_s": 303.91090157600047,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s0/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "fd001b46c8fe40d42c736c90011e18e4f794a59ecacbfff90758ceecdcbe56f8",
+      "wall_clock_s": 80.19159942700207,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s0/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "5dbd9cf8ea64348d60aed0b8fa4c423bd40e596a2ac4f1ccd1790a3bcf52753b",
+      "wall_clock_s": 303.36027780899894,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s0/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b11176099c44fb8dd89c1a1702d15c940bf4b415309b9a7029281c5a7fe50ff3",
+      "wall_clock_s": 312.327585119001,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s1/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "b912380ad63da94f765d15247c8922836e3cf461393cce6ddb68b00bf6ce2190",
+      "wall_clock_s": 79.71605975999773,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s1/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "14989de9bd60b40cf841003006208a32303f7e2bc5b5ccfaf9840e29c248a4b0",
+      "wall_clock_s": 306.44812976899993,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s1/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "65d0753484a1330de5abe38183cf685a42c44baa9c76886c44f110627607ae19",
+      "wall_clock_s": 85.26240028699976,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s1/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "72f85f6b402bb838c7205bf8d627bf51022f25c14d39729e1340bbfac028cc80",
+      "wall_clock_s": 318.2477307429981,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s1/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "e6bb3fc19b5463e531c7b5a9771ce0704882c6aa65a3bcff9231264b4a2f7044",
+      "wall_clock_s": 322.1875468830003,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s2/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "db3215c6e6e8fc3411af0ec1848c7ef0bd4b91158bb8f7b55662967d7f03d3ee",
+      "wall_clock_s": 84.17279866399986,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s2/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "a3dfcb1ccb89a590cd4cf6cb758df6d1a4fd39873c700dd4dcc42f150af07f17",
+      "wall_clock_s": 314.8763505909992,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s2/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "41e5a803e18f4801994e0eb4e370850195811c7341abb3a49b73872b3760a43e",
+      "wall_clock_s": 83.71448551199865,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s2/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "4597299617615ed1a9243992cf3853bd6581654cadd534b9566b079adf4afbe3",
+      "wall_clock_s": 307.0954746669995,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s2/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "17aa229d9124d74cdc9d18a4fe121cc5d91a427662e75fdd096b1d73764bdb29",
+      "wall_clock_s": 322.22212712200053,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s3/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "f6b57a91819f8b1fa309b3c052b2fea54085cc9a0688ded9f610b6f7c1c46d61",
+      "wall_clock_s": 82.60450834400035,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s3/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "451825c65791d3023233ee28d48c7e5edfa81f109fbca63f20744e3f80760100",
+      "wall_clock_s": 304.95099854,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s3/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "e5a3a0e6e5d2dde9df1a39b0a18a841644fc6b8fa3ee7bcd03b78f6fd0c1d969",
+      "wall_clock_s": 82.78611239500242,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s3/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "563f5f61bcffda92fbc815194d921aef53ab315d0238a5c7d9e0a2833a7d8bca",
+      "wall_clock_s": 301.6525939940002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s3/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "aca88bbc05f7081a440850f70410f52605b679b0a831f6174f1637c41153fe9c",
+      "wall_clock_s": 309.4138922509992,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s4/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "de43256028d6be43822ef5a464145eca3cac3cde00ce9d20603c98d74704d29f",
+      "wall_clock_s": 81.26530127299702,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s4/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d8e35e464a938442e928d1558a50ff6def5a79b91d7e854ee5a9456697be1ee0",
+      "wall_clock_s": 305.2356163680015,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s4/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "f1329a76d18617cf46ca31313041af5b6e98d05da9d851479e5111307ed211d8",
+      "wall_clock_s": 81.69803352600138,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s4/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "26151854f112bef959c7b4d039bdc2bd1feec0cd89fc0237bccf471713f22371",
+      "wall_clock_s": 302.4286991080007,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dart/s4/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d5a1ed43cc4b6a4809c79584c71e2c60b1c24f6fcfce2b762f5e7811b1e66560",
+      "wall_clock_s": 303.93557414099996,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "c7999629cb10d9fa4fa7f25cfcad98edf06ce3f6c4400adcc5929f2c231f2683",
+      "wall_clock_s": 80.11213017200134,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "58525a140e24c6ef8c36e99439a0dd3f9047f09cd3a342725e6e713f50b83c03",
+      "wall_clock_s": 315.97952217299826,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "334de9911a77f985327bb2ff703b0c0636e40b939d7d0ca6ffe3cdc1db1dfbe5",
+      "wall_clock_s": 81.85019994300092,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "0a5a4e6e5717cb01992049dbabb3a2490318a5c5264ee686086b719fa7958d7d",
+      "wall_clock_s": 315.93811326700234,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "4e1610d9469b0a19f30137e20ace5ea4147e7cc38bc744fa51c2bc69f8d48d11",
+      "wall_clock_s": 308.43534396500036,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a6dd0801dc3fd941c1d95f21740e5a0012079475d589718935fa1d1aeb22c6b9",
+      "wall_clock_s": 80.62029849900136,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d7c119aa23b62fa5b0933d404d63891bb26fde7180ce8d70945028f4997f8913",
+      "wall_clock_s": 306.3927289099993,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "09a8e7da72fe50a65a268672a54334561cac20a14b68fc53c3365af901e4f7a2",
+      "wall_clock_s": 81.23366818000068,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "459a9f51e4e0ee2b48c31ac3aa5c5db386c04e3280a47307c760dbe7f0577a6f",
+      "wall_clock_s": 311.2924274350007,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "472ce44af6b85234d7bf22eaa40f8ce08ecec99980d3db1698ff6f4308228fdb",
+      "wall_clock_s": 303.79601964500034,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "7e1d1d973797cdc84ba3b728881db2e636c3646903ec92f8d43db3f03097a1d8",
+      "wall_clock_s": 78.66544556900044,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "83925d0c299b521bf1a4e50884ad9e7c97823b341a0c5d60c8efb81299b92d63",
+      "wall_clock_s": 303.3780548909999,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "48bba06aa9781a25de74dc59ca4d941e3fecf6a1438b3d724431e465dea3442f",
+      "wall_clock_s": 83.55881826800032,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c1ce04785ed4e98227af36eeb9def17034580e1e19bc74f06b88ceaa51bf8646",
+      "wall_clock_s": 306.68386634099807,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "9dc8c5258f177e677641a6f8fababcff1f8ffba31bdbd9293db52b90648f409e",
+      "wall_clock_s": 305.52607193100266,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "c9e0021f15dd52847a25e74071be66cf7a14c75b9f821d0d74195715e7f5077c",
+      "wall_clock_s": 80.62024493499848,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c0ea1c423ca7bf1f14daeb14cd3b5d7cc4a68557149859f7db39faf467a59d4a",
+      "wall_clock_s": 301.61484411900165,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "49628002722d5db0e5addd096c8e2bd2cd8168c614021c0018e0835afa4420a8",
+      "wall_clock_s": 81.5785080300011,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1c29ec2717b4af54d3714c2c8e569b026914b0520d623d76acac9b1102d4fd71",
+      "wall_clock_s": 298.0160323679993,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b64b0b359242cf6a459a05098edb848b3a198eab261a5def9d225e6338d3982f",
+      "wall_clock_s": 311.43720817099893,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "6bd96da1ce6db4d8d8e58ba855ee57759f613a9cfcf8c2bb99efe835c5c0120c",
+      "wall_clock_s": 81.61353517300086,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "3440b3fd90daa81758b0906831d369698e4774c57b18a26a6e1723909b507d94",
+      "wall_clock_s": 307.86024097100017,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "eb7f4f6eddbb28dbf0c5b3efdbc367520e829583981e02b8b1bfa5d9ea73030f",
+      "wall_clock_s": 82.29358095799762,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d06ffb60d273e29cfbf061ef36efeefa98fbfb39821509c321264f60e44f7dec",
+      "wall_clock_s": 310.08950245800224,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "260dfb95745f9023928be578ebe7e824a78e616d9f1808f7a5d735418853c77c",
+      "wall_clock_s": 305.53231882399996,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/static__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "18b1dfeb609c298c57cb483f584d30fa31a8220940667ad70d41e483102e4de5",
+      "wall_clock_s": 48.44370791899928,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "4ce8586ab5b24673cdb8e24a79ca1995728c6f1ef55afac8ec833148dfe7a017",
+      "wall_clock_s": 174.40141301200129,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/unseen_seastate__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "fcc8fd25676bbac8bc6ecca8c7c95e9487ccaf226605b246f2ff44e84e1616fa",
+      "wall_clock_s": 50.76888708700062,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/unseen_heading__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1f6f5399b615594fd45cab3397d8e054630a337337082b5770973c59ac0ef334",
+      "wall_clock_s": 173.73240518799867,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/unseen_vessel__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "39ac5d65b52d77604dfd9462d4b3d3632d4c70c2ad7f7e15848a85e48e4543a9",
+      "wall_clock_s": 170.1072369370013,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/static__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "fabfd3351344e51402caaac0ae1dedc2a9c468a9648764cebf69a8a0944c967b",
+      "wall_clock_s": 52.73153214600097,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "9b24fbaea3536a9c809c53cfd2c2978895b6737a43249eb9038e89e031401bd1",
+      "wall_clock_s": 173.25462976500057,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/unseen_seastate__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "bd3951e86d4c06e19c81928c768e3bebdb9a149b90c996156e28a27ce56ea2df",
+      "wall_clock_s": 50.98581919500066,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/unseen_heading__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "988a10a84249df5bd74464dca809701a2a72314964f4d05e105fe1cab8193336",
+      "wall_clock_s": 173.11686888999975,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/unseen_vessel__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "45ce59914eee2ebf1ce528dee9281cf5e738a025e189786236e6ffe9cf647627",
+      "wall_clock_s": 181.8453415840013,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/static__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "99464650e1c1436ece21d56814cf5c76fcc807acb357227c16d7ebc5823e29ea",
+      "wall_clock_s": 49.4360763529985,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d0a6521a144c973eaf0ec96d694b8e62231900cc8a9cd6be7fc6136c5fcd5975",
+      "wall_clock_s": 177.83530949399938,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/unseen_seastate__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "0cb0620d57a66b6e5f03a54a54c70d60df065b12b1dd99b2cc6329cedf9544bf",
+      "wall_clock_s": 53.067403021002974,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/unseen_heading__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d680769923654d345bac040fa9b7d58223a7e84fe134a6022f40fe37da1d8804",
+      "wall_clock_s": 172.58252977099983,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/unseen_vessel__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "23849fd77dda70fb4b81afa1656bc0483c9aa24d2f95522f59d6f8f01f3db001",
+      "wall_clock_s": 177.1249789499998,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/static__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "67ad72ce469cb1e809847af81d53ac47e6de9b78a4baa5f0d7763b03a3b1461d",
+      "wall_clock_s": 49.64540304899856,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "43ff868b511dc59e6deae7e197f251e0c4dd8d4e2a87f6db1a87109c8c533122",
+      "wall_clock_s": 172.70129055699726,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/unseen_seastate__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "20695a4f60771e79d7a50ee0f8a527c2f22801bf6db79707b0c40cd8b82f8d9e",
+      "wall_clock_s": 50.79445253200174,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/unseen_heading__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "a0b4b72c19e93b38aefefc8898f5d76c9a92a7e59887cbcdc11e7df74effdcc1",
+      "wall_clock_s": 167.12328560199967,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/unseen_vessel__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "412011afba190788c8270189bacf6347e74495be8196915a261d8b22f39c4bf6",
+      "wall_clock_s": 168.5326781019976,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/static__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "6b9d08f2daa643b2977d5e016be2e99286c4d9bddf01d46eea078ac2e727a890",
+      "wall_clock_s": 50.59381221199874,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "8a60a553bc1929deeb558916b6eff59fcd7e92cfe6841e6716757ab889a0feba",
+      "wall_clock_s": 170.3611875570059,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/unseen_seastate__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "55a1766c125b943b36a96b57eba6fed5d41247bb6ad9d6d6aece7d66fe437146",
+      "wall_clock_s": 50.918251317001705,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/unseen_heading__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d98d255395df1c476ea96915730c0f5790357762cab6302e9815eeb28cbf4d7e",
+      "wall_clock_s": 164.68616002499766,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/unseen_vessel__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "12dd725dcf3db8eb962bc954faec8b1e0e45590b01acdbe51033d4ec96765b6f",
+      "wall_clock_s": 171.89437642900157,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "37127ed2c4772ef9707b1594ce85dc1e8de035c256f43cadf060d273715a3950",
+      "wall_clock_s": 81.99328900099499,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "6e7db221b84f13daa481e358edd4b76ab07502c11d4bae1db0b4db78a43552b4",
+      "wall_clock_s": 305.3963561499986,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "b69737c6aee35045e4d881cc021bbf00941d8b83a32b3bf443ccc329e85e2b5a",
+      "wall_clock_s": 81.4079768119991,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "7ef8501993c66a4ef9ef53e25c2a9c98ebd7f145a18af1cf3f84247c8bc5ef76",
+      "wall_clock_s": 296.6900896070001,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "53320c98f98fe21a0fd888b76a5644cf633635531922b27be47e99426366023a",
+      "wall_clock_s": 304.4199735889997,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "f2650413c8e4a7fa6f571239bcb0f2633b8330f44ff45f36eb37cd0c71b95b01",
+      "wall_clock_s": 80.77125603100285,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d76441ccd6ec454bd543d6415f159c686de27698193c09aa063d088e7a6b5ad5",
+      "wall_clock_s": 300.98353785200015,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "e44e6138f18282a53ea15baddaa708730d2d0dab903164e03ac0f5105efc21ac",
+      "wall_clock_s": 80.38787291799963,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "4e2132ae9e58dac2aacbcdf92fab43e37ee70e73bc82a2c386ae12d75590d482",
+      "wall_clock_s": 303.1671569920072,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "de67f8eddcb57d746c8dac87e56891b6bef4638558e0c8ea58e1102f6db3caba",
+      "wall_clock_s": 304.80608366600063,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a71d3a2c949d3e5d69ac470281dadc080e62416ce990f5a171c451364255a7c7",
+      "wall_clock_s": 80.35548968799412,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "551a3e282d64e21d0abfa997f94c60083eeccb41c8a1abeb53abe2888179a84e",
+      "wall_clock_s": 305.0609186760048,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "921dd8bba67e5084bd0da96b7a0266b6291bda2b397c94576a2f1f9488b3ab7d",
+      "wall_clock_s": 79.37790826299897,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "f9292e54afdc9d96f90f9f7a0159dc580f10c2e61403210dfd26328328e55a95",
+      "wall_clock_s": 306.55141733399796,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "ec5ea21745d8a2a932628f30af6896de4099e71c683a708ca1e6b5502aa58b20",
+      "wall_clock_s": 306.3083600050013,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "a8cb2b072d750c484d2f7a206f3e4fc223523fb7e39a3afe5c072029c595c148",
+      "wall_clock_s": 81.66910547999578,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1e230deb76703d02e54e5bb56cc90239682f7438514d84a7ad6551fa74c93496",
+      "wall_clock_s": 307.3371971450033,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "87888b9f0eff244816eb534ea4f7eb98a329326afdd0eed89f9469c86f27979f",
+      "wall_clock_s": 80.53263115799928,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "25e233abf4f0e5c65bc3bb36ef4227d983705ecd323482104ca73624f359fe13",
+      "wall_clock_s": 308.6370589090002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "1f75ca14baa518f869c86ad8233059178212539c376f5a69782e52d2eb2ad226",
+      "wall_clock_s": 308.7946523729988,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/static.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "3622be499437889cd22006cddc74cd772c09c41c1e36ccdc5a7a55ebfbf8896b",
+      "wall_clock_s": 80.36448653999832,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/id.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "d48543ab67829113ba838c100ca8bce96f570843a57b1dd23adc35dc9f701d3a",
+      "wall_clock_s": 300.29270257199823,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/unseen_seastate.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "dc52fb748b4dfa2cbccd776fad235fdbd8ff615dac6a093f6d319ef66bbaf302",
+      "wall_clock_s": 78.92978057500295,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/unseen_heading.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "b399fc13c8ddd44245a3e317f57edf1a23f0fc43d1dda513a5e43ed4cf6c7b31",
+      "wall_clock_s": 298.75187502100016,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/unseen_vessel.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "834ff617e400a12bc640aa15855effe1dcf3b60aab2684f023f92d227238bbf9",
+      "wall_clock_s": 297.84962764199736,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_pid/s0/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "c96c7ed75e94ac3896b7c3fbfb623d18f19ff64d4c746682112903b301f1565a",
+      "wall_clock_s": 523.5324700420024,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_pid/s1/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "e1c2fee51d0eb50b733cd679fb828df7c59b10d206aa1b0172819b2a1736845d",
+      "wall_clock_s": 472.14221749699936,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_pid/s2/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "16b0497708250d5e797f66f1b70a8952b7085d3ea664afc3f6f70a8bc8d352ef",
+      "wall_clock_s": 462.84977751400584,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_pid/s0/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "4bc69913b52e5bd7dd54d3d1f9a6bbd9ac1055e12a8e8b3265c786e7d4677466",
+      "wall_clock_s": 293.9136719099988,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_pid/s1/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "b7e8f5b0c4c7ed3bbc6c0d579ad477dabf79b99ea86f4a16c34d163c531f8c56",
+      "wall_clock_s": 296.50833478000277,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_pid/s2/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "ba24ecf13a877bc6fe80e68ea1b0a0fecfead5e5dd88b9b7da412dcdc6de66ca",
+      "wall_clock_s": 302.28002058900165,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_mix/s0/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "c07e8f1c16f4a94586f0032bf30e00eb9d89c265d954ab2333daf14ccee49ccb",
+      "wall_clock_s": 383.376187722999,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_mix/s1/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "024c3a3ab57a3f4f5c3c9d260f32df899ea6833e9a34258ae1fce458286288a0",
+      "wall_clock_s": 388.60283840000193,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_mix/s2/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "1c7ac42e06d0796881012f34edc2b0eb2c2b9515037d34fb451bd5f176e9dff9",
+      "wall_clock_s": 341.7244668420026,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_mix/s0/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "b6b8c22d6185371ea38aebe276d756c9239c03b3f79b72da3ec50e0590feaaad",
+      "wall_clock_s": 234.6369310700029,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_mix/s1/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "064799d993e747e40fe014ed0bb4e5159e30cad179d41c79f8fbded5a0b7a787",
+      "wall_clock_s": 230.5491936860053,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_mix/s2/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "5dad04166ef3474b1c05caea1af26df7a86253232e07ee08ed3533903d9ebede",
+      "wall_clock_s": 225.5883009120007,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_n100/s0/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "86db6c61212a0fb7a0746a6a82b546c3fb96cb139596b130cb7fc0d89d8556ee",
+      "wall_clock_s": 367.37941463600146,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_n100/s1/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "e032d7ca470d67f89449dac30d124ad35988988ab8ce28d592ba4693e77afe26",
+      "wall_clock_s": 404.5696958069966,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_n100/s2/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "ad0c7da73361262384ff2933cda54567d4756d0832f6020947003366ac40002f",
+      "wall_clock_s": 251.43250976299896,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_n300/s0/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "61d891de5a9c19145994e73b8314fff55e21a9eed7b60ce1f7409c942722968b",
+      "wall_clock_s": 242.553619833001,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_n300/s1/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "edd5be438b614df62beb8442e52a16b5e548cdad603d4b35f3eb5089c2f93d9a",
+      "wall_clock_s": 238.99032901600003,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_n300/s2/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "17812f27e1f2bd82333f5b733249e8218a8665c178ab40deca5d2cf7d7b7c74d",
+      "wall_clock_s": 238.64863089799474,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_n100/s0/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "15d4ecd6798a7e3299fcc3646e41560b5e020059f387b5f23f0eaa82abbc2b0a",
+      "wall_clock_s": 138.40426143500372,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_n100/s1/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "bf8c5261656474f238122272740f81156517f4956d04057b9cabdec26c23868e",
+      "wall_clock_s": 134.69383311499405,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_n100/s2/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "3f023a8d65b5b0ef99a6c96de8008f7a31ce56bd02e02913b3e98fb707815a20",
+      "wall_clock_s": 132.916214527002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_n300/s0/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "0a9b824e546b8cca12bbfaae9a3b1fc11d73c138140814c44ce4b1a2600d6803",
+      "wall_clock_s": 136.19287442399946,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_n300/s1/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "3e0c5ecc61e9a43a31a12150fe5b64d34e00c32e02b306390bf1c0283dd997f3",
+      "wall_clock_s": 129.54037533699739,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_n300/s2/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "6d826d10352a22ed68d10ba9d84d406d10a925eb65476b0aaaa5e50fc5a1d3b0",
+      "wall_clock_s": 130.36807551400125,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_minus_last_action/s0/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "01a5d2d2e3cdc203859c5f50ac63825495c0371074a501d1aba9c0b1a9cc4aca",
+      "wall_clock_s": 227.0742250559997,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_minus_last_action/s1/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "6e1e3227a0ff98130132a3be56fde956aa56a67b3d9df665d934d99beed522ba",
+      "wall_clock_s": 241.6536425939994,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_minus_last_action/s2/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "23b21f0cd380afa1bc7cce8dad695df1e388189ca8bc64a414a8d036961b4e38",
+      "wall_clock_s": 226.18983439099975,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_minus_last_action/s0/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "b73653ec0c2ad32bbbc12e48162a8aaacd313508a733087a1396b81499d749a1",
+      "wall_clock_s": 133.9514231130015,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_minus_last_action/s1/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "363b654ed4858324078102ceedeb43e70684acf8698a6d4fb748fc50f7d5665d",
+      "wall_clock_s": 129.88787610200234,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp_minus_last_action/s2/id-SS4-SS5-SS6__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "6acbec9b9e1397d1cdbc423a32169d8207fbce2e946270cdca523e6d19e7843f",
+      "wall_clock_s": 137.5541267439985,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_plus_clock/s0/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "c1b72b9f9990897e3bc1db2dc101784524d8312ea9b57906aa45f9da1f976374",
+      "wall_clock_s": 231.75888036799734,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_plus_clock/s1/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "59f017f19c03163d748c1e1586878a3f0a0d48d3aebd14001626892c798b5f27",
+      "wall_clock_s": 228.58635895200132,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_plus_clock/s2/id-SS4-SS5-SS6.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "50c75594bfed2d5af6705d58a65df2a758764ed4da15f2beafe207235a1d8a50",
+      "wall_clock_s": 227.53038056299556,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "607c2dda78b44a8b395a4a0061c1d4683c660a07ab4968e7d43516ee2d5560b6",
+      "wall_clock_s": 900.6458750300008,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta2_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "a34518e61410911c0d9e4b91fa6ce3bcf8c453df81e4f21fcae6e16861d70f3a",
+      "wall_clock_s": 458.40382886899897,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta2_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "5d61cf8de2e2855845a4dc307c86f3bb6f8203e0efa3afb52deee8489031215b",
+      "wall_clock_s": 879.9390744670018,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta4_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "441eebe0f39df4b62f6557ff725e5054934240ca710be6f0cba946faa4d9c810",
+      "wall_clock_s": 235.78148292600235,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta4_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "330f052c33a76b42356b5772e1fc9a478afaf7d343169ad7db459e2a9b89a427",
+      "wall_clock_s": 869.5246922880033,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta8_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "8487efc6a51925f84d3534252d049b79bffac2cc245e69cd079eecb93465a59c",
+      "wall_clock_s": 862.696102504,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta12_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "40b1e9af059abc317f80c001ab821e4965d2a14e8c0e23ea958a4d267d4d4bc9",
+      "wall_clock_s": 106.62936990200251,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS4-SS5-SS6__Ta12_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "a928993af8755b066ab21cc1b3a64e13230de324e9668ea48d2dd61a2c485dea",
+      "wall_clock_s": 829.8476749999973,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "0c9d95c2961b6686991d0106f3607f39ae7c84cf3ec9ed764f10097814a164e4",
+      "wall_clock_s": 1005.1270726889998,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta2_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "acf26ab7f70815cb538a40d3e4afe2fb55b67f56d02690d1425a1a6084dd28eb",
+      "wall_clock_s": 460.44426669300447,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta2_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "d1267586ccf8d22447e65dc01700bf7c2a3ea1fa747a57cccb0c597d55c6f34d",
+      "wall_clock_s": 881.5867022989987,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta4_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "3cb706c291971ede33927d9d767ab133b57da9b9c4dabe9c733d8655724f9514",
+      "wall_clock_s": 235.1571063770025,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta4_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "d90ff3d66fcd1e26f488f9fc6273ebd2bcab07dfb58ab6544a1fc37769c07cfb",
+      "wall_clock_s": 850.3636633970018,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta8_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "bff5ad85eeef3036108b5ff9f2ca0ef986781839a025bf5323c3e7945a7d2a4f",
+      "wall_clock_s": 836.7661616820042,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta12_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "d0aaea1b941e76aecf9fc0718b7c49819a6c74c59e803a605750f66978ad0be9",
+      "wall_clock_s": 110.03771136100113,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS4-SS5-SS6__Ta12_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "f78f5860be49b08b60fa6986f5e857f0c4b338f38a821c340cd3e01364291b52",
+      "wall_clock_s": 837.5578287850003,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "ba7b41fe4cee4b6a1396b00812ecd148c0a60f363044a45d8119efbdaf4d67b9",
+      "wall_clock_s": 922.3683509200055,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta2_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "edd335d9c17f90d3782c12cfa27d6ec1ce0d71e41b18d6f07190bda34c2f27e5",
+      "wall_clock_s": 500.1348195340033,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta2_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "34828f0c9ba279c62e8d5573408dcce86be46d5f1c77b974f0454d28185e04c0",
+      "wall_clock_s": 907.4092048169987,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta4_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "3b67f9ff42bb69ca5d37bdb274f484e83b750a307db32c062dabd955638c6bb8",
+      "wall_clock_s": 249.6014569350009,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta4_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "7f6a58ebbe07c440618b3222baae6c0eef1962859d5fb2baed4e4cfc2bab0782",
+      "wall_clock_s": 884.9913558030021,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta8_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "96115ed7a3ae5bccf65f728c5551f49b18d284e19fa28a915e86359015842396",
+      "wall_clock_s": 895.491596050997,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta12_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "6e5344577f18e84ab03f2236a10d6c1c207402d493ed35fa3362b0854ab93d37",
+      "wall_clock_s": 114.43010488500295,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS4-SS5-SS6__Ta12_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "3a3b5fb1011fadb9122ebf5df2af9ce23ca6df1c37f4653eb0f69062de05cc23",
+      "wall_clock_s": 873.7921977020014,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "c105ab17c8dbd6aef9324f47dee30a1fb14fdd4f6c9a01ff04fd4ae6c1964020",
+      "wall_clock_s": 830.222909666998,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta2_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "1e0778b630cb11e802e28fc67cb6094167c28ded81e9f2bf80543e41e0e7a894",
+      "wall_clock_s": 427.7036638819991,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta2_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "bcaab4363e2779168e4c2ba31ab1ed81f8e7a1dc6880a89b8c0ab7db465fb4c2",
+      "wall_clock_s": 829.3364767989988,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta4_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "2954b041251522712d4bd3638073bbb35970cecd9b6ba1ab70b3b68023ac07a2",
+      "wall_clock_s": 231.00291750200267,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta4_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "27a7c77c307c11e87a2f68742d57a8188797e2fe8871d3108ba5a9fe617f7ddb",
+      "wall_clock_s": 800.0766869429935,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta8_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "8d816b3dca12fb24350146569eafd7c371bffd8f9effc4524fc3873be6b00660",
+      "wall_clock_s": 799.9610068579932,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta12_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "789fde7690ea3a47b79193c27287da65347cf00fdf16820c6e2bc7af32365dce",
+      "wall_clock_s": 104.25849628700234,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS4-SS5-SS6__Ta12_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "7e8ae6cfaf151e8b88564e37d262f58199baa1049ef583c8cd804faa888b2580",
+      "wall_clock_s": 787.5750269459968,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "0384da45dbe37003569c593910eaf5ec72355c6df34d3b572c0a6903729966eb",
+      "wall_clock_s": 847.0478221119993,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta2_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "2cdbd3fcae45f9ad487c9978a52dd7044bce1fe76894b5fd35ace87f51c5ec63",
+      "wall_clock_s": 446.888436046007,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta2_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "4b3ea875105d0bbc9a0486ee2309fd7b98f1a025726a6c827371c0b87337aa3f",
+      "wall_clock_s": 831.1706216300081,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta4_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "957ba34bf20b44ca3c11ff689539f1a732fd629ce009ed9f6954cc99781ac19d",
+      "wall_clock_s": 233.38943112100242,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta4_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "71be80173e129e7eb13f6e9c8b4ccfb8075511b3f5d74aa2435f2f7c4292168a",
+      "wall_clock_s": 833.9151046740008,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta8_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "d94530ff520cd77172ecced3caea0b68685517c815ee20606ca381d4b6bf4ec8",
+      "wall_clock_s": 819.1932249289966,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta12_K10_ens0.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "f661cd3777dce1413aa79c07b60ee04976b026155f4a31b8a22431bd0cce13e8",
+      "wall_clock_s": 109.77916762299719,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS4-SS5-SS6__Ta12_K10_ens1.csv.gz": {
+      "n_rows": 600,
+      "rows_gz_sha256": "905c0ea648dfb8603236fe15ad46ee3f9bf73ce66d329fe0ea6e38b9f609f50d",
+      "wall_clock_s": 830.6431185940019,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5__Ta8_K1_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "39f17938f497327d2b61e88155f17ea37d6d6a06add67585ad4a0c8d74617c3b",
+      "wall_clock_s": 23.804262431003735,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5__Ta8_K2_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "b55bb6cf3581088c054b9534014937bbc43a9e4b507ddfcee7e18a09f41b79ef",
+      "wall_clock_s": 30.818972117005615,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5__Ta8_K5_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "d4c9fa6cfdd4ac4e302be86395fe088c268d8eb6a35efa2591127528ca2d10a8",
+      "wall_clock_s": 37.53483935800614,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5__Ta8_K25_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "70b03d094799cab65e46e97a927526127949fbb8a68ce0e44498bf76a65f28a3",
+      "wall_clock_s": 87.13764848599385,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5__Ta8_K100_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "0383b6c98f15ebbd9c07e2d6dd7bec7d5d3d1de1e354f6ebcee5869eaf25e99a",
+      "wall_clock_s": 276.55470936899655,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5__Ta8_K1_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "39de2b0a748a6247c5a68f0935aa55ae84409b84aad2a7e4e67da34b54555228",
+      "wall_clock_s": 22.13163740199525,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5__Ta8_K2_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "1bc92e46507e3d96c454b4cc46017ade2fd4c7dac1c3350becb15de0d2df960d",
+      "wall_clock_s": 33.907618929006276,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5__Ta8_K5_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "1d5aac4a06e872a93904ea47ae9dcc718dd609334272680f19fdd109ca158d1d",
+      "wall_clock_s": 39.583416348003084,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5__Ta8_K25_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "00987569550cea7aea147090167db0dac9919ab10916430ca6dd6d594f13dcee",
+      "wall_clock_s": 92.06530254300742,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5__Ta8_K100_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "8a49926d63d47a1eaf2b5665b268877ef190faef91c4b3fb14e32aff4ec937f9",
+      "wall_clock_s": 289.2507930030115,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5__Ta8_K1_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "c5fd54fea7c535c2a0501264bbf2b85d2873b639d70f1ec80def8b7aa62f30c6",
+      "wall_clock_s": 23.807823328999802,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5__Ta8_K2_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "822983520b1fe89330a7735328bd897bcfa2940b3748a7e56298afcd51363046",
+      "wall_clock_s": 32.582132369003375,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5__Ta8_K5_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "cc97b01bd486005c33e61170855c6b425a1298ae3a8179c6dca1d6a315e46836",
+      "wall_clock_s": 39.77263389900327,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5__Ta8_K25_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "550614c93a86f00ddd0f448625f640c65f0ddc971bfcf828350adcd8f3466213",
+      "wall_clock_s": 89.40394675699645,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5__Ta8_K100_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "e4709dc6b5bc70f35db3ada891d292c0e42ad38d9772672aa596de49475c86e0",
+      "wall_clock_s": 278.6288530610036,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5__Ta8_K1_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "4b93fc8aac415cad9575fe568a5b95c838a8f77123019ad4094b21d5f8513f55",
+      "wall_clock_s": 22.89552845399885,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5__Ta8_K2_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "54fe5db9ea52aab3b7d51a9da304f538af73c45fdfac8c33a426c24463b16b38",
+      "wall_clock_s": 30.671398253994994,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5__Ta8_K5_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "6ff8e43977b280896fa2ba8fb838160d104339c32acb3053f5d414cb4e2c03cc",
+      "wall_clock_s": 39.04216282699781,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5__Ta8_K25_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "1647fe216477b60f7fe88f7c9804ffa6853733d9ce5d66e4a5e7dab920f951e8",
+      "wall_clock_s": 87.79794292799488,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5__Ta8_K100_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "2d6d69719b1d6089e8702d35917299034c6d37d11689da8f12dc0fdb27f93757",
+      "wall_clock_s": 283.5459809900058,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5__Ta8_K1_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "fca6e2ae9ffd566cd062aa9097f56e5d21f7175c1e70a59adff96d55990408f5",
+      "wall_clock_s": 21.96791476200451,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5__Ta8_K2_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "9d1af586e5fed765f97810ff238de314c856b3ec07af65d0a6c85aa82df52f55",
+      "wall_clock_s": 30.153956893991563,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5__Ta8_K5_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "ec65aa65c473b42fc08e22ea04b028103a97d70c50bccedbd9c2f906ce3dd8ed",
+      "wall_clock_s": 37.54307361699466,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5__Ta8_K25_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "61744ed59964c21bad62c5c94edd7fd4340f7399aa8f50d0acd7231031329441",
+      "wall_clock_s": 86.32766314900073,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5__Ta8_K100_ens0.csv.gz": {
+      "n_rows": 200,
+      "rows_gz_sha256": "82dc7cee4e9f504f462659111847d3e2130e03f80aed9db413cbf147e9be332f",
+      "wall_clock_s": 270.6659575079975,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "f72984d93fc5923a4d48fd13db56612acfadae87c0e8b21d108bbc17c532adb1",
+      "wall_clock_s": 154.81744187801087,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "0ac86be6e2e4fac51c271cbb7e7fad5f3e86052ae6be4d097dc3b3b730e1dc1e",
+      "wall_clock_s": 157.41949091400602,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "1683c8f25c477caaa3069a5e6a591902fd732c9cd08990bbf4ca3e7494b1862d",
+      "wall_clock_s": 155.78880219199345,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "93990a7af3854ef12268cbd95dbd96bc1b5ff19ec63ed9a099e69f921fb6251b",
+      "wall_clock_s": 144.97643687500386,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s0/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "35d80965f4917277b6fa7c73e20a30f73b1550d2fed7d511d491d39c96aad314",
+      "wall_clock_s": 185.4467201630032,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "9f216842e7e8acbb841532698a1fbbef9d01f1d9f0bb5f3554a6a092ad2ce3fe",
+      "wall_clock_s": 151.99420683398785,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "455497e6f73635460380f33117fb7a115ba69082ec24b92748197ed03235461d",
+      "wall_clock_s": 152.92783184199652,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "0c98a2d4aad315c4428c18d49613708fc5d589c2693b9517f927daa06dc05d97",
+      "wall_clock_s": 159.181650523009,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "923c9cb625d134edf573e2c6c8666f6d218dcc6297b3dbc1b1561fea5020dae8",
+      "wall_clock_s": 143.96301332200528,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s1/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "51e5ceabc7f0eda828a2e282f633536d97d401db6d1aadda2d0c2f890c543db9",
+      "wall_clock_s": 189.0531635149964,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "71288227f57affe1a890733060a903f97583c800deb4257423e49889a57e889b",
+      "wall_clock_s": 154.77985310000076,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "646fcf0deb5459136970d36341a20e40a4052e2cbb595efa8935af02c66c4dcf",
+      "wall_clock_s": 152.28839869699732,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "a7534793a3fe62a2b8c46e05417f9d59319df30c92e08c9c404476f697a40dfb",
+      "wall_clock_s": 156.65546437900048,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7e0f990be2e7580fb4e7fba4590d3b73875d3dc307de994c536e77317c1284d1",
+      "wall_clock_s": 141.14803242198832,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s2/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "586c9958c4fb4e60d7167bb07b72bde4c84e4ce6736713764edce1611f47d8e5",
+      "wall_clock_s": 176.4849851379986,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "d767a40665576290f4f34f153895842fa4e0ba364208ef639b03fc7352f5d647",
+      "wall_clock_s": 153.07084284399753,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "4e2c8eae21e7eafe96259e2ae1476c3d55a3ed51758aedc9e17532aa97007680",
+      "wall_clock_s": 150.29536042999825,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "72539ee6f8bbc85e76c08ecb4d6cd8f676943895ea134d002fefa76882dcf169",
+      "wall_clock_s": 157.60468554400722,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "1e4559f116887e987e827cdb5aed17b4213a06d2886523d5d50eb5e6091b824b",
+      "wall_clock_s": 143.40948491499876,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s3/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "e6bd1476181d756239f12fdda1d34633dbf6dfc9f66c8186adf293c8fa6f2f23",
+      "wall_clock_s": 173.55890239599103,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "086491ea3a52007555370598296564822e5d3f6d10edc711d713fd8738abcdd4",
+      "wall_clock_s": 153.29310793199693,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "1b446afafe8c7b0456b3e59d8f057021237566f60a78dc03c41173afad83bf42",
+      "wall_clock_s": 154.8897399589914,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "15306f1261c059bb7ec681a697aa0180d1ec9300a1eb3919a5281068a017f4ae",
+      "wall_clock_s": 154.78843560600944,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "c9fb0c0da0efba9c97022a3634ba60c05bb2bc18f3b5e39f765eda5b3bbef0ab",
+      "wall_clock_s": 139.7874620470102,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/bc_dagger/s4/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "305c68861e5ea3be1a92a34fa4f7544d58cc35c86c54707f9e90f820bdc4b29f",
+      "wall_clock_s": 181.8806094860047,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5-SS6__shift-light_rot_60__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "dcf8559e69584084141be5fa18f9a364db327f0778b4b8b3581c64e38bcadcf0",
+      "wall_clock_s": 93.40758984199783,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5-SS6__shift-bg_hue__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "e8ebd22f2772253ffa9eee05645be4adbcf294aed9caadbfcab85b33cca4150d",
+      "wall_clock_s": 90.33874858199852,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5-SS6__shift-low_contrast__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "373b241b2c241dbbc52582a80dc6e2d676a0e74397a753775f0eae246866f2e1",
+      "wall_clock_s": 97.04425497401098,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5-SS6__shift-mount_tilt_p2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "86b4a2373e7fce9558e7e043974e06c35693a5404493d7e50e4a485817887196",
+      "wall_clock_s": 84.18347475600604,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s0/id-SS5-SS6__shift-mount_tilt_m2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "aa4fe9cc148aea8d375195380729e95d9cb89ef940e4b253fb516e6166722458",
+      "wall_clock_s": 105.15274132299237,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5-SS6__shift-light_rot_60__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7b0a6b0cdcf2deb4cca58abe2b7808c3fa01ad7f9395e6e8ee4f358872e3d47d",
+      "wall_clock_s": 95.12388658300915,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5-SS6__shift-bg_hue__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "9c38cb8dc2bc9a097c7aa5d5619c064166911d1709d5b47ed004a614f2fdeb55",
+      "wall_clock_s": 93.53293299599318,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5-SS6__shift-low_contrast__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7dc992ad88195f4ed119c38bcea6a2094c2c4de9b6ebea32d1d75c6071d80436",
+      "wall_clock_s": 91.48977473299601,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5-SS6__shift-mount_tilt_p2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7173764179c06657565a56de54578ce17d084adbaf603fdba243852dae9b57db",
+      "wall_clock_s": 90.77926768398902,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s1/id-SS5-SS6__shift-mount_tilt_m2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "97919d05953d28137f825f82084d6f757f29165961dbc4c8845199beca746456",
+      "wall_clock_s": 101.49115066800732,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5-SS6__shift-light_rot_60__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "e47757b76c20245d28a326ff44210924767985b3749f7f42cf4ba70599480961",
+      "wall_clock_s": 92.96655378300056,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5-SS6__shift-bg_hue__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "8764a47216922b5cc7f549a41cd5ff2a6b38f6666a29a69a9bc72c2b355ce61b",
+      "wall_clock_s": 95.56604716500442,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5-SS6__shift-low_contrast__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "f7278c6f6ca159024165d6543dacf13cce1589804cb4fa0c04f41d319ae10943",
+      "wall_clock_s": 97.96881964000931,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5-SS6__shift-mount_tilt_p2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "38fdc04c946192488bc4c7fb2c8e76e909b9237ce223c4463776749b57ede340",
+      "wall_clock_s": 84.74722553500033,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s2/id-SS5-SS6__shift-mount_tilt_m2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "5a224cc43f4800780e6d0c14285a858b518a837d2f48735430457b5b6b8f3b39",
+      "wall_clock_s": 107.6107344530028,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5-SS6__shift-light_rot_60__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "d362db9cfe56ac0a33df08c6227cb0eb4251dca3928f9ffae589f63bde7365c4",
+      "wall_clock_s": 90.27194759600388,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5-SS6__shift-bg_hue__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "73bc58ea2895a53f3665c401b4e7a14bac2e089af74877a91a73ff4c0614e865",
+      "wall_clock_s": 90.98401870900125,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5-SS6__shift-low_contrast__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "ecb27b91e6c53926138fdc79974d04900db7966a471f8db4cbdb1e8d2850a477",
+      "wall_clock_s": 92.84009867500572,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5-SS6__shift-mount_tilt_p2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "608ff65c67612a014cfd6b6c005f813a7f4cccc6923bf22c24c813e45ff95f55",
+      "wall_clock_s": 83.14212841300468,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s3/id-SS5-SS6__shift-mount_tilt_m2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "608ce9988effca4fbf1c039fd163683d211a663c9e3e361f67fb8e4cfe702a71",
+      "wall_clock_s": 103.24999889799801,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5-SS6__shift-light_rot_60__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "eb7097362d482d1f0a12c9a3a8f0e4d674cf5b7e11736d2cc540a3dbd49da97f",
+      "wall_clock_s": 90.67014586098958,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5-SS6__shift-bg_hue__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "fcb072b0e8adaad48c3f5118ca7919ba5e5c175df6cff105f2261f577f5bbd4a",
+      "wall_clock_s": 86.95985179299896,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5-SS6__shift-low_contrast__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "0bf26b19241b6c39d84208f6a8dc0747a08b6d2e23f17ec757437f8d39481b78",
+      "wall_clock_s": 92.76498162800272,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5-SS6__shift-mount_tilt_p2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "5fa7983521d3e743efc326b2483d78ad895614f4a7521784752f662d1a7f85c8",
+      "wall_clock_s": 84.4025380200037,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/dp/s4/id-SS5-SS6__shift-mount_tilt_m2__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "9e69d99d4c6caec5aa42ee389613b7dbfcde9e6f00019dfb572b23839d7e3559",
+      "wall_clock_s": 104.2947181060008,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7bea2ba43bb6af976ccde37d08b500e3d49d01784e3eaf46c56efe49a6bdbe29",
+      "wall_clock_s": 155.6664943039941,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7319cfde810ebaa1e5eb4980294914a8afb0e33c3bd31c5ab29d5d5f71c7c414",
+      "wall_clock_s": 150.39411093998933,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "84d2ad49694598be3ac49c64c9a7a8942078d159f6cf3f00a8d2f92898da1b0a",
+      "wall_clock_s": 158.39863277500262,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "97b63d73994341c2a82b70d5002472d2da8ed605aadda553944db6284c4d9367",
+      "wall_clock_s": 132.93348678700568,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s0/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "d562b475a0215a59c86e81d895af18140d00be7f7904de6e5bdf7c3301b4e17f",
+      "wall_clock_s": 177.15429769099865,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "a1d5143c7abb2b5259d9c9ddee927f0750da6b0f571f5bedbe3fc50049b77e04",
+      "wall_clock_s": 152.39918547100388,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "7d29d62f9add75b996d2f30bd39cf1503b4cada8052e80e1554ff3754603e928",
+      "wall_clock_s": 155.263525442002,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "4581a95139f5acabcde0a8514d60b10b4b4f86d16323ec30395c02c13a0c24df",
+      "wall_clock_s": 162.76555631800147,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "9fd970ba9c29fd7d21ea2279e05ab197c43763ba4c1cabcb9ac44b0b6e55b018",
+      "wall_clock_s": 135.686425382999,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s1/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "057d8504d28b6015e10c7a7cb23ecaabe8a7b5d3bdf6d2b1385d0a80110f350d",
+      "wall_clock_s": 191.97645421700145,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "d73ce296b74ee8bde1cdaa979a9754addc505670e633e0672bd29d21d5cb55f8",
+      "wall_clock_s": 152.84964519599453,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "8294373fe85e12f2e9ecde037b56ad7a1b75ca191ad5432ef06caedee899664e",
+      "wall_clock_s": 147.72047452500556,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "af4b0c7980e69a4145ba639d20e20b3a20c2d96d4824f0c465a0262c298e2cae",
+      "wall_clock_s": 160.98734272400907,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "d44fa2ea27bfd316f99fd09588ac73378177a7847720ae9d3744274892aaf81c",
+      "wall_clock_s": 132.74682462199416,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s2/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "c574bb5d10850c5eeb3d3defdc3b3db3e9a2e0acd296d8d3415ce52cd5249294",
+      "wall_clock_s": 174.66537062299903,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "b2b66debb1dd023a0d013f6ca5fbfbf2e98ef14a7002fe0c3f59e3a4b10fca86",
+      "wall_clock_s": 154.62281759000325,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "ca0d04bd2d44a3f3b72b95c777cd5304a2a5faf75132ab96fab68c219f003641",
+      "wall_clock_s": 155.444973028003,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "19c8ad7cbebebe4d982d1289bd9fa23db648ca98d4db1866578401f66856b5f3",
+      "wall_clock_s": 166.64166946800833,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "f5b58b1b1a920e8bd49d417f414e5bb4b57f58ae968e65c36e3837bda1ee48fb",
+      "wall_clock_s": 135.03279223501158,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s3/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "0604eef8666813e6b1b35cc53ca0b6024f9ff50b93ce88b0b7c04eede32707b4",
+      "wall_clock_s": 183.34283169399714,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/id-SS5-SS6__shift-light_rot_60.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "4c3329a07ca95aab31c1b3269efd101dd867045d7a0629ffe6c3be70b5819b23",
+      "wall_clock_s": 151.73109811899485,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/id-SS5-SS6__shift-bg_hue.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "488357869fabb1ee55470ab8bb17ff20dd7129bbbc121edfa10a1017435af1fd",
+      "wall_clock_s": 153.8093228600046,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/id-SS5-SS6__shift-low_contrast.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "67af1968f098572f775b4a89fd46fb626ccf0160cd51bea4169005388b4a1fa0",
+      "wall_clock_s": 158.30201403399406,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/id-SS5-SS6__shift-mount_tilt_p2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "bde8ac61f75b34c29c8db9de05fe8ab91fb010a45ed4b222bfd02a73aca71649",
+      "wall_clock_s": 131.60778665299586,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/modular/s4/id-SS5-SS6__shift-mount_tilt_m2.csv.gz": {
+      "n_rows": 400,
+      "rows_gz_sha256": "8ecb8a04c8f5989ba2459f83a48f9c16f5294b48d5308be6411a9008add6bcc0",
+      "wall_clock_s": 185.0159381830017,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/R1_lerobot_dp/s0/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "ab2d4caf1fee3cc8a7f2a9fc8132db057562c4e1be190c16485c3680d4d2cce4",
+      "wall_clock_s": 129.65088994099642,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/R1_lerobot_dp/s1/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "c4c9dccf8314fe0ea1f4c1108a1ba5298afa497b7dee508698cd3b3ea627a1c4",
+      "wall_clock_s": 127.27544392300479,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    },
+    "rows/R1_lerobot_dp/s2/id__Ta8_K10_ens0.csv.gz": {
+      "n_rows": 800,
+      "rows_gz_sha256": "98cf5b4969f344696e4a6d3484c2117746d6cfff46fb6598a16ee5559ded5234",
+      "wall_clock_s": 124.60444273400935,
+      "workers": 24,
+      "ila_commit": "6a8623dbcb5a68ade0788b2d6b8956fe6acd82cc"
+    }
+  }
+}
