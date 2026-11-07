@@ -502,3 +502,150 @@ def test_selection_pins_written_once_then_enforced(fake_run: dict[str, Any]) -> 
     # the smoke path checks existing pins too
     with pytest.raises(ev_matrix.SelectionPinError):
         run(frozen=False)
+
+
+# --------------------------------------------------------------------------- Phase 9 R1
+
+
+def _write_delay(path: Path, delays: dict[str, int], *, extra: str = "") -> Path:
+    arms = {a: {"d": d, "provider": "torch_cpu_fp32", "fallback": True} for a, d in delays.items()}
+    rec = {"arms": arms, "h5a_verdict": "not supported", **({"note": extra} if extra else {})}
+    path.write_text(json.dumps(rec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+@pytest.fixture
+def latency_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, Any]:
+    """``run_jobs`` on latency jobs with flights, hashes and P8 reads replaced (nothing flown)."""
+    state: dict[str, Any] = {"flown": [], "on_fly": None}
+    eps = [e for e in ev_arms.list_episodes("id") if e.ss == "SS4"][:2]
+
+    def fly(job: ev_arms.Job, ck: Any, episodes: Any, **_: Any) -> Any:
+        state["flown"].append(job.rel_path.as_posix())
+        if state["on_fly"] is not None:
+            state["on_fly"]()
+        return _rows(job, list(episodes)), []
+
+    monkeypatch.setattr(ev_matrix, "dirty_paths", lambda **_: [])
+    monkeypatch.setattr(ev_matrix, "static_provenance", lambda _out: {"p8_commit": "p8"})
+    monkeypatch.setattr(ev_matrix, "host_info", lambda: {})
+    monkeypatch.setattr(ev_arms, "resolve_checkpoint", lambda spec, s: _fake_ckpt(spec.arm, s, {}))
+    monkeypatch.setattr(ev_arms, "verify_checkpoint_bytes", lambda _c: None)
+    monkeypatch.setattr(ev_matrix, "fly_job", fly)
+    monkeypatch.setattr(ev_matrix, "check_rows", lambda *_, **__: None)
+    delay = _write_delay(tmp_path / "delay.json", {"bc_dagger": 1, "dp": 6})
+    out = tmp_path / "e08"
+
+    def run(m: ev_arms.Matrix, jobs: list[ev_arms.Job], frozen: bool = True) -> dict[str, Any]:
+        return ev_matrix.run_jobs(
+            jobs,
+            m,
+            out_root=out,
+            status_dir=tmp_path / "status",
+            workers=1,
+            episodes_of=lambda _j: eps,
+            frozen=frozen,
+            log=lambda _line: None,
+        )
+
+    def lat(m: ev_arms.Matrix, *arms: str) -> list[ev_arms.Job]:
+        return [j for j in m.jobs if j.tag == "latency_arm" and j.seed == 0 and j.arm in arms]
+
+    state.update(run=run, lat=lat, delay=delay, out=out)
+    return state
+
+
+def test_delay_json_is_pinned_and_recorded(latency_run: dict[str, Any]) -> None:
+    run, lat, delay, out = (latency_run[k] for k in ("run", "lat", "delay", "out"))
+    m = ev_arms.load_matrix(delay_file=delay)
+    sha = p8_adapter.sha256_file(delay)
+    assert m.delay_source == {
+        "file": str(delay),
+        "sha256": sha,
+        "delays": {"bc_dagger": 1, "dp": 6},
+    }
+    info = run(m, lat(m, "bc_dagger", "dp"))
+    assert len(latency_run["flown"]) == 2
+    pin = json.loads((out / ev_matrix.LATENCY_PINS_FILE).read_text(encoding="utf-8"))
+    assert pin["delay_json"] == str(delay) and pin["delay_json_sha256"] == sha
+    assert pin["delays"] == {"bc_dagger": 1, "dp": 6}
+    assert info["delay_json"] == {"file": str(delay), "sha256": sha, "delays": pin["delays"]}
+    assert info["latency_pins"]["sha256"] == ev_matrix._sha(
+        (out / ev_matrix.LATENCY_PINS_FILE).read_bytes()
+    )
+    assert info["invocations"][-1]["latency_pins_created"] is True
+    job = lat(m, "dp")[0]
+    side = out / job.rel_path.with_name(job.rel_path.name.removesuffix(".csv.gz") + ".json")
+    rec = json.loads(side.read_text(encoding="utf-8"))
+    assert (rec["latency_steps"], rec["delay_json_sha256"]) == (6, sha)
+    assert rec["job"]["latency_steps"] == 6 and job.rel_path.name.endswith("__latency-d6.csv.gz")
+    # A resumed invocation on the same delay.json passes the pin and skips finished jobs.
+    latency_run["flown"].clear()
+    info = run(ev_arms.load_matrix(delay_file=delay), lat(m, "bc_dagger", "dp"))
+    assert latency_run["flown"] == [] and info["invocations"][-1]["latency_pins_created"] is False
+
+
+@pytest.mark.parametrize("change", ["new_d", "same_d_new_bytes"])
+def test_regenerated_delay_json_is_refused_on_resume(
+    latency_run: dict[str, Any], change: str
+) -> None:
+    """R1: a regenerated delay.json never flies under a new stem; nothing is flown."""
+    run, lat, delay, out = (latency_run[k] for k in ("run", "lat", "delay", "out"))
+    m = ev_arms.load_matrix(delay_file=delay)
+    run(m, lat(m, "bc_dagger"))  # first invocation pins d = 1 / 6
+    assert len(latency_run["flown"]) == 1
+    if change == "new_d":
+        _write_delay(delay, {"bc_dagger": 1, "dp": 7})
+    else:
+        _write_delay(delay, {"bc_dagger": 1, "dp": 6}, extra="regenerated")
+    m2 = ev_arms.load_matrix(delay_file=delay)
+    with pytest.raises(ev_matrix.DelayPinError, match="differs from the pin"):
+        run(m2, lat(m2, "dp"))
+    assert len(latency_run["flown"]) == 1
+    assert not list((out / "rows" / "dp").rglob("*latency-d7*"))
+    # Even a core-only resume refuses while the matrix it expands disagrees with the pin.
+    core = [j for j in m2.jobs if j.tag == "core" and j.arm == "bc" and j.seed == 0][:1]
+    with pytest.raises(ev_matrix.DelayPinError):
+        run(m2, core)
+
+
+def test_delay_json_changed_mid_run_stops_the_next_latency_job(
+    latency_run: dict[str, Any],
+) -> None:
+    run, lat, delay = latency_run["run"], latency_run["lat"], latency_run["delay"]
+    m = ev_arms.load_matrix(delay_file=delay)
+    latency_run["on_fly"] = lambda: _write_delay(delay, {"bc_dagger": 1, "dp": 6}, extra="x")
+    with pytest.raises(ev_matrix.DelayPinError, match="changed mid-run"):
+        run(m, lat(m, "bc_dagger", "dp"))
+    assert len(latency_run["flown"]) == 1  # the second latency job was refused before flying
+
+
+def test_latency_jobs_need_d_from_delay_json(latency_run: dict[str, Any]) -> None:
+    run, lat, out = latency_run["run"], latency_run["lat"], latency_run["out"]
+    m = ev_arms.load_matrix(delays={"bc_dagger": 1, "dp": 6})  # explicit, not from a file
+    assert m.delay_source == {"file": None, "sha256": None, "delays": {"bc_dagger": 1, "dp": 6}}
+    with pytest.raises(ev_matrix.DelayPinError, match="read from results/latency/delay.json"):
+        run(m, lat(m, "dp"))
+    assert latency_run["flown"] == [] and not (out / ev_matrix.LATENCY_PINS_FILE).exists()
+    # A smoke-style run (select, frozen=False) may use them and writes no pin.
+    run(m, lat(m, "dp"), frozen=False)
+    assert len(latency_run["flown"]) == 1 and not (out / ev_matrix.LATENCY_PINS_FILE).exists()
+    # A core-only invocation with explicit delays writes no delay pin either.
+    core = [j for j in m.jobs if j.tag == "core" and j.arm == "bc" and j.seed == 0][:1]
+    run(m, core)
+    assert not (out / ev_matrix.LATENCY_PINS_FILE).exists()
+
+
+def test_committed_delay_json_expands_and_is_recorded() -> None:
+    """The committed results/latency/delay.json (Phase 9): d = 1 (bc_dagger), 6 (dp)."""
+    path = p8_adapter.REPO_ROOT / "results" / "latency" / "delay.json"
+    if not path.is_file():
+        pytest.skip("results/latency/delay.json not committed on this branch")
+    m = ev_arms.load_matrix()
+    assert m.delay_source is not None
+    assert m.delay_source["file"] == "results/latency/delay.json"
+    assert m.delay_source["sha256"] == p8_adapter.sha256_file(path)
+    flown = {j.arm: j.latency_steps for j in m.jobs if j.tag == "latency_arm"}
+    assert flown == m.delay_source["delays"] == dict(ev_arms.read_delay_file(path))
+    assert flown == {"bc_dagger": 1, "dp": 6}
+    assert sum(j.n_episodes for j in m.jobs if j.tag == "latency_arm") == 6000

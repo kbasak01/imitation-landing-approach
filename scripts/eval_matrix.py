@@ -136,7 +136,10 @@ def main() -> int:
         print("--assume-delay is for --dry-run only; a flight reads delay.json", file=sys.stderr)
         return 2
     assumed = None
-    if args.assume_delay is not None and not ev_arms.deploy_latency_arm.DELAY_FILE.is_file():
+    if args.assume_delay is not None:
+        if ev_arms.deploy_latency_arm.DELAY_FILE.is_file():
+            print("--assume-delay refused: results/latency/delay.json exists", file=sys.stderr)
+            return 2
         assumed = _assumed(args.assume_delay)
     try:
         matrix = ev_arms.load_matrix(alias_ta1_ensemble=not args.fly_ta1_ensemble, delays=assumed)

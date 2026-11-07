@@ -821,3 +821,17 @@ def test_h5a_is_read_as_written(tmp_path: Path) -> None:
     assert rec["status"] == scorer_text and rec["verdict"] is None
     with pytest.raises(hy.RowError, match="h5a_verdict"):
         hy.read_h5a(_write_h5a(tmp_path / "d", "supported", csv_verdict="not supported"))
+
+
+def test_h5a_reads_the_committed_deploy_scorer_output() -> None:
+    """results/latency as make bench-score wrote it (Phase 9), read as written."""
+    root = p8_adapter.REPO_ROOT / "results" / "latency"
+    if not (root / "h5a.csv").is_file():
+        pytest.skip("results/latency/h5a.csv not committed on this branch")
+    import json
+
+    rec = hy.read_h5a(root)
+    delay = json.loads((root / "delay.json").read_text(encoding="utf-8"))
+    assert rec["status"] == "scored" and rec["verdict"] == delay["h5a_verdict"]
+    assert rec["delays"] == delay["arms"]
+    assert [p["provider"] for p in rec["providers"]]

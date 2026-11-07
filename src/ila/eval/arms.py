@@ -81,6 +81,7 @@ episodes into a ``ppo`` half and a ``gated`` half (:mod:`ila.eval.matrix`).
 
 from __future__ import annotations
 
+import dataclasses
 import functools
 import math
 from collections.abc import Mapping, Sequence
@@ -396,6 +397,11 @@ class Matrix:
         skipped: Blocks not expanded -> reason (empty for the driver and the scorer).
         lists_all: Every frozen list, ``matrix.yaml`` order.
         always_printed: Baselines printed beside every student (P8's committed rows).
+        delay_source: Where the latency arm's ``d`` came from: ``{"file", "sha256",
+            "delays"}`` (``file``/``sha256`` of ``delay.json`` when read from it by
+            :func:`load_matrix`; both ``None`` when ``delays`` was passed explicitly, e.g. a
+            test or an assumed dry run). ``None`` when the block was not expanded. Pinned by
+            :func:`ila.eval.matrix.check_or_pin_delays` (privileged-leak review, Phase 9 R1).
     """
 
     arms: tuple[ArmSpec, ...]
@@ -404,6 +410,7 @@ class Matrix:
     skipped: Mapping[str, str]
     lists_all: tuple[str, ...]
     always_printed: tuple[str, ...]
+    delay_source: Mapping[str, Any] | None = None
 
     def arm(self, name: str) -> ArmSpec:
         """Return the :class:`ArmSpec` of ``name``.
@@ -537,8 +544,16 @@ def load_matrix(
     raw = read_matrix_yaml(path)
     if not latency_arm:
         return expand(raw, cells, alias_ta1_ensemble=alias_ta1_ensemble, latency_arm=False)
-    d = read_delay_file(delay_file) if delays is None else delays
-    return expand(raw, cells, alias_ta1_ensemble=alias_ta1_ensemble, delays=d)
+    if delays is not None:
+        return expand(raw, cells, alias_ta1_ensemble=alias_ta1_ensemble, delays=delays)
+    sha = p8_adapter.sha256_file(delay_file) if Path(delay_file).is_file() else None
+    d = read_delay_file(delay_file)
+    if p8_adapter.sha256_file(delay_file) != sha:
+        raise LatencyDelayError(f"{delay_file} changed while it was read; refusing to expand")
+    m = expand(raw, cells, alias_ta1_ensemble=alias_ta1_ensemble, delays=d)
+    return dataclasses.replace(
+        m, delay_source={"file": _rel(Path(delay_file)), "sha256": sha, "delays": dict(d)}
+    )
 
 
 def _cells(
@@ -755,9 +770,11 @@ def expand(
 
     # latency arm (Phase 9, P3-D1 §7): the core arm specs, one d per arm, id SS4-SS6
     skipped = dict(SKIPPED_BLOCKS)
+    delay_source: dict[str, Any] | None = None
     if latency_arm:
         assert delays is not None
         jobs.extend(_latency_jobs(raw[LATENCY_TAG], by_arm, delays, lists_all, list_cells))
+        delay_source = {"file": None, "sha256": None, "delays": dict(delays)}
     else:
         skipped[LATENCY_TAG] = _LATENCY_NOT_EXPANDED
 
@@ -773,6 +790,7 @@ def expand(
         skipped=skipped,
         lists_all=lists_all,
         always_printed=tuple(str(b) for b in raw["always_printed"]),
+        delay_source=delay_source,
     )
 
 

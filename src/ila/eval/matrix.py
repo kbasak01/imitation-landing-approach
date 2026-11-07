@@ -55,6 +55,13 @@ Outputs (under ``out``, default ``results/e08``)
 * ``run_info.json``: commits, list hashes, config hashes, committed-row provenance, host, the
   shared cells, the skipped blocks, every invocation, and per-job wall clocks
   (:func:`write_run_info`).
+* ``latency_pins.json``: the latency arm's ``delay.json`` (repository path, SHA-256) and its
+  ``d`` per arm, pinned by the first non-smoke invocation that expands the latency arm from
+  ``delay.json``; every later invocation must expand the same bytes and the same ``d``, and
+  every latency job re-hashes ``delay.json`` before it flies (:func:`check_or_pin_delays`;
+  privileged-leak review, Phase 9 R1: a regenerated ``delay.json`` would otherwise fly under a
+  new ``__latency-d<d>`` stem and orphan the old rows). ``run_info.json`` records the pin and
+  ``delay.json``'s SHA-256 and ``d``; each latency sidecar records them too.
 * ``selection_pins.json``: ``{"<arm>/s<seed>": selection.json SHA-256}`` for every (arm, seed)
   of the whole matrix, written by the first non-smoke invocation; every later invocation
   re-resolves them and refuses to fly if any differs (:func:`check_or_pin_selections`;
@@ -121,7 +128,9 @@ from ila.train import select as train_select
 __all__ = [
     "CAMERA_SHA256_PREFIX",
     "CAMERA_SHA256_SUFFIX",
+    "DelayPinError",
     "EXTRA_COLUMNS",
+    "LATENCY_PINS_FILE",
     "OUT_ROOT",
     "P2D2_MS",
     "PROJECTION_ASSUMPTIONS",
@@ -132,6 +141,7 @@ __all__ = [
     "JobProjection",
     "RowCheckError",
     "SelectionPinError",
+    "check_or_pin_delays",
     "check_or_pin_selections",
     "check_rows",
     "diffusion_cost_ratio",
@@ -163,6 +173,9 @@ OUT_ROOT: Final[Path] = p8_adapter.REPO_ROOT / "results" / "e08"
 
 #: Selection pins, under the output root (module docstring).
 PINS_FILE: Final[str] = "selection_pins.json"
+
+#: The latency arm's ``delay.json`` pin, under the output root (module docstring).
+LATENCY_PINS_FILE: Final[str] = "latency_pins.json"
 
 #: ``status.json`` and the log of the background job.
 STATUS_DIR: Final[Path] = p8_adapter.REPO_ROOT / "artifacts" / "runs" / "eval"
@@ -211,6 +224,10 @@ class RowCheckError(AssertionError):
 
 class SelectionPinError(RuntimeError):
     """A selection record differs from the one pinned by the first invocation."""
+
+
+class DelayPinError(RuntimeError):
+    """The latency arm's ``delay.json`` or ``d`` differs from the first invocation's pin."""
 
 
 # --------------------------------------------------------------------------- rows out
@@ -893,6 +910,100 @@ def check_or_pin_selections(
     return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pins": current, "created": True}
 
 
+def _latency_d(matrix: ev_arms.Matrix) -> dict[str, int]:
+    """Arm -> the ``d`` its ``latency_arm`` jobs fly with (empty without latency jobs)."""
+    out: dict[str, int] = {}
+    for j in matrix.jobs:
+        d = j.latency_steps
+        if j.tag == ev_arms.LATENCY_TAG and d is not None and out.setdefault(j.arm, d) != d:
+            raise DelayPinError(f"latency_arm {j.arm}: two delays in one matrix")
+    return out
+
+
+def _delay_path(file: str) -> Path:
+    p = Path(file)
+    return p if p.is_absolute() else p8_adapter.REPO_ROOT / p
+
+
+def check_or_pin_delays(
+    out_root: Path, matrix: ev_arms.Matrix, jobs: Sequence[ev_arms.Job], *, write: bool
+) -> dict[str, Any]:
+    """Compare the latency arm's ``delay.json`` and ``d`` with ``latency_pins.json``, or pin them.
+
+    Args:
+        out_root: Output root.
+        matrix: The expanded matrix (its :attr:`ila.eval.arms.Matrix.delay_source`).
+        jobs: The jobs this invocation flies.
+        write: Write the pin when the file does not exist (a non-smoke invocation).
+
+    Returns:
+        ``{"file", "sha256", "pin", "created"}``: the pin file (``None`` when nothing is
+        pinned) and the record every latency job is checked against (``None`` without one).
+
+    Raises:
+        DelayPinError: If a pin exists and the matrix's ``delay.json`` SHA-256 or any arm's
+            ``d`` differs from it; or a non-smoke invocation would fly a latency job with
+            ``d`` not read from ``delay.json``. Nothing is flown in either case.
+    """
+    path = out_root / LATENCY_PINS_FILE
+    flown = _latency_d(matrix)
+    src = matrix.delay_source
+    current = None
+    if flown and src is not None:
+        current = {"delay_json": src.get("file"), "delay_json_sha256": src.get("sha256"),
+                   "delays": dict(sorted(flown.items()))}  # fmt: skip
+    if path.is_file():
+        pinned = mf.read_json(path)
+        if current is not None:
+            same = (pinned.get("delay_json_sha256"), pinned.get("delays")) == (
+                current["delay_json_sha256"],
+                current["delays"],
+            )
+            if not same:
+                raise DelayPinError(
+                    f"{path}: delay.json {current['delay_json_sha256']} with d "
+                    f"{current['delays']} differs from the pin {pinned.get('delay_json_sha256')} "
+                    f"with d {pinned.get('delays')}; nothing flown (a resumed latency arm must "
+                    "fly the d it started with)"
+                )
+        return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pin": pinned,
+                "created": False}  # fmt: skip
+    wants_latency = any(j.latency_steps is not None for j in jobs)
+    if current is None or current["delay_json_sha256"] is None:
+        if write and wants_latency:
+            raise DelayPinError(
+                "latency_arm jobs fly only with d read from results/latency/delay.json "
+                "(load_matrix without delays=); nothing flown"
+            )
+        return {"file": None, "sha256": None, "pin": current, "created": False}
+    if not write:
+        return {"file": None, "sha256": None, "pin": current, "created": False}
+    write_json(path, {"created_utc": now_utc(), **current})
+    return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pin": current, "created": True}
+
+
+def _check_delay_now(job: ev_arms.Job, pin: Mapping[str, Any] | None) -> None:
+    """Before a latency job flies: its ``d`` is the pinned one and ``delay.json`` is unchanged.
+
+    Raises:
+        DelayPinError: On any difference (the job is not flown).
+    """
+    if job.latency_steps is None:
+        return
+    if pin is None:
+        raise DelayPinError(f"{job.rel_path}: no delay record for a latency job")
+    want = pin.get("delays", {}).get(job.arm)
+    if want != job.latency_steps:
+        raise DelayPinError(f"{job.rel_path}: d {job.latency_steps} != pinned d {want}")
+    file, sha = pin.get("delay_json"), pin.get("delay_json_sha256")
+    if file is None or sha is None:
+        return  # smoke / explicit delays: nothing on disk to re-check
+    path = _delay_path(str(file))
+    now = p8_adapter.sha256_file(path) if path.is_file() else None
+    if now != sha:
+        raise DelayPinError(f"{path}: SHA-256 {now} != pinned {sha}: delay.json changed mid-run")
+
+
 def run_jobs(
     jobs: Sequence[ev_arms.Job],
     matrix: ev_arms.Matrix,
@@ -926,17 +1037,29 @@ def run_jobs(
     Raises:
         DirtyTreeError: On a dirty tree without ``allow_dirty``.
         SelectionPinError: If a selection differs from its pin (before anything is flown).
+        DelayPinError: If ``delay.json`` or a ``d`` differs from its pin (before anything is
+            flown, or before the latency job that would fly under it).
     """
     dirty = dirty_paths(exclude=out_root)
     if dirty and not allow_dirty:
         raise DirtyTreeError(f"uncommitted changes (use --allow-dirty for a smoke run): {dirty}")
     pins = check_or_pin_selections(out_root, matrix, write=frozen)
+    delay_pins = check_or_pin_delays(out_root, matrix, jobs, write=frozen)
+    delay_pin = delay_pins["pin"]
     episodes_of = expected_episodes if episodes_of is None else episodes_of
     status = JobStatus(status_dir, "eval")
     ila_commit = _git("rev-parse", "HEAD").strip()
     static = {
         **static_provenance(out_root),
         "selection_pins": {"file": pins["file"], "sha256": pins["sha256"]},
+        "latency_pins": {"file": delay_pins["file"], "sha256": delay_pins["sha256"]},
+        "delay_json": None
+        if delay_pin is None
+        else {
+            "file": delay_pin.get("delay_json"),
+            "sha256": delay_pin.get("delay_json_sha256"),
+            "delays": delay_pin.get("delays"),
+        },
     }
     invocation = {
         "id": status.record["started_utc"],
@@ -949,6 +1072,7 @@ def run_jobs(
         "chunk": chunk,
         "jobs_requested": len(jobs),
         "selection_pins_created": pins["created"],
+        "latency_pins_created": delay_pins["created"],
     }
     provenance = {
         "ila_commit": ila_commit,
@@ -973,6 +1097,7 @@ def run_jobs(
                 if pins["pins"][f"{job.arm}/s{job.seed}"] != ckpt.selection_json_sha256:
                     raise SelectionPinError(f"{job.arm} s{job.seed}: selection changed mid-run")
                 ev_arms.verify_checkpoint_bytes(ckpt)  # bytes, arm, seed, obs_variant; every job
+                _check_delay_now(job, delay_pin)  # latency jobs: pinned d, delay.json unchanged
                 status.update(current_job=job.rel_path.as_posix())
                 t0 = time.perf_counter()
                 rows, plan = fly_job(job, ckpt, episodes, workers=workers, chunk=chunk)
@@ -986,7 +1111,15 @@ def run_jobs(
                     plan=plan,
                     wall_clock_s=wall,
                     workers=workers,
-                    provenance=provenance,
+                    provenance=provenance
+                    if job.latency_steps is None
+                    else {
+                        **provenance,
+                        "latency_steps": job.latency_steps,
+                        "delay_json_sha256": None
+                        if delay_pin is None
+                        else delay_pin.get("delay_json_sha256"),
+                    },
                 )
                 flown_eps += len(episodes)
                 flown_s += wall
