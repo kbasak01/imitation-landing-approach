@@ -3574,6 +3574,49 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
 - **On the eval-auditor's edits.** All accepted. "Unpaired reading" now opens the `bc_mix` SS5
   IQM sentence. Optional grace-used successes are reported (item 7); the review's teacher count
   holds in four of six cells, not six.
-- **Unchanged.** `hypotheses.csv` (verdict, estimate, CI and every other column) and
-  `contrasts.csv` are byte-identical to `ae63980`; `aggregate.csv`, `above_teacher.csv` and
-  `missing.csv` too.
+- **Unchanged.** At `0ada432`, `hypotheses.csv` (verdict, estimate, CI and every other column)
+  and `contrasts.csv` were byte-identical to `ae63980`, and so were `aggregate.csv`,
+  `above_teacher.csv` and `missing.csv`. The Gate 8 fixes (`fbdd32a`) then appended the
+  `ceiling_limited`, `notes` and `caveats_see` columns to `hypotheses.csv`. Every earlier column is
+  unchanged.
+
+### Gate 8 passed (2026-11-06)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| Every cell filled from CSV, or the empty cell explained | `results/e08/score_info.json`: 931 of 931 expected cells present, 0 missing (`missing.csv` header only). 351 jobs, 179 200 episodes in `results/e08/rows/**`, one invocation at `6a8623d` on a clean tree (`run_info.json`). Each row's `ckpt_sha256` equals its pinned `selection.json` pick (71 pins). `latency_arm` is not a Phase 8 cell: it needs Phase 9's d (P3-D1 §7–§8; `run_info.json` `skipped_blocks`) | PASS |
+| Hypotheses scored as written | `results/e08/hypotheses.{csv,json}`; P8-D1 item 8. Scorers follow P3-D1 §6, using P3-D1 §1's statistics: H1 P8 `paired_bootstrap`; H3 joint-seed; H2 W₁ bootstrap; H4 three-arm. Each non-P8 statistic has a known-answer test (`tests/test_eval_stats.py`), and each verdict branch has a synthetic test (`tests/test_eval_hypotheses.py`). Verdicts (point estimates [95 % CI]): **H1** `id` SS5 inconclusive +2.6 [+0.6, +4.8] (ceiling-limited: the largest attainable gain is 4.0); **H1-SS6** supported +5.9 [+2.3, +9.7]; **H1-DART-SS5** inconclusive +3.6 [+1.7, +5.8] (ceiling-limited: 4.3); **H1-DART-SS6** supported +8.1 [+4.6, +11.9]; **H2** not supported +0.088 s [−0.100, +0.263] (model scale); **H3** supported +47.4 [+41.0, +53.8], with the P6-D5 deck-motion caveat; **H4** supported +9.4 [+5.6, +13.5]. H5(a)/(b) are Phase 9 | PASS |
+| `results-skeptic` reports nothing BLOCKING | Pre-gate review of `ae63980`: 1 BLOCKING (B1, the H3 deck-motion caveat), 2 SERIOUS, 11 MINOR. All addressed (P8-D1 review response). Re-review of `0ada432`: **nothing BLOCKING**, no SERIOUS, 4 MINOR and 3 NOTEs, all fixed in `fbdd32a`/`76de808` | PASS |
+| Students above their teacher investigated before reporting (CLAUDE.md #8) | 6 cells flagged (`above_teacher.csv`); touchdown audit in `above_teacher/audit.md` and per-cell JSONs. `results-skeptic` released all 6 (`above_teacher/reviewed.json`): 5 single-seed margins of 1–3 episodes; `bc_mix` `id` SS6 is above the `T_mix` reference only through `gated`'s timeouts, and below `ppo` s0 | PASS |
+| `results.md` re-renders byte-identically | `make report` (render + `git diff --exit-code`) clean at `76de808`; SHA-256 `9a488a8e…` | PASS |
+| CPU tests green | `make lint` clean (ruff, format, mypy --strict, 75 files). `make test` at `76de808`: 1 086 passed, 1 skipped, 0 failed (20 min 28 s) on an unchanging tree; also green at `0ada432` (1 079 passed) and `ae63980` (1 070 passed) | PASS |
+
+*Reviewers.*
+- **`privileged-leak-auditor`.**
+  - 2026-11-05, before flight, on `9c7ed79`: no LEAK, 2 RISK. Both closed in `6a8623d`:
+    - the checkpoint arm and contract are verified before every job;
+    - selections are pinned across invocations.
+  - 2026-11-06, Gate 8, on `0ada432`: **no LEAK, no RISK**. All 179 200 rows and 351 sidecars match the pins, the selections and the recorded hashes. Render and obs variants are consistent with arm and tag, and nothing feeds frozen-list outcomes back into selection, training or tuning. Its three NOTEs:
+    - NOTE 1 (`ila/viz` added to the name scans): done in `fbdd32a`;
+    - NOTE 2 (two frozen-key reads in tests): recorded in P8-D1 item 5;
+    - NOTE 3 (code changing mid-flight): **refuted**. The reporting commits were made in a separate worktree. The main checkout stayed at `6a8623d` until 2026-11-07T00:23:40Z, after the last job at 2026-11-06T22:51:32Z (P8-D1 item 1).
+- **`results-skeptic`.** 2026-11-06:
+  - above-teacher review: 6 RELEASE, no BLOCKER;
+  - pre-gate review of `ae63980`: B1 + S1, S2 + M1–M11, all fixed;
+  - re-review of `0ada432`: nothing BLOCKING; MINOR 1–4 fixed in `fbdd32a`/`76de808`.
+
+*Deviations this phase.* None. No threshold, list, criterion or frozen config was changed. Implementation choices P3-D1 leaves open are recorded in P8-D1 (a decision, not a deviation).
+
+## Phase 9
+
+*Before you start (from Phase 8).*
+- **What Phase 9 needs.** `latency_arm` and H5(a)/(b) are the only matrix blocks not flown. P3-D1 §7's d comes from Phase 9's p99, then the latency arm flies `id` SS4–SS6 (H5(b) at SS5 only) through the same `ila.eval.matrix` driver.
+  - The `latency_arm` block is in `ila.eval.arms.SKIPPED_BLOCKS`; enabling it is a code change, reviewed by `privileged-leak-auditor` before flight.
+  - The selection pins in `results/e08/selection_pins.json` must still match.
+- **Fly from a frozen tree.** Fly from a dedicated worktree, or re-check HEAD per job: `ila_commit` is captured once per invocation (leak NOTE 3).
+- **Parity uses `select` only** (P3-D1 §6 H5(a)): 1 000 open-loop inputs and the 150 closed-loop episodes.
+- **`dp` context.**
+  - Core `dp` at Ta = 8 is 33.8 % at `id` SS6 and 41.0 % on the static deck (P8-D1 item 8).
+  - H5(b) compares `dp` with itself, so this low baseline does not invalidate the contrast. State it with the result.
+- **README (Phase 10).** Any `dp` sentence says "this `dp`, distilled from P8 `ppo` s0" (P8-D1 item 11). `hypotheses.csv` is never quoted without `hypotheses.json`'s caveats.
+- **First task:** `deploy-benchmarker` exports `dp` (seed 0's selected checkpoint; encoder, one denoise step, unrolled K = 10 with noise as input) and `bc_dagger`, and runs open-loop parity on the 1 000 `select` inputs.
