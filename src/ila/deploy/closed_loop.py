@@ -230,11 +230,12 @@ def count_flips(
 
 def _selection_rows(ckpt: ev_arms.Checkpoint) -> tuple[Path, str]:
     sel = json.loads((p8_adapter.REPO_ROOT / ckpt.selection_json).read_text("utf-8"))
-    path = (
-        (p8_adapter.REPO_ROOT / ckpt.selection_json).parent
-        / "select"
-        / sel["selected"]["rows_file"]
-    )
+    rows_file = sel["selected"]["rows_file"]
+    path = (p8_adapter.REPO_ROOT / ckpt.selection_json).parent / "select" / rows_file
+    if not path.is_file():
+        # Phase 5 committed only selection.json; its per-candidate rows stayed in the run
+        # directory (`selection.json` `run_dir`), as Phase 6 did not.
+        path = Path(sel["run_dir"]) / "select" / rows_file
     return path, path.read_text("utf-8")
 
 
