@@ -402,14 +402,251 @@
       "verdict_note": "supported"
     },
     {
-      "cell": "exported dp (K = 10), batch 1",
+      "beside": [
+        {
+          "label": "ort_cpu_fp32 (scored)",
+          "text": "latency timed; p50 111.596 ms, p99 122.911 ms, max 128.633 ms; open-loop parity True, closed-loop False"
+        },
+        {
+          "label": "ort_cuda_fp32 (scored)",
+          "text": "latency timed; p50 48.2704 ms, p99 52.6441 ms, max 54.159 ms; open-loop parity True, closed-loop False"
+        },
+        {
+          "label": "torch_cuda_fp32 (scored)",
+          "text": "latency timed; p50 80.6775 ms, p99 89.3851 ms, max 93.4996 ms; open-loop parity True, closed-loop False"
+        },
+        {
+          "label": "ort_trt_fp16 (scored)",
+          "text": "latency refused (open-loop parity not passed); p50 n/a ms, p99 n/a ms, max n/a ms; open-loop parity False, closed-loop not flown"
+        },
+        {
+          "label": "ort_trt_fp32 (unscored)",
+          "text": "latency timed; p50 19.832 ms, p99 25.7171 ms, max 31.3325 ms; open-loop parity True, closed-loop False"
+        },
+        {
+          "label": "ort_cuda_fp16 (unscored)",
+          "text": "latency refused (open-loop parity not passed); p50 n/a ms, p99 n/a ms, max n/a ms; open-loop parity False, closed-loop not flown"
+        },
+        {
+          "label": "delay d, bc_dagger",
+          "text": "d = 1 control steps; provider torch_cuda_fp32, p99 4.323704550624825 ms, fallback False"
+        },
+        {
+          "label": "delay d, dp",
+          "text": "d = 6 control steps; provider torch_cpu_fp32, p99 181.33390504546696 ms, fallback True"
+        }
+      ],
+      "caveats": [
+        "Wall-clock latency of one full replanning call at batch 1 on this machine (RTX A4000, i9-10980XE, WSL2); no embedded target is measured, and nothing here transfers to one (P3-D1 §6 H5).",
+        "Parity verdicts are measured on seed 0's selected checkpoint and apply to all five seeds (P3-D1 §3).",
+        "The bound is 33.3 ms as P3-D1 §6 writes it; d uses 33.333 ms (P3-D1 §7; P9-D1 item 9).",
+        "Scored by ila.deploy.latency.score (make bench-score) and read here as written; not re-derived (results/latency/h5a.csv, delay.json)."
+      ],
+      "ceiling_limited": false,
+      "cell": "exported dp (K = 10), dp_e2e, batch 1",
+      "ci_hi": null,
+      "ci_lo": null,
+      "contrast": "p99(dp_e2e, batch 1) < 33.3 ms on at least one scored provider that passes open- and closed-loop parity (P3-D1 §6 H5(a))",
+      "delays": {
+        "bc_dagger": {
+          "candidates": {
+            "ort_cpu_fp32": 17.78320291050477,
+            "ort_cuda_fp32": 5.994668873026967,
+            "torch_cuda_fp32": 4.323704550624825
+          },
+          "d": 1,
+          "fallback": false,
+          "p99_ms": 4.323704550624825,
+          "provider": "torch_cuda_fp32",
+          "row": "bc_e2e"
+        },
+        "dp": {
+          "candidates": {},
+          "d": 6,
+          "fallback": true,
+          "p99_ms": 181.33390504546696,
+          "provider": "torch_cpu_fp32",
+          "row": "dp_e2e"
+        }
+      },
+      "estimate": "nan",
       "hypothesis": "H5(a)",
-      "status": "not scored in Phase 8 (Phase 9): p99 latency on this machine needs Phase 9's export, parity and latency study (P3-D1 §6 H5(a))"
+      "inputs": [
+        "results/latency/delay.json",
+        "results/latency/h5a.csv"
+      ],
+      "kind": "latency",
+      "magnitude": 33.3,
+      "n_seeds": [
+        {
+          "arm": "dp",
+          "seeds": 1
+        }
+      ],
+      "notes": [],
+      "providers": [
+        {
+          "batch_size": "1",
+          "closed_loop_pass": "False",
+          "hypothesis": "H5a",
+          "latency_status": "timed",
+          "max_ms": "128.633",
+          "open_loop_pass": "True",
+          "p50_ms": "111.596",
+          "p99_below_threshold": "False",
+          "p99_ms": "122.911",
+          "parity_pass": "False",
+          "provider": "ort_cpu_fp32",
+          "row": "dp_e2e",
+          "scored": "True",
+          "threshold_ms": "33.3",
+          "verdict": "not supported"
+        },
+        {
+          "batch_size": "1",
+          "closed_loop_pass": "False",
+          "hypothesis": "H5a",
+          "latency_status": "timed",
+          "max_ms": "54.159",
+          "open_loop_pass": "True",
+          "p50_ms": "48.2704",
+          "p99_below_threshold": "False",
+          "p99_ms": "52.6441",
+          "parity_pass": "False",
+          "provider": "ort_cuda_fp32",
+          "row": "dp_e2e",
+          "scored": "True",
+          "threshold_ms": "33.3",
+          "verdict": "not supported"
+        },
+        {
+          "batch_size": "1",
+          "closed_loop_pass": "False",
+          "hypothesis": "H5a",
+          "latency_status": "timed",
+          "max_ms": "93.4996",
+          "open_loop_pass": "True",
+          "p50_ms": "80.6775",
+          "p99_below_threshold": "False",
+          "p99_ms": "89.3851",
+          "parity_pass": "False",
+          "provider": "torch_cuda_fp32",
+          "row": "dp_e2e",
+          "scored": "True",
+          "threshold_ms": "33.3",
+          "verdict": "not supported"
+        },
+        {
+          "batch_size": "1",
+          "closed_loop_pass": "",
+          "hypothesis": "H5a",
+          "latency_status": "refused (open-loop parity not passed)",
+          "max_ms": "",
+          "open_loop_pass": "False",
+          "p50_ms": "",
+          "p99_below_threshold": "",
+          "p99_ms": "",
+          "parity_pass": "False",
+          "provider": "ort_trt_fp16",
+          "row": "dp_e2e",
+          "scored": "True",
+          "threshold_ms": "33.3",
+          "verdict": "not supported"
+        },
+        {
+          "batch_size": "1",
+          "closed_loop_pass": "False",
+          "hypothesis": "H5a",
+          "latency_status": "timed",
+          "max_ms": "31.3325",
+          "open_loop_pass": "True",
+          "p50_ms": "19.832",
+          "p99_below_threshold": "True",
+          "p99_ms": "25.7171",
+          "parity_pass": "False",
+          "provider": "ort_trt_fp32",
+          "row": "dp_e2e",
+          "scored": "False",
+          "threshold_ms": "33.3",
+          "verdict": "context (not scored)"
+        },
+        {
+          "batch_size": "1",
+          "closed_loop_pass": "",
+          "hypothesis": "H5a",
+          "latency_status": "refused (open-loop parity not passed)",
+          "max_ms": "",
+          "open_loop_pass": "False",
+          "p50_ms": "",
+          "p99_below_threshold": "",
+          "p99_ms": "",
+          "parity_pass": "False",
+          "provider": "ort_cuda_fp16",
+          "row": "dp_e2e",
+          "scored": "False",
+          "threshold_ms": "33.3",
+          "verdict": "context (not scored)"
+        }
+      ],
+      "sources": {
+        "results/latency/delay.json": "846fbf6873b808ef5f8dedad74f33e19c5277f207ff2170acf247908c867dd8f",
+        "results/latency/h5a.csv": "2a599290a9d390a91710071aaa7147ebc5dffdf91b3f2b6100b050df2f062d6c"
+      },
+      "statistic": "p99 of >= 2 000 timed batch-1 calls after >= 200 warm-up calls (P8's latency harness through ila.p8_adapter; P9-D1 item 8)",
+      "status": "scored",
+      "units": "ms wall clock per call, batch 1, on this machine (RTX A4000, i9-10980XE, WSL2); lowest p99 among scored providers passing open- and closed-loop parity",
+      "verdict": "not supported",
+      "verdict_note": "not supported (no scored provider passed both parities and was timed)"
     },
     {
+      "beside": [
+        {
+          "label": "delay",
+          "text": "d = 6 control steps (200.0 ms model scale, 1000 ms full scale); from results/latency/delay.json: provider torch_cpu_fp32, row dp_e2e, batch-1 p99 181.33390504546696 ms on this machine (RTX A4000, WSL2), fallback True"
+        },
+        {
+          "label": "success (mean over seeds x episodes)",
+          "text": "latency arm 20.2 % (202/1000); synchronous 36.1 % (361/1000)"
+        },
+        {
+          "label": "outcome classes, seed-episodes",
+          "text": "latency arm: crash 23, off_pad 557, hard_landing 133, bounce 85, success 202, timeout 0 (of 1000); synchronous: crash 2, off_pad 462, hard_landing 103, bounce 72, success 361, timeout 0 (of 1000)"
+        }
+      ],
+      "caveats": [
+        "No two-sided reading for H5(b): a CI wholly above 0 is non-inferior and reported as such (P3-D1 §6).",
+        "Same checkpoints on both sides (the core dp selections); each replicate resamples seed indices jointly for both sides (P3-D1 §1). The parity verdicts behind d were measured on seed 0's selected checkpoint and apply to all five seeds (P3-D1 §3).",
+        "The delay is simulated: PyBullet does not advance while the network computes; each request's result is computed when it is issued, on the CPU fp32 single-sample path, and held back d control steps (P3-D1 §7; P9-D1 item 10). Both sides fly that same path (P3-D1 §3).",
+        "One request in flight at a time; the returned chunk executes from index (To - 1) + d, and past Tp - 1 its last action is held (from d > 7 at To = 2, Tp = 16, Ta = 8); the first action of an episode is zero until the first result lands (P3-D1 §7).",
+        "d comes from a p99 measured on this machine (RTX A4000, i9-10980XE, WSL2); no embedded target is measured (P3-D1 §6 H5).",
+        "Synchronous core dp at Ta = 8 succeeds on 36.1 % (361/1000) at id SS5; 33.8 % (338/1000) at id SS6; 41.0 % (410/1000) at static (mean over seeds x episodes). H5(b) compares this dp, distilled from P8 ppo s0, with itself, so a low baseline does not invalidate the contrast; non-inferiority is relative to that baseline (Phase 9 before-you-start).",
+        "No multiplicity correction is applied (P3-D1 §1)."
+      ],
+      "ceiling_limited": false,
       "cell": "id SS5",
+      "ci_hi": -0.105,
+      "ci_lo": -0.215,
+      "contrast": "success(dp, latency arm, d = 6) - success(dp, synchronous), same checkpoints, Ta = 8, K = 10, no ensembling",
+      "estimate": -0.15899999999999997,
       "hypothesis": "H5(b)",
-      "status": "not scored in Phase 8 (Phase 9): the latency arm's delay d comes from H5(a) (P3-D1 §6 H5(b), §7, §8); matrix.yaml's latency_arm block is not flown here"
+      "inputs": [
+        "latency_arm dp id SS5 Ta8 K10 ens0",
+        "core dp id SS5 Ta8 K10 ens0"
+      ],
+      "magnitude": -0.03,
+      "n_episodes": 200,
+      "n_seeds": [
+        {
+          "arm": "dp",
+          "seeds": 5
+        }
+      ],
+      "notes": [],
+      "statistic": "joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, seed 20261023)",
+      "status": "scored",
+      "units": "success difference, dimensionless (x100 = points)",
+      "verdict": "not supported",
+      "verdict_note": "not supported (CI lower bound below -3 points)"
     }
   ],
   "no_multiplicity": "No multiplicity correction is applied (P3-D1 §1)."
