@@ -162,6 +162,35 @@ def test_bc_d0_equals_inner_and_d3_timeline() -> None:
     assert out == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]  # zero, then each result held 3 steps
 
 
+class _StubTeacher:
+    """P8 ``EvalPolicy`` shape; never asked to act here."""
+
+    def reset(self, seed: int, context: Any = None) -> None:  # noqa: D102
+        del seed, context
+
+    def act(self, obs: Any) -> NDArray[np.float32]:  # noqa: D102
+        del obs
+        raise AssertionError("not flown")
+
+
+def test_wrap_delayed_accepts_only_bc_and_chunked_dp() -> None:
+    from ila.policies.bc import BCStudent
+    from ila.policies.modular import ModularEstimator, ModularStudent
+    from ila.policies.registry import build_dummy, build_net
+
+    bc = build_dummy("bc", 0)
+    assert isinstance(bc, BCStudent)
+    assert isinstance(la.wrap_delayed(bc, 2), la.DelayedBCStudent)
+    assert isinstance(la.wrap_delayed(FakeDP(), 2), la.DelayedDiffusionStudent)
+    net = build_net("modular", 0)
+    assert isinstance(net, ModularEstimator)
+    modular = ModularStudent(net, "cpu", teacher=_StubTeacher())
+    assert isinstance(modular, VisionStudentBase) and not hasattr(modular, "chunk_spec")
+    for other in (modular, FakeBC(), object()):
+        with pytest.raises(TypeError, match="no latency-arm wrapper"):
+            la.wrap_delayed(other, 2)
+
+
 def test_delayed_policy_build_pickles() -> None:
     build = functools.partial(
         la.delayed_checkpoint_policy, "/x.pt", 4, n_action_steps=8, num_inference_steps=10

@@ -43,6 +43,8 @@ __all__ = [
     "ChunkSpec",
     "chunk_steps",
     "delayed_chunk_index",
+    "delayed_chunk_offset",
+    "delayed_request_due",
     "ensemble_sources",
     "ensemble_weights",
     "executed_indices",
@@ -221,6 +223,65 @@ def delayed_chunk_index(
     if not 0 <= offset < n_action_steps:
         raise ValueError(f"offset must be in [0, {n_action_steps}), got {offset}")
     return min(n_obs_steps - 1 + delay + offset, horizon - 1)
+
+
+def _check_delayed_schedule(start: int | None, n_action_steps: int, t: int) -> None:
+    _check_step(t)
+    if n_action_steps < 1:
+        raise ValueError(f"Ta must be >= 1, got {n_action_steps}")
+    if start is not None and not 0 <= start <= t:
+        raise ValueError(f"chunk landing step must be in [0, t={t}], got {start}")
+
+
+def delayed_chunk_offset(start: int | None, n_action_steps: int, t: int) -> int | None:
+    """Return the offset into the executing delayed chunk at step ``t``, or ``None`` (P3-D1 §7).
+
+    The latency arm (:mod:`ila.deploy.latency_arm`): a chunk that landed at step ``start``
+    executes at steps ``start ... start + Ta - 1``; offset ``t - start`` goes to
+    :func:`delayed_chunk_index`. Past ``start + Ta - 1`` the chunk has run out (the arm holds
+    its last executed action).
+
+    Args:
+        start: Control step the executing chunk landed at, or ``None`` before the first lands.
+        n_action_steps: ``Ta`` (>= 1).
+        t: Current control step (>= ``start``; 1/30 s model scale).
+
+    Returns:
+        ``t - start`` when ``start <= t < start + Ta``, else ``None``.
+
+    Raises:
+        ValueError: If ``t < 0``, ``Ta < 1`` or ``start`` is outside ``[0, t]``.
+    """
+    _check_delayed_schedule(start, n_action_steps, t)
+    if start is None or t >= start + n_action_steps:
+        return None
+    return t - start
+
+
+def delayed_request_due(start: int | None, n_action_steps: int, delay: int, t: int) -> bool:
+    """Return whether the latency arm's request rule holds at step ``t`` (P3-D1 §7).
+
+    A request is due when the executing chunk has ``d`` steps or fewer left,
+    ``start + Ta - t <= d`` (immediately if it has run out), and always before the first chunk
+    lands (``start is None``). Whether a request is already in flight (requests never
+    overlap) is the arm's bookkeeping, not an index, and is checked by the caller.
+
+    Args:
+        start: Control step the executing chunk landed at, or ``None`` before the first lands.
+        n_action_steps: ``Ta`` (>= 1).
+        delay: ``d`` (>= 0), control steps.
+        t: Current control step (>= ``start``; 1/30 s model scale).
+
+    Returns:
+        ``start is None or start + Ta - t <= d``.
+
+    Raises:
+        ValueError: If ``t < 0``, ``Ta < 1``, ``d < 0`` or ``start`` is outside ``[0, t]``.
+    """
+    _check_delayed_schedule(start, n_action_steps, t)
+    if delay < 0:
+        raise ValueError(f"delay must be >= 0, got {delay}")
+    return start is None or start + n_action_steps - t <= delay
 
 
 def is_replan_step(t: int, n_action_steps: int) -> bool:
