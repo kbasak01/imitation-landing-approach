@@ -39,6 +39,26 @@
       "time_utc": "2026-11-07T14:27:40+00:00",
       "wall_s": 512.0063365679816
     },
+    "closed_loop_recheck": {
+      "arms": {
+        "bc_dagger": {
+          "previous": false,
+          "reference_equals_selection_rows": true
+        },
+        "dp": {
+          "previous": false,
+          "reference_equals_selection_rows": true
+        }
+      },
+      "git": {
+        "dirty": false,
+        "dirty_outside_results": false,
+        "dirty_paths": [],
+        "ila_commit": "efec6283fee07ab357fec3bca94fdf801a892426"
+      },
+      "time_utc": "2026-11-07T18:43:23+00:00",
+      "what": "reference_equals_selection_rows re-decided from file bytes; nothing flown"
+    },
     "export": {
       "git": {
         "dirty": false,

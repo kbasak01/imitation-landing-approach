@@ -24,7 +24,19 @@
     "success": 149
   },
   "provider": "torch_cpu_fp32",
-  "reference_equals_selection_rows": false,
+  "reference_equals_selection_rows": true,
+  "reference_equals_selection_rows_recheck": {
+    "fields_changed": [
+      "reference_equals_selection_rows"
+    ],
+    "ila_commit": "efec6283fee07ab357fec3bca94fdf801a892426",
+    "method": "bytes (Path.read_bytes equality, as cmp)",
+    "previous": false,
+    "reason": "the flight compared the reference rows text as written (csv, CRLF row endings) with the selection rows file read back with newline translation (LF), so byte-identical files were recorded as different; re-checked by comparing the two files' bytes, nothing re-flown",
+    "reference_rows_sha256": "b4880f57567975a78bb97c24db0f216f25d524b27909c7a4a3bc283f6a9e9281",
+    "selection_rows_sha256": "b4880f57567975a78bb97c24db0f216f25d524b27909c7a4a3bc283f6a9e9281",
+    "time_utc": "2026-11-07T18:43:23+00:00"
+  },
   "rows_text_differ": 0,
   "scored": false,
   "selection_rows_file": "artifacts/runs/bc_dagger/s0/select/s5_step005000_rows.csv",
