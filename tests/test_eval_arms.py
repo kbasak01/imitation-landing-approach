@@ -1,9 +1,10 @@
-"""Phase 8 matrix expansion and arm resolution (``ila.eval.arms``).
+"""Matrix expansion (Phase 8, and the Phase 9 latency arm) and arm resolution (``ila.eval.arms``).
 
 The job count is checked against a hand count from P3-D1 §3 / §6 and ``configs/eval/matrix.yaml``
 (arithmetic in :func:`test_job_count_equals_the_hand_count`). Frozen lists are read for their
 keys and cells only (allowed, P3-D1 §4); nothing is flown here. Checkpoint bytes are read only in
-tests marked ``checkpoints`` (workstation only).
+tests marked ``checkpoints`` (workstation only). The latency arm's ``d`` here is synthetic
+(:data:`DELAYS`); the committed ``results/latency/delay.json`` is never assumed to exist.
 """
 
 from __future__ import annotations
@@ -35,6 +36,9 @@ LIST_CELLS: dict[str, tuple[str, ...]] = {
 }
 
 CORE = ("bc_state", "bc", "bc_matched", "bc_dart", "bc_dagger", "dp", "modular")
+
+#: Synthetic latency-arm delays (control steps), for expansion only.
+DELAYS: dict[str, int] = {"bc_dagger": 2, "dp": 3}
 ABLATIONS = (
     "bc_pid",
     "dp_pid",
@@ -52,7 +56,7 @@ ABLATIONS = (
 
 @pytest.fixture(scope="module")
 def matrix() -> ev_arms.Matrix:
-    return ev_arms.expand(stats.read_matrix_yaml(), LIST_CELLS)
+    return ev_arms.expand(stats.read_matrix_yaml(), LIST_CELLS, delays=DELAYS)
 
 
 def _counts(m: ev_arms.Matrix) -> tuple[Counter[str], Counter[str]]:
@@ -69,7 +73,7 @@ def test_frozen_list_cells_are_p3d1s() -> None:
 
 def test_matrix_yaml_is_sha_checked(tmp_path: Path) -> None:
     assert p8_adapter.sha256_file(stats.MATRIX_YAML) == stats.MATRIX_SHA256
-    m = ev_arms.load_matrix(list_cells=LIST_CELLS)
+    m = ev_arms.load_matrix(list_cells=LIST_CELLS, delays=DELAYS)
     assert m.lists_all == ("static", "id", "unseen_seastate", "unseen_heading", "unseen_vessel")
     assert m.always_printed == ("teacher", "pid_feedforward", "pid_track_descend", "oracle_gated")
 
@@ -83,7 +87,9 @@ def test_job_count_equals_the_hand_count(matrix: ev_arms.Matrix) -> None:
     # dp_K: 6 K minus K = 10 (core) = 5 x 5 seeds = 25 jobs; 25 x 200 (id SS5) = 5 000.
     # appearance_shift: 3 arms x 5 variants x 5 seeds = 75 jobs; 75 x 400 (id SS5-SS6) = 30 000.
     # reference_external: R1 x 3 seeds = 3 jobs; 3 x 800 (id SS3-SS6) = 2 400.
-    # Total: 351 jobs, 179 200 episodes. Shared cells: 5 (Ta 8 off) + 5 (Ta 1 on) + 5 (K 10).
+    # Phase 8 total: 351 jobs, 179 200 episodes. Shared: 5 (Ta 8 off) + 5 (Ta 1 on) + 5 (K 10).
+    # latency_arm (Phase 9, P3-D1 §7): 2 arms x 5 seeds x (id SS4-SS6) = 10 jobs; 10 x 600 =
+    # 6 000 episodes. With it: 361 jobs, 185 200 episodes; no shared cell added.
     assert len(APPEARANCE_SHIFTS) == 5
     jobs, eps = _counts(matrix)
     assert jobs == {
@@ -93,6 +99,7 @@ def test_job_count_equals_the_hand_count(matrix: ev_arms.Matrix) -> None:
         "dp_K": (6 - 1) * 5,
         "appearance_shift": 3 * 5 * 5,
         "reference_external": 3,
+        "latency_arm": 2 * 5,
     }
     assert eps == {
         "core": 7 * 5 * 2800,
@@ -101,15 +108,20 @@ def test_job_count_equals_the_hand_count(matrix: ev_arms.Matrix) -> None:
         "dp_K": 5 * 5 * 200,
         "appearance_shift": 3 * 5 * 5 * 400,
         "reference_external": 3 * 800,
+        "latency_arm": 2 * 5 * 600,
     }
-    assert len(matrix.jobs) == 351 and sum(eps.values()) == 179_200
+    assert len(matrix.jobs) == 361 and sum(eps.values()) == 185_200
+    phase8 = [j for j in matrix.jobs if j.tag != "latency_arm"]
+    assert len(phase8) == 351 and sum(j.n_episodes for j in phase8) == 179_200
     assert Counter((s.tag, s.inference.as_tuple()) for s in matrix.shared) == {
         ("dp_Ta", (8, 10, False)): 5,
         ("dp_Ta", (1, 10, True)): 5,
         ("dp_K", (8, 10, False)): 5,
     }
     # Flying (Ta = 1, on) instead adds 5 jobs and 3 000 episodes.
-    flown = ev_arms.expand(stats.read_matrix_yaml(), LIST_CELLS, alias_ta1_ensemble=False)
+    flown = ev_arms.expand(
+        stats.read_matrix_yaml(), LIST_CELLS, alias_ta1_ensemble=False, delays=DELAYS
+    )
     jobs2, eps2 = _counts(flown)
     assert jobs2["dp_Ta"] == 45 and eps2["dp_Ta"] == 27_000 and len(flown.shared) == 10
 
@@ -141,7 +153,7 @@ def test_arms_seeds_teachers_and_variants(matrix: ev_arms.Matrix) -> None:
         diffusion = name == "dp" or name.startswith("dp_") or name == "R1_lerobot_dp"
         assert spec.inference == (core_inf if diffusion else None), name
     for j in matrix.jobs:
-        if j.tag in ("core", "ablation", "appearance_shift", "reference_external"):
+        if j.tag in ("core", "ablation", "appearance_shift", "reference_external", "latency_arm"):
             assert j.inference == by[j.arm].inference
     assert {j.list_name for j in matrix.jobs if j.tag == "ablation"} == {"id"}
     assert {j.sea_states for j in matrix.jobs if j.tag == "ablation"} == {("SS4", "SS5", "SS6")}
@@ -160,18 +172,125 @@ def test_arms_seeds_teachers_and_variants(matrix: ev_arms.Matrix) -> None:
     assert all(j.full_list for j in ref)  # id SS3-SS6 is the whole id list
 
 
-def test_latency_arm_is_excluded_and_stated(matrix: ev_arms.Matrix) -> None:
+def test_latency_arm_is_p3d1_s7(matrix: ev_arms.Matrix) -> None:
+    """bc_dagger and dp, seeds 0-4, id SS4-SS6, dp at Ta 8 / K 10 / off, one d per arm."""
     raw = stats.read_matrix_yaml()
-    assert "latency_arm" in raw and set(matrix.skipped) == {"latency_arm"}
-    assert "Phase 9" in matrix.skipped["latency_arm"]
+    assert "latency_arm" in raw and dict(matrix.skipped) == {} and not ev_arms.SKIPPED_BLOCKS
     assert all(j.tag in ev_arms.TAGS for j in matrix.jobs)
-    assert "latency_arm" not in ev_arms.TAGS
-    assert all(j.inference is None or j.inference.K > 0 for j in matrix.jobs)
+    assert ev_arms.TAGS[-1] == ev_arms.LATENCY_TAG == "latency_arm"
+    lat = [j for j in matrix.jobs if j.tag == "latency_arm"]
+    assert {(j.arm, j.seed) for j in lat} == {(a, s) for a in ("bc_dagger", "dp") for s in range(5)}
+    assert all((j.list_name, j.sea_states, j.full_list) == ("id", ("SS4", "SS5", "SS6"), False)
+               for j in lat)  # fmt: skip
+    assert all(j.appearance_shift is None for j in lat)
+    assert {j.inference for j in lat if j.arm == "dp"} == {ev_arms.Inference(8, 10, False)}
+    assert {j.inference for j in lat if j.arm == "bc_dagger"} == {None}
+    assert all(j.latency_steps == DELAYS[j.arm] for j in lat)
+    assert all(j.latency_steps is None for j in matrix.jobs if j.tag != "latency_arm")
+    # The latency arm adds no arm: its checkpoints and selection pins are the core arm's.
+    assert [a.arm for a in matrix.arms].count("dp") == 1
+    assert matrix.arm("dp").tag == "core" and matrix.arm("bc_dagger").tag == "core"
+    rec = next(j for j in lat if j.arm == "dp" and j.seed == 0).record()
+    assert rec["latency_steps"] == 3 and rec["Ta"] == 8 and rec["ensemble"] is False
+    assert all("latency_steps" not in j.record() for j in matrix.jobs if j.tag != "latency_arm")
     # Nothing is dropped silently: an unknown block or a missing block raises.
     with pytest.raises(ValueError, match="neither expanded nor skipped"):
-        ev_arms.expand({**raw, "new_block": {}}, LIST_CELLS)
+        ev_arms.expand({**raw, "new_block": {}}, LIST_CELLS, delays=DELAYS)
     with pytest.raises(ValueError, match="missing blocks"):
-        ev_arms.expand({k: v for k, v in raw.items() if k != "latency_arm"}, LIST_CELLS)
+        ev_arms.expand(
+            {k: v for k, v in raw.items() if k != "latency_arm"}, LIST_CELLS, delays=DELAYS
+        )
+    # A block that is not P3-D1 §7's is refused.
+    for key, bad in (
+        ("arms", ["dp"]),
+        ("lists", {"id": ["SS5"]}),
+        ("rule", "d = p99"),
+        ("provider", "any"),
+        ("fallback", "none"),
+    ):
+        changed = {**raw, "latency_arm": {**raw["latency_arm"], key: bad}}
+        with pytest.raises(ValueError, match="P3-D1 §7"):
+            ev_arms.expand(changed, LIST_CELLS, delays=DELAYS)
+
+
+def test_latency_arm_refuses_without_a_committed_d(tmp_path: Path) -> None:
+    raw = stats.read_matrix_yaml()
+    with pytest.raises(ev_arms.LatencyDelayError, match="not guessed"):
+        ev_arms.expand(raw, LIST_CELLS)
+    missing = tmp_path / "delay.json"
+    with pytest.raises(ev_arms.LatencyDelayError, match="does not exist") as err:
+        ev_arms.load_matrix(list_cells=LIST_CELLS, delay_file=missing)
+    assert "make bench-score" in str(err.value) and "refusing" in str(err.value)
+    missing.write_text('{"arms": {"dp": {"d": 4}, "bc_dagger": {"d": null, "status": "x"}}}')
+    with pytest.raises(ev_arms.LatencyDelayError, match="no usable d"):
+        ev_arms.load_matrix(list_cells=LIST_CELLS, delay_file=missing)
+    with pytest.raises(ev_arms.LatencyDelayError, match="no d for bc_dagger"):
+        ev_arms.expand(raw, LIST_CELLS, delays={"dp": 4})
+    with pytest.raises(ev_arms.LatencyDelayError, match="negative"):
+        ev_arms.expand(raw, LIST_CELLS, delays={"dp": 4, "bc_dagger": -1})
+    missing.write_text('{"arms": {"dp": {"d": 4}, "bc_dagger": {"d": 1}}, "h5a_verdict": "x"}')
+    m = ev_arms.load_matrix(list_cells=LIST_CELLS, delay_file=missing)
+    assert {j.latency_steps for j in m.jobs if j.tag == "latency_arm"} == {1, 4}
+    # An explicit opt-out (core arm specs only) is recorded, never silent.
+    core_only = ev_arms.load_matrix(list_cells=LIST_CELLS, delay_file=missing, latency_arm=False)
+    assert (
+        set(core_only.skipped) == {"latency_arm"}
+        and "delay.json" in core_only.skipped["latency_arm"]
+    )
+    assert not any(j.tag == "latency_arm" for j in core_only.jobs) and len(core_only.jobs) == 351
+
+
+def test_d0_latency_jobs_equal_the_synchronous_jobs() -> None:
+    """At d = 0 a latency job is the synchronous core job restricted to id SS4-SS6."""
+    m = ev_arms.expand(stats.read_matrix_yaml(), LIST_CELLS, delays={"bc_dagger": 0, "dp": 0})
+    core = {(j.arm, j.seed, j.list_name): j for j in m.jobs if j.tag == "core"}
+    lat = [j for j in m.jobs if j.tag == "latency_arm"]
+    assert len(lat) == 10
+    for j in lat:
+        sync = core[(j.arm, j.seed, "id")]
+        assert set(j.sea_states) <= set(sync.sea_states)
+        assert (j.arm, j.seed, j.list_name, j.inference, j.appearance_shift) == (
+            sync.arm,
+            sync.seed,
+            sync.list_name,
+            sync.inference,
+            sync.appearance_shift,
+        )
+        a, b = j.record(), sync.record()
+        assert a.pop("latency_steps") == 0
+        for k in ("tag", "sea_states", "full_list"):
+            a.pop(k), b.pop(k)
+        assert a == b
+        assert m.arm(j.arm) is m.arm(sync.arm)  # one arm spec: same checkpoint resolution
+
+
+def test_committed_phase8_jobs_are_unchanged_and_still_done() -> None:
+    """Every committed Phase 8 sidecar is a job of the Phase 9 expansion, with the same spec.
+
+    Reads committed ``results/e08`` rows and sidecars and the committed ``selection.json`` files
+    (no checkpoint bytes): the latency arm re-expands and re-flies nothing.
+    """
+    root = ev_matrix.OUT_ROOT
+    sidecars = sorted((root / "rows").rglob("*.json"))
+    if not sidecars:
+        pytest.skip("results/e08 rows not present")
+    m = ev_arms.load_matrix(delays=DELAYS)
+    by_path = {j.rel_path.as_posix(): j for j in m.jobs}
+    assert len(sidecars) == 351
+    for side in sidecars:
+        rec = json.loads(side.read_text(encoding="utf-8"))
+        job = by_path[rec["rows_file"]]
+        assert job.tag != "latency_arm" and rec["job"] == job.record(), rec["rows_file"]
+    ckpts = {(a.arm, s): ev_arms.resolve_checkpoint(a, s) for a in m.arms for s in a.seeds}
+    phase8 = [j for j in m.jobs if j.tag != "latency_arm"]
+    assert all(ev_matrix.job_done(root, j, ckpts[(j.arm, j.seed)]) for j in phase8)
+    assert not any(
+        ev_matrix.job_done(root, j, ckpts[(j.arm, j.seed)])
+        for j in m.jobs
+        if j.tag == "latency_arm"
+    )
+    pins = json.loads((root / ev_matrix.PINS_FILE).read_text(encoding="utf-8"))["pins"]
+    assert ev_matrix.selection_pins(m) == pins
 
 
 def test_core_dp_cell_is_not_reflown_in_the_sweeps(matrix: ev_arms.Matrix) -> None:
@@ -211,12 +330,22 @@ def test_ta1_ensemble_alias_is_the_same_policy(matrix: ev_arms.Matrix) -> None:
 
 
 def test_output_naming_is_injective_and_clean(matrix: ev_arms.Matrix) -> None:
-    flown = ev_arms.expand(stats.read_matrix_yaml(), LIST_CELLS, alias_ta1_ensemble=False)
+    flown = ev_arms.expand(
+        stats.read_matrix_yaml(), LIST_CELLS, alias_ta1_ensemble=False, delays=DELAYS
+    )
     for m in (matrix, flown):
         paths = [j.rel_path for j in m.jobs]
         assert len(set(paths)) == len(paths)
         keys = {
-            (j.arm, j.seed, j.list_name, j.sea_states, j.inference, j.appearance_shift)
+            (
+                j.arm,
+                j.seed,
+                j.list_name,
+                j.sea_states,
+                j.inference,
+                j.appearance_shift,
+                j.latency_steps,
+            )
             for j in m.jobs
         }
         assert len(keys) == len(m.jobs)  # the file name is a function of these, and back
@@ -228,6 +357,8 @@ def test_output_naming_is_injective_and_clean(matrix: ev_arms.Matrix) -> None:
     assert named["rows/bc/s0/id.csv.gz"].tag == "core"
     assert named["rows/dp/s0/id__Ta8_K10_ens0.csv.gz"].tag == "core"
     assert named["rows/dp/s3/id-SS4-SS5-SS6__Ta12_K10_ens1.csv.gz"].tag == "dp_Ta"
+    assert named["rows/dp/s0/id-SS4-SS5-SS6__Ta8_K10_ens0__latency-d3.csv.gz"].tag == "latency_arm"
+    assert named["rows/bc_dagger/s4/id-SS4-SS5-SS6__latency-d2.csv.gz"].tag == "latency_arm"
     assert named["rows/dp/s1/id-SS5__Ta8_K100_ens0.csv.gz"].tag == "dp_K"
     assert named["rows/modular/s2/id-SS5-SS6__shift-bg_hue.csv.gz"].tag == "appearance_shift"
     assert named["rows/dp/s0/id-SS5-SS6__shift-low_contrast__Ta8_K10_ens0.csv.gz"].arm == "dp"

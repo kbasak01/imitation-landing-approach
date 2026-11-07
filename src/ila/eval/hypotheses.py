@@ -1,4 +1,4 @@
-"""Scoring of H1-H4 exactly as frozen in P3-D1 §6 (Phase 8); H5 is Phase 9's.
+"""Scoring of H1-H5 exactly as frozen in P3-D1 §6 (H1-H4 Phase 8; H5(a), H5(b) Phase 9).
 
 Everything here is simulation only (PyBullet physics, PyBullet TinyRenderer frames). Success is
 dimensionless in ``[0, 1]``; "points" are hundredths of it. Times are seconds, model scale
@@ -10,9 +10,11 @@ Episode rows (CSV-read mappings, string or typed cells) become :class:`ArmMatrix
 :func:`student_matrix` (this project's rows: ``arm``, ``student_seed``, ``Ta``, ``K``,
 ``ensemble``, ``latency_steps``, ``render_cfg_sha256``, ``ckpt_sha256``) or :func:`p8_matrix`
 (P8's committed rows: ``method``, ``run_seed``). Both select one cell (``regime``, ``ss``),
-refuse a missing or extra seed (no seed is dropped, P3-D1 §4), refuse rows of the latency arm
-or of a non-committed render (appearance shift, ``camera``), and require every seed to cover
-the same episodes exactly once. Contrasts then require identical episodes on both sides.
+refuse a missing or extra seed (no seed is dropped, P3-D1 §4), refuse rows of a non-committed
+render (appearance shift, ``camera``), and require every seed to cover the same episodes exactly
+once. :func:`student_matrix` keeps only rows of one ``latency_steps`` (0, the synchronous arm,
+unless the latency arm's ``d`` is asked for), so latency-arm rows never enter a synchronous
+matrix. Contrasts then require identical episodes on both sides.
 
 Scorers and their rules (P3-D1 §6, verbatim in substance)
 ----------------------------------------------------------
@@ -39,9 +41,18 @@ Scorers and their rules (P3-D1 §6, verbatim in substance)
 * :func:`score_h4`: ``id`` SS6; D = P - I (:func:`ila.eval.stats.h4_three_arm_bootstrap`);
   supported: D > 0 and the CI excludes 0; not supported otherwise, a CI wholly below 0 printed
   as "imitation gap larger".
+* :func:`score_h5b`: ``id`` SS5, latency-arm ``dp`` minus synchronous ``dp`` (``Ta = 8``,
+  ``K = 10``, no ensembling) on the same checkpoints (:func:`ila.eval.stats.joint_seed_contrast`).
+  Supported (non-inferior): the CI lower bound >= -3 points (within :data:`MAGNITUDE_TOL`).
+  Not supported: otherwise. No two-sided reversal (P3-D1 §6): a CI wholly above 0 is reported
+  as non-inferior, never as an effect in the other direction (:func:`noninferiority_rule`).
+* :func:`read_h5a`: H5(a) is scored by ``ila.deploy.latency.score`` (``make bench-score``);
+  its verdict is read from ``results/latency/delay.json`` and ``h5a.csv`` as written, checked
+  for consistency, never re-derived here.
 * Unscored, two-sided (:class:`UnscoredContrast`): :func:`h4_p_prime`, :func:`modular_vs_best`
-  (the best end-to-end student from committed ``select`` scores, :func:`best_end_to_end`) and
-  :func:`dart_vs_matched`.
+  (the best end-to-end student from committed ``select`` scores, :func:`best_end_to_end`),
+  :func:`dart_vs_matched` and :func:`latency_context` (latency arm vs synchronous, same
+  checkpoints, at the cells H5(b) does not score).
 
 "Separates" means the 95 % CI excludes 0; magnitudes are judged on the point estimate; there is
 no multiplicity correction (P3-D1 §1). Every SS6 contrast carries :data:`FLIP_FLOOR` beside it.
@@ -50,6 +61,7 @@ no multiplicity correction (P3-D1 §1). Every SS6 contrast carries :data:`FLIP_F
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import json
 import math
@@ -69,6 +81,9 @@ from ila.eval.determinism import P8_FLOOR
 
 __all__ = [
     "CEILING",
+    "CONTROL_STEP_MS",
+    "H5A_THRESHOLD_MS",
+    "H5B_MARGIN",
     "CORE_SEEDS",
     "ABLATION_SEEDS",
     "END_TO_END_ARMS",
@@ -90,9 +105,13 @@ __all__ = [
     "build_h2_reference",
     "dart_vs_matched",
     "h4_p_prime",
+    "latency_context",
     "load_select_scores",
     "magnitude_rule",
     "modular_vs_best",
+    "noninferiority_rule",
+    "outcome_counts",
+    "read_h5a",
     "p8_committed_rows",
     "p8_matrix",
     "pooled_select_p95",
@@ -100,6 +119,7 @@ __all__ = [
     "score_h2",
     "score_h3",
     "score_h4",
+    "score_h5b",
     "student_matrix",
 ]
 
@@ -116,6 +136,15 @@ H2_MAGNITUDE_S: Final[float] = 0.033
 
 #: Ceiling: a reference arm whose point estimate exceeds 100 % - magnitude (P3-D1 §6).
 CEILING: Final[float] = 1.0 - SUCCESS_MAGNITUDE
+
+#: H5(b)'s non-inferiority margin: the 95 % CI lower bound must be >= -3 points (P3-D1 §6).
+H5B_MARGIN: Final[float] = -0.03
+
+#: H5(a)'s p99 bound as P3-D1 §6 writes it, ms (model-scale control step; P9-D1 item 9).
+H5A_THRESHOLD_MS: Final[float] = 33.3
+
+#: One 30 Hz control step, ms model scale (P3-D1 §7's 33.333 ms; 166.7 ms full scale).
+CONTROL_STEP_MS: Final[float] = 33.333
 
 #: Tolerance on "estimate >= magnitude" for float rounding of a difference of means (far
 #: below one episode's 1/1 000 resolution); a recorded implementation choice.
@@ -278,6 +307,8 @@ class ArmMatrix:
         ensemble: Temporal ensembling (``None`` when not applicable).
         tunnelled: ``(n_seeds, n_episodes)`` 1.0 where P8's ``tunnelled`` flag is set, else
             0.0; ``None`` when the rows carry no ``tunnelled`` column.
+        latency_steps: The rows' ``latency_steps`` (the latency arm's ``d``, control steps;
+            0 for every synchronous arm and for P8 rows).
     """
 
     arm: str
@@ -292,6 +323,7 @@ class ArmMatrix:
     K: int | None = None
     ensemble: bool | None = None
     tunnelled: FloatArray | None = None
+    latency_steps: int = 0
 
     @property
     def rate(self) -> float:
@@ -349,6 +381,7 @@ def _assemble(
     *,
     ckpt_column: str | None,
     tags: tuple[int | None, int | None, bool | None] = (None, None, None),
+    latency_steps: int = 0,
 ) -> ArmMatrix:
     if sorted(by_seed) != sorted(expected_seeds):
         raise RowError(
@@ -399,6 +432,7 @@ def _assemble(
         K=tags[1],
         ensemble=tags[2],
         tunnelled=None if tun is None else np.asarray(tun, dtype=np.float64),
+        latency_steps=latency_steps,
     )
 
 
@@ -416,13 +450,15 @@ def student_matrix(
     ta: int | None = None,
     k: int | None = None,
     ensemble: bool | None = None,
+    latency_steps: int = 0,
 ) -> ArmMatrix:
     """Select one student arm's rows in one cell and stack them as seeds x episodes.
 
     Rows are selected on ``arm``, ``regime``/``ss``, ``Ta``, ``K`` and ``ensemble`` (``None``
-    means the cell must be empty) and ``latency_steps == 0``. Selected rows must carry the
-    committed render (``render_cfg_sha256`` of ``full`` or ``off``): an appearance-shift or
-    ``camera`` row is refused, never mixed into a core section.
+    means the cell must be empty) and ``latency_steps`` (0: the synchronous arm; the latency
+    arm's ``d`` otherwise). Selected rows must carry the committed render
+    (``render_cfg_sha256`` of ``full`` or ``off``): an appearance-shift or ``camera`` row is
+    refused, never mixed into a core section.
 
     Args:
         rows: This project's episode rows (P8 columns, then plan §1.7's columns).
@@ -432,6 +468,7 @@ def student_matrix(
         ta: ``Ta``, executed actions per chunk, or ``None``.
         k: ``K``, DDIM steps, or ``None``.
         ensemble: Temporal ensembling flag, or ``None``.
+        latency_steps: The rows' delay ``d`` in control steps (0: synchronous).
 
     Returns:
         The :class:`ArmMatrix`.
@@ -447,7 +484,7 @@ def student_matrix(
             continue
         if (_opt_int(r["Ta"]), _opt_int(r["K"]), _opt_bool(r["ensemble"])) != (ta, k, ensemble):
             continue
-        if (_opt_int(r["latency_steps"]) or 0) != 0:
+        if (_opt_int(r["latency_steps"]) or 0) != latency_steps:
             continue
         if str(r["render_cfg_sha256"]) not in allowed:
             raise RowError(f"{arm} {cell}: non-core render {r['render_cfg_sha256']!r}")
@@ -455,7 +492,15 @@ def student_matrix(
         if seed is None:
             raise RowError(f"{arm} {cell}: a student row without student_seed")
         by_seed.setdefault(seed, []).append(r)
-    return _assemble(arm, cell, by_seed, seeds, ckpt_column="ckpt_sha256", tags=(ta, k, ensemble))
+    return _assemble(
+        arm,
+        cell,
+        by_seed,
+        seeds,
+        ckpt_column="ckpt_sha256",
+        tags=(ta, k, ensemble),
+        latency_steps=latency_steps,
+    )
 
 
 def p8_matrix(rows: Iterable[Row], *, method: str, cell: Cell, run_seed: int = 0) -> ArmMatrix:
@@ -1249,6 +1294,395 @@ def modular_vs_best(modular: ArmMatrix, best: ArmMatrix, reason: str) -> Unscore
         caveats=("modular's frozen teacher receives the true time_fraction (P3-D1 §3).",),
     )
     return replace(out, beside=(("best end-to-end", f"{best.arm}: {reason}"), *out.beside))
+
+
+# --------------------------------------------------------------------------- H5
+
+
+def noninferiority_rule(
+    estimate: float, lo: float, hi: float, margin: float = H5B_MARGIN
+) -> tuple[Verdict, str]:
+    """H5(b)'s rule (P3-D1 §6): supported (non-inferior) iff the CI lower bound >= ``margin``.
+
+    ``lo >= margin`` is compared within :data:`MAGNITUDE_TOL` (the P8-D1 item 3 precedent).
+    There is no two-sided reversal: a CI wholly above 0 is non-inferior and printed as such; a
+    CI wholly below 0 whose lower bound clears the margin is still non-inferior by the rule,
+    and the note says the delay's cost is below the margin.
+
+    Args:
+        estimate: Point estimate (latency minus synchronous success, dimensionless).
+        lo: Lower 95 % bound.
+        hi: Upper 95 % bound.
+        margin: The non-inferiority margin (-0.03, i.e. -3 points).
+
+    Returns:
+        ``(verdict, verdict_note)``.
+    """
+    pts = f"{100.0 * margin:+.0f} points"
+    if not all(math.isfinite(x) for x in (estimate, lo, hi)):
+        return "not supported", "not supported (statistic or CI undefined)"
+    if lo < margin - MAGNITUDE_TOL:
+        return "not supported", f"not supported (CI lower bound below {pts})"
+    if lo > 0.0:
+        return "supported", (
+            f"supported (non-inferior: CI lower bound >= {pts}; the CI lies wholly above 0, "
+            "which P3-D1 §6 reports as non-inferior, not as a gain)"
+        )
+    if hi < 0.0:
+        return "supported", (
+            f"supported (non-inferior: CI lower bound >= {pts}; the CI lies wholly below 0, so "
+            f"the delay costs success, by less than the {pts} margin)"
+        )
+    return "supported", f"supported (non-inferior: CI lower bound >= {pts})"
+
+
+def outcome_counts(m: ArmMatrix) -> dict[str, int]:
+    """Outcome class -> count over seeds x episodes, in P8's matching order."""
+    flat = [o for row in m.outcomes for o in row]
+    order = ("crash", "off_pad", "hard_landing", "bounce", "success", "timeout")
+    return {o: flat.count(o) for o in order}
+
+
+def _outcomes_text(m: ArmMatrix) -> str:
+    counts = outcome_counts(m)
+    return ", ".join(f"{o} {n}" for o, n in counts.items()) + f" (of {m.success.size})"
+
+
+def _side_label(m: ArmMatrix) -> str:
+    return f"{m.arm} d={m.latency_steps}" if m.latency_steps else f"{m.arm} synchronous"
+
+
+def _check_latency_pair(latency: ArmMatrix, sync: ArmMatrix, delay_steps: int) -> None:
+    """Same arm, cell, inference and checkpoints; the left side delayed by ``delay_steps``."""
+    if latency.arm != sync.arm or latency.cell != sync.cell:
+        raise RowError(
+            f"a latency contrast needs one arm and cell, got {latency.arm} {latency.cell_label} "
+            f"and {sync.arm} {sync.cell_label}"
+        )
+    if (latency.Ta, latency.K, latency.ensemble) != (sync.Ta, sync.K, sync.ensemble):
+        raise RowError(f"{latency.arm} {latency.cell_label}: the sides differ in inference")
+    if latency.latency_steps != delay_steps or sync.latency_steps != 0:
+        raise RowError(
+            f"{latency.arm} {latency.cell_label}: latency_steps {latency.latency_steps} / "
+            f"{sync.latency_steps}, expected {delay_steps} / 0"
+        )
+    _require_seeds(latency, CORE_SEEDS)
+    _require_seeds(sync, CORE_SEEDS)
+    if latency.ckpt_sha256 != sync.ckpt_sha256:
+        raise RowError(
+            f"{latency.arm} {latency.cell_label}: the sides are not the same checkpoints"
+        )
+    _same_episodes(latency, sync)
+
+
+def _delay_text(delay_steps: int, record: Mapping[str, Any] | None) -> str:
+    ms = delay_steps * CONTROL_STEP_MS
+    text = (
+        f"d = {delay_steps} control steps ({ms:.1f} ms model scale, {5.0 * ms:.0f} ms full scale)"
+    )
+    if record:
+        text += (
+            f"; from results/latency/delay.json: provider {record.get('provider')}, row "
+            f"{record.get('row')}, batch-1 p99 {record.get('p99_ms')} ms on this machine "
+            f"(RTX A4000, WSL2), fallback {record.get('fallback')}"
+        )
+    return text
+
+
+_H5B_CAVEATS: Final[tuple[str, ...]] = (
+    "No two-sided reading for H5(b): a CI wholly above 0 is non-inferior and reported as such "
+    "(P3-D1 §6).",
+    "Same checkpoints on both sides (the core dp selections); each replicate resamples seed "
+    "indices jointly for both sides (P3-D1 §1). The parity verdicts behind d were measured on "
+    "seed 0's selected checkpoint and apply to all five seeds (P3-D1 §3).",
+    "The delay is simulated: PyBullet does not advance while the network computes; each "
+    "request's result is computed when it is issued, on the CPU fp32 single-sample path, and "
+    "held back d control steps (P3-D1 §7; P9-D1 item 10). Both sides fly that same path "
+    "(P3-D1 §3).",
+    "One request in flight at a time; the returned chunk executes from index (To - 1) + d, and "
+    "past Tp - 1 its last action is held (from d > 7 at To = 2, Tp = 16, Ta = 8); the first "
+    "action of an episode is zero until the first result lands (P3-D1 §7).",
+    "d comes from a p99 measured on this machine (RTX A4000, i9-10980XE, WSL2); no embedded "
+    "target is measured (P3-D1 §6 H5).",
+)
+
+
+def _dp_baseline_caveat(
+    sync: ArmMatrix, sync_ss6: ArmMatrix | None, sync_static: ArmMatrix | None
+) -> str:
+    """Phase 9 before-you-start: the low synchronous dp baseline, from the rows."""
+
+    def at(m: ArmMatrix) -> str:
+        where = "static" if m.cell[0] == "static" else m.cell_label
+        return f"{100.0 * m.rate:.1f} % ({int(m.success.sum())}/{m.success.size}) at {where}"
+
+    parts = [at(m) for m in (sync, sync_ss6, sync_static) if m is not None]
+    return (
+        "Synchronous core dp at Ta = 8 succeeds on " + "; ".join(parts) + " (mean over seeds x "
+        "episodes). H5(b) compares this dp, distilled from P8 ppo s0, with itself, so a low "
+        "baseline does not invalidate the contrast; non-inferiority is relative to that baseline "
+        "(Phase 9 before-you-start)."
+    )
+
+
+def score_h5b(
+    latency: ArmMatrix,
+    sync: ArmMatrix,
+    *,
+    delay_steps: int,
+    delay_record: Mapping[str, Any] | None = None,
+    sync_ss6: ArmMatrix | None = None,
+    sync_static: ArmMatrix | None = None,
+) -> HypothesisResult:
+    """Score H5(b) (P3-D1 §6): latency-arm ``dp`` minus synchronous ``dp`` at ``id`` SS5.
+
+    Same-checkpoint contrast (:func:`ila.eval.stats.joint_seed_contrast`) and
+    :func:`noninferiority_rule` (CI lower bound >= -3 points). ``sync_ss6`` and
+    ``sync_static`` only supply the low-baseline caveat's numbers.
+
+    Args:
+        latency: ``dp`` at ``id`` SS5, ``Ta = 8``, ``K = 10``, no ensembling, rows with
+            ``latency_steps == delay_steps``, seeds 0-4.
+        sync: The synchronous core ``dp`` rows of the same checkpoints and cell.
+        delay_steps: ``d`` (control steps) the matrix flew.
+        delay_record: ``delay.json``'s ``arms.dp`` record (provider, p99), printed beside.
+        sync_ss6: Synchronous core ``dp`` at ``id`` SS6 (caveat numbers only).
+        sync_static: Synchronous core ``dp`` on ``static`` (caveat numbers only).
+
+    Returns:
+        The H5(b) :class:`HypothesisResult`.
+
+    Raises:
+        RowError: If the sides are not the same ``dp`` checkpoints at id SS5, Ta 8, K 10, no
+            ensembling, with the stated delays.
+    """
+    want = ("dp", ("id", "SS5"), 8, 10, False)
+    for m in (latency, sync):
+        if (m.arm, m.cell, m.Ta, m.K, m.ensemble) != want:
+            raise RowError(
+                f"H5(b) needs dp at id SS5, Ta=8, K=10, no ensembling; got {m.arm} "
+                f"{m.cell_label} Ta={m.Ta} K={m.K} ensemble={m.ensemble}"
+            )
+    _check_latency_pair(latency, sync, delay_steps)
+    if delay_steps < 0:
+        raise RowError(f"H5(b): d = {delay_steps} is negative")
+    if delay_record is not None and delay_record.get("d") != delay_steps:
+        raise RowError(f"H5(b): delay.json d {delay_record.get('d')} != flown d {delay_steps}")
+    c = st.joint_seed_contrast(latency.success, sync.success)
+    verdict, note = noninferiority_rule(c.diff, c.lo, c.hi)
+    beside = (
+        ("delay", _delay_text(delay_steps, delay_record)),
+        (
+            "success (mean over seeds x episodes)",
+            f"latency arm {100.0 * latency.rate:.1f} % ({int(latency.success.sum())}/"
+            f"{latency.success.size}); synchronous {100.0 * sync.rate:.1f} % "
+            f"({int(sync.success.sum())}/{sync.success.size})",
+        ),
+        (
+            "outcome classes, seed-episodes",
+            f"latency arm: {_outcomes_text(latency)}; synchronous: {_outcomes_text(sync)}",
+        ),
+    )
+    return HypothesisResult(
+        hypothesis="H5(b)",
+        cell="id SS5",
+        statistic="joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, "
+        "seed 20261023)",
+        contrast=f"success(dp, latency arm, d = {delay_steps}) - success(dp, synchronous), same "
+        "checkpoints, Ta = 8, K = 10, no ensembling",
+        estimate=c.diff,
+        ci_lo=c.lo,
+        ci_hi=c.hi,
+        units=_UNITS_SUCCESS,
+        n_seeds=(("dp", c.n_seeds_a),),
+        n_episodes=c.n_episodes,
+        magnitude=H5B_MARGIN,
+        verdict=verdict,
+        verdict_note=note,
+        caveats=(
+            *_H5B_CAVEATS,
+            _dp_baseline_caveat(sync, sync_ss6, sync_static),
+            NO_MULTIPLICITY,
+        ),
+        beside=beside,
+    )
+
+
+def latency_context(latency: ArmMatrix, sync: ArmMatrix, *, delay_steps: int) -> UnscoredContrast:
+    """Latency arm minus synchronous arm in one cell, same checkpoints, two-sided, unscored.
+
+    P3-D1 §7 flies the latency arm on ``id`` SS4-SS6 and scores H5(b) at SS5 only; this is the
+    rest (``bc_dagger`` at SS4-SS6, ``dp`` at SS4 and SS6) as context. Statistic:
+    :func:`ila.eval.stats.joint_seed_contrast` (the same checkpoints on both sides).
+
+    Raises:
+        RowError: If the sides are not one arm's same checkpoints in one cell.
+    """
+    if latency.arm not in ("bc_dagger", "dp") or latency.cell[0] != "id":
+        raise RowError(f"latency context is bc_dagger / dp on id, got {latency.arm}")
+    if latency.arm == "dp" and latency.cell[1] == "SS5":
+        raise RowError("dp at id SS5 is H5(b), scored, not context")
+    _check_latency_pair(latency, sync, delay_steps)
+    c = st.joint_seed_contrast(latency.success, sync.success)
+    a, b = _side_label(latency), _side_label(sync)
+    return UnscoredContrast(
+        name=f"H5(b) context: {latency.arm} latency arm - synchronous ({latency.cell[1]}, "
+        "unscored)",
+        cell=latency.cell_label,
+        statistic="joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, "
+        "seed 20261023)",
+        contrast=f"success({a}) - success({b}), same checkpoints",
+        estimate=c.diff,
+        ci_lo=c.lo,
+        ci_hi=c.hi,
+        units=_UNITS_SUCCESS,
+        n_seeds=((a, c.n_seeds_a), (b, c.n_seeds_b)),
+        n_episodes=c.n_episodes,
+        reading=_two_sided(c.lo, c.hi, a, b),
+        caveats=(
+            "Unscored context: P3-D1 §7 scores H5(b) at id SS5 only (dp).",
+            f"Outcome classes, seed-episodes: {a}: {_outcomes_text(latency)}; {b}: "
+            f"{_outcomes_text(sync)}.",
+            NO_MULTIPLICITY,
+        ),
+        beside=(("delay", _delay_text(delay_steps, None)), *_flip(latency)),
+    )
+
+
+#: ``h5a.csv``'s columns (``ila.deploy.latency.H5A_COLUMNS``; checked on read).
+_H5A_NEEDED: Final[tuple[str, ...]] = (
+    "hypothesis",
+    "row",
+    "provider",
+    "scored",
+    "batch_size",
+    "latency_status",
+    "p50_ms",
+    "p99_ms",
+    "max_ms",
+    "open_loop_pass",
+    "closed_loop_pass",
+    "parity_pass",
+    "threshold_ms",
+    "p99_below_threshold",
+    "verdict",
+)
+
+_H5A_CAVEATS: Final[tuple[str, ...]] = (
+    "Wall-clock latency of one full replanning call at batch 1 on this machine (RTX A4000, "
+    "i9-10980XE, WSL2); no embedded target is measured, and nothing here transfers to one "
+    "(P3-D1 §6 H5).",
+    "Parity verdicts are measured on seed 0's selected checkpoint and apply to all five seeds "
+    "(P3-D1 §3).",
+    "The bound is 33.3 ms as P3-D1 §6 writes it; d uses 33.333 ms (P3-D1 §7; P9-D1 item 9).",
+    "Scored by ila.deploy.latency.score (make bench-score) and read here as written; not "
+    "re-derived (results/latency/h5a.csv, delay.json).",
+)
+
+
+def read_h5a(latency_dir: Path) -> dict[str, Any]:
+    """H5(a)'s record from the deploy scorer's committed output (never re-derived).
+
+    Reads ``h5a.csv`` and ``delay.json`` under ``latency_dir``. The verdict is
+    ``delay.json``'s ``h5a_verdict``; every scored ``h5a.csv`` row must carry the same verdict.
+    The printed estimate is the lowest ``p99_ms`` among scored rows with ``parity_pass`` True
+    and a timed latency (the rows H5(a) counts), ms wall clock on this machine.
+
+    Args:
+        latency_dir: ``results/latency``.
+
+    Returns:
+        The record (``hypotheses.json`` shape plus ``providers`` and ``delays``), with
+        ``status`` ``scored`` for supported / not supported, else the scorer's ``not scored``
+        text, or ``not scored: ...`` when the files are absent.
+
+    Raises:
+        RowError: If the files disagree, or ``h5a.csv`` lacks a column.
+    """
+    csv_path, delay_path = latency_dir / "h5a.csv", latency_dir / "delay.json"
+    base: dict[str, Any] = {
+        "hypothesis": "H5(a)",
+        "cell": "exported dp (K = 10), dp_e2e, batch 1",
+        "kind": "latency",
+    }
+    if not (csv_path.is_file() and delay_path.is_file()):
+        return {
+            **base,
+            "status": "not scored: results/latency/h5a.csv and delay.json are not written yet "
+            "(make bench-score after the closed-loop parity and latency stages)",
+        }
+    text = csv_path.read_text(encoding="utf-8")
+    rows = list(csv.DictReader(io.StringIO(text)))
+    if rows and tuple(rows[0]) != _H5A_NEEDED:
+        raise RowError(f"{csv_path}: columns {tuple(rows[0])} != {_H5A_NEEDED}")
+    delay = json.loads(delay_path.read_text(encoding="utf-8"))
+    verdict = str(delay.get("h5a_verdict", ""))
+    scored = [r for r in rows if r["scored"] == "True"]
+    if {r["verdict"] for r in scored} - {verdict}:
+        raise RowError(
+            f"{csv_path}: scored rows' verdicts {sorted({r['verdict'] for r in scored})} != "
+            f"delay.json h5a_verdict {verdict!r}"
+        )
+    counted = [
+        float(r["p99_ms"])
+        for r in scored
+        if r["parity_pass"] == "True" and r["latency_status"] == "timed" and r["p99_ms"]
+    ]
+    providers = [dict(r) for r in rows]
+    beside = [
+        (
+            f"{r['provider']} ({'scored' if r['scored'] == 'True' else 'unscored'})",
+            f"latency {r['latency_status']}; p50 {r['p50_ms'] or 'n/a'} ms, p99 "
+            f"{r['p99_ms'] or 'n/a'} ms, max {r['max_ms'] or 'n/a'} ms; open-loop parity "
+            f"{r['open_loop_pass']}, closed-loop {r['closed_loop_pass'] or 'not flown'}",
+        )
+        for r in rows
+    ]
+    for arm, rec in sorted(delay.get("arms", {}).items()):
+        beside.append(
+            (
+                f"delay d, {arm}",
+                f"d = {rec.get('d')} control steps; provider {rec.get('provider')}, p99 "
+                f"{rec.get('p99_ms')} ms, fallback {rec.get('fallback')}"
+                if rec.get("d") is not None
+                else str(rec.get("status")),
+            )
+        )
+    sources = {
+        "results/latency/h5a.csv": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "results/latency/delay.json": hashlib.sha256(delay_path.read_bytes()).hexdigest(),
+    }
+    if verdict in ("supported", "not supported"):
+        status, note = "scored", verdict
+        if verdict == "not supported" and not counted:
+            note = "not supported (no scored provider passed both parities and was timed)"
+    else:
+        status, note = verdict or "not scored: delay.json has no h5a_verdict", ""
+    return {
+        **base,
+        "status": status,
+        "verdict": verdict if status == "scored" else None,
+        "verdict_note": note,
+        "estimate": min(counted) if counted else math.nan,
+        "ci_lo": None,
+        "ci_hi": None,
+        "units": "ms wall clock per call, batch 1, on this machine (RTX A4000, i9-10980XE, "
+        "WSL2); lowest p99 among scored providers passing open- and closed-loop parity",
+        "magnitude": H5A_THRESHOLD_MS,
+        "statistic": "p99 of >= 2 000 timed batch-1 calls after >= 200 warm-up calls (P8's "
+        "latency harness through ila.p8_adapter; P9-D1 item 8)",
+        "contrast": "p99(dp_e2e, batch 1) < 33.3 ms on at least one scored provider that passes "
+        "open- and closed-loop parity (P3-D1 §6 H5(a))",
+        "n_seeds": [{"arm": "dp", "seeds": 1}],
+        "inputs": sorted(sources),
+        "sources": sources,
+        "providers": providers,
+        "delays": delay.get("arms", {}),
+        "beside": [{"label": k, "text": v} for k, v in beside],
+        "caveats": list(_H5A_CAVEATS),
+        "ceiling_limited": False,
+        "notes": [],
+    }
 
 
 # --------------------------------------------------------------------------- best end-to-end

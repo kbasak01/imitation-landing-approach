@@ -1,4 +1,4 @@
-"""H1-H4 scorers (``ila.eval.hypotheses``) on synthetic rows with known verdicts (P3-D1 §6).
+"""H1-H5 scorers (``ila.eval.hypotheses``) on synthetic rows with known verdicts (P3-D1 §6).
 
 Every student row here is synthetic: nothing is flown and no student row of a frozen list exists
 or is read. Two tests read committed files that P3-D1 §4 allows to be read: P8's committed
@@ -644,3 +644,180 @@ def test_best_end_to_end_from_committed_select_scores() -> None:
     arm, reason = hy.best_end_to_end(scores)
     assert arm in hy.END_TO_END_ARMS and reason
     assert np.isfinite(float(scores[arm].mean_success))
+
+
+# --------------------------------------------------------------------------- H5
+
+
+def _lat(
+    arm: str, ss: str, k: int, d: int, *, ckpt: str = "c", n: int = N, sync_k: int | None = None
+) -> tuple[hy.ArmMatrix, hy.ArmMatrix]:
+    """(latency arm at d, synchronous) of one arm: seed s succeeds on episodes 0..k-1."""
+    inf: dict[str, Any] = {"ta": 8, "kk": 10, "ensemble": False} if arm == "dp" else {}
+    sel: dict[str, Any] = {"ta": 8, "k": 10, "ensemble": False} if arm == "dp" else {}
+    rows = _rows(arm, ss, CORE, k, latency=d, ckpt=ckpt, n=n, **inf)
+    rows += _rows(arm, ss, CORE, 150 if sync_k is None else sync_k, n=n, **inf)
+    cell = ("id", ss)
+    return (
+        hy.student_matrix(rows, arm=arm, cell=cell, latency_steps=d, **sel),
+        hy.student_matrix(rows, arm=arm, cell=cell, **sel),
+    )
+
+
+@pytest.mark.parametrize(
+    ("est", "lo", "hi", "verdict", "fragment"),
+    [
+        (-0.01, -0.025, 0.005, "supported", "CI lower bound >= -3 points)"),
+        (0.04, 0.01, 0.07, "supported", "wholly above 0, which P3-D1 §6 reports as non-inferior"),
+        (-0.01, -0.02, -0.005, "supported", "wholly below 0, so the delay costs success"),
+        (-0.01, -0.03, 0.01, "supported", "non-inferior"),  # the bound itself
+        (-0.01, -0.03 - 5e-10, 0.01, "supported", "non-inferior"),  # float rounding only
+        (-0.02, -0.0301, 0.0, "not supported", "below -3 points"),
+        (-0.10, -0.14, -0.06, "not supported", "below -3 points"),  # no opposite-direction note
+        (math.nan, -0.01, 0.01, "not supported", "undefined"),
+    ],
+)
+def test_noninferiority_rule(est: float, lo: float, hi: float, verdict: str, fragment: str) -> None:
+    v, note = hy.noninferiority_rule(est, lo, hi)
+    assert v == verdict and fragment in note
+    assert "opposite direction" not in note  # P3-D1 §6: no two-sided reversal for H5(b)
+
+
+def test_h5b_supported_ci_includes_zero_with_everything_beside() -> None:
+    lat, sync = _lat("dp", "SS5", 149, 3)
+    static = hy.student_matrix(
+        _rows("dp", "static", CORE, 82, ta=8, kk=10, ensemble=False, regime="static"),
+        arm="dp", cell=("static", "static"), ta=8, k=10, ensemble=False,
+    )  # fmt: skip
+    ss6 = hy.student_matrix(
+        _rows("dp", "SS6", CORE, 70, ta=8, kk=10, ensemble=False),
+        arm="dp", cell=("id", "SS6"), ta=8, k=10, ensemble=False,
+    )  # fmt: skip
+    rec = {"d": 3, "provider": "ort_cuda_fp32", "row": "dp_e2e", "p99_ms": 80.2, "fallback": False}
+    r = hy.score_h5b(lat, sync, delay_steps=3, delay_record=rec, sync_ss6=ss6, sync_static=static)
+    assert (r.hypothesis, r.cell, r.verdict) == ("H5(b)", "id SS5", "supported")
+    assert r.verdict_note == "supported (non-inferior: CI lower bound >= -3 points)"
+    assert r.estimate == pytest.approx(-0.005) and r.ci_lo >= -0.03 and r.ci_lo < 0 <= r.ci_hi
+    assert r.magnitude == hy.H5B_MARGIN == -0.03 and r.n_seeds == (("dp", 5),)
+    assert r.n_episodes == N and not r.ceiling_limited
+    b = _beside(r)
+    assert b["delay"].startswith("d = 3 control steps (100.0 ms model scale, 500 ms full scale)")
+    assert "provider ort_cuda_fp32" in b["delay"] and "p99 80.2 ms" in b["delay"]
+    assert b["success (mean over seeds x episodes)"] == (
+        "latency arm 74.5 % (745/1000); synchronous 75.0 % (750/1000)"
+    )
+    assert b["outcome classes, seed-episodes"] == (
+        "latency arm: crash 0, off_pad 0, hard_landing 0, bounce 0, success 745, timeout 255 "
+        "(of 1000); synchronous: crash 0, off_pad 0, hard_landing 0, bounce 0, success 750, "
+        "timeout 250 (of 1000)"
+    )
+    assert "SS6 flip floor" not in b  # SS5
+    assert any("No two-sided reading for H5(b)" in c for c in r.caveats)
+    assert any("seed indices jointly" in c for c in r.caveats)
+    assert any("PyBullet does not advance" in c for c in r.caveats)
+    assert any("no embedded target" in c for c in r.caveats)
+    assert (
+        "Synchronous core dp at Ta = 8 succeeds on 75.0 % (750/1000) at id SS5; 35.0 % (350/1000) "
+        "at id SS6; 41.0 % (410/1000) at static (mean over seeds x episodes). H5(b) compares this "
+        "dp, distilled from P8 ppo s0, with itself, so a low baseline"
+    ) in " ".join(r.caveats)
+    assert r.caveats[-1] == hy.NO_MULTIPLICITY
+
+
+def test_h5b_supported_ci_wholly_above_zero_is_non_inferior_not_a_gain() -> None:
+    lat, sync = _lat("dp", "SS5", 160, 2)
+    r = hy.score_h5b(lat, sync, delay_steps=2)
+    assert r.verdict == "supported" and r.ci_lo > 0.0
+    assert "reports as non-inferior, not as a gain" in r.verdict_note
+
+
+def test_h5b_supported_ci_wholly_below_zero_within_the_margin() -> None:
+    lat, sync = _lat("dp", "SS5", 1480, 2, n=2000, sync_k=1500)
+    r = hy.score_h5b(lat, sync, delay_steps=2)
+    assert r.estimate == pytest.approx(-0.01) and r.ci_hi < 0.0 and r.ci_lo >= -0.03
+    assert r.verdict == "supported" and "wholly below 0" in r.verdict_note
+
+
+def test_h5b_not_supported() -> None:
+    lat, sync = _lat("dp", "SS5", 130, 4)
+    r = hy.score_h5b(lat, sync, delay_steps=4)
+    assert r.verdict == "not supported" and r.ci_lo < -0.03
+    assert r.verdict_note == "not supported (CI lower bound below -3 points)"
+    assert r.estimate == pytest.approx(-0.10)
+
+
+def test_h5b_same_checkpoint_same_settings_only() -> None:
+    lat, sync = _lat("dp", "SS5", 149, 3)
+    with pytest.raises(hy.RowError, match="same checkpoints"):
+        hy.score_h5b(_lat("dp", "SS5", 149, 3, ckpt="other")[0], sync, delay_steps=3)
+    with pytest.raises(hy.RowError, match="expected 2 / 0"):
+        hy.score_h5b(lat, sync, delay_steps=2)
+    with pytest.raises(hy.RowError, match="delay.json d"):
+        hy.score_h5b(lat, sync, delay_steps=3, delay_record={"d": 4})
+    with pytest.raises(hy.RowError, match="id SS5"):
+        hy.score_h5b(*_lat("dp", "SS6", 149, 3), delay_steps=3)
+    with pytest.raises(hy.RowError, match="H5\\(b\\) needs dp"):
+        hy.score_h5b(*_lat("bc_dagger", "SS5", 149, 3), delay_steps=3)
+    ens = hy.student_matrix(
+        _rows("dp", "SS5", CORE, 150, ta=8, kk=10, ensemble=True),
+        arm="dp", cell=("id", "SS5"), ta=8, k=10, ensemble=True,
+    )  # fmt: skip
+    with pytest.raises(hy.RowError, match="no ensembling"):
+        hy.score_h5b(lat, ens, delay_steps=3)
+    # A latency row never enters the synchronous matrix, and vice versa.
+    assert sync.latency_steps == 0 and lat.latency_steps == 3
+    assert sync.rate == 0.75 and lat.rate == 0.745
+
+
+def test_latency_context_is_unscored_two_sided() -> None:
+    lat, sync = _lat("bc_dagger", "SS6", 120, 2)
+    u = hy.latency_context(lat, sync, delay_steps=2)
+    assert u.name == "H5(b) context: bc_dagger latency arm - synchronous (SS6, unscored)"
+    assert u.reading == "separates: bc_dagger d=2 below bc_dagger synchronous (CI wholly below 0)"
+    assert u.n_seeds == (("bc_dagger d=2", 5), ("bc_dagger synchronous", 5))
+    assert _beside(u)["SS6 flip floor"] == hy.FLIP_FLOOR
+    assert any(c.startswith("Unscored context") for c in u.caveats)
+    assert any("success 600" in c and "success 750" in c for c in u.caveats)
+    u4 = hy.latency_context(*_lat("dp", "SS4", 150, 3), delay_steps=3)
+    assert u4.reading == "does not separate (CI includes 0)" and "SS6 flip floor" not in dict(
+        u4.beside
+    )
+    with pytest.raises(hy.RowError, match="is H5\\(b\\), scored"):
+        hy.latency_context(*_lat("dp", "SS5", 150, 3), delay_steps=3)
+
+
+def _write_h5a(root: Path, verdict: str, *, csv_verdict: str | None = None) -> Path:
+    import eval_support as es
+
+    return es.write_latency_results(root, verdict=verdict, csv_verdict=csv_verdict)
+
+
+def test_h5a_is_read_as_written(tmp_path: Path) -> None:
+    rec = hy.read_h5a(tmp_path / "absent")
+    assert rec["status"].startswith("not scored: results/latency/h5a.csv")
+    rec = hy.read_h5a(_write_h5a(tmp_path / "a", "supported"))
+    assert (rec["status"], rec["verdict"], rec["verdict_note"]) == (
+        "scored",
+        "supported",
+        "supported",
+    )
+    assert rec["estimate"] == 21.5  # the one scored provider passing both parities, timed
+    assert rec["magnitude"] == hy.H5A_THRESHOLD_MS == 33.3
+    assert rec["units"].startswith("ms wall clock") and "RTX A4000" in rec["units"]
+    assert [p["provider"] for p in rec["providers"]] == [
+        "ort_cuda_fp32",
+        "ort_trt_fp16",
+        "ort_trt_fp32",
+    ]
+    assert set(rec["sources"]) == {"results/latency/h5a.csv", "results/latency/delay.json"}
+    beside = {b["label"]: b["text"] for b in rec["beside"]}
+    assert beside["delay d, dp"].startswith("d = 3 control steps; provider ort_cuda_fp32")
+    assert "ort_trt_fp32 (unscored)" in beside  # reported, never counted
+    assert any("no embedded target" in c for c in rec["caveats"])
+    rec = hy.read_h5a(_write_h5a(tmp_path / "b", "not supported"))
+    assert (rec["status"], rec["verdict"]) == ("scored", "not supported")
+    scorer_text = "not scored - ort_cpu_fp32: closed-loop parity not flown"
+    rec = hy.read_h5a(_write_h5a(tmp_path / "c", scorer_text))
+    assert rec["status"] == scorer_text and rec["verdict"] is None
+    with pytest.raises(hy.RowError, match="h5a_verdict"):
+        hy.read_h5a(_write_h5a(tmp_path / "d", "supported", csv_verdict="not supported"))

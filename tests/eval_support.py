@@ -36,6 +36,46 @@ _SHAPE: Mapping[str, tuple[bool, str, float, float, float]] = {
 #: (arm, seed, list, ss, index, shift, Ta) -> outcome
 type OutcomeFn = Callable[[str, int, str, str, int, str | None, int | None], str]
 
+#: The latency arm's d per arm in every synthetic tree (control steps; not delay.json's).
+SYNTHETIC_DELAYS: Mapping[str, int] = {"bc_dagger": 2, "dp": 3}
+
+
+def write_latency_results(
+    root: Path,
+    *,
+    verdict: str = "supported",
+    delays: Mapping[str, int] = SYNTHETIC_DELAYS,
+    csv_verdict: str | None = None,
+) -> Path:
+    """Synthetic ``h5a.csv`` and ``delay.json`` under ``root`` (the deploy scorer's shapes).
+
+    Two scored providers (one passes both parities at p99 21.5 ms, one fails open loop) and
+    one unscored. ``csv_verdict`` overrides the CSV's verdict on scored rows (inconsistency).
+    """
+    from ila.deploy import latency as lat
+
+    root.mkdir(parents=True, exist_ok=True)
+    v = verdict if csv_verdict is None else csv_verdict
+    rows = [
+        ["H5a", "dp_e2e", "ort_cuda_fp32", "True", "1", "timed", "20.1", "21.5", "30.2",
+         "True", "True", "True", "33.3", "True", v],
+        ["H5a", "dp_e2e", "ort_trt_fp16", "True", "1", "refused", "", "", "",
+         "False", "", "False", "33.3", "", v],
+        ["H5a", "dp_e2e", "ort_trt_fp32", "False", "1", "timed", "9.0", "9.9", "12.0",
+         "True", "", "False", "33.3", "True", "context (not scored)"],
+    ]  # fmt: skip
+    (root / "h5a.csv").write_text(lat.h5a_csv(rows), encoding="utf-8")
+    arms = {
+        arm: {"d": d, "provider": "ort_cuda_fp32", "row": f"{arm}_e2e", "p99_ms": 21.5,
+              "fallback": False}
+        for arm, d in delays.items()
+    }  # fmt: skip
+    (root / "delay.json").write_text(
+        json.dumps({"arms": arms, "h5a_verdict": verdict}, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return root
+
 
 @functools.cache
 def listed_cell(list_name: str, ss: str, n: int) -> tuple[p8_adapter.ListedEpisode, ...]:
@@ -115,7 +155,7 @@ def student_row(
         Ta="" if inf is None else str(inf.Ta),
         K="" if inf is None else str(inf.K),
         ensemble="" if inf is None else str(inf.ensemble),
-        latency_steps="0",
+        latency_steps=str(job.latency_steps or 0),
         render_cfg_sha256=runner.render_cfg_sha256("full", job.appearance_shift),
         ckpt_sha256=ckpt,
         frames_rendered="61",
@@ -202,7 +242,7 @@ def synthetic_baselines(n: int, list_cells: Mapping[str, Sequence[str]]) -> sc.B
 
 def reduced_matrix(keep: Callable[[ev_arms.Job], bool]) -> ev_arms.Matrix:
     """The frozen matrix restricted to the jobs ``keep`` accepts (and their shared cells)."""
-    m = ev_arms.load_matrix()
+    m = ev_arms.load_matrix(delays=SYNTHETIC_DELAYS)
     jobs = tuple(j for j in m.jobs if keep(j))
     shared = tuple(s for s in m.shared if s.source in jobs)
     return dataclasses.replace(m, jobs=jobs, shared=shared)
@@ -241,6 +281,7 @@ def synthetic_tree(
     outcome: OutcomeFn = default_outcome,
     skip: Callable[[ev_arms.Job], bool] | None = None,
     matrix: ev_arms.Matrix | None = None,
+    latency_dir: Path | None = None,
 ) -> sc.ScoreInputs:
     """Write every matrix job (minus ``skip``) under ``root`` and return the score inputs.
 
@@ -249,12 +290,14 @@ def synthetic_tree(
         n: Episodes per cell (the first ``n`` of each frozen-list cell).
         outcome: Synthetic outcome per (arm, seed, list, ss, index, shift, Ta).
         skip: Jobs not written (to exercise missing cells).
-        matrix: The matrix (default: the frozen one).
+        matrix: The matrix (default: the frozen one, latency arm at :data:`SYNTHETIC_DELAYS`).
+        latency_dir: H5(a)'s ``results/latency`` stand-in (:func:`write_latency_results`), or
+            ``None`` (H5(a) not scored).
 
     Returns:
         :class:`ila.eval.score.ScoreInputs` with synthetic baselines and fixed H1/H4 inputs.
     """
-    m = ev_arms.load_matrix() if matrix is None else matrix
+    m = ev_arms.load_matrix(delays=SYNTHETIC_DELAYS) if matrix is None else matrix
     for job in m.jobs:
         if skip is not None and skip(job):
             continue
@@ -296,4 +339,5 @@ def synthetic_tree(
         best_sources={"synthetic": "none"},
         list_cells=list_cells,
         episodes_per_cell=n,
+        latency_dir=latency_dir,
     )

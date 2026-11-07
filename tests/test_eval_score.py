@@ -8,6 +8,7 @@ P3-D1 §4 / §8). Speeds m/s, times s, model scale.
 from __future__ import annotations
 
 import dataclasses
+import json
 import math
 from pathlib import Path
 
@@ -120,7 +121,8 @@ def test_missing_cells_are_listed_never_skipped(small: tuple[sc.ScoreInputs, Pat
     assert con and all(r["status"].startswith("missing") for r in con)
     hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
     assert hyp["H1"]["status"].startswith("not scored: missing")
-    assert hyp["H5(a)"]["status"].startswith("not scored in Phase 8 (Phase 9)")
+    assert hyp["H5(a)"]["status"] == "not scored: no latency results directory given"
+    assert hyp["H5(b)"]["status"].startswith("not scored: missing (latency_arm dp is not in")
 
 
 def test_aggregate_iqm_and_losses(small: tuple[sc.ScoreInputs, Path]) -> None:
@@ -332,14 +334,129 @@ def test_corrupt_rows_file_is_refused(tmp_path: Path) -> None:
         sc.load_cells(tmp_path, inp.matrix, episodes_per_cell=N)
 
 
+def _latency_job(job: object) -> bool:
+    """Core bc_dagger / dp on id and static, and the latency arm (Phase 9)."""
+    tag = getattr(job, "tag", "")
+    return tag == "latency_arm" or (
+        tag == "core"
+        and getattr(job, "arm", "") in ("bc_dagger", "dp")
+        and getattr(job, "list_name", "") in ("id", "static")
+    )
+
+
+def _latency_outcome(
+    arm: str, seed: int, list_name: str, ss: str, i: int, shift: str | None, ta: int | None
+) -> str:
+    return "success" if (i + seed) % 5 else "off_pad"
+
+
+@pytest.fixture(scope="module")
+def latency_tree(tmp_path_factory: pytest.TempPathFactory) -> tuple[sc.ScoreInputs, Path]:
+    root = tmp_path_factory.mktemp("e08_latency")
+    lat_dir = es.write_latency_results(root.parent / f"{root.name}_latency")
+    inp = es.synthetic_tree(
+        root,
+        n=N,
+        matrix=es.reduced_matrix(_latency_job),
+        outcome=_latency_outcome,
+        latency_dir=lat_dir,
+    )
+    sc.run_score(inp)
+    return inp, root
+
+
+def test_latency_arm_scores_h5a_h5b_and_context(
+    latency_tree: tuple[sc.ScoreInputs, Path],
+) -> None:
+    inp, root = latency_tree
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
+    assert list(hyp)[-2:] == ["H5(a)", "H5(b)"]
+    a, b = hyp["H5(a)"], hyp["H5(b)"]
+    assert (a["status"], a["verdict"], a["estimate"], a["magnitude"]) == (
+        "scored",
+        "supported",
+        "21.5",
+        "33.3",
+    )
+    assert a["inputs"] == "results/latency/delay.json; results/latency/h5a.csv"
+    assert (b["status"], b["verdict"], b["cell"], b["magnitude"]) == (
+        "scored",
+        "supported",
+        "id SS5",
+        "-0.03",
+    )
+    assert b["inputs"] == (
+        "latency_arm dp id SS5 Ta8 K10 ens0; core dp id SS5 Ta8 K10 ens0"
+    )  # never a mixed cell: each side is its own tagged group
+    assert float(b["estimate"]) == 0.0  # identical synthetic outcomes on both sides
+    recs = {r["hypothesis"]: r for r in json.loads((root / "hypotheses.json").read_text())[
+        "hypotheses"
+    ]}  # fmt: skip
+    assert recs["H5(a)"]["kind"] == "latency" and recs["H5(a)"]["providers"]
+    beside = {x["label"]: x["text"] for x in recs["H5(b)"]["beside"]}
+    assert beside["delay"].startswith("d = 3 control steps") and "ort_cuda_fp32" in beside["delay"]
+    assert "off_pad" in beside["outcome classes, seed-episodes"]
+    assert any("Synchronous core dp at Ta = 8 succeeds on" in c and "at static" in c
+               for c in recs["H5(b)"]["caveats"])  # fmt: skip
+    con = {r["name"]: r for r in sc.read_csv(root / "contrasts.csv")}
+    for arm, ss in (("bc_dagger", "SS4"), ("bc_dagger", "SS5"), ("bc_dagger", "SS6"),
+                    ("dp", "SS4"), ("dp", "SS6")):  # fmt: skip
+        name = f"H5(b) context: {arm} latency arm - synchronous ({ss}, unscored)"
+        assert con[name]["status"] == "computed" and con[name]["kind"] == "descriptive, unscored"
+        assert con[name]["inputs"].startswith(f"latency_arm {arm} id {ss}")
+        assert (con[name]["flip_floor"] != "") == (ss == "SS6")
+        assert f"{name} relative p95 closing speed" in con
+    assert con["H5(b)"]["status"] == "scored" and "H5(b) relative p95 closing speed" in con
+    assert "H5(b) context: dp latency arm - synchronous (SS5, unscored)" not in con
+    agg = [r for r in sc.read_csv(root / "aggregate.csv") if r["tag"] == "latency_arm"]
+    assert {(r["arm"], r["ss"]) for r in agg} == {
+        (a, s) for a in ("bc_dagger", "dp") for s in ("SS4", "SS5", "SS6")
+    }
+    assert all(r["status"] == "complete" and r["n_seeds"] == "5" for r in agg)
+    info = json.loads((root / "score_info.json").read_text())
+    assert info["latency_arm"]["flown_d"] == {"bc_dagger": 2, "dp": 3}
+    assert len(info["latency_arm"]["delay_json_sha256"]) == 64
+
+
+def test_latency_delay_mismatch_is_refused(
+    latency_tree: tuple[sc.ScoreInputs, Path], tmp_path: Path
+) -> None:
+    inp, _ = latency_tree
+    other = es.write_latency_results(tmp_path / "lat", delays={"bc_dagger": 2, "dp": 4})
+    with pytest.raises(sc.ScoreInputError, match="flown d 3 != delay.json d 4"):
+        sc.run_score(dataclasses.replace(inp, latency_dir=other), tmp_path / "out")
+
+
+def test_latency_rows_must_carry_their_d(
+    latency_tree: tuple[sc.ScoreInputs, Path], tmp_path: Path
+) -> None:
+    inp, root = latency_tree
+    job = next(j for j in inp.matrix.jobs if j.tag == "latency_arm" and j.arm == "dp")
+    wrong = dataclasses.replace(job, latency_steps=0)  # same file name would differ; rewrite
+    rows = [
+        es.student_row(e, wrong, "success", ckpt=f"ckpt-dp-{job.seed}")
+        for ss in job.sea_states
+        for e in es.listed_cell(job.list_name, ss, N)
+    ]
+    es.write_job(tmp_path, job, rows)  # job's own path, rows saying latency_steps 0
+    with pytest.raises(sc.ScoreInputError, match="latency_steps"):
+        sc.load_cells(
+            tmp_path,
+            dataclasses.replace(inp.matrix, jobs=(job,), shared=()),
+            episodes_per_cell=N,
+        )
+
+
 @pytest.mark.slow
 def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
-    """The frozen matrix, every job present (synthetic): H1-H4 scored, H5 deferred."""
-    inp = es.synthetic_tree(tmp_path, n=N)
+    """The frozen matrix, every job present (synthetic): H1-H5 scored."""
+    lat_dir = es.write_latency_results(tmp_path / "latency")
+    inp = es.synthetic_tree(tmp_path / "e08", n=N, latency_dir=lat_dir)
+    tmp_path = tmp_path / "e08"
     info = sc.run_score(inp)
     assert info["complete"] and info["cells_missing"] == 0
     hyp = {r["hypothesis"]: r for r in sc.read_csv(tmp_path / "hypotheses.csv")}
-    for h in ("H1", "H1-SS6", "H1-DART-SS5", "H1-DART-SS6", "H2", "H3", "H4"):
+    for h in ("H1", "H1-SS6", "H1-DART-SS5", "H1-DART-SS6", "H2", "H3", "H4", "H5(a)", "H5(b)"):
         assert hyp[h]["status"] == "scored", h
         assert hyp[h]["verdict"] in ("supported", "not supported", "inconclusive")
         assert hyp[h]["inputs"], h
@@ -355,6 +472,8 @@ def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
         "teacher check: dp_pid - pid_feedforward (id SS5)",
         "teacher check: dp_minus_last_action - ppo (id SS6)",
         "teacher check: modular - ppo (unseen_heading SS6)",
+        "H5(b) context: bc_dagger latency arm - synchronous (SS6, unscored)",
+        "H5(b) relative p95 closing speed",
     ):
         assert want in names, want
     shared = [

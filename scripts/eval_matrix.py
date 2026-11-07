@@ -1,4 +1,4 @@
-"""Phase 8 evaluation matrix (background job; ``make eval`` / ``make eval-bg``).
+"""Phase 8 evaluation matrix and Phase 9 latency arm (background job; ``make eval-bg``).
 
 Expands the frozen ``configs/eval/matrix.yaml`` (SHA-256 checked) into jobs
 (:mod:`ila.eval.arms`) and flies them on P8's frozen lists through the selection path, CPU fp32
@@ -7,8 +7,13 @@ with a sidecar each, ``results/e08/run_info.json`` and ``artifacts/runs/eval/sta
 Resumable: re-run the same command and finished jobs are skipped. Refuses a dirty tree (the
 output root excepted). Simulation only.
 
+The ``latency_arm`` block (Phase 9, P3-D1 §7) needs its delay d per arm from the committed
+``results/latency/delay.json`` (``make bench-score``); without it every mode refuses, except a
+dry run given ``--assume-delay ARM=D`` (projection only, labelled ASSUMED; never a flight).
+
     python scripts/eval_matrix.py --dry-run              # jobs, episodes per tag, projection
-    python scripts/eval_matrix.py --only core dp s0      # a subset (tags / arms / seeds)
+    python scripts/eval_matrix.py --dry-run --only latency_arm --assume-delay bc_dagger=1 dp=4
+    python scripts/eval_matrix.py --only latency_arm     # the latency arm (needs delay.json)
     python scripts/eval_matrix.py --smoke --out DIR --allow-dirty   # 2 select episodes per arm
 """
 
@@ -48,6 +53,14 @@ def _parse() -> argparse.Namespace:
         "--fly-ta1-ensemble",
         action="store_true",
         help="fly dp (Ta=1, ensembling on) instead of aliasing it to (Ta=1, off)",
+    )
+    parser.add_argument(
+        "--assume-delay",
+        nargs="*",
+        default=None,
+        metavar="ARM=D",
+        help="dry run only, when results/latency/delay.json does not exist yet: the latency "
+        "arm's d per arm (control steps) for the projection, printed as ASSUMED",
     )
     parser.add_argument("--status-dir", type=Path, default=None)
     parser.add_argument("--quiet-jobs", action="store_true", help="dry run: totals only")
@@ -106,12 +119,34 @@ def _dry_run(matrix: ev_arms.Matrix, jobs: list[ev_arms.Job], workers: int, quie
         print(f"  - {a}")
 
 
+def _assumed(pairs: list[str]) -> dict[str, int]:
+    out = {}
+    for pair in pairs:
+        arm, _, d = pair.partition("=")
+        if not arm or not d.isdigit():
+            raise SystemExit(f"--assume-delay takes ARM=D with D >= 0, got {pair!r}")
+        out[arm] = int(d)
+    return out
+
+
 def main() -> int:
     args = _parse()
     order = [t.strip() for t in args.order.split(",") if t.strip()]
-    matrix = ev_arms.load_matrix(alias_ta1_ensemble=not args.fly_ta1_ensemble)
+    if args.assume_delay is not None and not args.dry_run:
+        print("--assume-delay is for --dry-run only; a flight reads delay.json", file=sys.stderr)
+        return 2
+    assumed = None
+    if args.assume_delay is not None and not ev_arms.deploy_latency_arm.DELAY_FILE.is_file():
+        assumed = _assumed(args.assume_delay)
+    try:
+        matrix = ev_arms.load_matrix(alias_ta1_ensemble=not args.fly_ta1_ensemble, delays=assumed)
+    except ev_arms.LatencyDelayError as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return 2
     jobs = ev_matrix.order_jobs(ev_matrix.filter_jobs(matrix.jobs, args.only), order)
     if args.dry_run:
+        if assumed is not None:
+            print(f"ASSUMED latency-arm delays (projection only, not delay.json): {assumed}\n")
         _dry_run(matrix, jobs, args.workers, args.quiet_jobs)
         return 0
     if args.smoke:

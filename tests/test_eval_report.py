@@ -87,9 +87,13 @@ def test_baselines_beside_every_student(scored: Path) -> None:
 
 
 def _tagged_tables_print_baselines(text: str) -> None:
-    """Every tagged table (7a-7e) with a student prints the four; 7d adds the mix references."""
+    """Every tagged table (7a-7f) with a student prints the four; 7d adds the mix references.
+
+    7f (the latency arm) is present only when ``latency_arm`` rows were scored.
+    """
     tagged = _section(text, "## 7. Tagged sections").split("### ")[1:]
-    assert [s[:2] for s in tagged] == ["7a", "7b", "7c", "7d", "7e"]
+    heads = [s[:2] for s in tagged]
+    assert heads in (["7a", "7b", "7c", "7d", "7e"], ["7a", "7b", "7c", "7d", "7e", "7f"])
     for sub in tagged:
         if "losses/1 000" not in sub:
             continue  # no student in this subsection (reduced matrix)
@@ -168,7 +172,10 @@ def test_full_matrix_section6_and_section7_n(tmp_path: Path) -> None:
     rows_b = [ln for ln in b.splitlines() if ln.startswith("| ") and "---" not in ln][1:]
     assert rows_a and rows_b
     assert not any("`ablation`" in ln for ln in rows_a)
-    assert all("`ablation`" in ln for ln in rows_b)
+    assert all("`ablation`" in ln or "`latency_arm`" in ln for ln in rows_b)
+    assert any(ln.startswith("| H5(b) context: bc_dagger latency arm") for ln in rows_b)
+    assert "`latency_arm`; never mixed into 6a)" in b.splitlines()[0]
+    assert not any("`latency_arm`" in ln for ln in rows_a)
     assert any(ln.startswith("| teacher check: dp_pid") for ln in rows_b)
     assert any("`+clock`" in ln for ln in rows_b)
     assert any(" 5 / 5 × 10 |" in ln for ln in rows_a)
@@ -240,6 +247,59 @@ def test_simulation_wording_and_no_forbidden_claims(scored: Path) -> None:
         assert word not in low, word
 
 
+def _latency_keep(job: object) -> bool:
+    tag = getattr(job, "tag", "")
+    return tag == "latency_arm" or (
+        tag == "core"
+        and getattr(job, "arm", "") in ("bc_dagger", "dp")
+        and getattr(job, "list_name", "") in ("id", "static")
+    )
+
+
+def test_latency_arm_renders_h5_and_section_7f(tmp_path: Path) -> None:
+    lat_dir = es.write_latency_results(tmp_path / "latency")
+    root = tmp_path / "e08"
+    inp = es.synthetic_tree(root, n=N, matrix=es.reduced_matrix(_latency_keep), latency_dir=lat_dir)
+    sc.run_score(inp)
+    text = rp.write_report(root, tmp_path / "results.md")
+    assert text.startswith("# Results — Phases 8–9: evaluation matrix, latency arm")
+    assert rp.write_report(root, tmp_path / "again.md") == text  # byte-identical re-render
+    prov = _section(text, "## 1. Provenance")
+    assert "`latency_arm` (Phase 9) flew with `bc_dagger` d = 2, `dp` d = 3 control steps" in prov
+    hyp = _section(text, "## 5. Hypotheses")
+    h5a = hyp.split("### H5(a)")[1].split("### H5(b)")[0]
+    assert "**Verdict: supported**." in h5a
+    assert "21.50 ms (no CI: a p99 of timed calls); bound p99 < 33.3 ms" in h5a
+    assert "ort_trt_fp32 (unscored)" in h5a and "no embedded target" in h5a
+    h5b = hyp.split("### H5(b)")[1]
+    assert "**Verdict: supported** (non-inferior: CI lower bound >= -3 points)." in h5b
+    assert "non-inferiority margin: CI lower bound ≥ -3 points" in h5b
+    assert "`latency_arm dp id SS5 Ta8 K10 ens0`, `core dp id SS5 Ta8 K10 ens0`" in h5b
+    assert "`results/latency/h5a.csv`" in hyp
+    six = _section(text, "## 6. Unscored contrasts")
+    a, b = six.split("### 6b.")
+    assert "H5(b) context" not in a  # tagged inputs never in 6a
+    assert "`latency_arm`, `core`" in b and "H5(b) context: dp latency arm" in b
+    seven = _section(text, "## 7. Tagged sections")
+    f = seven.split("### 7f.")[1]
+    assert "latency arm d = 2" in f and "latency arm d = 3" in f
+    assert "synchronous (core, beside it)" in f and "; N = 50 (5 seeds × 10)" in f
+    for m in sc.ALWAYS_PRINTED:
+        assert f.count(rp._BASELINE_LABEL[m]) == 1 + 3, m  # success row + SS4-SS6 outcome rows
+    assert (
+        "| arm, side | SS | N | crash | off_pad | hard_landing | bounce | success | timeout |" in f
+    )
+    assert "| `dp` latency d = 3 | SS5 | 50 |" in f and "| `dp` sync | SS5 | 50 |" in f
+    # The synthetic SS6 students beat the synthetic teacher: latency cells are withheld too.
+    assert "| `dp` latency d = 3 | SS6 † | withheld |" in f
+    assert "latency_arm dp id SS6 Ta8 K10 ens0" in rp.load_inputs(root).withheld
+    assert "PyBullet does not advance" in f and "RTX A4000, WSL2" in f
+    _tagged_tables_print_baselines(text)
+    low = text.lower()
+    for word in FORBIDDEN:
+        assert word not in low, word
+
+
 @pytest.mark.slow
 def test_full_matrix_report_sections(tmp_path: Path) -> None:
     inp = es.synthetic_tree(tmp_path, n=N)
@@ -257,6 +317,7 @@ def test_full_matrix_report_sections(tmp_path: Path) -> None:
         "### 7c.",
         "### 7d.",
         "### 7e.",
+        "### 7f.",
         "## 8. Students above",
         "## 9. Missing cells",
     ):

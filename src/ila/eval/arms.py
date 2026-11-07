@@ -46,8 +46,18 @@ is dropped silently.
 * ``reference_external`` -- ``R1_lerobot_dp`` seeds 0-2, ``id`` SS3-SS6, at the core ``dp``
   inference (P3-D1 §4: R1 is selected by the same rule at ``Ta = 8``, ``K = 10``; its manifest's
   ``selection.at`` is checked).
-* ``latency_arm`` -- **skipped in Phase 8** (:data:`SKIPPED_BLOCKS`): its delay
-  ``d = ceil(p99 / 33.333 ms)`` exists only after Phase 9 (P3-D1 §6 H5, §7, §8).
+* ``latency_arm`` -- Phase 9 (P3-D1 §7): ``bc_dagger`` and ``dp`` x their core seeds (0-4) x
+  ``id`` SS4-SS6, ``dp`` at its core inference (``Ta = 8``, ``K = 10``, no ensembling), each
+  arm delayed by its one ``d`` control steps (30 Hz; 33.333 ms model scale each, 166.7 ms full
+  scale). ``d`` comes only from the committed ``results/latency/delay.json``
+  (:func:`ila.deploy.latency_arm.read_delays`, written by ``make bench-score``); without it
+  expansion raises :class:`LatencyDelayError` (never a guessed ``d``). The arm specs are the
+  core arms' (same checkpoints, same selection pins); only the tag, the delay and the output
+  name differ (``<stem>__latency-d<d>``). Rows carry ``latency_steps = d``. The seeds come from
+  the core arm (``matrix.yaml``'s block names neither seeds nor ``Ta``/``K``; P3-D1 §3 / §7 do,
+  as :data:`ABLATION_SEEDS` precedent). ``latency_arm=False`` (:func:`load_matrix`) records the
+  block in ``skipped`` instead, for callers that only need core arm specs (the GIF gallery);
+  the driver and the scorer never pass it.
 
 Arms -> checkpoints (:func:`resolve_checkpoint`)
 ------------------------------------------------
@@ -79,6 +89,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from ila import p8_adapter
+from ila.deploy import latency_arm as deploy_latency_arm
 from ila.eval.stats import MATRIX_YAML, read_matrix_yaml
 from ila.policies.registry import read_checkpoint
 from ila.render.config import APPEARANCE_SHIFTS
@@ -87,6 +98,7 @@ from ila.train import select as train_select
 
 __all__ = [
     "ABLATION_LISTS",
+    "LATENCY_TAG",
     "ABLATION_SEEDS",
     "DEFAULT_ORDER",
     "EPISODES_PER_CELL",
@@ -101,6 +113,7 @@ __all__ = [
     "Checkpoint",
     "Inference",
     "Job",
+    "LatencyDelayError",
     "Matrix",
     "SharedCell",
     "expand",
@@ -109,13 +122,18 @@ __all__ = [
     "frozen_list_cells",
     "is_diffusion",
     "list_episodes",
+    "read_delay_file",
     "load_matrix",
     "resolve_checkpoint",
     "selection_path",
     "verify_checkpoint_bytes",
 ]
 
-#: Every job tag, in the default flying order (core first, the external reference last).
+#: The latency-in-the-loop arm's tag (P3-D1 §7; Phase 9).
+LATENCY_TAG: Final[str] = "latency_arm"
+
+#: Every job tag, in the default flying order (core first, the external reference, then the
+#: Phase 9 latency arm last).
 TAGS: Final[tuple[str, ...]] = (
     "core",
     "ablation",
@@ -123,18 +141,33 @@ TAGS: Final[tuple[str, ...]] = (
     "dp_K",
     "appearance_shift",
     "reference_external",
+    LATENCY_TAG,
 )
 
 #: Default order in which ``scripts/eval_matrix.py`` flies the tags.
 DEFAULT_ORDER: Final[tuple[str, ...]] = TAGS
 
-#: Blocks of ``matrix.yaml`` not flown in Phase 8, with the reason (never dropped silently).
-SKIPPED_BLOCKS: Final[Mapping[str, str]] = {
-    "latency_arm": (
-        "not flown in Phase 8: its delay d = ceil(p99_ms / 33.333) comes from Phase 9's "
-        "latency study (P3-D1 §6 H5(a), §7); P3-D1 §8 moves H5(b) and the latency arm to Phase 9"
-    ),
+#: Blocks of ``matrix.yaml`` never expanded, with the reason (never dropped silently). Empty
+#: since Phase 9 enabled ``latency_arm`` (it was the only one; P8-D1 item 1).
+SKIPPED_BLOCKS: Final[Mapping[str, str]] = {}
+
+#: ``matrix.yaml``'s ``latency_arm`` rule, provider and fallback, as ``ila.deploy.latency.score``
+#: implements them (P3-D1 §6 H5(a), §7; P9-D1 item 9). Any other text is refused.
+_LATENCY_BLOCK: Final[Mapping[str, Any]] = {
+    "rule": "d = ceil(p99_ms / 33.333)",
+    "provider": "fastest_parity_passing",
+    "fallback": "torch_cpu_fp32_single_sample",
 }
+
+#: The latency arm's arms and cells (P3-D1 §7).
+_LATENCY_ARMS: Final[tuple[str, ...]] = ("bc_dagger", "dp")
+_LATENCY_LISTS: Final[Mapping[str, tuple[str, ...]]] = {"id": ("SS4", "SS5", "SS6")}
+
+#: Why the block is recorded in ``skipped`` when a caller passes ``latency_arm=False``.
+_LATENCY_NOT_EXPANDED: Final[str] = (
+    "not expanded by this caller (core arm specs only); the driver and the scorer always "
+    "expand it, with d from results/latency/delay.json (P3-D1 §7)"
+)
 
 #: ``matrix.yaml`` keys that hold no arm (read by :mod:`ila.eval.stats` and the report).
 _NON_ARM_KEYS: Final[frozenset[str]] = frozenset(
@@ -178,6 +211,14 @@ _SELECT_INFERENCE: Final[Mapping[str, Any]] = {"Ta": 8, "K": 10, "temporal_ensem
 
 class ArmResolutionError(ValueError):
     """An (arm, seed) does not resolve to exactly one consistent selected checkpoint."""
+
+
+class LatencyDelayError(ValueError):
+    """The ``latency_arm`` block cannot be expanded: no committed ``d`` for an arm.
+
+    ``d`` is read only from ``results/latency/delay.json`` (``make bench-score``); it is never
+    guessed (P3-D1 §7).
+    """
 
 
 # --------------------------------------------------------------------------- dataclasses
@@ -243,6 +284,10 @@ class Job:
         full_list: Whether ``sea_states`` is every cell of the list.
         inference: Diffusion inference, or ``None`` (non-diffusion arms).
         appearance_shift: Evaluation-only render variant, or ``None``.
+        latency_steps: The latency arm's delay ``d``, control steps (30 Hz; 33.333 ms model
+            scale each), or ``None`` for every other job (synchronous, rows carry 0). ``None``
+            leaves :attr:`stem` and :meth:`record` exactly as in Phase 8, so the committed
+            sidecars still match (:func:`ila.eval.matrix.job_done`).
     """
 
     tag: str
@@ -253,19 +298,23 @@ class Job:
     full_list: bool
     inference: Inference | None = None
     appearance_shift: str | None = None
+    latency_steps: int | None = None
 
     @property
     def stem(self) -> str:
-        """Deterministic file stem: ``<list>[-<SS>...][__shift-<v>][__Ta<k>_K<k>_ens<0|1>]``.
+        """Deterministic file stem.
 
-        The list name alone when every cell of the list is flown; otherwise the list name and
-        the flown cells joined by ``-`` (e.g. ``id-SS4-SS5-SS6``).
+        ``<list>[-<SS>...][__shift-<v>][__Ta<k>_K<k>_ens<0|1>][__latency-d<d>]``: the list name
+        alone when every cell of the list is flown; otherwise the list name and the flown cells
+        joined by ``-`` (e.g. ``id-SS4-SS5-SS6``).
         """
         parts = [self.list_name if self.full_list else "-".join((self.list_name, *self.sea_states))]
         if self.appearance_shift is not None:
             parts.append(f"shift-{self.appearance_shift}")
         if self.inference is not None:
             parts.append(self.inference.suffix)
+        if self.latency_steps is not None:
+            parts.append(f"latency-d{self.latency_steps}")
         return "__".join(parts)
 
     @property
@@ -292,6 +341,7 @@ class Job:
             "K": None if inf is None else inf.K,
             "ensemble": None if inf is None else inf.ensemble,
             "appearance_shift": self.appearance_shift,
+            **({} if self.latency_steps is None else {"latency_steps": self.latency_steps}),
         }
 
 
@@ -343,7 +393,7 @@ class Matrix:
         arms: Every arm with its own tag, seeds, teacher and core inference.
         jobs: Flown jobs, in expansion order (tag blocks in :data:`TAGS` order).
         shared: Cells whose rows come from another job.
-        skipped: Blocks not flown in Phase 8 -> reason.
+        skipped: Blocks not expanded -> reason (empty for the driver and the scorer).
         lists_all: Every frozen list, ``matrix.yaml`` order.
         always_printed: Baselines printed beside every student (P8's committed rows).
     """
@@ -431,11 +481,39 @@ def frozen_list_cells() -> dict[str, tuple[str, ...]]:
 # --------------------------------------------------------------------------- expansion
 
 
+def read_delay_file(path: Path = deploy_latency_arm.DELAY_FILE) -> dict[str, int]:
+    """The latency arm's ``d`` per arm from the committed ``delay.json`` (P3-D1 §7).
+
+    Args:
+        path: ``results/latency/delay.json`` (``make bench-score``).
+
+    Returns:
+        Arm -> ``d``, control steps (30 Hz; 33.333 ms model scale each).
+
+    Raises:
+        LatencyDelayError: If the file does not exist, an arm has no ``d`` (its fallback row
+            was not timed), or the file cannot be read.
+    """
+    if not Path(path).is_file():
+        raise LatencyDelayError(
+            f"{path} does not exist: the latency_arm block's delay d per arm comes only from "
+            "Phase 9's latency study (make bench-score writes it from parity-passing p99s; "
+            "P3-D1 §6 H5(a), §7). d is not guessed; refusing to expand the matrix."
+        )
+    try:
+        return dict(deploy_latency_arm.read_delays(Path(path)))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise LatencyDelayError(f"{path}: no usable d ({exc}); refusing to expand") from exc
+
+
 def load_matrix(
     path: Path = MATRIX_YAML,
     list_cells: Mapping[str, Sequence[str]] | None = None,
     *,
     alias_ta1_ensemble: bool = True,
+    delays: Mapping[str, int] | None = None,
+    delay_file: Path = deploy_latency_arm.DELAY_FILE,
+    latency_arm: bool = True,
 ) -> Matrix:
     """Read the frozen matrix (SHA-256 checked) and expand it.
 
@@ -443,12 +521,24 @@ def load_matrix(
         path: ``configs/eval/matrix.yaml``.
         list_cells: List -> cells; read from P8's frozen lists when ``None``.
         alias_ta1_ensemble: Record ``(Ta = 1, on)`` as an alias of ``(Ta = 1, off)``.
+        delays: The latency arm's ``d`` per arm (control steps); ``None`` reads
+            ``delay_file`` (:func:`read_delay_file`). Tests pass synthetic values.
+        delay_file: ``results/latency/delay.json``.
+        latency_arm: ``False`` records the ``latency_arm`` block in ``skipped`` instead of
+            expanding it (callers needing core arm specs only; module docstring).
 
     Returns:
         The :class:`Matrix`.
+
+    Raises:
+        LatencyDelayError: If ``latency_arm`` and no ``d`` is available (module docstring).
     """
     cells = frozen_list_cells() if list_cells is None else list_cells
-    return expand(read_matrix_yaml(path), cells, alias_ta1_ensemble=alias_ta1_ensemble)
+    raw = read_matrix_yaml(path)
+    if not latency_arm:
+        return expand(raw, cells, alias_ta1_ensemble=alias_ta1_ensemble, latency_arm=False)
+    d = read_delay_file(delay_file) if delays is None else delays
+    return expand(raw, cells, alias_ta1_ensemble=alias_ta1_ensemble, delays=d)
 
 
 def _cells(
@@ -494,6 +584,8 @@ def expand(
     list_cells: Mapping[str, Sequence[str]],
     *,
     alias_ta1_ensemble: bool = True,
+    delays: Mapping[str, int] | None = None,
+    latency_arm: bool = True,
 ) -> Matrix:
     """Expand a parsed ``matrix.yaml`` into jobs (module docstring).
 
@@ -502,20 +594,30 @@ def expand(
         list_cells: List -> its cells in list order (:func:`frozen_list_cells`).
         alias_ta1_ensemble: Record ``(Ta = 1, on)`` as an alias of ``(Ta = 1, off)`` (P6-D1
             precedent) instead of flying it.
+        delays: The latency arm's ``d`` per arm, control steps (:func:`read_delay_file`).
+            Required unless ``latency_arm`` is False.
+        latency_arm: Expand the ``latency_arm`` block (``False``: record it in ``skipped``).
 
     Returns:
         The :class:`Matrix`.
 
     Raises:
         ValueError: On an unknown top-level key, a missing block, an arm listed twice, or an
-            inconsistent sweep.
+            inconsistent sweep or latency block.
+        LatencyDelayError: If the latency arm is expanded without a ``d`` for one of its arms,
+            or with a negative ``d``.
     """
-    unknown = set(raw) - _NON_ARM_KEYS - _ARM_KEYS - set(SKIPPED_BLOCKS)
+    unknown = set(raw) - _NON_ARM_KEYS - _ARM_KEYS - {LATENCY_TAG} - set(SKIPPED_BLOCKS)
     if unknown:
         raise ValueError(f"matrix.yaml: keys neither expanded nor skipped: {sorted(unknown)}")
-    missing = (_ARM_KEYS | set(SKIPPED_BLOCKS)) - set(raw)
+    missing = (_ARM_KEYS | {LATENCY_TAG} | set(SKIPPED_BLOCKS)) - set(raw)
     if missing:
         raise ValueError(f"matrix.yaml: missing blocks {sorted(missing)}")
+    if latency_arm and delays is None:
+        raise LatencyDelayError(
+            "the latency_arm block needs d per arm from results/latency/delay.json "
+            "(make bench-score; P3-D1 §7); d is not guessed"
+        )
     lists_all = tuple(str(n) for n in raw["lists_all"])
     if set(lists_all) != set(list_cells):
         raise ValueError(f"lists_all {lists_all} != frozen lists {sorted(list_cells)}")
@@ -651,6 +753,14 @@ def expand(
         for name, ss, full in _cells(ref["lists"], lists_all, list_cells):
             jobs.append(Job("reference_external", spec.arm, seed, name, ss, full, spec.inference))
 
+    # latency arm (Phase 9, P3-D1 §7): the core arm specs, one d per arm, id SS4-SS6
+    skipped = dict(SKIPPED_BLOCKS)
+    if latency_arm:
+        assert delays is not None
+        jobs.extend(_latency_jobs(raw[LATENCY_TAG], by_arm, delays, lists_all, list_cells))
+    else:
+        skipped[LATENCY_TAG] = _LATENCY_NOT_EXPANDED
+
     names = [a.arm for a in arms]
     if len(names) != len(set(names)):
         raise ValueError(f"an arm is listed twice: {names}")
@@ -660,10 +770,53 @@ def expand(
         arms=tuple(arms),
         jobs=tuple(j for _, j in jobs_sorted),
         shared=tuple(shared),
-        skipped=dict(SKIPPED_BLOCKS),
+        skipped=skipped,
         lists_all=lists_all,
         always_printed=tuple(str(b) for b in raw["always_printed"]),
     )
+
+
+def _latency_jobs(
+    block: Mapping[str, Any],
+    by_arm: Mapping[str, ArmSpec],
+    delays: Mapping[str, int],
+    lists_all: Sequence[str],
+    list_cells: Mapping[str, Sequence[str]],
+) -> list[Job]:
+    """The latency arm's jobs (module docstring; P3-D1 §7).
+
+    Each arm reuses its **core** :class:`ArmSpec` (seeds, teacher, contract, core inference),
+    so the checkpoints, the selection pins and the bytes check are the core arm's.
+
+    Raises:
+        ValueError: If the block is not P3-D1 §7's (arms, cells, rule, provider, fallback), or
+            ``dp``'s core inference is not ``Ta = 8``, ``K = 10``, no ensembling.
+        LatencyDelayError: If an arm has no ``d`` or a negative one.
+    """
+    for key, want in _LATENCY_BLOCK.items():
+        if block.get(key) != want:
+            raise ValueError(f"latency_arm.{key} {block.get(key)!r} != {want!r} (P3-D1 §7)")
+    names = tuple(str(a) for a in block["arms"])
+    if names != _LATENCY_ARMS:
+        raise ValueError(f"latency_arm.arms {names} != {_LATENCY_ARMS} (P3-D1 §7)")
+    if {str(k): tuple(v) for k, v in block["lists"].items()} != dict(_LATENCY_LISTS):
+        raise ValueError(f"latency_arm.lists {block['lists']!r} != id SS4-SS6 (P3-D1 §7)")
+    out = []
+    for arm in names:
+        spec = by_arm[arm]
+        if spec.tag != "core":
+            raise ValueError(f"latency_arm: {arm} is not a core arm")
+        if is_diffusion(arm) and spec.inference != Inference(8, 10, False):
+            raise ValueError(f"latency_arm: {arm} must fly Ta = 8, K = 10, no ensembling")
+        if arm not in delays:
+            raise LatencyDelayError(f"latency_arm: no d for {arm} in {dict(delays)}")
+        d = int(delays[arm])
+        if d < 0:
+            raise LatencyDelayError(f"latency_arm: d = {d} for {arm} is negative")
+        for seed in spec.seeds:
+            for name, ss, full in _cells(block["lists"], lists_all, list_cells):
+                out.append(Job(LATENCY_TAG, arm, seed, name, ss, full, spec.inference, None, d))
+    return out
 
 
 # --------------------------------------------------------------------------- checkpoints
