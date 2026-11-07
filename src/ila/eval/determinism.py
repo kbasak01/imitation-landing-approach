@@ -15,11 +15,12 @@ key), K = 10 DDIM steps, Ta = 8, flown on all 150 ``select`` episodes
 * ``gpu_B24_torch_default``: the same at B = 24 with torch's default numerics (cuDNN TF32
   on), the labelled control.
 
-Beside the GPU flip rate: P8's one-ulp floor, 53 of 800 ``id`` SS6 policy-episodes (6.6 %)
-flip outcome class under at least one of 20 one-ulp input perturbations
-(``external/rl-land-on-moving-deck/docs/protocol.md`` lines 5314 and 5455). ``select`` is
-SS3-SS5, so that SS6 floor is a conservative comparator. Episode lengths are 30 Hz control
-steps, model scale (lambda = 1/25); times wall seconds.
+Beside the GPU flip rate: P8's one-ulp floor (:data:`ila.p8_adapter.FLIP_FLOOR_SS6`), 53 of
+800 ``id`` SS6 policy-episodes (6.6 %) flip outcome class under at least one of 20 one-ulp input
+perturbations, a single draw a median 1.9 % (``external/rl-land-on-moving-deck/docs/protocol.md``
+lines 5311, 5314 and 5455). P3-D1 §8 corrects this module's original reading: ``select`` is
+SS3-SS5, where P8 saw no flips, so the SS6 floor is not a conservative comparator there.
+Episode lengths are 30 Hz control steps, model scale (lambda = 1/25); times wall seconds.
 """
 
 from __future__ import annotations
@@ -54,14 +55,15 @@ __all__ = ["K", "P8_FLOOR", "TA", "Plan", "compare_runs", "run", "select_episode
 K: Final[int] = 10
 TA: Final[int] = 8
 
-#: P8's one-ulp outcome-flip floor (P8 docs/protocol.md L5314, L5455).
+#: P8's one-ulp outcome-flip floor as written to ``run_info.json``: the fields of
+#: :data:`ila.p8_adapter.FLIP_FLOOR_SS6` (P8 docs/protocol.md L5311, L5314, L5455).
 P8_FLOOR: Final[dict[str, Any]] = {
-    "flipped": 53,
-    "of": 800,
-    "rate": 53 / 800,
-    "cell": "id SS6 (4 policies x 200 episodes)",
-    "definition": "outcome class flips under at least one of 20 one-ulp input perturbations",
-    "source": "external/rl-land-on-moving-deck/docs/protocol.md L5314, L5455",
+    "flipped": p8_adapter.FLIP_FLOOR_SS6.flipped,
+    "of": p8_adapter.FLIP_FLOOR_SS6.of,
+    "rate": p8_adapter.FLIP_FLOOR_SS6.rate,
+    "cell": p8_adapter.FLIP_FLOOR_SS6.cell,
+    "definition": p8_adapter.FLIP_FLOOR_SS6.definition,
+    "source": p8_adapter.FLIP_FLOOR_SS6.source,
 }
 
 

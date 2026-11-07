@@ -1,0 +1,784 @@
+{
+  "above_teacher_row": {
+    "K": "",
+    "Ta": "",
+    "appearance_shift": "",
+    "arm": "bc_state",
+    "audit_file": "above_teacher/core__bc_state__id__SS6.json",
+    "ensemble": "",
+    "iqm_above": "False",
+    "iqm_margin": "0",
+    "list": "id",
+    "max_margin": "0.005",
+    "seeds_above": "s4:0.005",
+    "ss": "SS6",
+    "status": "complete",
+    "success_iqm": "0.985",
+    "tag": "core",
+    "teacher": "T_ppo",
+    "teacher_k": "197",
+    "teacher_n": "200",
+    "teacher_rate": "0.985",
+    "teacher_source": "P8 e07 ppo run_seed 0"
+  },
+  "cell": {
+    "K": null,
+    "Ta": null,
+    "appearance_shift": null,
+    "arm": "bc_state",
+    "ensemble": null,
+    "list": "id",
+    "ss": "SS6",
+    "tag": "core"
+  },
+  "label": "core bc_state id SS6",
+  "near_fraction": 0.05,
+  "outcome_shift": {
+    "table_teacher_by_student_pooled_over_seeds": [
+      {
+        "n": 9,
+        "student": "hard_landing",
+        "teacher": "hard_landing"
+      },
+      {
+        "n": 6,
+        "student": "success",
+        "teacher": "hard_landing"
+      },
+      {
+        "n": 6,
+        "student": "hard_landing",
+        "teacher": "success"
+      },
+      {
+        "n": 1,
+        "student": "bounce",
+        "teacher": "success"
+      },
+      {
+        "n": 978,
+        "student": "success",
+        "teacher": "success"
+      }
+    ],
+    "teacher_failure_to_student_success": [
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "success",
+        "seed": 0,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "outcome": "success",
+        "seed": 2,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 0,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 1,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 3,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 4,
+        "teacher_outcome": "hard_landing"
+      }
+    ],
+    "teacher_success_to_student_failure": [
+      {
+        "episode_seed": 1760349828,
+        "index": 12,
+        "outcome": "bounce",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1558505032,
+        "index": 38,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 857261509,
+        "index": 146,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1450410311,
+        "index": 178,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      }
+    ]
+  },
+  "per_seed_recount": [
+    {
+      "discordant_teacher_failure_to_student_success": 2,
+      "discordant_teacher_success_to_student_failure": 4,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.6875,
+      "seed": 0,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 195,
+        "successes_minus_tunnelled_disagreement_or_near": 195,
+        "successes_minus_tunnelled_or_disagreement": 195,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 1,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 1,
+        "n_episodes": 200,
+        "near_threshold_successes": 2,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 194,
+        "successes_minus_tunnelled_or_disagreement": 196,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 2,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 2,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 195,
+        "successes_minus_tunnelled_or_disagreement": 196,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 3,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 0,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 4,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 198,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    }
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "simulation_only": "PyBullet physics; model scale lambda = 1/25",
+  "status": "for results-skeptic review; not reported until reviewed",
+  "student": {
+    "detectors_disagree": [],
+    "grace_used_successes": [
+      {
+        "episode_seed": 1657229134,
+        "index": 33,
+        "outcome": "success",
+        "seed": 1
+      }
+    ],
+    "metrics": {
+      "closing_speed_normal_m_s": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            1,
+            450,
+            549
+          ]
+        },
+        "max": 0.39893381976616454,
+        "n_over_threshold": 0,
+        "p50": 0.24733177889697044,
+        "p95": 0.28734120448252565,
+        "success_criterion": true,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "closing_speed_world_z_m_s": {
+        "in_near_test": false,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            2,
+            483,
+            515
+          ]
+        },
+        "max": 0.4128641100979087,
+        "n_over_threshold": 0,
+        "p50": 0.24926627057468725,
+        "p95": 0.2897966755142579,
+        "success_criterion": false,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "lateral_offset_m": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            1,
+            0,
+            1,
+            8,
+            990
+          ]
+        },
+        "max": 0.09693853167022677,
+        "n_over_threshold": 0,
+        "p50": 0.013794937149654404,
+        "p95": 0.032245344707630144,
+        "success_criterion": true,
+        "threshold": 0.1,
+        "unit": "m model scale"
+      },
+      "rel_tilt_deg": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            15,
+            5,
+            2,
+            32,
+            126,
+            820
+          ]
+        },
+        "max": 22.93433509499108,
+        "n_over_threshold": 15,
+        "p50": 3.9968265157485527,
+        "p95": 11.387840295876309,
+        "success_criterion": true,
+        "threshold": 15.0,
+        "unit": "deg"
+      }
+    },
+    "n_detectors_disagree": 0,
+    "n_episodes": 1000,
+    "n_grace_used_successes": 1,
+    "n_successes_near_threshold": 5,
+    "n_touchdowns": 1000,
+    "n_tunnelled": 10,
+    "outcomes": {
+      "bounce": 1,
+      "crash": 0,
+      "hard_landing": 15,
+      "off_pad": 0,
+      "success": 984,
+      "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
+    },
+    "success_min_dwell_s": 0.5,
+    "successes": 984,
+    "successes_near_threshold": [
+      {
+        "episode_seed": 1145804141,
+        "index": 24,
+        "margin_fraction": 0.0064632876990459685,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "margin_fraction": 0.04714977485984224,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 343780280,
+        "index": 58,
+        "margin_fraction": 0.009478223910566777,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "margin_fraction": 0.04015332098837009,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 1646836629,
+        "index": 86,
+        "margin_fraction": 0.015655473189382128,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 4
+      }
+    ],
+    "tunnelled": [
+      {
+        "closing_speed_normal_m_s": 0.28836032822043134,
+        "episode_seed": 343780280,
+        "index": 58,
+        "lateral_offset_m": 0.01413759154969771,
+        "max_penetration_m": -0.005631321732875908,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 22.410661114962636,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.2625,
+        "td_t_episode_contact_s": 1.2625
+      },
+      {
+        "closing_speed_normal_m_s": 0.10524249727752777,
+        "episode_seed": 1765714094,
+        "index": 80,
+        "lateral_offset_m": 0.015164163438506533,
+        "max_penetration_m": -0.005090525450934446,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 15.739599370480573,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.65,
+        "td_t_episode_contact_s": 1.65
+      },
+      {
+        "closing_speed_normal_m_s": 0.26223730595993566,
+        "episode_seed": 1712242685,
+        "index": 49,
+        "lateral_offset_m": 0.018920170895622864,
+        "max_penetration_m": -0.005161930455562357,
+        "outcome": "success",
+        "rel_tilt_deg": 6.208173731419317,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.7291666666666667,
+        "td_t_episode_contact_s": 1.7291666666666667
+      },
+      {
+        "closing_speed_normal_m_s": 0.2627816995785281,
+        "episode_seed": 343780280,
+        "index": 58,
+        "lateral_offset_m": 0.017167451735601014,
+        "max_penetration_m": -0.00511540159553115,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 20.789105262897444,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.3083333333333333,
+        "td_t_episode_contact_s": 1.3083333333333333
+      },
+      {
+        "closing_speed_normal_m_s": 0.10304792556142742,
+        "episode_seed": 1765714094,
+        "index": 80,
+        "lateral_offset_m": 0.010809464698788435,
+        "max_penetration_m": -0.005057523206059368,
+        "outcome": "success",
+        "rel_tilt_deg": 14.397700185174449,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.7125,
+        "td_t_episode_contact_s": 1.7125
+      },
+      {
+        "closing_speed_normal_m_s": 0.24781685670033843,
+        "episode_seed": 1905388242,
+        "index": 102,
+        "lateral_offset_m": 0.02169994723561465,
+        "max_penetration_m": -0.006246754486816114,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 20.28000767249952,
+        "seed": 2,
+        "td_t_episode_analytic_s": 2.654166666666667,
+        "td_t_episode_contact_s": 2.654166666666667
+      },
+      {
+        "closing_speed_normal_m_s": 0.16707160627007903,
+        "episode_seed": 343780280,
+        "index": 58,
+        "lateral_offset_m": 0.015189147528032744,
+        "max_penetration_m": -0.006146214187100347,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 17.90823317548867,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.3583333333333334,
+        "td_t_episode_contact_s": 1.3583333333333334
+      },
+      {
+        "closing_speed_normal_m_s": 0.10373155945523452,
+        "episode_seed": 1323121477,
+        "index": 10,
+        "lateral_offset_m": 0.020148920215980522,
+        "max_penetration_m": -0.005009900212801027,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 16.44937172885845,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.7833333333333332,
+        "td_t_episode_contact_s": 1.7833333333333332
+      },
+      {
+        "closing_speed_normal_m_s": 0.17994676035109436,
+        "episode_seed": 343780280,
+        "index": 58,
+        "lateral_offset_m": 0.010690876898192219,
+        "max_penetration_m": -0.005242404468129057,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 22.93433509499108,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.2833333333333332,
+        "td_t_episode_contact_s": 1.2833333333333332
+      },
+      {
+        "closing_speed_normal_m_s": 0.21234383760102846,
+        "episode_seed": 1646836629,
+        "index": 86,
+        "lateral_offset_m": 0.011971792171909995,
+        "max_penetration_m": -0.005175147639503753,
+        "outcome": "success",
+        "rel_tilt_deg": 14.765167902159268,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.925,
+        "td_t_episode_contact_s": 1.925
+      }
+    ]
+  },
+  "success_yaml_sha256": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+  "teacher": "T_ppo",
+  "teacher_rows": {
+    "detectors_disagree": [],
+    "grace_used_successes": [],
+    "metrics": {
+      "closing_speed_normal_m_s": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            86,
+            114
+          ]
+        },
+        "max": 0.31572718285456497,
+        "n_over_threshold": 0,
+        "p50": 0.247269394000022,
+        "p95": 0.2818113647317609,
+        "success_criterion": true,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "closing_speed_world_z_m_s": {
+        "in_near_test": false,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            92,
+            108
+          ]
+        },
+        "max": 0.30739354546856007,
+        "n_over_threshold": 0,
+        "p50": 0.24925623690394128,
+        "p95": 0.28298190821142216,
+        "success_criterion": false,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "lateral_offset_m": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            2,
+            198
+          ]
+        },
+        "max": 0.06189916394687604,
+        "n_over_threshold": 0,
+        "p50": 0.012835659772954625,
+        "p95": 0.033913862327913706,
+        "success_criterion": true,
+        "threshold": 0.1,
+        "unit": "m model scale"
+      },
+      "rel_tilt_deg": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            3,
+            0,
+            2,
+            7,
+            23,
+            165
+          ]
+        },
+        "max": 18.644021328183985,
+        "n_over_threshold": 3,
+        "p50": 4.016321028269496,
+        "p95": 11.89886369877752,
+        "success_criterion": true,
+        "threshold": 15.0,
+        "unit": "deg"
+      }
+    },
+    "n_detectors_disagree": 0,
+    "n_episodes": 200,
+    "n_grace_used_successes": 0,
+    "n_successes_near_threshold": 0,
+    "n_touchdowns": 200,
+    "n_tunnelled": 0,
+    "outcomes": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 3,
+      "off_pad": 0,
+      "success": 197,
+      "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
+    },
+    "success_min_dwell_s": 0.5,
+    "successes": 197,
+    "successes_near_threshold": [],
+    "tunnelled": []
+  },
+  "teacher_source": "P8 e07 ppo run_seed 0",
+  "thresholds_success_yaml": {
+    "contact_dwell_min_s": 0.5,
+    "lateral_offset_max_m": 0.1,
+    "rel_vertical_velocity_max_m_s": 0.5,
+    "relative_tilt_max_deg": 15.0
+  }
+}

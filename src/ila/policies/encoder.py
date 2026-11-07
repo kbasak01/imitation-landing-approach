@@ -360,10 +360,17 @@ class VisionStudentBase:
     * ``act_vision(image_stack, proprio)``: ``uint8[To, 96, 96, 3]`` and ``float32[To, D]``
       (the contract's proprio, P8 units) -> ``float32[3]`` normalised world-frame velocity
       setpoint in ``[-1, 1]`` (the env scales by v_max = 1.5 m/s model scale, norm-capped).
+    * ``inference_calls``: network invocations on the closed-loop path since the last
+      ``reset`` (``bc``: one per ``act_vision``; diffusion: one per chunk sampled; ``modular``:
+      one estimator call per ``act_modular``). A diagnostic counter only: it is never read by
+      the student and never changes an action. The batched GPU entry points (``act_batch``,
+      ``sample_batch``) do not count; their server keeps its own tally.
     """
 
     cfg: EncoderConfig
     device: torch.device
+    #: Network invocations since the last ``reset`` (closed-loop single-sample path).
+    inference_calls: int = 0
 
     def reset(
         self, seed: int, context: object | None = None, motion_feed: object | None = None
@@ -380,6 +387,7 @@ class VisionStudentBase:
         """
         if context is not None or motion_feed is not None:
             raise ValueError("a vision student never receives a privileged context or feed")
+        self.inference_calls = 0
         self._reset_episode(int(seed))
 
     def _reset_episode(self, seed: int) -> None:

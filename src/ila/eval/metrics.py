@@ -5,20 +5,28 @@ unit test on a case of known value. This module holds the first piece of H2's: t
 empirical Wasserstein-1 distance (:func:`wasserstein_1`). The H2 bootstrap around it is
 Phase 8's.
 
+It also holds the exact two-sided McNemar test (:func:`mcnemar_exact_p`), which P8 does not
+provide. It is descriptive only: the above-teacher touchdown audit prints it per flagged seed
+(student vs teacher on the same 200 episodes); it scores nothing.
+
 ``ila.data.audit.wasserstein_1`` computes the same quantity for the demo-set precondition
 (P3-D1 §6 H2); ``tests/test_eval_h2_select.py`` checks the two agree.
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 
 import numpy as np
+import numpy.typing as npt
 
-__all__ = ["wasserstein_1"]
+__all__ = ["mcnemar_exact_p", "wasserstein_1"]
 
 
-def wasserstein_1(a: Sequence[float], b: Sequence[float]) -> float:
+def wasserstein_1(
+    a: Sequence[float] | npt.NDArray[np.float64], b: Sequence[float] | npt.NDArray[np.float64]
+) -> float:
     """Exact 1-D Wasserstein-1 distance between two empirical distributions.
 
     Each sample carries weight ``1/len`` of its own set. The distance is
@@ -49,3 +57,32 @@ def wasserstein_1(a: Sequence[float], b: Sequence[float]) -> float:
     fa = np.searchsorted(x, grid[:-1], side="right") / x.size
     fb = np.searchsorted(y, grid[:-1], side="right") / y.size
     return float(np.sum(np.abs(fa - fb) * np.diff(grid)))
+
+
+def mcnemar_exact_p(b: int, c: int) -> float:
+    """Exact two-sided McNemar p-value from the two discordant counts.
+
+    Under the null each discordant pair is equally likely to fall either way, so
+    ``min(b, c) ~ Binomial(b + c, 1/2)``; the two-sided p is
+    ``min(1, 2 * P(X <= min(b, c)))``, computed with exact integer arithmetic (no normal or
+    continuity approximation). Dimensionless.
+
+    Args:
+        b: Pairs where the first arm fails and the second succeeds (e.g. teacher failure ->
+            student success), episodes.
+        c: Pairs the other way round, episodes.
+
+    Returns:
+        The p-value in [0, 1]; 1.0 when there is no discordant pair.
+
+    Raises:
+        ValueError: If a count is negative.
+    """
+    if b < 0 or c < 0:
+        raise ValueError("discordant counts must be non-negative")
+    n = b + c
+    if n == 0:
+        return 1.0
+    k = min(b, c)
+    tail = sum(math.comb(n, i) for i in range(k + 1))
+    return float(min(1.0, 2.0 * tail / 2**n))

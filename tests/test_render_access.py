@@ -5,7 +5,8 @@ the clock, the segmentation mask = a perfect deck mask) and raw PyBullet access 
 inputs (P1-D1, il-conventions). This static scan, in the style of the ``rld`` import scanner,
 restricts which packages may even reference them:
 
-* ``ila/train``, ``ila/policies``, ``ila/deploy``: none of META_NAMES and no ``pybullet``.
+* ``ila/train``, ``ila/policies``, ``ila/deploy``, ``ila/viz`` (figures and the GIF gallery;
+  Phase 8 leak review NOTE 1): none of META_NAMES and no ``pybullet``.
 * ``ila/data``: may build ``Scene`` via ``attach`` and call ``.render()`` (pixels only), but none
   of META_NAMES and no ``pybullet`` (all PyBullet access belongs to ``ila/render`` and the adapter).
 * ``ila/eval``: restricted like the others, EXCEPT ``eval/runner.py`` (EXEMPT). The runner may
@@ -33,9 +34,9 @@ can name it without matching ``str.split``, P7-D1 NOTE 3, closed in P7-D4) and t
 non-student accessors ``privileged_observations`` (``teacher_obs``), ``model_times``
 (``t_model_s``, the clock), ``audit_arrays`` (every dataset) and ``estimator_targets``
 (``priv``) -- may not be referenced in ``ila/train``, ``ila/policies``,
-``ila/deploy`` or ``ila/eval``, by the same reference rules (any Attribute on any object, a
-Name, an import, a literal-string ``getattr``/``attrgetter``/...). ``ila/data`` (the store and
-its audits) and ``ila/obs`` are where they live and are not scanned for them.
+``ila/deploy``, ``ila/eval`` or ``ila/viz``, by the same reference rules (any Attribute on any
+object, a Name, an import, a literal-string ``getattr``/``attrgetter``/...). ``ila/data`` (the
+store and its audits) and ``ila/obs`` are where they live and are not scanned for them.
 
 The only way in is a committed entry in ``AUDIT_ALLOWLIST`` (file relative to ``src/ila`` ->
 the names that one file may reference), reviewed by ``privileged-leak-auditor``. Phase 4 adds
@@ -84,6 +85,7 @@ RESTRICTED: dict[str, frozenset[str]] = {
     "deploy": META_NAMES | {PYBULLET},
     "data": META_NAMES | {PYBULLET},
     "eval": META_NAMES | {PYBULLET},
+    "viz": META_NAMES | {PYBULLET},
 }
 
 #: Files (relative to src/ila) exempt from RESTRICTED: the runner's timing assertion only.
@@ -102,7 +104,7 @@ AUDIT_NAMES = frozenset(
 )
 
 #: Packages (relative to src/ila) scanned for AUDIT_NAMES.
-AUDIT_RESTRICTED: tuple[str, ...] = ("train", "policies", "deploy", "eval")
+AUDIT_RESTRICTED: tuple[str, ...] = ("train", "policies", "deploy", "eval", "viz")
 
 #: Reviewed exceptions: file (relative to src/ila) -> AUDIT_NAMES that file may reference. Each
 #: entry needs a privileged-leak-auditor review recorded in docs/protocol.md.

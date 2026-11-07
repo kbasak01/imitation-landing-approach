@@ -397,6 +397,7 @@ class ModularStudent(VisionStudentBase):
             raise TypeError(f"act_modular takes a ModularInput, got {type(mi).__name__}")
         si = mi.student_input
         est = self.estimate(si.images, si.proprio)  # the estimator sees no clock
+        self.inference_calls += 1  # the estimator call (the frozen teacher's MLP not counted)
         # Time axis, not a field index: window position To - 1 is step t (oldest first,
         # ila.policies.dp.chunking.obs_window_steps); the fields are placed by name.
         newest = mi.n_obs_steps - 1

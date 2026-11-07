@@ -57,8 +57,8 @@ __all__ = [
 #: The ``id`` cells the PPO teacher is re-flown on.
 PPO_CELLS: Final[tuple[str, ...]] = ("SS5", "SS6")
 
-_E01: Final[str] = "results/e01/episodes.csv"
-_E07: Final[str] = "results/e07/matrix/episodes.csv"  # read through storage: the .csv.gz
+_E01: Final[str] = p8_adapter.COMMITTED_EPISODES["e01"]
+_E07: Final[str] = p8_adapter.COMMITTED_EPISODES["e07"]  # read through storage: the .csv.gz
 
 
 @dataclass(frozen=True)

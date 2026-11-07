@@ -1,0 +1,1108 @@
+{
+  "above_teacher_row": {
+    "K": "",
+    "Ta": "",
+    "appearance_shift": "mount_tilt_m2",
+    "arm": "bc_dagger",
+    "audit_file": "above_teacher/appearance_shift__bc_dagger__id__SS6__shift-mount_tilt_m2.json",
+    "ensemble": "",
+    "iqm_above": "False",
+    "iqm_margin": "-0.0283333333333",
+    "list": "id",
+    "max_margin": "0.005",
+    "seeds_above": "s0:0.005",
+    "ss": "SS6",
+    "status": "complete",
+    "success_iqm": "0.956666666667",
+    "tag": "appearance_shift",
+    "teacher": "T_ppo",
+    "teacher_k": "197",
+    "teacher_n": "200",
+    "teacher_rate": "0.985",
+    "teacher_source": "P8 e07 ppo run_seed 0"
+  },
+  "cell": {
+    "K": null,
+    "Ta": null,
+    "appearance_shift": "mount_tilt_m2",
+    "arm": "bc_dagger",
+    "ensemble": null,
+    "list": "id",
+    "ss": "SS6",
+    "tag": "appearance_shift"
+  },
+  "label": "appearance_shift bc_dagger id SS6 shift-mount_tilt_m2",
+  "near_fraction": 0.05,
+  "outcome_shift": {
+    "table_teacher_by_student_pooled_over_seeds": [
+      {
+        "n": 7,
+        "student": "hard_landing",
+        "teacher": "hard_landing"
+      },
+      {
+        "n": 8,
+        "student": "success",
+        "teacher": "hard_landing"
+      },
+      {
+        "n": 1,
+        "student": "off_pad",
+        "teacher": "success"
+      },
+      {
+        "n": 23,
+        "student": "hard_landing",
+        "teacher": "success"
+      },
+      {
+        "n": 9,
+        "student": "bounce",
+        "teacher": "success"
+      },
+      {
+        "n": 952,
+        "student": "success",
+        "teacher": "success"
+      }
+    ],
+    "teacher_failure_to_student_success": [
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "success",
+        "seed": 0,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "success",
+        "seed": 1,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "success",
+        "seed": 2,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 1323121477,
+        "index": 10,
+        "outcome": "success",
+        "seed": 4,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 0,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 1,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 2,
+        "teacher_outcome": "hard_landing"
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "outcome": "success",
+        "seed": 4,
+        "teacher_outcome": "hard_landing"
+      }
+    ],
+    "teacher_success_to_student_failure": [
+      {
+        "episode_seed": 903867449,
+        "index": 9,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1760349828,
+        "index": 12,
+        "outcome": "bounce",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 522567851,
+        "index": 14,
+        "outcome": "bounce",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1195033505,
+        "index": 22,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1712242685,
+        "index": 49,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1712242685,
+        "index": 49,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1712242685,
+        "index": 49,
+        "outcome": "hard_landing",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 389108991,
+        "index": 56,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 699142286,
+        "index": 60,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 699142286,
+        "index": 60,
+        "outcome": "hard_landing",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1765714094,
+        "index": 80,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1331158237,
+        "index": 84,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1646836629,
+        "index": 86,
+        "outcome": "bounce",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 793640459,
+        "index": 92,
+        "outcome": "hard_landing",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 228857887,
+        "index": 98,
+        "outcome": "bounce",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "bounce",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "outcome": "hard_landing",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 986110172,
+        "index": 108,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1177384037,
+        "index": 112,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1321347680,
+        "index": 127,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 857261509,
+        "index": 146,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1799758887,
+        "index": 152,
+        "outcome": "bounce",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 54654604,
+        "index": 163,
+        "outcome": "bounce",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 392092734,
+        "index": 167,
+        "outcome": "hard_landing",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1568484266,
+        "index": 175,
+        "outcome": "bounce",
+        "seed": 1,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1450410311,
+        "index": 178,
+        "outcome": "hard_landing",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1450410311,
+        "index": 178,
+        "outcome": "hard_landing",
+        "seed": 3,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 1502030989,
+        "index": 183,
+        "outcome": "hard_landing",
+        "seed": 4,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 853190055,
+        "index": 186,
+        "outcome": "hard_landing",
+        "seed": 0,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 853190055,
+        "index": 186,
+        "outcome": "bounce",
+        "seed": 2,
+        "teacher_outcome": "success"
+      },
+      {
+        "episode_seed": 853190055,
+        "index": 186,
+        "outcome": "off_pad",
+        "seed": 3,
+        "teacher_outcome": "success"
+      }
+    ]
+  },
+  "per_seed_recount": [
+    {
+      "discordant_teacher_failure_to_student_success": 2,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 0,
+      "student": {
+        "disagreement_successes": 1,
+        "grace_used_successes": 2,
+        "n_episodes": 200,
+        "near_threshold_successes": 4,
+        "successes": 198,
+        "successes_minus_tunnelled_disagreement_or_near": 193,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 2,
+      "discordant_teacher_success_to_student_failure": 7,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.1796875,
+      "seed": 1,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 4,
+        "successes": 192,
+        "successes_minus_tunnelled_disagreement_or_near": 187,
+        "successes_minus_tunnelled_or_disagreement": 191,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 2,
+      "discordant_teacher_success_to_student_failure": 9,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.0654296875,
+      "seed": 2,
+      "student": {
+        "disagreement_successes": 1,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 3,
+        "successes": 190,
+        "successes_minus_tunnelled_disagreement_or_near": 186,
+        "successes_minus_tunnelled_or_disagreement": 189,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 0,
+      "discordant_teacher_success_to_student_failure": 9,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.00390625,
+      "seed": 3,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 188,
+        "successes_minus_tunnelled_disagreement_or_near": 186,
+        "successes_minus_tunnelled_or_disagreement": 186,
+        "tunnelled_successes": 2
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 2,
+      "discordant_teacher_success_to_student_failure": 7,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.1796875,
+      "seed": 4,
+      "student": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 4,
+        "successes": 192,
+        "successes_minus_tunnelled_disagreement_or_near": 188,
+        "successes_minus_tunnelled_or_disagreement": 192,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "grace_used_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    }
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "simulation_only": "PyBullet physics; model scale lambda = 1/25",
+  "status": "for results-skeptic review; not reported until reviewed",
+  "student": {
+    "detectors_disagree": [
+      {
+        "closing_speed_normal_m_s": 0.11287846834965119,
+        "episode_seed": 761584583,
+        "index": 88,
+        "lateral_offset_m": 0.009733083783603966,
+        "max_penetration_m": -0.0021273265090611866,
+        "outcome": "success",
+        "rel_tilt_deg": 6.541778030698191,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.9875,
+        "td_t_episode_contact_s": 1.95
+      },
+      {
+        "closing_speed_normal_m_s": 0.1840058491564238,
+        "episode_seed": 228857887,
+        "index": 98,
+        "lateral_offset_m": 0.016862415187426472,
+        "max_penetration_m": -0.0013802666110947985,
+        "outcome": "success",
+        "rel_tilt_deg": 7.514778537616189,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.7208333333333332,
+        "td_t_episode_contact_s": 1.6833333333333333
+      }
+    ],
+    "grace_used_successes": [
+      {
+        "episode_seed": 406214555,
+        "index": 105,
+        "outcome": "success",
+        "seed": 0
+      },
+      {
+        "episode_seed": 592697513,
+        "index": 141,
+        "outcome": "success",
+        "seed": 0
+      }
+    ],
+    "metrics": {
+      "closing_speed_normal_m_s": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            8,
+            8,
+            6,
+            92,
+            406,
+            480
+          ]
+        },
+        "max": 0.6264337183422742,
+        "n_over_threshold": 8,
+        "p50": 0.25448595485267717,
+        "p95": 0.4159185506701391,
+        "success_criterion": true,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "closing_speed_world_z_m_s": {
+        "in_near_test": false,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            9,
+            7,
+            9,
+            97,
+            410,
+            468
+          ]
+        },
+        "max": 0.6274212074393827,
+        "n_over_threshold": 9,
+        "p50": 0.2562866370616804,
+        "p95": 0.4228039580293029,
+        "success_criterion": false,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "lateral_offset_m": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            1,
+            1,
+            1,
+            4,
+            28,
+            965
+          ]
+        },
+        "max": 0.11749123104482692,
+        "n_over_threshold": 1,
+        "p50": 0.01687062122003691,
+        "p95": 0.040216795945866,
+        "success_criterion": true,
+        "threshold": 0.1,
+        "unit": "m model scale"
+      },
+      "rel_tilt_deg": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            23,
+            6,
+            9,
+            41,
+            127,
+            794
+          ]
+        },
+        "max": 20.611037567563127,
+        "n_over_threshold": 23,
+        "p50": 3.9225880313478036,
+        "p95": 12.675497683687801,
+        "success_criterion": true,
+        "threshold": 15.0,
+        "unit": "deg"
+      }
+    },
+    "n_detectors_disagree": 2,
+    "n_episodes": 1000,
+    "n_grace_used_successes": 2,
+    "n_successes_near_threshold": 15,
+    "n_touchdowns": 1000,
+    "n_tunnelled": 11,
+    "outcomes": {
+      "bounce": 9,
+      "crash": 0,
+      "hard_landing": 30,
+      "off_pad": 1,
+      "success": 960,
+      "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
+    },
+    "success_min_dwell_s": 0.5,
+    "successes": 960,
+    "successes_near_threshold": [
+      {
+        "episode_seed": 1657229134,
+        "index": 33,
+        "margin_fraction": 0.026106101221948563,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 0
+      },
+      {
+        "episode_seed": 1712242685,
+        "index": 49,
+        "margin_fraction": 0.043408305786517214,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 0
+      },
+      {
+        "episode_seed": 1378675592,
+        "index": 50,
+        "margin_fraction": 0.04828444002221066,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 0
+      },
+      {
+        "episode_seed": 1905388242,
+        "index": 102,
+        "margin_fraction": 0.0027766107895588494,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 0
+      },
+      {
+        "episode_seed": 903867449,
+        "index": 9,
+        "margin_fraction": 0.03507323637803358,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 699142286,
+        "index": 60,
+        "margin_fraction": 4.346872460303519e-05,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 986110172,
+        "index": 108,
+        "margin_fraction": 0.005798266142537201,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 1491716105,
+        "index": 153,
+        "margin_fraction": 0.011429912377675988,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 1
+      },
+      {
+        "episode_seed": 404636521,
+        "index": 48,
+        "margin_fraction": 0.01836091729529954,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 857261509,
+        "index": 146,
+        "margin_fraction": 0.03942810631460306,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 1491716105,
+        "index": 153,
+        "margin_fraction": 0.04067858843281169,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 2
+      },
+      {
+        "episode_seed": 175912377,
+        "index": 72,
+        "margin_fraction": 0.045511267327682486,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 4
+      },
+      {
+        "episode_seed": 1102052247,
+        "index": 101,
+        "margin_fraction": 0.01763365605232403,
+        "metric": "closing_speed_normal_m_s",
+        "outcome": "success",
+        "seed": 4
+      },
+      {
+        "episode_seed": 406214555,
+        "index": 105,
+        "margin_fraction": 0.04900035151778365,
+        "metric": "lateral_offset_m",
+        "outcome": "success",
+        "seed": 4
+      },
+      {
+        "episode_seed": 1321347680,
+        "index": 127,
+        "margin_fraction": 0.033390991737675436,
+        "metric": "rel_tilt_deg",
+        "outcome": "success",
+        "seed": 4
+      }
+    ],
+    "tunnelled": [
+      {
+        "closing_speed_normal_m_s": 0.1785920033366253,
+        "episode_seed": 853190055,
+        "index": 186,
+        "lateral_offset_m": 0.07008733968910665,
+        "max_penetration_m": -0.0066727174531199945,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 20.439330648233287,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.0833333333333333,
+        "td_t_episode_contact_s": 1.0833333333333333
+      },
+      {
+        "closing_speed_normal_m_s": 0.3628073372980678,
+        "episode_seed": 1712242685,
+        "index": 49,
+        "lateral_offset_m": 0.021560286104658308,
+        "max_penetration_m": -0.005181395798191358,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 15.586514629480241,
+        "seed": 1,
+        "td_t_episode_analytic_s": 2.220833333333333,
+        "td_t_episode_contact_s": 2.220833333333333
+      },
+      {
+        "closing_speed_normal_m_s": 0.269753465710936,
+        "episode_seed": 1905388242,
+        "index": 102,
+        "lateral_offset_m": 0.06968021724361508,
+        "max_penetration_m": -0.005310139687907744,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 15.010923930061498,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.1708333333333334,
+        "td_t_episode_contact_s": 1.1708333333333334
+      },
+      {
+        "closing_speed_normal_m_s": 0.2254363729823926,
+        "episode_seed": 406214555,
+        "index": 105,
+        "lateral_offset_m": 0.07153706872187669,
+        "max_penetration_m": -0.005099227661597307,
+        "outcome": "success",
+        "rel_tilt_deg": 11.634042168908975,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.1166666666666667,
+        "td_t_episode_contact_s": 1.1166666666666667
+      },
+      {
+        "closing_speed_normal_m_s": 0.2663114964104005,
+        "episode_seed": 903867449,
+        "index": 9,
+        "lateral_offset_m": 0.016101653880660476,
+        "max_penetration_m": -0.005248726742952807,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 15.489199911822434,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.3708333333333333,
+        "td_t_episode_contact_s": 1.3708333333333333
+      },
+      {
+        "closing_speed_normal_m_s": 0.28536499989641884,
+        "episode_seed": 343780280,
+        "index": 58,
+        "lateral_offset_m": 0.028928647420464807,
+        "max_penetration_m": -0.005384376034670238,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 20.429237117169805,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.4166666666666667,
+        "td_t_episode_contact_s": 1.4166666666666667
+      },
+      {
+        "closing_speed_normal_m_s": 0.3127389338533827,
+        "episode_seed": 175912377,
+        "index": 72,
+        "lateral_offset_m": 0.04106716761169863,
+        "max_penetration_m": -0.005004348976409119,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 17.378748614470844,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.8,
+        "td_t_episode_contact_s": 1.8
+      },
+      {
+        "closing_speed_normal_m_s": 0.305068886984355,
+        "episode_seed": 406214555,
+        "index": 105,
+        "lateral_offset_m": 0.06712614830967997,
+        "max_penetration_m": -0.00521591394137419,
+        "outcome": "success",
+        "rel_tilt_deg": 11.34797893503102,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.0916666666666666,
+        "td_t_episode_contact_s": 1.0916666666666666
+      },
+      {
+        "closing_speed_normal_m_s": 0.2958810903015055,
+        "episode_seed": 857261509,
+        "index": 146,
+        "lateral_offset_m": 0.010574675558673767,
+        "max_penetration_m": -0.005039588067479816,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 15.061549419021665,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.8541666666666667,
+        "td_t_episode_contact_s": 1.8541666666666667
+      },
+      {
+        "closing_speed_normal_m_s": 0.3028193129645701,
+        "episode_seed": 1514039191,
+        "index": 147,
+        "lateral_offset_m": 0.032264960478640796,
+        "max_penetration_m": -0.005210290997842445,
+        "outcome": "success",
+        "rel_tilt_deg": 12.353919621226275,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.2041666666666666,
+        "td_t_episode_contact_s": 1.2041666666666666
+      },
+      {
+        "closing_speed_normal_m_s": 0.2756946321394116,
+        "episode_seed": 1450410311,
+        "index": 178,
+        "lateral_offset_m": 0.055194549099346124,
+        "max_penetration_m": -0.005491729110691936,
+        "outcome": "hard_landing",
+        "rel_tilt_deg": 19.63434844624832,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.1583333333333332,
+        "td_t_episode_contact_s": 1.1583333333333332
+      }
+    ]
+  },
+  "success_yaml_sha256": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+  "teacher": "T_ppo",
+  "teacher_rows": {
+    "detectors_disagree": [],
+    "grace_used_successes": [],
+    "metrics": {
+      "closing_speed_normal_m_s": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            86,
+            114
+          ]
+        },
+        "max": 0.31572718285456497,
+        "n_over_threshold": 0,
+        "p50": 0.247269394000022,
+        "p95": 0.2818113647317609,
+        "success_criterion": true,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "closing_speed_world_z_m_s": {
+        "in_near_test": false,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            92,
+            108
+          ]
+        },
+        "max": 0.30739354546856007,
+        "n_over_threshold": 0,
+        "p50": 0.24925623690394128,
+        "p95": 0.28298190821142216,
+        "success_criterion": false,
+        "threshold": 0.5,
+        "unit": "m/s model scale"
+      },
+      "lateral_offset_m": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            0,
+            0,
+            0,
+            0,
+            2,
+            198
+          ]
+        },
+        "max": 0.06189916394687604,
+        "n_over_threshold": 0,
+        "p50": 0.012835659772954625,
+        "p95": 0.033913862327913706,
+        "success_criterion": true,
+        "threshold": 0.1,
+        "unit": "m model scale"
+      },
+      "rel_tilt_deg": {
+        "in_near_test": true,
+        "margin_histogram": {
+          "bin_edges_fraction_of_threshold": [
+            "-inf",
+            "0",
+            "0.05",
+            "0.1",
+            "0.25",
+            "0.5",
+            "inf"
+          ],
+          "counts": [
+            3,
+            0,
+            2,
+            7,
+            23,
+            165
+          ]
+        },
+        "max": 18.644021328183985,
+        "n_over_threshold": 3,
+        "p50": 4.016321028269496,
+        "p95": 11.89886369877752,
+        "success_criterion": true,
+        "threshold": 15.0,
+        "unit": "deg"
+      }
+    },
+    "n_detectors_disagree": 0,
+    "n_episodes": 200,
+    "n_grace_used_successes": 0,
+    "n_successes_near_threshold": 0,
+    "n_touchdowns": 200,
+    "n_tunnelled": 0,
+    "outcomes": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 3,
+      "off_pad": 0,
+      "success": 197,
+      "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
+    },
+    "success_min_dwell_s": 0.5,
+    "successes": 197,
+    "successes_near_threshold": [],
+    "tunnelled": []
+  },
+  "teacher_source": "P8 e07 ppo run_seed 0",
+  "thresholds_success_yaml": {
+    "contact_dwell_min_s": 0.5,
+    "lateral_offset_max_m": 0.1,
+    "rel_vertical_velocity_max_m_s": 0.5,
+    "relative_tilt_max_deg": 15.0
+  }
+}

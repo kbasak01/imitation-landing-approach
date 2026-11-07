@@ -1,0 +1,26 @@
+# Output of: python scripts/eval_matrix.py --dry-run --quiet-jobs (re-run 2026-11-06 at HEAD 6a4d0f2 from committed selection.json files; nothing flown). The same projection was printed before the matrix ran (9c7ed79).
+
+projection at 24 workers (CPU fp32 single-sample path):
+  tag                 jobs  episodes shared    CPU-h  wall-h
+  core                 175     98000      0    202.2    8.43
+  ablation              33     19800      0     65.7    2.74
+  dp_Ta                 40     24000     10    209.3    8.72
+  dp_K                  25      5000      5     20.4    0.85
+  appearance_shift      75     30000      0     78.8    3.28
+  reference_external     3      2400      0      3.6    0.15
+  total                351    179200     15    580.1   24.17
+
+shared cells (not flown; rows from another job):
+  dp_Ta dp Ta=1 K=10 ens=1 -> rows/dp/s0/id-SS4-SS5-SS6__Ta1_K10_ens0.csv.gz (x5 seeds): Ta = 1 with ensembling is bit-identical to Ta = 1 without (one source of weight 1.0, same noise keys; chunking.ensemble_sources, P6-D1 item 3 alias)
+  dp_Ta dp Ta=8 K=10 ens=0 -> rows/dp/s0/id__Ta8_K10_ens0.csv.gz (x5 seeds): the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)
+  dp_K dp Ta=8 K=10 ens=0 -> rows/dp/s0/id__Ta8_K10_ens0.csv.gz (x5 seeds): the core dp setting: same checkpoint, episodes and inference as the core job (no cell is re-flown)
+
+skipped blocks:
+  latency_arm: not flown in Phase 8: its delay d = ceil(p99_ms / 33.333) comes from Phase 9's latency study (P3-D1 §6 H5(a), §7); P3-D1 §8 moves H5(b) and the latency arm to Phase 9
+
+assumptions:
+  - CPU-s per control step measured per (arm, seed) from its committed selection.json: wall_clock_s x workers / sum over candidates of (150 x mean_steps) on select (CPU fp32 single-sample path; diffusion arms at Ta = 8, K = 10, no ensembling)
+  - wall clock = CPU-s / workers (linear in workers; bc-family selections ran at 16 workers, the rest at 24)
+  - steps per episode = the selected checkpoint's select mean steps x (P8 ppo s0 mean steps in the cell / P8 ppo s0 mean steps over id SS3-SS5)
+  - diffusion: cost(L) = L*11 ms + calls*(31 ms + K*14 ms) (P2-D2 single-thread dummy dp), calls = L with ensembling else ceil(L/Ta); scaled by its ratio to Ta = 8, K = 10
+  - appearance shift costs as the committed look; shadow-teacher MLP cost not added

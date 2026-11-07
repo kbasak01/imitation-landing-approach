@@ -1,0 +1,87 @@
+{
+  "committed_row_sources": {
+    "results/e07/matrix/episodes.csv.gz": "1ab1fc844e1fd7dcb65f7aa8eefa35fadd77b40dfed89ab7b534d41f407fa280",
+    "results/e08/rows/bc/s0/id.csv.gz": "70e5a2915973b3142e246a7d5ef7ed68602cf0b77520256cf189a5909fb8085b",
+    "results/e08/rows/bc_dagger/s0/id.csv.gz": "58525a140e24c6ef8c36e99439a0dd3f9047f09cd3a342725e6e713f50b83c03",
+    "results/e08/rows/dp/s0/id__Ta8_K10_ens0.csv.gz": "4ce8586ab5b24673cdb8e24a79ca1995728c6f1ef55afac8ec833148dfe7a017"
+  },
+  "gifs": [
+    {
+      "bytes": 564549,
+      "file": "a_all_four_succeed__id_SS5_ep2.gif",
+      "sha256": "5b96fb833dc93298873099e5c9c0f7de402bb2b1da76e4bba27feda4d40489a9"
+    },
+    {
+      "bytes": 456658,
+      "file": "b_students_split__id_SS5_ep0.gif",
+      "sha256": "6e20e6941e7bcfb316f8f1900b4a2bace1e989680a30f7e1165c400edf0ae7f0"
+    },
+    {
+      "bytes": 522473,
+      "file": "c_dp_off_pad__id_SS5_ep1.gif",
+      "sha256": "4ae34d52ed266e4572d26fe1b7a221806498ae34d49daeb08cf818a9638b318e"
+    },
+    {
+      "bytes": 382950,
+      "file": "d_teacher_ss6_failure__id_SS6_ep10.gif",
+      "sha256": "3bf0bad50b15cf784cfab88223346a13a753fcd485d88572242ec54511f93bf3"
+    }
+  ],
+  "gifs_committed": true,
+  "label": "hand-picked by stated rule \u00b7 simulation (PyBullet TinyRenderer)",
+  "picks": {
+    "a_all_four_succeed": {
+      "episode_seed": 953709142,
+      "index": 2,
+      "list_position": 402,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "success",
+        "teacher": "success"
+      },
+      "ss": "SS5"
+    },
+    "b_students_split": {
+      "episode_seed": 578769763,
+      "index": 0,
+      "list_position": 400,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "off_pad",
+        "teacher": "success"
+      },
+      "ss": "SS5"
+    },
+    "c_dp_off_pad": {
+      "episode_seed": 1081822447,
+      "index": 1,
+      "list_position": 401,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "off_pad",
+        "teacher": "success"
+      },
+      "ss": "SS5"
+    },
+    "d_teacher_ss6_failure": {
+      "episode_seed": 1323121477,
+      "index": 10,
+      "list_position": 610,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "off_pad",
+        "teacher": "hard_landing"
+      },
+      "ss": "SS6"
+    }
+  },
+  "reflight": "every panel re-flown on the CPU fp32 single-sample path; every row asserted equal to its committed row before any GIF was written",
+  "release_location": null,
+  "rule_sha256": "2e4e64c0a5f716bd774424b13596c522d7daa6c637567fd3e87dd68a1b973991",
+  "simulation_only": "PyBullet physics; frames rendered by PyBullet TinyRenderer; model scale lambda = 1/25",
+  "total_bytes": 1926630
+}

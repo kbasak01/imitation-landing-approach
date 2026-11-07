@@ -1,0 +1,41 @@
+{
+  "released": [
+    {
+      "date": "2026-11-06",
+      "finding": "One seed of five (s4) is 1 episode above P8 ppo seed 0 (margin 0.005); IQM equal (0.985). Not an exploit: s4's one tunnelled success accounts for the margin, 0 detector disagreements, 5 of 984 successes within 5 % of a success-criterion threshold (teacher 0 of 197). bc_state sees P8's 25-d obs incl. time_fraction, the teacher's own input (privileged by design, never a vision row). SS6 is outside the training distribution; P8's one-ulp flip floor: 6.6 % of id SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. In simulation; model scale, lambda = 1/25.",
+      "label": "core bc_state id SS6",
+      "reviewed_by": "results-skeptic"
+    },
+    {
+      "date": "2026-11-06",
+      "finding": "One seed of five (s3) is 2 episodes above P8 ppo seed 0 (margin 0.01); IQM 0.972 is below the teacher's 0.975. s3's two tunnelled successes (penetration > 5 mm, which P8 does not reclassify) account for the margin; 0 detector disagreements. Outside the training distribution; P8 did not audit tunnelling outside id, and its flip floor was measured on id SS6 only. In simulation.",
+      "label": "core bc_state unseen_seastate SS6",
+      "reviewed_by": "results-skeptic"
+    },
+    {
+      "date": "2026-11-06",
+      "finding": "One seed of five (s2) is 2 episodes above P8 ppo seed 0 (margin 0.01); IQM 0.888 is below the teacher's 0.91. Within binomial noise for 200 episodes; tunnelled 55 over five seeds vs 8 for the single teacher run, 12 of 888 successes within 5 % of a success-criterion threshold (teacher 1 of 182). 90 deg heading and SS6 are outside the training distribution; P8 did not audit tunnelling outside id. P8's one-ulp flip floor: 6.6 % of id SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs on id SS6 only, not on these students or this list. Regimes share realizations, so the three bc_state flags are not independent. In simulation.",
+      "label": "core bc_state unseen_heading SS6",
+      "reviewed_by": "results-skeptic"
+    },
+    {
+      "date": "2026-11-06",
+      "finding": "Above the T_mix reference in one seed (s1, margin 0.015) only. Unpaired reading: IQM 0.925 is below T_mix 0.935, below P8 ppo seed 0 (1.000) and above gated alone (0.895). T_mix is a per-episode assignment of ppo s0 and gated rows that the student cannot observe; all 37 teacher-failure -> student-success seed-episodes are T_mix timeouts, which come only from gated (13 in this cell), and the training mixture was success-filtered. bc_mix lands harder (closing-speed p95 0.520 vs 0.265 m/s model scale; 10 tunnelled vs 0; 17 of 555 successes within 5 % of a success-criterion threshold vs 0 of 187). Not above ppo s0, the better of its two teachers. In simulation.",
+      "label": "ablation bc_mix id SS5",
+      "reviewed_by": "results-skeptic"
+    },
+    {
+      "date": "2026-11-06",
+      "finding": "Above the T_mix reference (IQM 0.877 vs 0.830; all three seeds) only because T_mix includes gated's waiting: 85 of the 90 teacher-failure -> student-success seed-episodes are T_mix timeouts (31 in this cell, all from gated); bc_mix never times out. It is below P8 ppo seed 0 (0.985) and above gated alone (0.630), unpaired reading; it is not above ppo s0, the better of its two teachers, and the training mixture was success-filtered. It lands harder than the reference: closing-speed p95 0.532 vs 0.282 m/s model scale, 14 tunnelled vs 0, 23 of 526 successes within 5 % of a success-criterion threshold vs 0 of 166. Not H2 evidence (H2 is scored at id SS4). SS6 is outside the training distribution; P8's one-ulp flip floor (6.6 % of id SS6 policy-episodes, measured on P8's MLPs, not on these students). In simulation.",
+      "label": "ablation bc_mix id SS6",
+      "reviewed_by": "results-skeptic"
+    },
+    {
+      "date": "2026-11-06",
+      "finding": "One seed of five (s0) is 1 episode above P8 ppo seed 0 (margin 0.005); IQM 0.957 is below the teacher's 0.985. s0's one detector-disagreement success (contact 37.5 ms before the analytic detector, metrics well inside thresholds) accounts for the margin. Appearance-shift tag, not a core result; SS6 is outside the training distribution; P8's one-ulp flip floor (6.6 % of id SS6 policy-episodes, measured on P8's MLPs, not on these students). Rendered frames (PyBullet TinyRenderer); in simulation.",
+      "label": "appearance_shift bc_dagger id SS6 shift-mount_tilt_m2",
+      "reviewed_by": "results-skeptic"
+    }
+  ],
+  "source": "results-skeptic above-teacher review of HEAD 29374e0 (2026-11-06): all six cells RELEASE, nothing BLOCKING; near-threshold counts updated to the criteria-only test (world-z dropped) of results/e08/above_teacher/audit.md; wording edits by eval-auditor: 'not above either teacher' -> 'not above ppo s0, the better of its two teachers' (bc_mix is above gated alone), and 'unpaired reading' added to the SS5 gated comparison; after the results-skeptic pre-gate review (2026-11-06, M7 and the eval-auditor-edit note): P8's flip-floor sentence added to the bc_state unseen_heading SS6 finding (as for id SS6, stating that it was measured on id SS6 only), and 'unpaired reading' moved to the start of the bc_mix id SS5 IQM sentence so that it covers all three IQM-vs-reference comparisons (T_mix, ppo s0, gated)"
+}

@@ -61,7 +61,28 @@ Rows
 :data:`VISION_EPISODE_COLUMNS`: P8's ``EPISODE_COLUMNS`` verbatim and in P8's order, then
 :data:`P9_COLUMNS` (plan §1.7), then :data:`RENDER_EVIDENCE_COLUMNS` (frames rendered and timed
 checks per episode; with render on, :class:`FrameCountError` unless frames == steps + 1).
-:func:`p8_rows` strips everything after P8's columns for ``compare_to_reference``. Units are P8's:
+:func:`p8_rows` strips everything after P8's columns for ``compare_to_reference``.
+
+With ``diagnostics=True`` (Phase 8; CPU single-sample path only) each row also carries
+:data:`DIAGNOSTIC_COLUMNS` after the render evidence (:data:`EVAL_EPISODE_COLUMNS`):
+
+* ``inference_calls``: the flown policy's ``inference_calls`` attribute read after the episode
+  (``ila.policies``: reset to 0 by ``reset``; ``bc`` one per step, diffusion one per chunk
+  sampled, ``modular`` one per estimator call, ``bc_state`` one per ``act``). ``None`` (an empty
+  cell) for a policy without it, e.g. P8's teachers and controllers.
+* ``teacher_agreement``: with a ``shadow_teacher`` spec, the mean over the episode's executed
+  control steps t of ``||clip(a_student[t]) - clip(a_teacher[t])||_2`` (normalised action units,
+  x v_max = 1.5 m/s model scale; 0 = identical; clipped to ``[-1, 1]^3`` as the env clips,
+  before the env's norm cap). ``a_teacher[t]`` is the frozen teacher's action on the env's own
+  25-d observation at step t, the state the student actually visited (its ``last_action`` is
+  the student's ``action_exec[t-1]``). The shadow is built once per chunk in the worker,
+  ``reset(episode_seed)`` on every episode and called exactly once per step, in order, so a
+  stateful teacher (``pid_feedforward``, ``gated``) integrates along the flown trajectory
+  (il-conventions, alignment rule 4). Its action goes into this mean only: no path leads from
+  it to the student, the env or any other column. NaN without a shadow.
+
+Without ``diagnostics`` rows are exactly :data:`VISION_EPISODE_COLUMNS`, as before Phase 8.
+Units are P8's:
 times seconds model scale, lengths metres model scale, speeds m/s model scale, angles degrees,
 actions normalised (x v_max = 1.5 m/s model). Model scale lambda = 1/25 (1 model s = 5 full-scale s;
 1 model m = 25 full-scale m).
@@ -91,6 +112,8 @@ from ila.render.config import RENDER_CONFIG_PATH, RenderConfig, load_render_conf
 
 __all__ = [
     "DEFAULT_TIMING_EVERY",
+    "DIAGNOSTIC_COLUMNS",
+    "EVAL_EPISODE_COLUMNS",
     "P9_COLUMNS",
     "RENDER_EVIDENCE_COLUMNS",
     "RENDER_MODES",
@@ -102,16 +125,19 @@ __all__ = [
     "RenderMode",
     "RenderTimingError",
     "RowTags",
+    "ShadowTeacher",
     "StudentActor",
     "StudentWindow",
     "TeacherActor",
     "VisionArm",
     "VisionTask",
     "check_privilege",
+    "check_shadow",
     "check_start",
     "chunk_tasks",
     "episode_row",
     "fly_chunk",
+    "inference_calls_of",
     "init_worker_threads",
     "is_modular",
     "is_student",
@@ -157,6 +183,14 @@ VISION_EPISODE_COLUMNS: Final[tuple[str, ...]] = (
     *P9_COLUMNS,
     *RENDER_EVIDENCE_COLUMNS,
 )
+
+#: Phase 8 per-episode diagnostics (module docstring), after the render evidence; present only
+#: when a run asks for them (``diagnostics=True``), so every pre-Phase-8 row format is unchanged.
+DIAGNOSTIC_COLUMNS: Final[tuple[str, ...]] = ("inference_calls", "teacher_agreement")
+
+#: Column order of a ``diagnostics=True`` row: :data:`VISION_EPISODE_COLUMNS`, then
+#: :data:`DIAGNOSTIC_COLUMNS`.
+EVAL_EPISODE_COLUMNS: Final[tuple[str, ...]] = (*VISION_EPISODE_COLUMNS, *DIAGNOSTIC_COLUMNS)
 
 #: Thread-count variables set to 1 before any worker pool is spawned (P8 run conditions:
 #: ``OMP_NUM_THREADS=1``, and ``MKL_NUM_THREADS=1`` from ``rld.eval.learned.main``).
@@ -222,6 +256,9 @@ class VisionArm:
         contract_variant: The observation contract variant a student is fed
             (``ila.obs.split.VARIANTS``).
         timing_every: Stride of the timing assertion, control steps.
+        diagnostics: Append :data:`DIAGNOSTIC_COLUMNS` to every row.
+        shadow_teacher: A teacher spec (``p8_adapter.teacher_spec``) flown in lockstep for
+            ``teacher_agreement``; requires ``diagnostics``. ``None``: the column is NaN.
     """
 
     spec: p8_adapter.PolicySpec
@@ -231,6 +268,8 @@ class VisionArm:
     appearance_shift: str | None = None
     contract_variant: str = "default"
     timing_every: int = DEFAULT_TIMING_EVERY
+    diagnostics: bool = False
+    shadow_teacher: p8_adapter.PolicySpec | None = None
 
 
 @dataclass(frozen=True)
@@ -246,6 +285,8 @@ class VisionTask:
         appearance_shift: Render variant, or ``None``.
         contract_variant: Student contract variant.
         timing_every: Stride of the timing assertion, control steps.
+        diagnostics: Append :data:`DIAGNOSTIC_COLUMNS` to every row.
+        shadow_teacher: Lockstep teacher for ``teacher_agreement`` (needs ``diagnostics``).
     """
 
     episodes: Sequence[p8_adapter.ListedEpisode]
@@ -256,6 +297,8 @@ class VisionTask:
     appearance_shift: str | None = None
     contract_variant: str = "default"
     timing_every: int = DEFAULT_TIMING_EVERY
+    diagnostics: bool = False
+    shadow_teacher: p8_adapter.PolicySpec | None = None
 
 
 def render_cfg_sha256(render: RenderMode, appearance_shift: str | None = None) -> str:
@@ -647,6 +690,83 @@ class StudentActor:
         return np.asarray(self.policy.act_vision(si.images, si.proprio), dtype=np.float64)
 
 
+# --------------------------------------------------------------------------- diagnostics
+
+
+def check_shadow(shadow: p8_adapter.PolicySpec | None, diagnostics: bool) -> None:
+    """Refuse a shadow teacher the runner cannot fly without a side channel.
+
+    Raises:
+        ValueError: If a shadow is given without ``diagnostics``, or it is privileged or
+            consumes a motion feed (it would need a context or feed the student run lacks).
+    """
+    if shadow is None:
+        return
+    if not diagnostics:
+        raise ValueError("shadow_teacher needs diagnostics=True (teacher_agreement column)")
+    if shadow.privileged or shadow.needs_motion_feed:
+        raise ValueError(f"shadow teacher {shadow.method!r} must be non-privileged and unfed")
+
+
+class ShadowTeacher:
+    """A frozen teacher flown in lockstep with the evaluated policy, for ``teacher_agreement``.
+
+    It is reset with the listed episode seed at the start of every episode and asked once per
+    executed control step, in order, on a copy of the env's 25-d observation at that step (the
+    teacher observation, P8 units). Its action only enters :attr:`distances`; nothing it
+    returns reaches the student, the env or any other column.
+
+    Attributes:
+        policy: The teacher (P8 ``EvalPolicy``; never privileged).
+        distances: This episode's per-step ``||clip(a_student) - clip(a_teacher)||_2``,
+            normalised action units (x v_max = 1.5 m/s model scale).
+    """
+
+    def __init__(self, policy: p8_adapter.EvalPolicy) -> None:
+        """Hold the built teacher."""
+        self.policy = policy
+        self.distances: list[float] = []
+
+    def begin(self, listed: p8_adapter.ListedEpisode) -> None:
+        """Reset the teacher (its integrators and latches) for a new episode."""
+        self.distances = []
+        self.policy.reset(listed.episode_seed, None)
+
+    def step(self, obs: NDArray[Any], student_action: NDArray[np.float64]) -> None:
+        """Query the teacher at this step's observation and record the distance.
+
+        Args:
+            obs: The env's observation at step t (copied before the teacher sees it).
+            student_action: The student's action at step t, clipped to ``[-1, 1]^3``.
+
+        Raises:
+            ValueError: If the teacher returns a non-finite or wrongly shaped action.
+        """
+        teacher = np.asarray(self.policy.act(np.array(obs, copy=True)), dtype=np.float64)
+        if teacher.shape != (p8_adapter.ACTION_DIM,) or not np.all(np.isfinite(teacher)):
+            raise ValueError(f"shadow teacher: bad action {teacher!r}")
+        diff = student_action - np.clip(teacher, -1.0, 1.0)
+        self.distances.append(float(np.sqrt(np.sum(diff * diff))))
+
+    def mean(self) -> float:
+        """Mean distance over the episode's steps (NaN for an episode without a step)."""
+        return float(np.mean(self.distances)) if self.distances else float("nan")
+
+
+def inference_calls_of(policy: object) -> int | None:
+    """Read a policy's ``inference_calls`` counter after an episode (``None`` if it has none).
+
+    Raises:
+        TypeError: If the attribute exists but is not a non-negative int.
+    """
+    calls = getattr(policy, "inference_calls", None)
+    if calls is None:
+        return None
+    if isinstance(calls, bool) or not isinstance(calls, int | np.integer) or calls < 0:
+        raise TypeError(f"inference_calls must be a non-negative int, got {calls!r}")
+    return int(calls)
+
+
 # --------------------------------------------------------------------------- rendering
 
 
@@ -747,9 +867,14 @@ def _refuse_feed(spec: p8_adapter.PolicySpec) -> None:
 
 
 def _tag_row(
-    row: dict[str, Any], tags: RowTags, render_sha: str, frames: int, timed_checks: int
+    row: dict[str, Any],
+    tags: RowTags,
+    render_sha: str,
+    frames: int,
+    timed_checks: int,
+    diagnostics: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Append the P9 and render-evidence columns to a P8 row, in column order."""
+    """Append the P9, render-evidence and (if given) diagnostic columns, in column order."""
     out = dict(row)
     out.update(
         arm=tags.arm,
@@ -764,8 +889,12 @@ def _tag_row(
         frames_rendered=frames,
         timed_checks=timed_checks,
     )
-    if tuple(out) != VISION_EPISODE_COLUMNS:
-        raise RuntimeError(f"row columns {list(out)} != {list(VISION_EPISODE_COLUMNS)}")
+    columns = VISION_EPISODE_COLUMNS
+    if diagnostics is not None:
+        out.update((name, diagnostics[name]) for name in DIAGNOSTIC_COLUMNS)
+        columns = EVAL_EPISODE_COLUMNS
+    if tuple(out) != columns:
+        raise RuntimeError(f"row columns {list(out)} != {list(columns)}")
     return out
 
 
@@ -781,17 +910,20 @@ def fly_chunk(
             carrying its flags) is checked against the spec by :func:`check_privilege`.
 
     Returns:
-        One row per episode (:data:`VISION_EPISODE_COLUMNS`), in the order given.
+        One row per episode (:data:`VISION_EPISODE_COLUMNS`, or :data:`EVAL_EPISODE_COLUMNS`
+        with ``task.diagnostics``), in the order given.
 
     Raises:
         EpisodeListMismatchError: If any reset does not reproduce its listed episode.
         MotionFeedRefusedError: For a ``needs_motion_feed`` spec.
         RenderTimingError: If a frame and its observation do not share a step count.
         ValueError: If the policy's flags disagree with the spec, it returns a non-finite or
-            wrongly shaped action, or a student is flown privileged or without ``full``.
+            wrongly shaped action, a student is flown privileged or without ``full``, or the
+            shadow teacher is refused (:func:`check_shadow`) or returns a bad action.
     """
     spec, cfgs = task.spec, task.cfgs
     _refuse_feed(spec)
+    check_shadow(task.shadow_teacher, task.diagnostics)
     if task.timing_every < 1:
         raise ValueError(f"timing_every must be positive, got {task.timing_every}")
     if not task.episodes:
@@ -809,6 +941,12 @@ def fly_chunk(
                 raise ValueError(f"{spec.method}: a vision student is never privileged")
             if task.render != "full":
                 raise ValueError(f"{spec.method}: a student needs render 'full', not {task.render}")
+        shadow: ShadowTeacher | None = None
+        if task.shadow_teacher is not None:
+            # Built after the evaluated policy, in this worker, and never handed to the actor.
+            shadow_policy = task.shadow_teacher.build(cfgs)
+            check_privilege(task.shadow_teacher, shadow_policy)
+            shadow = ShadowTeacher(shadow_policy)
         max_steps = int(round(cfgs.landing.total_len_s * cfgs.landing.ctrl_freq_hz)) + 1
         rule = p8_adapter.touchdown_rule(cfgs)
         stride = int(cfgs.landing.pyb_steps_per_ctrl)
@@ -823,12 +961,16 @@ def fly_chunk(
             frames = 0 if frame is None else 1
             context = p8_adapter.PrivilegedContext.from_env(env) if spec.privileged else None
             actor.begin(listed, context)
+            if shadow is not None:
+                shadow.begin(listed)
             actions: list[NDArray[np.float64]] = []
             for k in range(max_steps):
                 action = actor.act(k, obs, frame)
                 if action.shape != (action_dim,) or not np.all(np.isfinite(action)):
                     raise ValueError(f"{spec.method}: bad action {action!r}")
                 actions.append(np.clip(action, -1.0, 1.0))
+                if shadow is not None:  # same step t, same observation, before env.step
+                    shadow.step(obs, actions[-1])
                 obs, _, terminated, truncated, _ = env.step(action)
                 done = bool(terminated or truncated)
                 timed = done or (k + 1) % task.timing_every == 0
@@ -854,7 +996,15 @@ def fly_chunk(
             )
             row = episode_row(listed, pad, spec, env, actions, truth)
             n_timed = renderer.timed_checks - timed_before
-            rows.append(_tag_row(row, task.tags, render_sha, frames, n_timed))
+            diag = (
+                {
+                    "inference_calls": inference_calls_of(policy),
+                    "teacher_agreement": float("nan") if shadow is None else shadow.mean(),
+                }
+                if task.diagnostics
+                else None
+            )
+            rows.append(_tag_row(row, task.tags, render_sha, frames, n_timed, diag))
     finally:
         env.close()
     return rows
@@ -927,6 +1077,8 @@ def chunk_tasks(
             appearance_shift=arm.appearance_shift,
             contract_variant=arm.contract_variant,
             timing_every=arm.timing_every,
+            diagnostics=arm.diagnostics,
+            shadow_teacher=arm.shadow_teacher,
         )
         for arm in arms
         for i in range(0, len(arm.episodes), chunk)
@@ -966,6 +1118,7 @@ def run_arms_vision(
         raise ValueError(f"workers and chunk must be positive, got {workers}, {chunk}")
     for arm in arms:
         _refuse_feed(arm.spec)
+        check_shadow(arm.shadow_teacher, arm.diagnostics)
         if arm.render not in RENDER_MODES:
             raise ValueError(f"unknown render mode {arm.render!r}")
     tasks = chunk_tasks(arms, cfgs, chunk)
@@ -1004,6 +1157,8 @@ def run_list_vision(
     appearance_shift: str | None = None,
     contract_variant: str = "default",
     timing_every: int = DEFAULT_TIMING_EVERY,
+    diagnostics: bool = False,
+    shadow_teacher: p8_adapter.PolicySpec | None = None,
 ) -> list[dict[str, Any]]:
     """Fly one policy on a list of listed episodes (one arm of :func:`run_arms_vision`).
 
@@ -1018,9 +1173,14 @@ def run_list_vision(
         appearance_shift: Render variant, or ``None``.
         contract_variant: Student contract variant.
         timing_every: Stride of the timing assertion, control steps.
+        diagnostics: Append :data:`DIAGNOSTIC_COLUMNS` (``inference_calls``,
+            ``teacher_agreement``) to every row.
+        shadow_teacher: Teacher spec flown in lockstep for ``teacher_agreement``
+            (e.g. ``p8_adapter.teacher_spec("ppo")``); needs ``diagnostics``.
 
     Returns:
-        One row per episode (:data:`VISION_EPISODE_COLUMNS`), in list order.
+        One row per episode (:data:`VISION_EPISODE_COLUMNS`, or :data:`EVAL_EPISODE_COLUMNS`
+        with ``diagnostics``), in list order.
     """
     arm = VisionArm(
         spec=spec,
@@ -1030,6 +1190,8 @@ def run_list_vision(
         appearance_shift=appearance_shift,
         contract_variant=contract_variant,
         timing_every=timing_every,
+        diagnostics=diagnostics,
+        shadow_teacher=shadow_teacher,
     )
     return run_arms_vision([arm], cfgs, workers=workers, chunk=chunk)
 
@@ -1053,21 +1215,30 @@ def _cell(value: Any) -> Any:
 
 
 def vision_rows_csv(rows: Sequence[Mapping[str, Any]]) -> str:
-    """Serialise rows with every column (:data:`VISION_EPISODE_COLUMNS`) deterministically.
+    """Serialise rows with every column deterministically.
 
-    The P8 columns are written exactly as P8's ``episode_rows_csv`` writes them (floats as
-    ``repr``, booleans ``True``/``False``, newline endings), so the first
-    ``len(EPISODE_COLUMNS)`` fields of each line are P8's text. ``None`` tags are empty.
+    The columns are :data:`VISION_EPISODE_COLUMNS`, or :data:`EVAL_EPISODE_COLUMNS` when the
+    rows carry the diagnostics. The P8 columns are written exactly as P8's
+    ``episode_rows_csv`` writes them (floats as ``repr``, booleans ``True``/``False``, newline
+    endings), so the first ``len(EPISODE_COLUMNS)`` fields of each line are P8's text. ``None``
+    cells are empty.
 
     Args:
-        rows: Runner rows.
+        rows: Runner rows, all with or all without the diagnostic columns.
 
     Returns:
         The CSV text, header included.
+
+    Raises:
+        ValueError: If some rows carry the diagnostic columns and others do not.
     """
+    flags = {all(c in row for c in DIAGNOSTIC_COLUMNS) for row in rows}
+    if len(flags) > 1:
+        raise ValueError("rows mix diagnostic and plain runner rows")
+    columns = EVAL_EPISODE_COLUMNS if flags == {True} else VISION_EPISODE_COLUMNS
     buffer = io.StringIO()
     writer = csv.writer(buffer, lineterminator="\n")
-    writer.writerow(VISION_EPISODE_COLUMNS)
+    writer.writerow(columns)
     for row in rows:
-        writer.writerow([_cell(row[c]) for c in VISION_EPISODE_COLUMNS])
+        writer.writerow([_cell(row[c]) for c in columns])
     return buffer.getvalue()

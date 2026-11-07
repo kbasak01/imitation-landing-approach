@@ -140,6 +140,7 @@ class BCStudent(VisionStudentBase):
         images, prop = self._single_to_batch(image_stack, proprio)
         with torch.inference_mode():
             out = self.net(images, prop)
+        self.inference_calls += 1
         action: NDArray[np.float32] = out[0].cpu().numpy().astype(np.float32)
         return action
 

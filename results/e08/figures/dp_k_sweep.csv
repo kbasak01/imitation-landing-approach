@@ -1,0 +1,7 @@
+panel,x,series,kind,point,lo,hi,note
+id SS5,1,"Ta = 8, no ensembling",learned,0,0,0,schedule-limited (P3-D1 §3)
+id SS5,2,"Ta = 8, no ensembling",learned,18.8333333333,13.3333333333,24,schedule-limited (P3-D1 §3)
+id SS5,5,"Ta = 8, no ensembling",learned,34,30.5,39.8333333333,IQM over 5 seeds
+id SS5,10,"Ta = 8, no ensembling",learned,36.3333333333,32.3333333333,39.8333333333,IQM over 5 seeds
+id SS5,25,"Ta = 8, no ensembling",learned,32.1666666667,29.8333333333,38.3333333333,IQM over 5 seeds
+id SS5,100,"Ta = 8, no ensembling",learned,33,29.3333333333,36.6666666667,IQM over 5 seeds

@@ -163,6 +163,18 @@ def test_nan_privileged_fields_through_the_runner_actor() -> None:
     assert actions["clean"].tobytes() == actions["poisoned"].tobytes()
 
 
+def test_inference_calls_count_estimator_calls_per_episode() -> None:
+    """One estimator call per ``act_modular``; ``reset`` zeroes the counter."""
+    student = _student(StubTeacher())
+    images, obs = _window()
+    student.reset(1)
+    for _ in range(4):
+        student.act_modular(CONTRACT.modular_input(images, obs))
+    assert student.inference_calls == 4
+    student.reset(2)
+    assert student.inference_calls == 0
+
+
 def test_teacher_observation_is_p8_layout_with_the_true_clock() -> None:
     teacher = StubTeacher()
     student = _student(teacher)

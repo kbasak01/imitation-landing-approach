@@ -3280,3 +3280,343 @@ was changed.
 - **First task:** `eval-auditor` drafts `scripts/eval_matrix.py` and the arm definitions from
   `configs/eval/matrix.yaml`, including ablation `obs_variant` pass-through and `modular`'s CPU path.
   Then `privileged-leak-auditor` reviews it before any frozen list is flown.
+
+### P8-D1 — Evaluation matrix, scoring and above-teacher review (2026-11-06; revised 2026-11-06 after the results-skeptic pre-gate review)
+*Decision.* The full Phase 8 matrix was flown once, scored under P3-D1 exactly, and every
+above-teacher cell was audited and reviewed before release. Nothing was re-flown, re-selected or
+re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer frames), model scale
+(λ = 1/25).
+
+*Sources.* `results/e08/`: `run_info.json`, `score_info.json`, `summary.csv`, `baselines.csv`,
+`aggregate.csv`, `contrasts.csv`, `hypotheses.{csv,json}`, `above_teacher.csv`,
+`above_teacher/{audit.md,*.json,reviewed.json}`, `missing.csv`, `projection_dry_run.txt`,
+`selection_pins.json`, `figures/`, `gifs/`; rendered into `results/results.md` by
+`scripts/report.py`.
+
+1. **Matrix, provenance, wall clock.**
+   - 351 jobs, 179 200 episodes, all flown at `6a8623d` on a clean tree, P8 at `7237b70`, in one
+     invocation at 24 workers (`run_info.json` `invocations`). The main checkout stayed at
+     `6a8623d` for the whole flight (git reflog: phase-8 moved to `ec1172d` at
+     2026-11-07T00:23:40Z, after the last job at 2026-11-06T22:51:32Z); the reporting commits
+     `fe1641a`–`ec1172d` were made in a separate worktree, so every job ran the recorded code.
+   - **Wall clock.** Projection 24.17 h (580.1 CPU-h) before the run (`projection_dry_run.txt`;
+     the same dry run printed it at `9c7ed79`). Actual: 2026-11-06T01:10:59Z to 22:51:32Z, a
+     span of 21 h 40 min (78 033 s); summed per-job flight time `flight_wall_clock_s` 78 366 s
+     (21.77 h). The sum exceeds the UTC span by 333 s (0.4 %): per-job times are
+     `time.perf_counter`, the span is the system clock. Not investigated further.
+   - **Empty cells: none.** 931 of 931 expected cells are present (`score_info.json`;
+     `missing.csv` has a header only).
+   - **Shared cells** (15, not re-flown; `run_info.json` `shared_cells`): `dp` (Ta = 8, no
+     ensembling) in the `dp_Ta` block is the core `id` rows; (Ta = 1, ensembling on) is aliased to
+     (Ta = 1, off), bit-identical by construction (one source of weight 1.0, same noise keys;
+     P6-D1 item 3); K = 10 in the `dp_K` block is core `id` SS5.
+   - **`latency_arm` is excluded** (`skipped_blocks`): its delay d comes from Phase 9's latency
+     study (P3-D1 §6 H5(a), §7, §8). H5(a) and H5(b) are Phase 9's.
+2. **Inference path; GPU acceptance not applicable.**
+   - Every arm flew the CPU fp32 single-sample path (R1: ONNX Runtime CPU, one thread)
+     (`run_info.json` `inference_path`). The batched GPU path is not wired for trained
+     checkpoints and refuses `modular` (P7-D1 item 3), so no arm used it.
+   - P3-D1 §3's GPU acceptance test (≤ 3 of 150 `select` flips) gates use of the batched path;
+     with no arm on it, there is nothing to accept. P6-D5's open binding GPU-acceptance test for
+     `dp` is therefore moot for Phase 8. Both sides of every scored contrast flew the same path.
+   - `dp` and R1 rows carry Ta / K / ensembling only when the driver passes them; the driver
+     always does. `inference_calls` is per episode, reset in `reset()`; for `dp` it counts chunks
+     sampled. `render_cfg_sha256` per appearance shift = sha256(`"<camera.yaml sha>:<variant>"`).
+3. **Implementation choices P3-D1 leaves open** (eval-auditor; statistics and hypotheses).
+   - Magnitude ≥ is compared with a 1e-9 tolerance (180 vs 170 of 200 gives 0.04999…).
+   - H2's threshold is the literal 0.033 s as written, not 1/30 s (they differ only for D in
+     [0.033, 0.0333)). H2 uses 10 000 replicates (matrix.yaml `paired`); draw order `bc_mix`
+     seeds, `dp_mix` seeds, then episodes. An arm with no touchdown leaves D undefined → not
+     supported.
+   - Ceiling test: the reference arm's mean over seeds × episodes (the contrast's own quantity),
+     printed beside. Ceiling and opposite direction together: the opposite-direction note is kept
+     and the ceiling sentence goes to the caveats.
+   - **Ceiling reading** (results-skeptic S1, 2026-11-06). P3-D1 §6 gives the printed form of a
+     ceiling-limited *null* ("not supported (ceiling-limited: …)", SS6 secondary beside it). It
+     does not say what to print when the rule gives "inconclusive" under the ceiling, which is
+     what H1 and H1-DART-SS5 give. Reading:
+     - the rule's verdict is kept (no verdict changes);
+     - the ceiling-limited wording is printed as a caveat with the largest attainable gain,
+       1 − the reference arm's rate, computed by the scorer from the rows: 4.0 points for H1
+       (`bc_matched` 960/1000 at `id` SS5) and 4.3 for H1-DART-SS5 (`bc` 957/1000), both below
+       +5, so "supported" was unattainable (`hypotheses.json` caveats);
+     - the SS6 secondary is attached whenever the ceiling applies, whatever the verdict: H1-SS6
+       beside H1, H1-DART-SS6 beside H1-DART-SS5 (before the review, only beside a "not
+       supported"). `hypotheses.json` and `hypotheses.csv` record `ceiling_limited` per
+       hypothesis. It is P3-D1 §6's reference-arm ceiling only (reference arm above 100 % −
+       magnitude). H4 has no magnitude, so it is False there; H4's I is bounded by the teacher's
+       own rate instead (item 8), which `notes` states. `hypotheses.csv`'s `caveats_see` points
+       to `hypotheses.json`, which holds every caveat verbatim.
+   - Touched down = finite `time_to_touchdown_s`. P′ and `modular` vs best end-to-end: P8
+     `paired_bootstrap`, two-sided, unscored. H1's labelled frames are per arm per seed.
+   - Seed counts are enforced (core 0–4, ablations 0–2).
+   - Best end-to-end on committed `select` scores: `bc_dart` (749/750) over `bc_dagger`
+     (745/750), no tie (`score_info.json` `best_end_to_end`).
+   - Phase 4–6 selection records lack teacher / tag / `obs_variant`: the teacher comes from the
+     manifest (`training_teacher`), `obs_variant` from the checkpoint. Resume does not compare
+     commits; each sidecar records the `ila` commit. `T_mix` arms shadow the teacher per episode
+     by `assign_rows` (ppo / gated halves); rows do not depend on the split (test).
+   - Smoke: 24 jobs × 2 `select` episodes passed; `dp` K = 1 crashed both (schedule-limited, as
+     expected).
+4. **Leak review** (`privileged-leak-auditor`, 2026-11-05, on `9c7ed79`): no LEAK, 2 RISK, 8 NOTE.
+   - RISK 1, `obs_variant` not checked against the arm at run time for arms without a recorded
+     variant: fixed in `6a8623d` (`verify_checkpoint_bytes` checks the checkpoint's arm and
+     `obs_variant` before every job). All 71 selected checkpoints were already consistent:
+     35 core + 33 ablation + 3 R1 (`selection_pins.json`). This entry said 73 until the
+     results-skeptic pre-gate review (M1); 71 is the pinned count.
+   - RISK 2, selections not pinned across resumed invocations: fixed in `6a8623d` (selection
+     pins in `run_info.json`, `selection_pins.json`).
+   - NOTEs: the shadow teacher is clean (`dp`, `modular` and `bc_plus_clock` rows byte-identical
+     with and without the `ppo` shadow on 2 `select` episodes); SB3 load reseeds global RNGs,
+     harmless because students use seeded generators only; `run_jobs` logs per-job success
+     counts mid-run, which nothing reads back.
+5. **Frozen-list reads in tests** (key reads, P8 committed-row reads; nothing flown, trained,
+   selected or scored): `tests/test_eval_arms.py` (frozen-list cells, matrix fixture, `T_mix`
+   split), `tests/test_eval_matrix.py` (synthetic rows on frozen keys),
+   `tests/test_eval_hypotheses.py::test_h2_reference_from_committed_p8_rows` (`id` SS4 keys, P8
+   e07 `ppo` s0 and e01 `gated` rows), `tests/test_p8_adapter.py` (`committed_rows`),
+   `tests/eval_support.py:41-43` `listed_cell` (frozen-list keys for the synthetic trees used by
+   `tests/test_eval_score.py`, `test_eval_report.py` and `test_eval_figures.py`), and the GIF-rule
+   tests in `tests/test_eval_figures.py` (`id` keys).
+6. **GIF rule.** Committed in `9a589b3` (2026-11-05 23:40 −0500) before any GIF existed; the GIFs
+   landed in `6a4d0f2` (2026-11-06 19:29 −0500). Hand-picked by the stated rule
+   (`results/e08/gifs/RULE.md`); picks (`gifs/manifest.json`): (a) all four succeed `id` SS5
+   ep 2; (b) students split `id` SS5 ep 0; (c) `dp` off_pad `id` SS5 ep 1; (d) teacher fails in
+   SS6 `id` SS6 ep 10. Every panel was re-flown and matched to its committed row before writing.
+7. **Above-teacher scan and review** (CLAUDE.md non-negotiable 8; a decision, not a deviation).
+   - **Rule:** a cell is flagged when its IQM, **or any single seed's** success rate, is strictly
+     greater (`>`) than its own teacher's committed rate in the same cell. Teacher: P8 `ppo` s0
+     (e07) for `T_ppo` arms, `pid_feedforward` (e01) for `*_pid`, and for `*_mix` the `T_mix`
+     reference built as H2's (`assign_rows(20261023)` over P8 `ppo` s0 / `gated`), extended from
+     H2's `id` SS4 to SS5 and SS6. Flagged cells are withheld from every table, contrast and
+     hypothesis until released.
+   - **Six cells flagged** of 931 (`above_teacher.csv`). Touchdown audit per cell
+     (`above_teacher/*.json`, `audit.md`); `results-skeptic` reviewed all six on 29374e0: all
+     RELEASE, nothing BLOCKING. Findings verbatim in `above_teacher/reviewed.json`.
+
+     | Cell | Severity | Flagged seed(s): student / teacher successes (A as scored → B minus tunnelled and disagreement successes → C also minus near-threshold) | McNemar p (flagged) |
+     |---|---|---|---|
+     | `core bc_state id SS6` | MINOR | s4: 198/197 → 197/197 → 197/197 | 1.000 |
+     | `core bc_state unseen_seastate SS6` | MINOR | s3: 197/195 → 195/195 → 194/195 | 0.625 |
+     | `core bc_state unseen_heading SS6` | MINOR | s2: 184/182 → 183/180 → 179/180 | 0.774 |
+     | `ablation bc_mix id SS5` | SERIOUS (wording) | s1: 190/187 → 189/187 → 184/187 | 0.664 |
+     | `ablation bc_mix id SS6` | SERIOUS (framing, touchdown quality) | s0 / s1 / s2: 172 / 180 / 174 vs 166 → 170 / 178 / 174 → 162 / 171 / 166 | 0.488 / 0.054 / 0.341 |
+     | `appearance_shift bc_dagger id SS6 shift-mount_tilt_m2` | MINOR | s0: 198/197 → 197/197 → 193/197 | 1.000 |
+
+     Source: `above_teacher/<cell>.json` `per_seed_recount` (and `audit.md`).
+   - Only `bc_mix` id SS6 stays above its reference at IQM. After B (tunnelled and
+     disagreement successes removed), two flagged seeds of other cells also stay above in that
+     seed: `bc_mix` id SS5 s1 (189 vs 187, +2) and `bc_state` unseen_heading SS6 s2 (183 vs 180,
+     +3) (`per_seed_recount`; corrected after the pre-gate review, S2). `bc_mix` id SS6's gained
+     episodes are `T_mix` timeouts: 85 of 90 teacher-failure →
+     student-success seed-episodes, all `gated`-assigned with `ppo` landing them (28 / 28 / 29
+     per seed); the other 5 are `ppo`-assigned hard landings that `gated` timed out
+     (`ablation__bc_mix__id__SS6.json`). It is below P8 `ppo` s0 (IQM 0.877 vs 0.985) and above
+     `gated` alone (0.630), unpaired reading.
+   - **Changes made after the review** (all in the commit that adds `reviewed.json`):
+     - SERIOUS: `results.md` §7d now prints the teacher, `pid_feedforward`, `pid_track_descend`,
+       `oracle_gated`, plus `gated` and the `T_mix` reference beside the ablations; §7a, §7b, §7c
+       and §7e now print the four always-printed baselines too (they had none). A released cell
+       is marked ‡ wherever printed and its finding follows each success table that prints it.
+     - MINOR: the audit now emits, per seed, the A / B / C recount for student and teacher, the
+       discordant counts with an exact two-sided McNemar p (`ila.eval.metrics.mcnemar_exact_p`,
+       not in P8; known-answer test in `tests/test_eval_stats.py`; descriptive only), and for
+       `T_mix` cells each gained / lost episode's assigned policy and the other teacher's outcome
+       with per-seed counts by assigned policy. Tunnelled and disagreement episodes now carry both
+       detectors' touchdown times.
+     - MINOR: the near-threshold test (within 5 % of a threshold) now uses success criteria only:
+       closing speed along the deck normal, lateral offset, relative tilt. World-z closing speed is
+       still printed, labelled "not a criterion". **Dwell is not in the test**: every success ends
+       at `dwell_complete`, so its dwell sits just above 0.5 s by construction (0.500–0.546 s
+       across the six cells, `success_dwell`) and carries no margin; including it would flag every
+       success that ended below 0.525 s, a property of when the episode stops, not of the
+       landing. Counts that changed: `bc_state` unseen_heading SS6 13 → 12 of 888;
+       `bc_mix` id SS6 24 → 23 of 526 (C for s1 170 → 171).
+     - `reviewed.json` is the skeptic's proposal with those two counts updated and two wording
+       edits by eval-auditor, recorded in its `source` field: "not above either teacher" →
+       "not above ppo s0, the better of its two teachers" (`bc_mix` is above `gated` alone), and
+       "unpaired reading" added to the SS5 `gated` comparison.
+     - NOTE: H4's I is ceiling-limited (item 8).
+     - Not a review item: the H3 relative-p95 row's reading said "dp softer than dp"; it now
+       names "dp Ta=1" and "dp Ta=8" (`contrasts.csv`; estimate unchanged).
+   - **Changes after the pre-gate review** (results-skeptic, 2026-11-06):
+     - The audit reports grace-used successes (`contact_events > 1` among successes; P8 counts a
+       new contact event only after a gap longer than the 50 ms contact-loss grace), per cell and
+       per seed, counted and removed from nothing. Flagged student seeds: 0–2
+       (`bc_dagger` mount_tilt_m2 s0 2; `bc_state` unseen_heading s2 1; `bc_mix` SS5 s1 1;
+       `bc_mix` SS6 s0 1; the other flagged seeds 0). Teacher: 0 in four cells, 1 in two
+       (`ppo` s0 unseen_seastate SS6 index 15; `T_mix` id SS5 index 119), so the review's
+       "teacher 0 in every flagged cell" holds for four of six (`audit.md`, `*.json`
+       `grace_used_successes`).
+     - `run_audits` no longer deletes `reviewed.json`: its stale-audit sweep removed every
+       `*.json` that was not a flagged cell's audit, which included the review record (test
+       added).
+     - `reviewed.json` (recorded in its `source`): the `bc_state` unseen_heading SS6 finding gains
+       P8's flip-floor sentence, stated as measured on `id` SS6 only (M7); in the `bc_mix` id SS5
+       finding, "Unpaired reading:" now opens the IQM sentence, so it covers all three
+       IQM-vs-reference comparisons (`T_mix`, `ppo` s0, `gated`).
+8. **Hypotheses** (`hypotheses.csv`; verdict words P3-D1's; no multiplicity correction; every
+   SS6 contrast carries P8's flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one
+   of 20 one-ulp draws, single-draw median 1.9 %, measured on P8's MLPs, not on these students).
+
+   | Hypothesis | Cell | Verdict | Estimate [95 % CI] |
+   |---|---|---|---|
+   | H1 `bc_dagger` − `bc_matched` | `id` SS5 | inconclusive | +2.6 points [+0.6, +4.8] |
+   | H1-SS6 (secondary) | `id` SS6 | supported | +5.9 points [+2.3, +9.7] |
+   | H1-DART-SS5 `bc_dart` − `bc` | `id` SS5 | inconclusive | +3.6 points [+1.7, +5.8] |
+   | H1-DART-SS6 | `id` SS6 | supported | +8.1 points [+4.6, +11.9] |
+   | H2 W₁(`bc_mix`) − W₁(`dp_mix`) | `id` SS4 | not supported (CI includes 0) | +0.088 s [−0.100, +0.263] (model; ×5 full) |
+   | H3 `dp` Ta = 1 − Ta = 8 | `id` SS6 | supported | +47.4 points [+41.0, +53.8] |
+   | H4 D = P − I | `id` SS6 | supported | +9.4 points [+5.6, +13.5] |
+   | H5(a), H5(b) | — | Phase 9 | — |
+
+   Caveats stated with each (verbatim in `hypotheses.json` and `results.md` §5):
+   - **H1:** P8's `paired_bootstrap` treats seeds as unpaired, conservative because both arms
+     share iteration 0; the arms differ only in who chose the actions on the second 1 000;
+     labelled frames `bc_dagger` 616 053, `bc_matched` 614 365. **Ceiling-limited** (item 3):
+     `bc_matched` is at 96.0 % (960/1000) at `id` SS5, so the largest attainable gain is 4.0
+     points, below +5, and "supported" was unattainable; the rule's verdict (inconclusive) is
+     kept and H1-SS6 is printed beside it. The primary is inconclusive; only the SS6 secondary is
+     supported.
+   - **H1-SS6:** it clears +5 by 9 seed-episodes. Printed beside it, descriptive (no CI): with
+     P8-tunnelled successes removed (`bc_dagger` 14, `bc_matched` 6) the difference is +5.1
+     points (938 vs 887 of 1000). The verdict uses success as P8 scores it and is unchanged
+     (pre-gate review M10). The same line is printed beside H1 and both DART contrasts.
+   - **H1-DART:** equal N = 1 000 on the same starting conditions; `bc_dart` − `bc_matched` is
+     descriptive (unequal data). **Ceiling-limited** at SS5: `bc` is at 95.7 % (957/1000), so
+     the largest attainable gain is 4.3 points and "supported" was unattainable; the verdict
+     (inconclusive) is kept and H1-DART-SS6 is printed beside it.
+   - **H2:** 3 seeds per arm; mixture 500 : 478 episodes but about 1 : 2 by frames; all 22
+     filtered episodes `gated`; `last_action` can reveal the mode; W₁'s bias grows as touchdowns
+     fall; `dp_mix`'s gain over `dp` is not shown to come from multimodality; `select` W₁ is not
+     H2 evidence. The `bc_mix` above-`T_mix` cells at SS5/SS6 (item 7) are not H2 evidence.
+   - **H3:** checkpoints selected at Ta = 8; Ta = 1 without ensembling can switch modes between
+     replans; `dp_minus_last_action` is a competing input-freshness explanation (stale
+     `last_action`), so no sentence may say `dp` fails "because of chunking" without naming it.
+     **P6-D5's binding caveat** (added after the pre-gate review, B1; the scorer computes the
+     numbers from the rows): "P6-D5: a Ta contrast cannot attribute the loss to deck motion. On
+     the frozen lists the gain is +53.3 / +53.2 / +47.4 points at SS4 / SS5 / SS6 (Ta = 1 minus
+     Ta = 8, mean over seeds x episodes, same checkpoints; comparing the gains across sea states
+     is an unpaired reading), and `dp` at Ta = 8 succeeds on 41.0 % (410/1000) of the
+     static-deck episodes." Not a claim, a pointer: `dp_pid` (3 seeds, from `pid_feedforward`) at
+     Ta = 8 has IQM 96.5 / 89.2 / 79.8 at `id` SS4–SS6 (`aggregate.csv`), which points to the
+     teacher's actions rather than deck motion; unpaired reading (teacher and data differ).
+     `dp` at its frozen Ta = 8 is reported as is; P6-D5's README statements (chunking effect on
+     `select`, noise-dominated and optimistic selection, held-out loss not a selection proxy) are
+     pointed to from `results.md` §7a.
+   - **H4:** P includes withholding `time_fraction`; P′ = S(`bc_state`) − S(`bc_plus_clock`) =
+     +13.1 points [+8.2, +18.1], unscored, and `bc_plus_clock` relies on the clock to a
+     seed-dependent degree while `bc_state`'s clock reliance was not measured; P includes fp32
+     vs bf16; conditional on teacher seed 0. **I is ceiling-limited**: the teacher is at 98.5 %,
+     so I ≥ −0.015; I = +0.1 points [−1.1, +1.4], P = +9.5 points [+6.1, +13.3]. Stated beside I
+     and as a caveat; the verdict is unchanged. Unscored beside it: `modular` − best end-to-end
+     (`bc_dart`) −16.1 points [−20.6, −11.7].
+9. **Phase 8 before-you-start, answered** (`contrasts.csv` "teacher check" rows, P8 paired
+   bootstrap against P8's single committed row set; `summary.csv`).
+   - **`dp_pid` vs `pid_feedforward`**, `id` SS4 / SS5 / SS6: −3.5 [−6.3, −1.3], −9.8 [−13.8,
+     −6.2], −10.7 [−16.5, −4.8] points; harder landings (relative p95 closing speed −0.690,
+     −0.705, −0.826, all CIs below 0).
+   - **`bc_pid` vs `pid_feedforward`**: −2.3 [−4.3, −0.7], −6.7 [−10.5, −3.2], −2.3 [−7.0, +2.5]
+     points (SS6 does not separate); relative p95 −0.813, −1.031, −0.914, all below 0.
+   - **`dp_minus_last_action` vs `T_ppo`**: −22.5 [−31.3, −15.0], −32.2 [−38.0, −26.5], −34.2
+     [−39.5, −28.8] points at SS4 / SS5 / SS6.
+   - **`modular` vs `T_ppo`**: below in all 14 cells, from −1.0 [−2.5, −0.1] (`static`) and −1.3
+     [−2.8, −0.3] (`id` SS3) to −17.6 [−22.0, −13.3] (`id` SS6) and −23.0 [−29.8, −16.7]
+     (`unseen_heading` SS6); harder in all 14 (relative p95 −0.557 to −1.135).
+   - **`bc_n100` timeouts** (selected 5 k checkpoints): 28 / 600 at `id` SS4 (s0 13, s1 15,
+     s2 0), 12 / 600 at SS5 (6, 6, 0), 12 / 600 at SS6 (7, 5, 0). Two of three seeds time out;
+     s2 never does.
+   - **Detector disagreements, `dp_*` arms** (`disagreement_n`, episodes): core `dp` 20 / 14 000;
+     `dp_mix` 3, `dp_pid` 0, `dp_n100` 5, `dp_n300` 5, `dp_minus_last_action` 5 (each of
+     1 800); R1 8 / 2 400; `dp_K` K = 1 19 / 1 000 and K = 2 9 / 1 000 (schedule-limited), K ≥ 5
+     1–5 / 1 000. Against: core BC family 5–9 / 14 000, `bc_state` 0, P8 `ppo` s0 0 / 2 800
+     (`baselines.csv`).
+   - **`dp` GPU acceptance:** moot (item 2).
+10. **Re-rendering.** `make report` re-renders `results/results.md` byte-identically (the
+    Makefile target fails on any diff); `make figures` regenerates `results/e08/figures/` from
+    committed CSVs with identical SHA-256 on repeat. The released cells now appear in
+    `success_vs_seastate` and `h4_gaps`.
+11. **Before you start (Phase 9/10)**, for the README (pre-gate review M11; a note, no code
+    change).
+    - Core `dp` (Ta = 8) and R1 fail the same way, mostly `off_pad`: 1 767 of 2 479 `dp`
+      failures and 1 199 of 1 655 R1 failures at `id` SS3–SS6. Their per-seed median lateral
+      offsets sit around the 0.10 m threshold: 0.076–0.107 m for `dp` (20 seed-cells) and
+      0.096–0.120 m for R1 (12), model scale (`summary.csv` `lateral_p50_m`, `n_off_pad`,
+      `n_success`).
+    - Any README sentence about `dp` must say "this `dp`, distilled from P8 `ppo` s0". Neither
+      that row nor H3 supports a claim about Diffusion Policy in general.
+
+*Review response (results-skeptic pre-gate review of `ae63980`, 2026-11-06; one BLOCKER).*
+- **B1.** H3 now carries P6-D5's deck-motion caveat, with the per-sea-state gains and the
+  static-deck rate computed by the scorer (`hypotheses.json`, `results.md` §5; item 8). Verdict
+  unchanged.
+- **S1.** The ceiling reading is recorded in item 3: the rule's verdict is kept, the ceiling
+  wording is a caveat with the computed largest attainable gain (4.0 / 4.3 points), and the SS6
+  secondary is attached whenever the ceiling applies (H1, H1-DART-SS5). Verdicts unchanged.
+- **S2.** Item 7's sentence was corrected: only `bc_mix` id SS6 stays above at IQM; after B,
+  `bc_mix` SS5 s1 (+2) and `bc_state` unseen_heading SS6 s2 (+3) also stay above.
+- **M1.** 73 → 71 selected checkpoints (item 4).
+- **M2.** `h4_gaps.png`'s caption now states I's ceiling (from the teacher's committed `id` SS6
+  rate) and P8's flip floor.
+- **M3.** The `oracle_gated` legend reads "commit-timing oracle, not a bound".
+- **M4.** `dp_k_sweep.png` (and `h3_ta_curve.png`) now show the y-axis label and the full title.
+- **M5.** `results.md` §6 is split into 6a (core inputs) and 6b (an ablation or `+clock`
+  input), with an input-tag column in both.
+- **M6.** Every learned cell in §7a–e prints N (seeds × episodes); the 6a / 6b tables print
+  seeds per side × episodes.
+- **M7.** The `bc_state` unseen_heading SS6 finding carries the flip-floor sentence (item 7).
+- **M8.** The duplicate `n_success` column is gone from `summary.csv` and `baselines.csv`.
+- **M9.** The verdict note is printed only where it adds a reason ("**Verdict: supported**.",
+  "**Verdict: inconclusive** (CI excludes 0; …)").
+- **M10.** The tunnel-removed difference is printed beside H1-SS6 (+5.1 points) and the other H1
+  contrasts, descriptive (item 8).
+- **M11.** Recorded as a Phase 9/10 before-you-start item (item 11).
+- **On the eval-auditor's edits.** All accepted. "Unpaired reading" now opens the `bc_mix` SS5
+  IQM sentence. Optional grace-used successes are reported (item 7); the review's teacher count
+  holds in four of six cells, not six.
+- **Unchanged.** At `0ada432`, `hypotheses.csv` (verdict, estimate, CI and every other column)
+  and `contrasts.csv` were byte-identical to `ae63980`, and so were `aggregate.csv`,
+  `above_teacher.csv` and `missing.csv`. The Gate 8 fixes (`fbdd32a`) then appended the
+  `ceiling_limited`, `notes` and `caveats_see` columns to `hypotheses.csv`. Every earlier column is
+  unchanged.
+
+### Gate 8 passed (2026-11-06)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| Every cell filled from CSV, or the empty cell explained | `results/e08/score_info.json`: 931 of 931 expected cells present, 0 missing (`missing.csv` header only). 351 jobs, 179 200 episodes in `results/e08/rows/**`, one invocation at `6a8623d` on a clean tree (`run_info.json`). Each row's `ckpt_sha256` equals its pinned `selection.json` pick (71 pins). `latency_arm` is not a Phase 8 cell: it needs Phase 9's d (P3-D1 §7–§8; `run_info.json` `skipped_blocks`) | PASS |
+| Hypotheses scored as written | `results/e08/hypotheses.{csv,json}`; P8-D1 item 8. Scorers follow P3-D1 §6, using P3-D1 §1's statistics: H1 P8 `paired_bootstrap`; H3 joint-seed; H2 W₁ bootstrap; H4 three-arm. Each non-P8 statistic has a known-answer test (`tests/test_eval_stats.py`), and each verdict branch has a synthetic test (`tests/test_eval_hypotheses.py`). Verdicts (point estimates [95 % CI]): **H1** `id` SS5 inconclusive +2.6 [+0.6, +4.8] (ceiling-limited: the largest attainable gain is 4.0); **H1-SS6** supported +5.9 [+2.3, +9.7]; **H1-DART-SS5** inconclusive +3.6 [+1.7, +5.8] (ceiling-limited: 4.3); **H1-DART-SS6** supported +8.1 [+4.6, +11.9]; **H2** not supported +0.088 s [−0.100, +0.263] (model scale); **H3** supported +47.4 [+41.0, +53.8], with the P6-D5 deck-motion caveat; **H4** supported +9.4 [+5.6, +13.5]. H5(a)/(b) are Phase 9 | PASS |
+| `results-skeptic` reports nothing BLOCKING | Pre-gate review of `ae63980`: 1 BLOCKING (B1, the H3 deck-motion caveat), 2 SERIOUS, 11 MINOR. All addressed (P8-D1 review response). Re-review of `0ada432`: **nothing BLOCKING**, no SERIOUS, 4 MINOR and 3 NOTEs, all fixed in `fbdd32a`/`76de808` | PASS |
+| Students above their teacher investigated before reporting (CLAUDE.md #8) | 6 cells flagged (`above_teacher.csv`); touchdown audit in `above_teacher/audit.md` and per-cell JSONs. `results-skeptic` released all 6 (`above_teacher/reviewed.json`): 5 single-seed margins of 1–3 episodes; `bc_mix` `id` SS6 is above the `T_mix` reference only through `gated`'s timeouts, and below `ppo` s0 | PASS |
+| `results.md` re-renders byte-identically | `make report` (render + `git diff --exit-code`) clean at `76de808`; SHA-256 `9a488a8e…` | PASS |
+| CPU tests green | `make lint` clean (ruff, format, mypy --strict, 75 files). `make test` at `76de808`: 1 086 passed, 1 skipped, 0 failed (20 min 28 s) on an unchanging tree; also green at `0ada432` (1 079 passed) and `ae63980` (1 070 passed) | PASS |
+
+*Reviewers.*
+- **`privileged-leak-auditor`.**
+  - 2026-11-05, before flight, on `9c7ed79`: no LEAK, 2 RISK. Both closed in `6a8623d`:
+    - the checkpoint arm and contract are verified before every job;
+    - selections are pinned across invocations.
+  - 2026-11-06, Gate 8, on `0ada432`: **no LEAK, no RISK**. All 179 200 rows and 351 sidecars match the pins, the selections and the recorded hashes. Render and obs variants are consistent with arm and tag, and nothing feeds frozen-list outcomes back into selection, training or tuning. Its three NOTEs:
+    - NOTE 1 (`ila/viz` added to the name scans): done in `fbdd32a`;
+    - NOTE 2 (two frozen-key reads in tests): recorded in P8-D1 item 5;
+    - NOTE 3 (code changing mid-flight): **refuted**. The reporting commits were made in a separate worktree. The main checkout stayed at `6a8623d` until 2026-11-07T00:23:40Z, after the last job at 2026-11-06T22:51:32Z (P8-D1 item 1).
+- **`results-skeptic`.** 2026-11-06:
+  - above-teacher review: 6 RELEASE, no BLOCKER;
+  - pre-gate review of `ae63980`: B1 + S1, S2 + M1–M11, all fixed;
+  - re-review of `0ada432`: nothing BLOCKING; MINOR 1–4 fixed in `fbdd32a`/`76de808`.
+
+*Deviations this phase.* None. No threshold, list, criterion or frozen config was changed. Implementation choices P3-D1 leaves open are recorded in P8-D1 (a decision, not a deviation).
+
+## Phase 9
+
+*Before you start (from Phase 8).*
+- **What Phase 9 needs.** `latency_arm` and H5(a)/(b) are the only matrix blocks not flown. P3-D1 §7's d comes from Phase 9's p99, then the latency arm flies `id` SS4–SS6 (H5(b) at SS5 only) through the same `ila.eval.matrix` driver.
+  - The `latency_arm` block is in `ila.eval.arms.SKIPPED_BLOCKS`; enabling it is a code change, reviewed by `privileged-leak-auditor` before flight.
+  - The selection pins in `results/e08/selection_pins.json` must still match.
+- **Fly from a frozen tree.** Fly from a dedicated worktree, or re-check HEAD per job: `ila_commit` is captured once per invocation (leak NOTE 3).
+- **Parity uses `select` only** (P3-D1 §6 H5(a)): 1 000 open-loop inputs and the 150 closed-loop episodes.
+- **`dp` context.**
+  - Core `dp` at Ta = 8 is 33.8 % at `id` SS6 and 41.0 % on the static deck (P8-D1 item 8).
+  - H5(b) compares `dp` with itself, so this low baseline does not invalidate the contrast. State it with the result.
+- **README (Phase 10).** Any `dp` sentence says "this `dp`, distilled from P8 `ppo` s0" (P8-D1 item 11). `hypotheses.csv` is never quoted without `hypotheses.json`'s caveats.
+- **First task:** `deploy-benchmarker` exports `dp` (seed 0's selected checkpoint; encoder, one denoise step, unrolled K = 10 with noise as input) and `bc_dagger`, and runs open-loop parity on the 1 000 `select` inputs.
