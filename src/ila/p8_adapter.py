@@ -127,6 +127,7 @@ __all__ = [
     "FLIP_FLOOR_SS6",
     "CommittedRows",
     "FlipFloor",
+    "LatencyHarness",
     "ListedEpisode",
     "MotionKind",
     "ObsField",
@@ -149,6 +150,7 @@ __all__ = [
     "episode_rows_csv",
     "feed_skip_reason",
     "label_entropy",
+    "latency_harness",
     "list_names",
     "list_path",
     "list_paths",
@@ -861,3 +863,67 @@ def physics_step_count(env: DeckLandingAviary) -> int:
         Physics substeps since reset, dimensionless.
     """
     return int(env._substep)  # private P8 attribute; read here only
+
+
+# --------------------------------------------------------------------------- latency harness
+
+
+@dataclass(frozen=True)
+class LatencyHarness:
+    """P8's latency harness pieces (Phase 9), held by reference.
+
+    P8's ``rld.deploy.latency`` mirrors dmf's ``benchmark_onnxruntime`` / ``benchmark_torch``
+    (>= 200 warm-up and >= 2 000 timed host-to-host iterations, ``torch.cuda.synchronize()``
+    after every timed GPU iteration, one subprocess per configuration under
+    ``tf32_environment()``), but only for rank-2, single-input graphs. ``ila.deploy.latency``
+    applies the same loop to multi-input graphs and reduces, stamps and guards with the very
+    objects P8 uses, listed here: dmf's ``BenchConfig``, ``BenchResult``, ``_stats``
+    (``(p50, p90, p99, mean, std)`` in ms), ``environment_stamp``, ``_peak_host_mem_mb``,
+    ``_cuda_free_bytes``, ``BYTES_PER_MIB``, ``GPU_PROVIDERS``; dmf's provider guards
+    ``disable_tf32``, ``preload_gpu_libraries``, ``session_providers``, ``tf32_environment``,
+    ``CUDA_PROVIDER_OPTIONS``; P8's ``CONTROL_PERIOD_MS`` (1000/30 ms, model scale) and
+    ``CHILD_TIMEOUT_S``. ``tests/test_deploy_latency.py`` asserts ``is``-identity.
+    """
+
+    BenchConfig: Any
+    BenchResult: Any
+    stats: Any
+    environment_stamp: Any
+    peak_host_mem_mb: Any
+    cuda_free_bytes: Any
+    BYTES_PER_MIB: float
+    GPU_PROVIDERS: frozenset[str]
+    disable_tf32: Any
+    preload_gpu_libraries: Any
+    session_providers: Any
+    tf32_environment: Any
+    CUDA_PROVIDER_OPTIONS: Mapping[str, str]
+    CONTROL_PERIOD_MS: float
+    CHILD_TIMEOUT_S: float
+
+
+@functools.cache
+def latency_harness() -> LatencyHarness:
+    """Return P8's latency harness pieces (imported on first use; see :class:`LatencyHarness`)."""
+    from dmf.deploy import bench as dmf_bench
+    from dmf.deploy import providers as dmf_providers
+    from dmf.deploy.harness import CHILD_TIMEOUT_S
+    from rld.deploy import latency as p8_latency
+
+    return LatencyHarness(
+        BenchConfig=dmf_bench.BenchConfig,
+        BenchResult=dmf_bench.BenchResult,
+        stats=dmf_bench._stats,
+        environment_stamp=dmf_bench.environment_stamp,
+        peak_host_mem_mb=dmf_bench._peak_host_mem_mb,
+        cuda_free_bytes=dmf_bench._cuda_free_bytes,
+        BYTES_PER_MIB=float(dmf_bench.BYTES_PER_MIB),
+        GPU_PROVIDERS=dmf_bench.GPU_PROVIDERS,
+        disable_tf32=dmf_providers.disable_tf32,
+        preload_gpu_libraries=dmf_providers.preload_gpu_libraries,
+        session_providers=dmf_providers.session_providers,
+        tf32_environment=dmf_providers.tf32_environment,
+        CUDA_PROVIDER_OPTIONS=dmf_providers.CUDA_PROVIDER_OPTIONS,
+        CONTROL_PERIOD_MS=float(p8_latency.CONTROL_PERIOD_MS),
+        CHILD_TIMEOUT_S=float(CHILD_TIMEOUT_S),
+    )

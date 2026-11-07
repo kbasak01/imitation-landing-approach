@@ -42,6 +42,7 @@ __all__ = [
     "ENSEMBLE_DECAY",
     "ChunkSpec",
     "chunk_steps",
+    "delayed_chunk_index",
     "ensemble_sources",
     "ensemble_weights",
     "executed_indices",
@@ -188,6 +189,38 @@ def executed_indices(n_obs_steps: int, horizon: int, n_action_steps: int) -> tup
     """
     s = executed_slice(n_obs_steps, horizon, n_action_steps)
     return tuple(range(s.start, s.stop))
+
+
+def delayed_chunk_index(
+    n_obs_steps: int, horizon: int, n_action_steps: int, delay: int, offset: int
+) -> int:
+    """Return the chunk index executed ``offset`` steps after a delayed chunk lands (P3-D1 §7).
+
+    The latency arm (:mod:`ila.deploy.latency_arm`): a chunk planned on the window ending at
+    step ``s`` lands at ``s + d`` and executes, aligned in time, from index ``(To - 1) + d`` for
+    ``Ta`` steps; past ``Tp - 1`` the last chunk action is held. At ``To = 2``, ``Tp = 16``,
+    ``Ta = 8`` that holding starts at ``d > 7``. ``d = 0`` gives :func:`executed_indices`.
+
+    Args:
+        n_obs_steps: ``To``.
+        horizon: ``Tp``.
+        n_action_steps: ``Ta``.
+        delay: ``d`` (>= 0), control steps.
+        offset: Steps since the chunk landed, ``0 <= offset < Ta``.
+
+    Returns:
+        ``min(To - 1 + d + offset, Tp - 1)``.
+
+    Raises:
+        ValueError: On an inadmissible ``(To, Tp, Ta)``, ``d < 0`` or ``offset`` outside
+            ``[0, Ta)``.
+    """
+    ChunkSpec(n_obs_steps, horizon, n_action_steps)
+    if delay < 0:
+        raise ValueError(f"delay must be >= 0, got {delay}")
+    if not 0 <= offset < n_action_steps:
+        raise ValueError(f"offset must be in [0, {n_action_steps}), got {offset}")
+    return min(n_obs_steps - 1 + delay + offset, horizon - 1)
 
 
 def is_replan_step(t: int, n_action_steps: int) -> bool:
