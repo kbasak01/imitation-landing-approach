@@ -1,0 +1,23 @@
+{
+  "arrays_sha256": "3b6f8a55c1d1da5e0a4047fff6bbec31970baff35c5e08435f8303cd64e6baa2",
+  "checkpoints": {
+    "bc_dagger": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+    "dp": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581"
+  },
+  "n": 1000,
+  "noise_key": "(run_seed, -100, i) for input i",
+  "path": "torch fp32 CPU, batch 1, 1 intra-op thread, EMA weights, TF32 n/a",
+  "timesteps": [
+    99,
+    89,
+    79,
+    69,
+    59,
+    49,
+    39,
+    29,
+    19,
+    9
+  ],
+  "wall_s": 199.70046826498583
+}

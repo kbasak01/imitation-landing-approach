@@ -1,0 +1,660 @@
+{
+  "criterion": "bc_dagger action max-abs <= 0.0001; dp per-step eps-hat max-abs <= 0.0001 at each of the K = 10 DDIM-trailing steps, own encoder, reference x_k (P3-D1 \u00a76 H5(a), \u00a77); final chunk reported, not judged; batch 1 against torch fp32 CPU batch 1 with the same initial noise; TF32 off",
+  "graphs": {
+    "bc_dagger.onnx": "23ce916d05d09865b6a6acb52e24624259bb2cdce96c50619b81c810dddb3294",
+    "bc_dagger_fp16.onnx": "8368aa786ed28a380ac3525ab639fde4bd2c51308734a1a37c188b6f92ae9c2c",
+    "dp_K10.onnx": "a0bf2c88ee7da03ca0737082dbf61cc76d8f3a6fa0465934882b75619ad55759",
+    "dp_K10_fp16.onnx": "6610c876c7bee63bf0ff94f4fc782c4c244d5beb0647d5ad659f8b4f472f7339",
+    "dp_denoise_step.onnx": "a553183d5ea3f4aedfcd84ec86c88d57c65b859386eac25965326c70bac90f8a",
+    "dp_denoise_step_fp16.onnx": "a4b3f1b2d6dac15634f0e7c1353152aefae35c0287054a43fc1f67811d0479e7",
+    "dp_encoder.onnx": "2d0001f5fd4cdcae259a9a70c11064265151c51b09ccf9311db24d3bcce1a2ca",
+    "dp_encoder_fp16.onnx": "b1c0911d8c074b73fa1ad4783f9dac02818ecf233d5ea5ed9a250f000b5541ef"
+  },
+  "inputs": {
+    "draw": "numpy.random.default_rng(draw_seed).choice(N, n, replace=False), sorted",
+    "draw_seed": 20261023,
+    "episodes": 150,
+    "file": "artifacts/deploy/inputs/select_inputs.npz",
+    "images_shape": [
+      1000,
+      2,
+      96,
+      96,
+      3
+    ],
+    "list": "select",
+    "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+    "n": 1000,
+    "policy": "ppo s0 (P8), CPU path, render full",
+    "proprio_shape": [
+      1000,
+      2,
+      13
+    ],
+    "sha256": "d217ea891782a41c11e36730c2ca3c84c81709628ba21f06cf8fd2f80768b75c",
+    "teacher_outcomes": {
+      "hard_landing": 1,
+      "success": 149
+    },
+    "windows_total": 9218
+  },
+  "providers": {
+    "ort_cpu_fp32": {
+      "bc_dagger": {
+        "judged_max_abs": 3.043562173843384e-06,
+        "judged_quantity": "action max-abs",
+        "open_loop_pass": true,
+        "p99_abs": 8.940696716308594e-07,
+        "per_axis_max_abs": [
+          1.996755599975586e-06,
+          1.2814998626708984e-06,
+          3.043562173843384e-06
+        ],
+        "tolerance": 0.0001
+      },
+      "dp": {
+        "chunk_loop_max_abs": 2.7738511562347412e-05,
+        "chunk_reported_bound": 0.001,
+        "chunk_unrolled_max_abs": 2.7738511562347412e-05,
+        "chunk_unrolled_p50_p99_abs": [
+          1.1119991540908813e-06,
+          1.0620411485433575e-05
+        ],
+        "eps_per_step_max_abs": [
+          1.6689300537109375e-06,
+          1.6689300537109375e-06,
+          2.0265579223632812e-06,
+          3.0994415283203125e-06,
+          4.649162292480469e-06,
+          6.079673767089844e-06,
+          9.5367431640625e-06,
+          1.1682510375976562e-05,
+          1.9073486328125e-05,
+          2.956390380859375e-05
+        ],
+        "eps_per_step_p99_abs": [
+          7.152557373046875e-07,
+          7.152557373046875e-07,
+          7.152557373046875e-07,
+          8.344650268554688e-07,
+          1.0728836059570312e-06,
+          1.3113021850585938e-06,
+          1.7285346984863281e-06,
+          2.384185791015625e-06,
+          3.3753365278244474e-06,
+          5.424022674560547e-06
+        ],
+        "eps_reference_cond_max_abs": 1.329183578491211e-05,
+        "global_cond_max_abs": 1.895427703857422e-05,
+        "judged_max_abs": 2.956390380859375e-05,
+        "judged_quantity": "per-step eps-hat max-abs (K = 10 steps, own encoder)",
+        "n_chunk_over_bound": 0,
+        "open_loop_pass": true,
+        "timesteps": [
+          99,
+          89,
+          79,
+          69,
+          59,
+          49,
+          39,
+          29,
+          19,
+          9
+        ],
+        "tolerance": 0.0001
+      },
+      "git": {
+        "dirty": true,
+        "dirty_outside_results": false,
+        "dirty_paths": [
+          "?? results/latency/graphs.json",
+          "?? results/latency/inputs.json",
+          "?? results/latency/run_info.json"
+        ],
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd"
+      },
+      "provider": "ort_cpu_fp32",
+      "realized": {
+        "bc_dagger.onnx": [
+          "CPUExecutionProvider"
+        ],
+        "dp_K10.onnx": [
+          "CPUExecutionProvider"
+        ],
+        "dp_denoise_step.onnx": [
+          "CPUExecutionProvider"
+        ],
+        "dp_encoder.onnx": [
+          "CPUExecutionProvider"
+        ]
+      },
+      "scored": true,
+      "status": "measured",
+      "time_utc": "2026-11-07T13:40:44+00:00",
+      "wall_s": 428.5203996360069
+    },
+    "ort_cuda_fp16": {
+      "bc_dagger": {
+        "judged_max_abs": 0.0012406110763549805,
+        "judged_quantity": "action max-abs",
+        "open_loop_pass": false,
+        "p99_abs": 0.000541045665740965,
+        "per_axis_max_abs": [
+          0.0007128119468688965,
+          0.0005396604537963867,
+          0.0012406110763549805
+        ],
+        "tolerance": 0.0001
+      },
+      "dp": {
+        "chunk_loop_max_abs": 0.03833366930484772,
+        "chunk_reported_bound": 0.001,
+        "chunk_unrolled_max_abs": 0.02696172147989273,
+        "chunk_unrolled_p50_p99_abs": [
+          0.002211250364780426,
+          0.018642472922801967
+        ],
+        "eps_per_step_max_abs": [
+          0.0055999755859375,
+          0.0043239593505859375,
+          0.0038442611694335938,
+          0.0045773983001708984,
+          0.008020684123039246,
+          0.012457877397537231,
+          0.016056343913078308,
+          0.021630406379699707,
+          0.036690399050712585,
+          0.06448108702898026
+        ],
+        "eps_per_step_p99_abs": [
+          0.0016980385780334516,
+          0.0017330706119537366,
+          0.0018023312091827405,
+          0.00182318925857544,
+          0.002070080041885378,
+          0.0021944081783294685,
+          0.0027675962448120185,
+          0.003618379235267643,
+          0.005259695276618006,
+          0.008276193141937262
+        ],
+        "eps_reference_cond_max_abs": 0.025284528732299805,
+        "global_cond_max_abs": 0.0017982125282287598,
+        "judged_max_abs": 0.06448108702898026,
+        "judged_quantity": "per-step eps-hat max-abs (K = 10 steps, own encoder)",
+        "n_chunk_over_bound": 741,
+        "open_loop_pass": false,
+        "timesteps": [
+          99,
+          89,
+          79,
+          69,
+          59,
+          49,
+          39,
+          29,
+          19,
+          9
+        ],
+        "tolerance": 0.0001
+      },
+      "git": {
+        "dirty": true,
+        "dirty_outside_results": false,
+        "dirty_paths": [
+          "?? results/latency/graphs.json",
+          "?? results/latency/inputs.json",
+          "?? results/latency/run_info.json"
+        ],
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd"
+      },
+      "provider": "ort_cuda_fp16",
+      "realized": {
+        "bc_dagger_fp16.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_K10_fp16.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_denoise_step_fp16.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_encoder_fp16.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ]
+      },
+      "scored": false,
+      "status": "measured",
+      "time_utc": "2026-11-07T13:59:43+00:00",
+      "wall_s": 234.02792894700542
+    },
+    "ort_cuda_fp32": {
+      "bc_dagger": {
+        "judged_max_abs": 1.8775463104248047e-06,
+        "judged_quantity": "action max-abs",
+        "open_loop_pass": true,
+        "p99_abs": 8.344650268554688e-07,
+        "per_axis_max_abs": [
+          1.8775463104248047e-06,
+          1.430511474609375e-06,
+          1.6614794731140137e-06
+        ],
+        "tolerance": 0.0001
+      },
+      "dp": {
+        "chunk_loop_max_abs": 2.501159906387329e-05,
+        "chunk_reported_bound": 0.001,
+        "chunk_unrolled_max_abs": 2.501159906387329e-05,
+        "chunk_unrolled_p50_p99_abs": [
+          1.269858330488205e-06,
+          1.1980198323726643e-05
+        ],
+        "eps_per_step_max_abs": [
+          1.6689300537109375e-06,
+          1.6689300537109375e-06,
+          2.384185791015625e-06,
+          3.2186508178710938e-06,
+          4.887580871582031e-06,
+          6.318092346191406e-06,
+          8.344650268554688e-06,
+          1.0848045349121094e-05,
+          1.5914440155029297e-05,
+          2.86102294921875e-05
+        ],
+        "eps_per_step_p99_abs": [
+          6.556510925292969e-07,
+          7.152557373046875e-07,
+          7.152557373046875e-07,
+          9.5367431640625e-07,
+          1.1920928955078125e-06,
+          1.5497207641601562e-06,
+          2.0265579223632812e-06,
+          2.86102294921875e-06,
+          4.038363695144684e-06,
+          6.67572021484375e-06
+        ],
+        "eps_reference_cond_max_abs": 1.5556812286376953e-05,
+        "global_cond_max_abs": 2.014636993408203e-05,
+        "judged_max_abs": 2.86102294921875e-05,
+        "judged_quantity": "per-step eps-hat max-abs (K = 10 steps, own encoder)",
+        "n_chunk_over_bound": 0,
+        "open_loop_pass": true,
+        "timesteps": [
+          99,
+          89,
+          79,
+          69,
+          59,
+          49,
+          39,
+          29,
+          19,
+          9
+        ],
+        "tolerance": 0.0001
+      },
+      "git": {
+        "dirty": true,
+        "dirty_outside_results": false,
+        "dirty_paths": [
+          "?? results/latency/graphs.json",
+          "?? results/latency/inputs.json",
+          "?? results/latency/run_info.json"
+        ],
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd"
+      },
+      "provider": "ort_cuda_fp32",
+      "realized": {
+        "bc_dagger.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_K10.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_denoise_step.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_encoder.onnx": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ]
+      },
+      "scored": true,
+      "status": "measured",
+      "time_utc": "2026-11-07T13:44:17+00:00",
+      "wall_s": 213.6565498209966
+    },
+    "ort_trt_fp16": {
+      "bc_dagger": {
+        "judged_max_abs": 0.0009653568267822266,
+        "judged_quantity": "action max-abs",
+        "open_loop_pass": false,
+        "p99_abs": 0.00044183388352394,
+        "per_axis_max_abs": [
+          0.0005545178428292274,
+          0.0008359253406524658,
+          0.0009653568267822266
+        ],
+        "tolerance": 0.0001
+      },
+      "dp": {
+        "chunk_loop_max_abs": 0.03497314453125,
+        "chunk_reported_bound": 0.001,
+        "chunk_unrolled_max_abs": 0.03210838884115219,
+        "chunk_unrolled_p50_p99_abs": [
+          0.0027544349431991577,
+          0.02064874842762947
+        ],
+        "eps_per_step_max_abs": [
+          0.006246089935302734,
+          0.006303310394287109,
+          0.006059169769287109,
+          0.007107734680175781,
+          0.008318424224853516,
+          0.013394176959991455,
+          0.015282034873962402,
+          0.019513368606567383,
+          0.028147578239440918,
+          0.06378829479217529
+        ],
+        "eps_per_step_p99_abs": [
+          0.00264407277107239,
+          0.0026874589920043955,
+          0.0027160823345184363,
+          0.0028219282627105725,
+          0.0030965798348188446,
+          0.0035305309295654355,
+          0.004444245100021363,
+          0.00580026060342789,
+          0.0081291723251343,
+          0.013956720009446155
+        ],
+        "eps_reference_cond_max_abs": 0.0568767786026001,
+        "global_cond_max_abs": 0.002680480480194092,
+        "judged_max_abs": 0.06378829479217529,
+        "judged_quantity": "per-step eps-hat max-abs (K = 10 steps, own encoder)",
+        "n_chunk_over_bound": 799,
+        "open_loop_pass": false,
+        "timesteps": [
+          99,
+          89,
+          79,
+          69,
+          59,
+          49,
+          39,
+          29,
+          19,
+          9
+        ],
+        "tolerance": 0.0001
+      },
+      "git": {
+        "dirty": true,
+        "dirty_outside_results": false,
+        "dirty_paths": [
+          "?? results/latency/graphs.json",
+          "?? results/latency/inputs.json",
+          "?? results/latency/run_info.json"
+        ],
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd"
+      },
+      "provider": "ort_trt_fp16",
+      "realized": {
+        "bc_dagger_fp16.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_K10_fp16.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_denoise_step_fp16.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_encoder_fp16.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ]
+      },
+      "scored": true,
+      "status": "measured",
+      "time_utc": "2026-11-07T13:53:16+00:00",
+      "wall_s": 233.90514129798976
+    },
+    "ort_trt_fp32": {
+      "bc_dagger": {
+        "judged_max_abs": 1.8775463104248047e-06,
+        "judged_quantity": "action max-abs",
+        "open_loop_pass": true,
+        "p99_abs": 8.344650268554688e-07,
+        "per_axis_max_abs": [
+          1.8775463104248047e-06,
+          1.4156103134155273e-06,
+          1.5050172805786133e-06
+        ],
+        "tolerance": 0.0001
+      },
+      "dp": {
+        "chunk_loop_max_abs": 2.6054680347442627e-05,
+        "chunk_reported_bound": 0.001,
+        "chunk_unrolled_max_abs": 2.117455005645752e-05,
+        "chunk_unrolled_p50_p99_abs": [
+          1.3150274753570557e-06,
+          1.1887550354003903e-05
+        ],
+        "eps_per_step_max_abs": [
+          1.9073486328125e-06,
+          1.9073486328125e-06,
+          2.9802322387695312e-06,
+          3.2186508178710938e-06,
+          4.291534423828125e-06,
+          6.9141387939453125e-06,
+          8.106231689453125e-06,
+          1.1444091796875e-05,
+          1.8477439880371094e-05,
+          2.9087066650390625e-05
+        ],
+        "eps_per_step_p99_abs": [
+          8.344650268554688e-07,
+          8.344650268554688e-07,
+          8.940696716308594e-07,
+          9.5367431640625e-07,
+          1.1920928955078125e-06,
+          1.5497207641601562e-06,
+          2.086162567138672e-06,
+          2.86102294921875e-06,
+          4.0531158447265625e-06,
+          6.67572021484375e-06
+        ],
+        "eps_reference_cond_max_abs": 1.4543533325195312e-05,
+        "global_cond_max_abs": 1.996755599975586e-05,
+        "judged_max_abs": 2.9087066650390625e-05,
+        "judged_quantity": "per-step eps-hat max-abs (K = 10 steps, own encoder)",
+        "n_chunk_over_bound": 0,
+        "open_loop_pass": true,
+        "timesteps": [
+          99,
+          89,
+          79,
+          69,
+          59,
+          49,
+          39,
+          29,
+          19,
+          9
+        ],
+        "tolerance": 0.0001
+      },
+      "git": {
+        "dirty": true,
+        "dirty_outside_results": false,
+        "dirty_paths": [
+          "?? results/latency/graphs.json",
+          "?? results/latency/inputs.json",
+          "?? results/latency/run_info.json"
+        ],
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd"
+      },
+      "provider": "ort_trt_fp32",
+      "realized": {
+        "bc_dagger.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_K10.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_denoise_step.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "dp_encoder.onnx": [
+          "TensorrtExecutionProvider",
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ]
+      },
+      "scored": false,
+      "status": "measured",
+      "time_utc": "2026-11-07T13:55:49+00:00",
+      "wall_s": 151.4153125520097
+    },
+    "torch_cuda_fp32": {
+      "bc_dagger": {
+        "judged_max_abs": 1.6689300537109375e-06,
+        "judged_quantity": "action max-abs",
+        "open_loop_pass": true,
+        "p99_abs": 8.571892976760776e-07,
+        "per_axis_max_abs": [
+          1.6689300537109375e-06,
+          1.3560056686401367e-06,
+          1.5906989574432373e-06
+        ],
+        "tolerance": 0.0001
+      },
+      "dp": {
+        "chunk_loop_max_abs": 2.2761523723602295e-05,
+        "chunk_reported_bound": 0.001,
+        "chunk_unrolled_max_abs": 2.27317214012146e-05,
+        "chunk_unrolled_p50_p99_abs": [
+          1.2814998626708984e-06,
+          9.33121889829635e-06
+        ],
+        "eps_per_step_max_abs": [
+          1.6689300537109375e-06,
+          1.5348196029663086e-06,
+          2.3543834686279297e-06,
+          3.248453140258789e-06,
+          4.76837158203125e-06,
+          7.152557373046875e-06,
+          8.225440979003906e-06,
+          1.1324882507324219e-05,
+          1.6450881958007812e-05,
+          2.9146671295166016e-05
+        ],
+        "eps_per_step_p99_abs": [
+          6.556510925292969e-07,
+          7.152557373046875e-07,
+          7.152557373046875e-07,
+          9.5367431640625e-07,
+          1.1920928955078125e-06,
+          1.5497207641601562e-06,
+          2.0265579223632812e-06,
+          2.86102294921875e-06,
+          4.112720489501953e-06,
+          6.735324859619141e-06
+        ],
+        "eps_reference_cond_max_abs": 1.6808509826660156e-05,
+        "global_cond_max_abs": 2.014636993408203e-05,
+        "judged_max_abs": 2.9146671295166016e-05,
+        "judged_quantity": "per-step eps-hat max-abs (K = 10 steps, own encoder)",
+        "n_chunk_over_bound": 0,
+        "open_loop_pass": true,
+        "timesteps": [
+          99,
+          89,
+          79,
+          69,
+          59,
+          49,
+          39,
+          29,
+          19,
+          9
+        ],
+        "tolerance": 0.0001
+      },
+      "git": {
+        "dirty": true,
+        "dirty_outside_results": false,
+        "dirty_paths": [
+          "?? results/latency/graphs.json",
+          "?? results/latency/inputs.json",
+          "?? results/latency/run_info.json"
+        ],
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd"
+      },
+      "provider": "torch_cuda_fp32",
+      "realized": {
+        "bc_dagger.onnx": [
+          "torch:cuda"
+        ],
+        "dp_K10.onnx": [
+          "torch:cuda"
+        ],
+        "dp_denoise_step.onnx": [
+          "torch:cuda"
+        ],
+        "dp_encoder.onnx": [
+          "torch:cuda"
+        ]
+      },
+      "scored": true,
+      "status": "measured",
+      "time_utc": "2026-11-07T13:49:23+00:00",
+      "wall_s": 302.80219649200444
+    }
+  },
+  "reference": {
+    "arrays_sha256": "3b6f8a55c1d1da5e0a4047fff6bbec31970baff35c5e08435f8303cd64e6baa2",
+    "checkpoints": {
+      "bc_dagger": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+      "dp": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581"
+    },
+    "n": 1000,
+    "noise_key": "(run_seed, -100, i) for input i",
+    "path": "torch fp32 CPU, batch 1, 1 intra-op thread, EMA weights, TF32 n/a",
+    "timesteps": [
+      99,
+      89,
+      79,
+      69,
+      59,
+      49,
+      39,
+      29,
+      19,
+      9
+    ],
+    "wall_s": 199.70046826498583
+  }
+}
