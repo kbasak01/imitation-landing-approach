@@ -17,6 +17,12 @@ Withholding rule (CLAUDE.md non-negotiable 8; eval-auditor rule 5). A student ce
 
     {"released": [{"label": "<GroupKey.label>", "reviewed_by": "results-skeptic",
                    "date": "YYYY-MM-DD", "finding": "..."}]}
+
+A released cell prints its number with a ``‡`` marker, and the table it sits in is followed by
+its finding as a footnote (and §8 lists every finding). Every student table prints the teacher
+and the three P8 baselines (:data:`ila.eval.score.ALWAYS_PRINTED`; CLAUDE.md non-negotiable 7)
+beside the students; the ablation table adds ``gated`` and the ``T_mix`` reference for the
+``*_mix`` arms.
 """
 
 from __future__ import annotations
@@ -96,6 +102,7 @@ _HYP_TITLES: Final[Mapping[str, str]] = {
 }
 
 _DAGGER: Final[str] = "†"
+_RELEASED: Final[str] = "‡"
 _OUTSIDE: Final[str] = (
     f"{_DAGGER} outside the training distribution: no SS6 and no 90° heading in any training, "
     "tuning or selection (P3-D1 §2); `unseen_heading` is the 90° list. `unseen_vessel` and "
@@ -255,6 +262,47 @@ def _learned_cell(r: Mapping[str, str] | None, withheld: frozenset[str]) -> str:
         f"{_pct(r['success_iqm_hi'])}]; seeds {_pct(r['success_seed_min'])}–"
         f"{_pct(r['success_seed_max'])}; losses/1 000: {_losses(r, 'per_1000_')}"
     )
+
+
+def _cell(r: Mapping[str, str] | None, inp: ReportInputs, notes: list[str] | None = None) -> str:
+    """:func:`_learned_cell`, marked ``‡`` when it is a released above-teacher cell.
+
+    The marked cell's label is appended to ``notes`` (once) for :func:`_footnotes`.
+    """
+    text = _learned_cell(r, inp.withheld)
+    if r is not None and label_of(r) in inp.released:
+        text = f"{text} {_RELEASED}"
+        if notes is not None and label_of(r) not in notes:
+            notes.append(label_of(r))
+    return text
+
+
+def _footnotes(inp: ReportInputs, labels: Sequence[str]) -> list[str]:
+    """The reviewed findings of the released above-teacher cells marked in a table."""
+    out = []
+    for lab in labels:
+        rec = inp.released[lab]
+        out += [
+            "",
+            f"{_RELEASED} `{lab}` is above its own teacher in at least one seed; released by "
+            f"{rec.get('reviewed_by', '')} ({rec.get('date', '')}) after the touchdown audit "
+            f"(`results/e08/above_teacher/audit.md`): {rec.get('finding', '')}",
+        ]
+    return out
+
+
+def _baseline_rows(
+    inp: ReportInputs,
+    list_name: str,
+    cells: Sequence[str],
+    methods: Sequence[str] = sc.ALWAYS_PRINTED,
+) -> list[list[str]]:
+    """One row per baseline (P8's committed rows) for ``cells`` of ``list_name``."""
+    base = _base_index(inp)
+    return [
+        [_BASELINE_LABEL[m]] + [_baseline_cell(base.get((m, list_name, ss))) for ss in cells]
+        for m in methods
+    ]
 
 
 def _baseline_cell(r: Mapping[str, str] | None) -> str:
@@ -437,7 +485,7 @@ def _provenance(inp: ReportInputs) -> list[str]:
 
 
 def _core(inp: ReportInputs) -> list[str]:
-    agg, base, withheld = _agg_index(inp), _base_index(inp), inp.withheld
+    agg = _agg_index(inp)
     lines = [
         "## 2. Success per list and sea state (core arms; simulated landings)",
         "",
@@ -449,20 +497,18 @@ def _core(inp: ReportInputs) -> list[str]:
         lines += [f"### `{list_name}`", ""]
         header = ["arm", *(_ss_head(list_name, ss) for ss in cells)]
         rows = []
+        notes: list[str] = []
         for arm, teacher in _arms(inp, "core"):
             rows.append(
                 [_student_name(arm, teacher)]
                 + [
-                    _learned_cell(agg.get(("core", arm, list_name, ss, *_inf(arm), "")), withheld)
+                    _cell(agg.get(("core", arm, list_name, ss, *_inf(arm), "")), inp, notes)
                     for ss in cells
                 ]
             )
-        for m in sc.ALWAYS_PRINTED:
-            rows.append(
-                [_BASELINE_LABEL[m]]
-                + [_baseline_cell(base.get((m, list_name, ss))) for ss in cells]
-            )
+        rows += _baseline_rows(inp, list_name, cells)
         lines += _table(header, rows)
+        lines += _footnotes(inp, notes)
         lines.append("")
     lines += [
         "Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.",
@@ -497,8 +543,9 @@ def _breakdown(inp: ReportInputs) -> list[str]:
                     rows.append([f"`{arm}`", list_name, ss, "missing", *([""] * 6)])
                     continue
                 n = int(r["n_seeds"]) * int(r["n_episodes_per_seed"])
+                mark = f" {_RELEASED}" if label_of(r) in inp.released else ""
                 rows.append(
-                    [f"`{arm}`", list_name, _ss_head(list_name, ss), str(n)]
+                    [f"`{arm}`{mark}", list_name, _ss_head(list_name, ss), str(n)]
                     + [f"{r[f'n_{o}']} ({100.0 * int(r[f'n_{o}']) / n:.1f})" for o in sc.OUTCOMES]
                 )
             for m in sc.ALWAYS_PRINTED:
@@ -576,7 +623,8 @@ def _secondary(inp: ReportInputs) -> list[str]:
                 vals.append(_num(sum(finite)) if finite else "n/a")
             else:
                 vals.append(_f3(sum(finite) / len(finite)) if finite else "n/a")
-        rows.append([f"`{r0['arm']}`", r0["list"], _ss_head(r0["list"], r0["ss"]), *vals])
+        mark = f" {_RELEASED}" if lab in inp.released else ""
+        rows.append([f"`{r0['arm']}`{mark}", r0["list"], _ss_head(r0["list"], r0["ss"]), *vals])
     for b in inp.baselines:
         if b["method"] not in sc.ALWAYS_PRINTED:
             continue
@@ -699,7 +747,8 @@ def _contrasts(inp: ReportInputs, kinds: Callable[[str], bool], title: str) -> l
 
 
 def _tagged(inp: ReportInputs) -> list[str]:
-    agg, base, withheld = _agg_index(inp), _base_index(inp), inp.withheld
+    agg = _agg_index(inp)
+    notes: list[str] = []
     lines = [
         "## 7. Tagged sections (never mixed into the core tables)",
         "",
@@ -709,6 +758,16 @@ def _tagged(inp: ReportInputs) -> list[str]:
         "Ta = 8 without ensembling is the core `dp` row (shared, not re-flown); Ta = 1 with "
         "ensembling is recorded as an alias of Ta = 1 without (one source of weight 1.0, same "
         "noise keys; P6-D1 item 3).",
+        "",
+        "`dp` is reported at its frozen Ta = 8, K = 10 (P3-D1 §3); nothing is re-selected from "
+        "this curve. Stated with it, from Phase 6 (`docs/protocol.md` P6-D5, items 3–5 and its "
+        "README requirements; sources under `results/phase6/` and `results/dp_sweeps.json`): on "
+        "`select`, `dp` at Ta = 8 already landed far below the BC family, mostly a chunking "
+        "effect that did not depend on sea state; its checkpoint selection is noise-dominated "
+        "and the selected `select` scores are optimistic; and held-out denoising loss is not a "
+        "selection proxy (success does not follow it). H3 (§5) scores Ta = 1 − Ta = 8 at `id` "
+        "SS6 with its caveats: checkpoints selected at Ta = 8, mode switching between replans, "
+        "and the `dp_minus_last_action` input-freshness confound.",
         "",
     ]
     tas = sorted({int(r["Ta"]) for r in inp.aggregate if r["tag"] == "dp_Ta"})
@@ -723,9 +782,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
             [
                 f"Ta = {ta}",
                 *(
-                    _learned_cell(
-                        agg.get(("dp_Ta", "dp", "id", ss, str(ta), "10", e, "")), withheld
-                    )
+                    _cell(agg.get(("dp_Ta", "dp", "id", ss, str(ta), "10", e, "")), inp, notes)
                     for e in ("False", "True")
                 ),
             ]
@@ -733,6 +790,15 @@ def _tagged(inp: ReportInputs) -> list[str]:
         ]
         lines += _table(("Ta", "no ensembling", "ACT ensembling (m = 0.01)"), rows)
         lines.append("")
+    if sss:
+        lines += ["Beside it, the teacher and the three P8 baselines (P8's committed rows):", ""]
+        lines += _table(
+            ("baseline", *(f"id {_ss_head('id', ss)}" for ss in sss)),
+            _baseline_rows(inp, "id", sss),
+        )
+        lines += _footnotes(inp, notes)
+        lines.append("")
+        notes = []
     lines += [
         "### 7b. `dp` DDIM steps K (tag `dp_K`; `id` SS5; Ta = 8, no ensembling)",
         "",
@@ -745,8 +811,11 @@ def _tagged(inp: ReportInputs) -> list[str]:
     for k in ks:
         r = agg.get(("dp_K", "dp", "id", "SS5", "8", str(k), "False", ""))
         name = f"K = {k}" + (" (schedule-limited)" if k in (1, 2) else "")
-        k_rows.append([name, _learned_cell(r, withheld)])
+        k_rows.append([name, _cell(r, inp, notes)])
+    k_rows += _baseline_rows(inp, "id", ("SS5",))
     lines += _table(("K", "id SS5"), k_rows)
+    lines += _footnotes(inp, notes)
+    notes = []
     lines += [
         "",
         "### 7c. Appearance shift (tag `appearance_shift`; evaluation-only render variants of "
@@ -759,7 +828,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
         shift_rows.append(
             [f"{_student_name(arm, teacher)}, committed look"]
             + [
-                _learned_cell(agg.get(("core", arm, "id", ss, *inf, "")), withheld)
+                _cell(agg.get(("core", arm, "id", ss, *inf, "")), inp, notes)
                 for ss in ("SS5", "SS6")
             ]
         )
@@ -774,17 +843,24 @@ def _tagged(inp: ReportInputs) -> list[str]:
             shift_rows.append(
                 [f"`{arm}`, `{v}`"]
                 + [
-                    _learned_cell(agg.get(("appearance_shift", arm, "id", ss, *inf, v)), withheld)
+                    _cell(agg.get(("appearance_shift", arm, "id", ss, *inf, v)), inp, notes)
                     for ss in ("SS5", "SS6")
                 ]
             )
+    shift_rows += _baseline_rows(inp, "id", ("SS5", "SS6"))
     lines += _table(("arm, look", "id SS5", f"id SS6 {_DAGGER}"), shift_rows)
+    lines += _footnotes(inp, notes)
+    notes = []
     lines += [
         "",
         "### 7d. Ablations (tag `ablation`; 3 seeds; `id` SS4–SS6; each with its own teacher's "
         "committed rows)",
         "",
-        "`bc_plus_clock` is the labelled `+clock` ablation (`time_fraction` in the input).",
+        "`bc_plus_clock` is the labelled `+clock` ablation (`time_fraction` in the input). "
+        "Beside the students: the teacher and the three P8 baselines, plus `gated` and the "
+        "`T_mix` reference, the two references of the `*_mix` arms (`T_mix` assigns each "
+        "episode to `ppo` s0 or `gated`; the student cannot observe the assignment). "
+        "`pid_feedforward` is the `*_pid` arms' teacher.",
         "",
     ]
     abl_rows = []
@@ -792,16 +868,16 @@ def _tagged(inp: ReportInputs) -> list[str]:
         abl_rows.append(
             [_student_name(arm, teacher)]
             + [
-                _learned_cell(agg.get(("ablation", arm, "id", ss, *_inf_abl(arm), "")), withheld)
+                _cell(agg.get(("ablation", arm, "id", ss, *_inf_abl(arm), "")), inp, notes)
                 for ss in ("SS4", "SS5", "SS6")
             ]
         )
-    for m in ("ppo", "pid_feedforward", sc.TMIX):
-        abl_rows.append(
-            [_BASELINE_LABEL[m]]
-            + [_baseline_cell(base.get((m, "id", ss))) for ss in ("SS4", "SS5", "SS6")]
-        )
+    abl_rows += _baseline_rows(
+        inp, "id", ("SS4", "SS5", "SS6"), (*sc.ALWAYS_PRINTED, "gated", sc.TMIX)
+    )
     lines += _table(("arm", "id SS4", "id SS5", f"id SS6 {_DAGGER}"), abl_rows)
+    lines += _footnotes(inp, notes)
+    notes = []
     lines += [
         "",
         "### 7e. External reference R1 (tag `reference_external`; not gating; 3 seeds; "
@@ -813,8 +889,10 @@ def _tagged(inp: ReportInputs) -> list[str]:
         ref_rows.append(
             [_student_name(arm, teacher)]
             + [
-                _learned_cell(
-                    agg.get(("reference_external", arm, "id", ss, "8", "10", "False", "")), withheld
+                _cell(
+                    agg.get(("reference_external", arm, "id", ss, "8", "10", "False", "")),
+                    inp,
+                    notes,
                 )
                 for ss in ("SS3", "SS4", "SS5", "SS6")
             ]
@@ -822,11 +900,13 @@ def _tagged(inp: ReportInputs) -> list[str]:
     ref_rows.append(
         [_student_name("dp", "T_ppo") + " (core, beside it)"]
         + [
-            _learned_cell(agg.get(("core", "dp", "id", ss, "8", "10", "False", "")), withheld)
+            _cell(agg.get(("core", "dp", "id", ss, "8", "10", "False", "")), inp, notes)
             for ss in ("SS3", "SS4", "SS5", "SS6")
         ]
     )
+    ref_rows += _baseline_rows(inp, "id", ("SS3", "SS4", "SS5", "SS6"))
     lines += _table(("arm", "id SS3", "id SS4", "id SS5", f"id SS6 {_DAGGER}"), ref_rows)
+    lines += _footnotes(inp, notes)
     lines += ["", "Sources: `results/e08/aggregate.csv`, `results/e08/baselines.csv`.", ""]
     return lines
 
@@ -841,7 +921,9 @@ def _above(inp: ReportInputs) -> list[str]:
         "",
         "A cell is listed when its IQM, or any single seed's success rate, exceeds its own "
         "teacher's committed rate in that cell. Its numbers are withheld from every table above "
-        "until `results-skeptic` has reviewed the touchdown audit (CLAUDE.md non-negotiable 8).",
+        "until `results-skeptic` has reviewed the touchdown audit (CLAUDE.md non-negotiable 8). "
+        f"A released cell is marked {_RELEASED} wherever it is printed; its finding follows each "
+        "success table that prints it and is listed below.",
         "",
     ]
     if not inp.above:

@@ -83,6 +83,21 @@ def test_baselines_beside_every_student(scored: Path) -> None:
         assert names.index(next(n for n in names if "teacher `ppo` s0" in n)) > names.index(
             students[-1]
         )
+    _tagged_tables_print_baselines(text)
+
+
+def _tagged_tables_print_baselines(text: str) -> None:
+    """Every tagged table (7a-7e) with a student prints the four; 7d adds the mix references."""
+    tagged = _section(text, "## 7. Tagged sections").split("### ")[1:]
+    assert [s[:2] for s in tagged] == ["7a", "7b", "7c", "7d", "7e"]
+    for sub in tagged:
+        if "losses/1 000" not in sub:
+            continue  # no student in this subsection (reduced matrix)
+        for m in sc.ALWAYS_PRINTED:
+            assert rp._BASELINE_LABEL[m] in sub, (m, sub[:20])
+    if "losses/1 000" in tagged[3]:
+        assert rp._BASELINE_LABEL["gated"] in tagged[3]
+        assert rp._BASELINE_LABEL[sc.TMIX] in tagged[3]
 
 
 def test_learned_and_baseline_formats(scored: Path) -> None:
@@ -143,7 +158,15 @@ def test_above_teacher_cells_are_withheld_until_released(scored: Path, tmp_path:
     try:
         inp2 = rp.load_inputs(scored)
         assert "core bc id SS6" not in inp2.withheld
-        assert "released by results-skeptic" in rp.render(inp2)
+        text2 = rp.render(inp2)
+        assert "released by results-skeptic" in text2
+        # Marked where printed, with the finding as a footnote under the success table.
+        core = _section(text2, "## 2. Success per list")
+        assert " ‡ |" in core
+        assert (
+            "‡ `core bc id SS6` is above its own teacher in at least one seed; released by " in core
+        )
+        assert "synthetic" in core
     finally:
         review.unlink()
 
@@ -179,5 +202,7 @@ def test_full_matrix_report_sections(tmp_path: Path) -> None:
     ):
         assert title in text, title
     assert "K = 1 (schedule-limited)" in text
+    _tagged_tables_print_baselines(text)
+    assert all("losses/1 000" in s for s in _section(text, "## 7.").split("### ")[1:])
     assert "None: every expected cell has rows." in text
     assert rp.write_report(tmp_path, tmp_path / "again.md") == text

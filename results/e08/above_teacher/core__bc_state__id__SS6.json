@@ -157,6 +157,133 @@
       }
     ]
   },
+  "per_seed_recount": [
+    {
+      "discordant_teacher_failure_to_student_success": 2,
+      "discordant_teacher_success_to_student_failure": 4,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.6875,
+      "seed": 0,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 195,
+        "successes_minus_tunnelled_disagreement_or_near": 195,
+        "successes_minus_tunnelled_or_disagreement": 195,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 1,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 2,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 194,
+        "successes_minus_tunnelled_or_disagreement": 196,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 2,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 2,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 195,
+        "successes_minus_tunnelled_or_disagreement": 196,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 1,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 3,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 1,
+      "discordant_teacher_success_to_student_failure": 0,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 4,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 198,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 197,
+        "successes_minus_tunnelled_disagreement_or_near": 197,
+        "successes_minus_tunnelled_or_disagreement": 197,
+        "tunnelled_successes": 0
+      }
+    }
+  ],
   "seeds": [
     0,
     1,
@@ -170,6 +297,7 @@
     "detectors_disagree": [],
     "metrics": {
       "closing_speed_normal_m_s": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -193,10 +321,12 @@
         "n_over_threshold": 0,
         "p50": 0.24733177889697044,
         "p95": 0.28734120448252565,
+        "success_criterion": true,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "closing_speed_world_z_m_s": {
+        "in_near_test": false,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -220,10 +350,12 @@
         "n_over_threshold": 0,
         "p50": 0.24926627057468725,
         "p95": 0.2897966755142579,
+        "success_criterion": false,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "lateral_offset_m": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -247,10 +379,12 @@
         "n_over_threshold": 0,
         "p50": 0.013794937149654404,
         "p95": 0.032245344707630144,
+        "success_criterion": true,
         "threshold": 0.1,
         "unit": "m model scale"
       },
       "rel_tilt_deg": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -274,6 +408,7 @@
         "n_over_threshold": 15,
         "p50": 3.9968265157485527,
         "p95": 11.387840295876309,
+        "success_criterion": true,
         "threshold": 15.0,
         "unit": "deg"
       }
@@ -290,6 +425,16 @@
       "off_pad": 0,
       "success": 984,
       "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
     },
     "success_min_dwell_s": 0.5,
     "successes": 984,
@@ -337,64 +482,124 @@
     ],
     "tunnelled": [
       {
+        "closing_speed_normal_m_s": 0.28836032822043134,
         "episode_seed": 343780280,
         "index": 58,
+        "lateral_offset_m": 0.01413759154969771,
+        "max_penetration_m": -0.005631321732875908,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 22.410661114962636,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.2625,
+        "td_t_episode_contact_s": 1.2625
       },
       {
+        "closing_speed_normal_m_s": 0.10524249727752777,
         "episode_seed": 1765714094,
         "index": 80,
+        "lateral_offset_m": 0.015164163438506533,
+        "max_penetration_m": -0.005090525450934446,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 15.739599370480573,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.65,
+        "td_t_episode_contact_s": 1.65
       },
       {
+        "closing_speed_normal_m_s": 0.26223730595993566,
         "episode_seed": 1712242685,
         "index": 49,
+        "lateral_offset_m": 0.018920170895622864,
+        "max_penetration_m": -0.005161930455562357,
         "outcome": "success",
-        "seed": 1
+        "rel_tilt_deg": 6.208173731419317,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.7291666666666667,
+        "td_t_episode_contact_s": 1.7291666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.2627816995785281,
         "episode_seed": 343780280,
         "index": 58,
+        "lateral_offset_m": 0.017167451735601014,
+        "max_penetration_m": -0.00511540159553115,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 20.789105262897444,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.3083333333333333,
+        "td_t_episode_contact_s": 1.3083333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.10304792556142742,
         "episode_seed": 1765714094,
         "index": 80,
+        "lateral_offset_m": 0.010809464698788435,
+        "max_penetration_m": -0.005057523206059368,
         "outcome": "success",
-        "seed": 2
+        "rel_tilt_deg": 14.397700185174449,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.7125,
+        "td_t_episode_contact_s": 1.7125
       },
       {
+        "closing_speed_normal_m_s": 0.24781685670033843,
         "episode_seed": 1905388242,
         "index": 102,
+        "lateral_offset_m": 0.02169994723561465,
+        "max_penetration_m": -0.006246754486816114,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 20.28000767249952,
+        "seed": 2,
+        "td_t_episode_analytic_s": 2.654166666666667,
+        "td_t_episode_contact_s": 2.654166666666667
       },
       {
+        "closing_speed_normal_m_s": 0.16707160627007903,
         "episode_seed": 343780280,
         "index": 58,
+        "lateral_offset_m": 0.015189147528032744,
+        "max_penetration_m": -0.006146214187100347,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 17.90823317548867,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.3583333333333334,
+        "td_t_episode_contact_s": 1.3583333333333334
       },
       {
+        "closing_speed_normal_m_s": 0.10373155945523452,
         "episode_seed": 1323121477,
         "index": 10,
+        "lateral_offset_m": 0.020148920215980522,
+        "max_penetration_m": -0.005009900212801027,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 16.44937172885845,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.7833333333333332,
+        "td_t_episode_contact_s": 1.7833333333333332
       },
       {
+        "closing_speed_normal_m_s": 0.17994676035109436,
         "episode_seed": 343780280,
         "index": 58,
+        "lateral_offset_m": 0.010690876898192219,
+        "max_penetration_m": -0.005242404468129057,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 22.93433509499108,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.2833333333333332,
+        "td_t_episode_contact_s": 1.2833333333333332
       },
       {
+        "closing_speed_normal_m_s": 0.21234383760102846,
         "episode_seed": 1646836629,
         "index": 86,
+        "lateral_offset_m": 0.011971792171909995,
+        "max_penetration_m": -0.005175147639503753,
         "outcome": "success",
-        "seed": 4
+        "rel_tilt_deg": 14.765167902159268,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.925,
+        "td_t_episode_contact_s": 1.925
       }
     ]
   },
@@ -404,6 +609,7 @@
     "detectors_disagree": [],
     "metrics": {
       "closing_speed_normal_m_s": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -427,10 +633,12 @@
         "n_over_threshold": 0,
         "p50": 0.247269394000022,
         "p95": 0.2818113647317609,
+        "success_criterion": true,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "closing_speed_world_z_m_s": {
+        "in_near_test": false,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -454,10 +662,12 @@
         "n_over_threshold": 0,
         "p50": 0.24925623690394128,
         "p95": 0.28298190821142216,
+        "success_criterion": false,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "lateral_offset_m": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -481,10 +691,12 @@
         "n_over_threshold": 0,
         "p50": 0.012835659772954625,
         "p95": 0.033913862327913706,
+        "success_criterion": true,
         "threshold": 0.1,
         "unit": "m model scale"
       },
       "rel_tilt_deg": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -508,6 +720,7 @@
         "n_over_threshold": 3,
         "p50": 4.016321028269496,
         "p95": 11.89886369877752,
+        "success_criterion": true,
         "threshold": 15.0,
         "unit": "deg"
       }
@@ -524,6 +737,16 @@
       "off_pad": 0,
       "success": 197,
       "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
     },
     "success_min_dwell_s": 0.5,
     "successes": 197,

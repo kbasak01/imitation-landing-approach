@@ -977,6 +977,16 @@ _H4_CAVEATS: Final[tuple[str, ...]] = (
 )
 
 
+def _h4_ceiling(s_teacher: float) -> str:
+    """H4's ceiling caveat: I cannot fall below S(teacher) - 1 (stated, not a scoring change)."""
+    return (
+        f"I is ceiling-limited: the teacher is at {100.0 * s_teacher:.1f} % at id SS6, so "
+        f"I = S(teacher) - S(bc_state) >= S(teacher) - 1 = {s_teacher - 1.0:+.3f}; an imitation "
+        "gap in bc_state's favour larger than that cannot be observed, which bounds how much "
+        "of D can come from a negative I."
+    )
+
+
 def score_h4(bc_state: ArmMatrix, bc: ArmMatrix, teacher: ArmMatrix) -> HypothesisResult:
     """Score H4 (P3-D1 §6 H4) at ``id`` SS6: D = P - I.
 
@@ -1026,10 +1036,14 @@ def score_h4(bc_state: ArmMatrix, bc: ArmMatrix, teacher: ArmMatrix) -> Hypothes
         magnitude=None,
         verdict=verdict,
         verdict_note=note,
-        caveats=(*_H4_CAVEATS, NO_MULTIPLICITY),
+        caveats=(*_H4_CAVEATS, _h4_ceiling(g.s_teacher), NO_MULTIPLICITY),
         beside=(
             ("perception gap P", _ci_pts(g.p, g.p_lo, g.p_hi)),
-            ("imitation gap I", _ci_pts(g.i, g.i_lo, g.i_hi)),
+            (
+                "imitation gap I",
+                f"{_ci_pts(g.i, g.i_lo, g.i_hi)}; ceiling-limited: I >= "
+                f"{_pts(g.s_teacher - 1.0)} points (teacher at {100.0 * g.s_teacher:.1f} %)",
+            ),
             (
                 "success (mean over seeds x episodes)",
                 f"teacher {100.0 * g.s_teacher:.1f} %; bc_state {100.0 * g.s_bc_state:.1f} %; "

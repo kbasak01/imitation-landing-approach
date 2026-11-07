@@ -83,631 +83,901 @@
     ],
     "teacher_failure_to_student_success": [
       {
+        "assigned_policy": "gated",
         "episode_seed": 1760349828,
         "index": 12,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1760349828,
         "index": 12,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1760349828,
         "index": 12,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1139586890,
         "index": 17,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1139586890,
         "index": 17,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1139586890,
         "index": 17,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1657229134,
         "index": 33,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 55155601,
         "index": 35,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 55155601,
         "index": 35,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 55155601,
         "index": 35,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1167900726,
         "index": 37,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1167900726,
         "index": 37,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1167900726,
         "index": 37,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 157253413,
         "index": 42,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 157253413,
         "index": 42,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 157253413,
         "index": 42,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1712242685,
         "index": 49,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1712242685,
         "index": 49,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1378675592,
         "index": 50,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1378675592,
         "index": 50,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1378675592,
         "index": 50,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 343780280,
         "index": 58,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "hard_landing"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 343780280,
         "index": 58,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "hard_landing"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 343780280,
         "index": 58,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "hard_landing"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 699142286,
         "index": 60,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 699142286,
         "index": 60,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1409692232,
         "index": 70,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1409692232,
         "index": 70,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1409692232,
         "index": 70,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 175912377,
         "index": 72,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "hard_landing"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 175912377,
         "index": 72,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "hard_landing"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1532668767,
         "index": 78,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1532668767,
         "index": 78,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 160799111,
         "index": 83,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 160799111,
         "index": 83,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 160799111,
         "index": 83,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 389537841,
         "index": 87,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 389537841,
         "index": 87,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 389537841,
         "index": 87,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1395150632,
         "index": 91,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1395150632,
         "index": 91,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 537732710,
         "index": 94,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 537732710,
         "index": 94,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 537732710,
         "index": 94,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1480805519,
         "index": 96,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1480805519,
         "index": 96,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1480805519,
         "index": 96,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 48872594,
         "index": 100,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 48872594,
         "index": 100,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 48872594,
         "index": 100,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 986110172,
         "index": 108,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 986110172,
         "index": 108,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 986110172,
         "index": 108,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 354569941,
         "index": 111,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 354569941,
         "index": 111,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 354569941,
         "index": 111,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2081510509,
         "index": 115,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2081510509,
         "index": 115,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2081510509,
         "index": 115,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 908615276,
         "index": 125,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 908615276,
         "index": 125,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 908615276,
         "index": 125,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2054376439,
         "index": 131,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2054376439,
         "index": 131,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2054376439,
         "index": 131,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 592697513,
         "index": 141,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 592697513,
         "index": 141,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 592697513,
         "index": 141,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 645350653,
         "index": 142,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 645350653,
         "index": 142,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 645350653,
         "index": 142,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1131326001,
         "index": 145,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1131326001,
         "index": 145,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 857261509,
         "index": 146,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 857261509,
         "index": 146,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 857261509,
         "index": 146,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 672011799,
         "index": 148,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 672011799,
         "index": 148,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 672011799,
         "index": 148,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1799758887,
         "index": 152,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1799758887,
         "index": 152,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1502030989,
         "index": 183,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1502030989,
         "index": 183,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1502030989,
         "index": 183,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 623800363,
         "index": 196,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 623800363,
         "index": 196,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 623800363,
         "index": 196,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1640874021,
         "index": 197,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 0,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1640874021,
         "index": 197,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 1,
         "teacher_outcome": "timeout"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1640874021,
         "index": 197,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "success",
         "seed": 2,
         "teacher_outcome": "timeout"
@@ -715,441 +985,752 @@
     ],
     "teacher_success_to_student_failure": [
       {
+        "assigned_policy": "ppo",
         "episode_seed": 349236203,
         "index": 3,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 2144706323,
         "index": 6,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "bounce",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 2012805540,
         "index": 7,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1442354209,
         "index": 8,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 903867449,
         "index": 9,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1147113176,
         "index": 15,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1578801034,
         "index": 16,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "bounce",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 808326075,
         "index": 20,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1195033505,
         "index": 22,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "off_pad",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1195033505,
         "index": 22,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1754734567,
         "index": 27,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "bounce",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1754734567,
         "index": 27,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 186339205,
         "index": 30,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1854229207,
         "index": 34,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1219915927,
         "index": 44,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 2003775157,
         "index": 45,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 389108991,
         "index": 56,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 540466837,
         "index": 57,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 540466837,
         "index": 57,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "off_pad",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 540466837,
         "index": 57,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "off_pad",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 665100675,
         "index": 64,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 289932990,
         "index": 68,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 614825645,
         "index": 82,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1646836629,
         "index": 86,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "bounce",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 793640459,
         "index": 92,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "bounce",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 228857887,
         "index": 98,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1905388242,
         "index": 102,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 406214555,
         "index": 105,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "off_pad",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 406214555,
         "index": 105,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "off_pad",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 627475610,
         "index": 106,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1177384037,
         "index": 112,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "off_pad",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1216483064,
         "index": 121,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1216483064,
         "index": 121,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1321347680,
         "index": 127,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 813667634,
         "index": 136,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 813667634,
         "index": 136,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1798967440,
         "index": 138,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "bounce",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1618105963,
         "index": 143,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1618105963,
         "index": 143,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1618105963,
         "index": 143,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1514039191,
         "index": 147,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1514039191,
         "index": 147,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "bounce",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1514039191,
         "index": 147,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1574493175,
         "index": 151,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1353001036,
         "index": 158,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "bounce",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1370568126,
         "index": 159,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "bounce",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1443729475,
         "index": 162,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 800616896,
         "index": 164,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 800616896,
         "index": 164,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 800616896,
         "index": 164,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1742164241,
         "index": 165,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 778428015,
         "index": 166,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 392092734,
         "index": 167,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 392092734,
         "index": 167,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1589993934,
         "index": 177,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1589993934,
         "index": 177,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1450410311,
         "index": 178,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1680960645,
         "index": 184,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 853190055,
         "index": 186,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 0,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 853190055,
         "index": 186,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "gated",
         "episode_seed": 1497922702,
         "index": 194,
+        "other_teacher": "ppo",
+        "other_teacher_outcome": "success",
         "outcome": "hard_landing",
         "seed": 1,
         "teacher_outcome": "success"
       },
       {
+        "assigned_policy": "ppo",
         "episode_seed": 1137692218,
         "index": 195,
+        "other_teacher": "gated",
+        "other_teacher_outcome": "timeout",
         "outcome": "hard_landing",
         "seed": 2,
         "teacher_outcome": "success"
       }
     ]
   },
+  "per_seed_recount": [
+    {
+      "by_assigned_policy": {
+        "gated": {
+          "gained": 28,
+          "lost": 9,
+          "n_episodes": 100,
+          "reference_successes": 69,
+          "student_successes": 88
+        },
+        "ppo": {
+          "gained": 1,
+          "lost": 14,
+          "n_episodes": 100,
+          "reference_successes": 97,
+          "student_successes": 84
+        }
+      },
+      "discordant_teacher_failure_to_student_success": 29,
+      "discordant_teacher_success_to_student_failure": 23,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 0.48845566937989204,
+      "seed": 0,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 8,
+        "successes": 172,
+        "successes_minus_tunnelled_disagreement_or_near": 162,
+        "successes_minus_tunnelled_or_disagreement": 170,
+        "tunnelled_successes": 2
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 166,
+        "successes_minus_tunnelled_disagreement_or_near": 166,
+        "successes_minus_tunnelled_or_disagreement": 166,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "by_assigned_policy": {
+        "gated": {
+          "gained": 28,
+          "lost": 5,
+          "n_episodes": 100,
+          "reference_successes": 69,
+          "student_successes": 92
+        },
+        "ppo": {
+          "gained": 2,
+          "lost": 11,
+          "n_episodes": 100,
+          "reference_successes": 97,
+          "student_successes": 88
+        }
+      },
+      "discordant_teacher_failure_to_student_success": 30,
+      "discordant_teacher_success_to_student_failure": 16,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 0.054076031858869555,
+      "seed": 1,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 7,
+        "successes": 180,
+        "successes_minus_tunnelled_disagreement_or_near": 171,
+        "successes_minus_tunnelled_or_disagreement": 178,
+        "tunnelled_successes": 2
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 166,
+        "successes_minus_tunnelled_disagreement_or_near": 166,
+        "successes_minus_tunnelled_or_disagreement": 166,
+        "tunnelled_successes": 0
+      }
+    },
+    {
+      "by_assigned_policy": {
+        "gated": {
+          "gained": 29,
+          "lost": 7,
+          "n_episodes": 100,
+          "reference_successes": 69,
+          "student_successes": 91
+        },
+        "ppo": {
+          "gained": 2,
+          "lost": 16,
+          "n_episodes": 100,
+          "reference_successes": 97,
+          "student_successes": 83
+        }
+      },
+      "discordant_teacher_failure_to_student_success": 31,
+      "discordant_teacher_success_to_student_failure": 23,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 0.34089094122009733,
+      "seed": 2,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 8,
+        "successes": 174,
+        "successes_minus_tunnelled_disagreement_or_near": 166,
+        "successes_minus_tunnelled_or_disagreement": 174,
+        "tunnelled_successes": 0
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 0,
+        "successes": 166,
+        "successes_minus_tunnelled_disagreement_or_near": 166,
+        "successes_minus_tunnelled_or_disagreement": 166,
+        "tunnelled_successes": 0
+      }
+    }
+  ],
   "seeds": [
     0,
     1,
@@ -1161,6 +1742,7 @@
     "detectors_disagree": [],
     "metrics": {
       "closing_speed_normal_m_s": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1184,10 +1766,12 @@
         "n_over_threshold": 44,
         "p50": 0.29780133358947347,
         "p95": 0.5319446637104004,
+        "success_criterion": true,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "closing_speed_world_z_m_s": {
+        "in_near_test": false,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1211,10 +1795,12 @@
         "n_over_threshold": 46,
         "p50": 0.30008498066662426,
         "p95": 0.5356552430354734,
+        "success_criterion": false,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "lateral_offset_m": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1238,10 +1824,12 @@
         "n_over_threshold": 6,
         "p50": 0.02571731086170617,
         "p95": 0.07260270335878335,
+        "success_criterion": true,
         "threshold": 0.1,
         "unit": "m model scale"
       },
       "rel_tilt_deg": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1265,13 +1853,14 @@
         "n_over_threshold": 17,
         "p50": 3.9647550514642935,
         "p95": 13.10623395713338,
+        "success_criterion": true,
         "threshold": 15.0,
         "unit": "deg"
       }
     },
     "n_detectors_disagree": 0,
     "n_episodes": 600,
-    "n_successes_near_threshold": 24,
+    "n_successes_near_threshold": 23,
     "n_touchdowns": 600,
     "n_tunnelled": 14,
     "outcomes": {
@@ -1281,6 +1870,16 @@
       "off_pad": 6,
       "success": 526,
       "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333337,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
     },
     "success_min_dwell_s": 0.5,
     "successes": 526,
@@ -1294,26 +1893,10 @@
         "seed": 0
       },
       {
-        "episode_seed": 305654731,
-        "index": 39,
-        "margin_fraction": 0.029407441011305102,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
         "episode_seed": 2003775157,
         "index": 45,
         "margin_fraction": 0.02229504594318532,
         "metric": "closing_speed_normal_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
-        "episode_seed": 2003775157,
-        "index": 45,
-        "margin_fraction": 0.025331728349480942,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 0
       },
@@ -1326,14 +1909,6 @@
         "seed": 0
       },
       {
-        "episode_seed": 618785951,
-        "index": 69,
-        "margin_fraction": -0.002643843842933258,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
         "episode_seed": 1395150632,
         "index": 91,
         "margin_fraction": 0.04285317609068873,
@@ -1342,26 +1917,10 @@
         "seed": 0
       },
       {
-        "episode_seed": 1395150632,
-        "index": 91,
-        "margin_fraction": 0.043532364357763864,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
         "episode_seed": 1491716105,
         "index": 153,
         "margin_fraction": 0.03023544407628187,
         "metric": "closing_speed_normal_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
-        "episode_seed": 1491716105,
-        "index": 153,
-        "margin_fraction": 0.028758125014588964,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 0
       },
@@ -1382,26 +1941,10 @@
         "seed": 0
       },
       {
-        "episode_seed": 1568484266,
-        "index": 175,
-        "margin_fraction": 0.033170089975876005,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
         "episode_seed": 1137692218,
         "index": 195,
         "margin_fraction": 0.03406005453645067,
         "metric": "closing_speed_normal_m_s",
-        "outcome": "success",
-        "seed": 0
-      },
-      {
-        "episode_seed": 1137692218,
-        "index": 195,
-        "margin_fraction": 0.025931813185871566,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 0
       },
@@ -1422,14 +1965,6 @@
         "seed": 1
       },
       {
-        "episode_seed": 1292213564,
-        "index": 53,
-        "margin_fraction": 0.02521991931589973,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 1
-      },
-      {
         "episode_seed": 1765714094,
         "index": 80,
         "margin_fraction": 0.012552288129190951,
@@ -1446,14 +1981,6 @@
         "seed": 1
       },
       {
-        "episode_seed": 1905382172,
-        "index": 99,
-        "margin_fraction": 0.004827516730325554,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 1
-      },
-      {
         "episode_seed": 1102052247,
         "index": 101,
         "margin_fraction": 0.016755026008825752,
@@ -1464,24 +1991,8 @@
       {
         "episode_seed": 193962269,
         "index": 109,
-        "margin_fraction": 0.046084830692114,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 1
-      },
-      {
-        "episode_seed": 193962269,
-        "index": 109,
         "margin_fraction": 0.0416509647768773,
         "metric": "lateral_offset_m",
-        "outcome": "success",
-        "seed": 1
-      },
-      {
-        "episode_seed": 1321347680,
-        "index": 127,
-        "margin_fraction": 0.04628988723406513,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 1
       },
@@ -1502,26 +2013,10 @@
         "seed": 2
       },
       {
-        "episode_seed": 1760349828,
-        "index": 12,
-        "margin_fraction": 0.0410355474583296,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 2
-      },
-      {
         "episode_seed": 618785951,
         "index": 69,
         "margin_fraction": 0.042105637404805996,
         "metric": "closing_speed_normal_m_s",
-        "outcome": "success",
-        "seed": 2
-      },
-      {
-        "episode_seed": 618785951,
-        "index": 69,
-        "margin_fraction": 0.04129331910165501,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 2
       },
@@ -1534,14 +2029,6 @@
         "seed": 2
       },
       {
-        "episode_seed": 1532668767,
-        "index": 78,
-        "margin_fraction": 0.012292201483485643,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 2
-      },
-      {
         "episode_seed": 614825645,
         "index": 82,
         "margin_fraction": 0.04860880579066351,
@@ -1550,26 +2037,10 @@
         "seed": 2
       },
       {
-        "episode_seed": 614825645,
-        "index": 82,
-        "margin_fraction": 0.04782650198253202,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 2
-      },
-      {
         "episode_seed": 389537841,
         "index": 87,
         "margin_fraction": 0.023155335417476497,
         "metric": "closing_speed_normal_m_s",
-        "outcome": "success",
-        "seed": 2
-      },
-      {
-        "episode_seed": 389537841,
-        "index": 87,
-        "margin_fraction": 0.022319955864123053,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 2
       },
@@ -1590,14 +2061,6 @@
         "seed": 2
       },
       {
-        "episode_seed": 1491716105,
-        "index": 153,
-        "margin_fraction": 0.03338235594678596,
-        "metric": "closing_speed_world_z_m_s",
-        "outcome": "success",
-        "seed": 2
-      },
-      {
         "episode_seed": 2144808994,
         "index": 174,
         "margin_fraction": 0.048623594471211784,
@@ -1608,88 +2071,172 @@
     ],
     "tunnelled": [
       {
+        "closing_speed_normal_m_s": 0.6217740637354502,
         "episode_seed": 1618105963,
         "index": 143,
+        "lateral_offset_m": 0.016834276690560153,
+        "max_penetration_m": -0.005548853787883769,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 2.834044086491258,
+        "seed": 0,
+        "td_t_episode_analytic_s": 3.5458333333333334,
+        "td_t_episode_contact_s": 3.55
       },
       {
+        "closing_speed_normal_m_s": 0.2988704666453501,
         "episode_seed": 857261509,
         "index": 146,
+        "lateral_offset_m": 0.02270155361518582,
+        "max_penetration_m": -0.005013032849500383,
         "outcome": "success",
-        "seed": 0
+        "rel_tilt_deg": 10.99019818276421,
+        "seed": 0,
+        "td_t_episode_analytic_s": 3.05,
+        "td_t_episode_contact_s": 3.05
       },
       {
+        "closing_speed_normal_m_s": 0.23838019132417962,
         "episode_seed": 1450410311,
         "index": 178,
+        "lateral_offset_m": 0.026654733541365223,
+        "max_penetration_m": -0.005167796821938803,
         "outcome": "success",
-        "seed": 0
+        "rel_tilt_deg": 13.355631669251075,
+        "seed": 0,
+        "td_t_episode_analytic_s": 3.0541666666666667,
+        "td_t_episode_contact_s": 3.0541666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.2595173510638848,
         "episode_seed": 853190055,
         "index": 186,
+        "lateral_offset_m": 0.060484214989726906,
+        "max_penetration_m": -0.006057750842900832,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 16.84681229883731,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.0083333333333333,
+        "td_t_episode_contact_s": 1.0083333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.581245993774737,
         "episode_seed": 1195033505,
         "index": 22,
+        "lateral_offset_m": 0.1271468988967136,
+        "max_penetration_m": -0.00540696630719351,
         "outcome": "off_pad",
-        "seed": 1
+        "rel_tilt_deg": 19.90391836498795,
+        "seed": 1,
+        "td_t_episode_analytic_s": 0.8791666666666667,
+        "td_t_episode_contact_s": 0.8791666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.33796364246348815,
         "episode_seed": 175912377,
         "index": 72,
+        "lateral_offset_m": 0.033968365916019976,
+        "max_penetration_m": -0.005691289205947052,
         "outcome": "success",
-        "seed": 1
+        "rel_tilt_deg": 9.813099181357488,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.3541666666666667,
+        "td_t_episode_contact_s": 1.3541666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.42721282147800144,
         "episode_seed": 908615276,
         "index": 125,
+        "lateral_offset_m": 0.03276841412715555,
+        "max_penetration_m": -0.0054697690981544015,
         "outcome": "success",
-        "seed": 1
+        "rel_tilt_deg": 12.638419803724155,
+        "seed": 1,
+        "td_t_episode_analytic_s": 3.1125,
+        "td_t_episode_contact_s": 3.1125
       },
       {
+        "closing_speed_normal_m_s": 0.6442415894105596,
         "episode_seed": 1618105963,
         "index": 143,
+        "lateral_offset_m": 0.08886229882101175,
+        "max_penetration_m": -0.005155202221912461,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 7.748602448590575,
+        "seed": 1,
+        "td_t_episode_analytic_s": 0.7833333333333333,
+        "td_t_episode_contact_s": 0.7875
       },
       {
+        "closing_speed_normal_m_s": 0.2369226169439417,
         "episode_seed": 853190055,
         "index": 186,
+        "lateral_offset_m": 0.03619774235663071,
+        "max_penetration_m": -0.0052096391227364185,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 20.572110960390678,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.1541666666666666,
+        "td_t_episode_contact_s": 1.1541666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.20717916658960459,
         "episode_seed": 1712242685,
         "index": 49,
+        "lateral_offset_m": 0.06039754378384553,
+        "max_penetration_m": -0.005138019167236405,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 16.71690014282045,
+        "seed": 2,
+        "td_t_episode_analytic_s": 2.1166666666666667,
+        "td_t_episode_contact_s": 2.1166666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.3547104468398938,
         "episode_seed": 1905388242,
         "index": 102,
+        "lateral_offset_m": 0.06968748994773523,
+        "max_penetration_m": -0.005769001824627746,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 18.01304891980059,
+        "seed": 2,
+        "td_t_episode_analytic_s": 2.65,
+        "td_t_episode_contact_s": 2.654166666666667
       },
       {
+        "closing_speed_normal_m_s": 0.6528352673780398,
         "episode_seed": 1618105963,
         "index": 143,
+        "lateral_offset_m": 0.05203606137882452,
+        "max_penetration_m": -0.007244167781888818,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 0.08319133170746962,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.8375,
+        "td_t_episode_contact_s": 1.8416666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.5437954270164101,
         "episode_seed": 1574493175,
         "index": 151,
+        "lateral_offset_m": 0.02728042353498157,
+        "max_penetration_m": -0.005174855295009907,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 0.2018504094698441,
+        "seed": 2,
+        "td_t_episode_analytic_s": 3.3041666666666667,
+        "td_t_episode_contact_s": 3.308333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.5341093738043291,
         "episode_seed": 1443729475,
         "index": 162,
+        "lateral_offset_m": 0.06822553372080864,
+        "max_penetration_m": -0.005501301046033262,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 8.999452388513813,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.3041666666666667,
+        "td_t_episode_contact_s": 1.3041666666666667
       }
     ]
   },
@@ -1699,6 +2246,7 @@
     "detectors_disagree": [],
     "metrics": {
       "closing_speed_normal_m_s": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1722,10 +2270,12 @@
         "n_over_threshold": 0,
         "p50": 0.23286542726015208,
         "p95": 0.28153378359742204,
+        "success_criterion": true,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "closing_speed_world_z_m_s": {
+        "in_near_test": false,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1749,10 +2299,12 @@
         "n_over_threshold": 0,
         "p50": 0.23646528554116092,
         "p95": 0.2818457140215263,
+        "success_criterion": false,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "lateral_offset_m": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1776,10 +2328,12 @@
         "n_over_threshold": 0,
         "p50": 0.013536777739393623,
         "p95": 0.03503139381180124,
+        "success_criterion": true,
         "threshold": 0.1,
         "unit": "m model scale"
       },
       "rel_tilt_deg": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1803,6 +2357,7 @@
         "n_over_threshold": 3,
         "p50": 3.6224159654206805,
         "p95": 10.312692926929936,
+        "success_criterion": true,
         "threshold": 15.0,
         "unit": "deg"
       }
@@ -1820,6 +2375,16 @@
       "success": 166,
       "timeout": 31
     },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
+    },
     "success_min_dwell_s": 0.5,
     "successes": 166,
     "successes_near_threshold": [],
@@ -1831,5 +2396,27 @@
     "lateral_offset_max_m": 0.1,
     "rel_vertical_velocity_max_m_s": 0.5,
     "relative_tilt_max_deg": 15.0
+  },
+  "tmix_assignment": {
+    "gated": 100,
+    "ppo": 100
+  },
+  "tmix_reference_outcomes_by_policy": {
+    "gated": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 0,
+      "off_pad": 0,
+      "success": 69,
+      "timeout": 31
+    },
+    "ppo": {
+      "bounce": 0,
+      "crash": 0,
+      "hard_landing": 3,
+      "off_pad": 0,
+      "success": 97,
+      "timeout": 0
+    }
   }
 }

@@ -17,6 +17,7 @@ import eval_support as es
 from ila import p8_adapter
 from ila.eval import above_teacher as at
 from ila.eval import score as sc
+from ila.eval.metrics import mcnemar_exact_p
 
 N = 10
 OUTPUTS = (
@@ -177,10 +178,69 @@ def test_above_teacher_scan_and_audit(small: tuple[sc.ScoreInputs, Path]) -> Non
     }
     assert (root / key).is_file() and (root / "above_teacher" / "audit.md").is_file()
     assert a["teacher_rows"]["metrics"]["closing_speed_normal_m_s"]["n_over_threshold"] == 1
+    # Near test: success criteria only (world-z printed, not tested; dwell reported, not tested).
+    assert not a["student"]["metrics"]["closing_speed_world_z_m_s"]["in_near_test"]
+    assert a["student"]["metrics"]["closing_speed_normal_m_s"]["in_near_test"]
+    assert not a["student"]["success_dwell"]["in_near_test"]
+    # Per-seed recount and exact McNemar from the discordant counts.
+    flagged = {int(s.split(":")[0][1:]) for s in r["seeds_above"].split("|") if s}
+    assert {p["seed"] for p in a["per_seed_recount"] if p["flagged_above_teacher"]} == flagged
+    for p in a["per_seed_recount"]:
+        assert p["teacher"]["successes"] == 9
+        b, c = (
+            p["discordant_teacher_failure_to_student_success"],
+            p["discordant_teacher_success_to_student_failure"],
+        )
+        assert p["mcnemar_exact_p_two_sided"] == mcnemar_exact_p(b, c)
+        assert p["student"]["successes"] - p["teacher"]["successes"] == b - c
     # Re-running is byte-identical.
     before = (root / "above_teacher" / "audit.md").read_bytes()
     at.run_audits(inp)
     assert (root / "above_teacher" / "audit.md").read_bytes() == before
+
+
+def _row(index: int, outcome: str, **kw: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "index": index,
+        "outcome": outcome,
+        "touchdown_contact": "True",
+        "tunnelled": "False",
+        "detectors_disagree": "False",
+        "rel_vz_normal_m_s": -0.2,
+        "rel_vz_world_z_m_s": -0.2,
+        "lateral_offset_m": 0.01,
+        "rel_tilt_deg": 3.0,
+    }
+    return {**base, **kw}
+
+
+def test_recount_known_answer() -> None:
+    """Synthetic rows with a known stricter recount (speeds m/s, lengths m, model scale)."""
+    limits = {
+        "rel_vertical_velocity_max_m_s": 0.5,
+        "lateral_offset_max_m": 0.1,
+        "relative_tilt_max_deg": 15.0,
+        "contact_dwell_min_s": 0.5,
+    }
+    rows = [
+        _row(0, "success"),
+        _row(1, "success", tunnelled="True"),
+        _row(2, "success", detectors_disagree="True", tunnelled="True"),
+        _row(3, "success", rel_tilt_deg=14.5),  # margin 3.3 % -> near
+        _row(4, "success", rel_vz_world_z_m_s=-0.49),  # world z only: not a criterion
+        _row(5, "success", lateral_offset_m=0.0951),  # margin 4.9 % -> near
+        _row(6, "hard_landing", rel_vz_normal_m_s=-0.6, tunnelled="True"),
+        _row(7, "timeout", touchdown_contact="False"),
+    ]
+    assert at.recount(rows, limits) == {
+        "n_episodes": 8,
+        "successes": 6,
+        "tunnelled_successes": 2,
+        "disagreement_successes": 1,
+        "successes_minus_tunnelled_or_disagreement": 4,
+        "near_threshold_successes": 2,
+        "successes_minus_tunnelled_disagreement_or_near": 2,
+    }
 
 
 def test_labelled_frames_from_committed_manifests() -> None:

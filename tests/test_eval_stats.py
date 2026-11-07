@@ -13,7 +13,7 @@ import pytest
 
 from ila import p8_adapter
 from ila.eval import stats
-from ila.eval.metrics import wasserstein_1
+from ila.eval.metrics import mcnemar_exact_p, wasserstein_1
 
 SEED = 20261023
 
@@ -225,3 +225,17 @@ def test_h4_deterministic_and_teacher_is_one_row_set() -> None:
     assert stats.h4_three_arm_bootstrap(bs, b, t).reps == 10000
     with pytest.raises(ValueError):
         stats.h4_three_arm_bootstrap(bs, b, np.vstack([t, t]))
+
+
+# --------------------------------------------------------------------------- exact McNemar
+
+
+def test_mcnemar_exact_known_values() -> None:
+    assert mcnemar_exact_p(0, 0) == 1.0
+    assert mcnemar_exact_p(1, 0) == 1.0  # 2 * P(X <= 0 | n = 1) = 2 * 1/2
+    assert mcnemar_exact_p(3, 1) == pytest.approx(0.625)  # 2 * (1 + 4) / 16
+    assert mcnemar_exact_p(7, 5) == pytest.approx(2 * 1586 / 4096)  # 0.7744...
+    assert mcnemar_exact_p(5, 7) == mcnemar_exact_p(7, 5)
+    assert mcnemar_exact_p(10, 0) == pytest.approx(2 / 1024)
+    with pytest.raises(ValueError):
+        mcnemar_exact_p(-1, 2)

@@ -3,12 +3,12 @@ static,static,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstr
 id,SS3,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 id,SS4,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 id,SS5,bc_state,learned,99.6666666667,99.5,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
-id,SS6,bc_state,learned,,,,withheld
-unseen_seastate,SS6,bc_state,learned,,,,withheld
+id,SS6,bc_state,learned,98.5,97.8333333333,98.8333333333,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
+unseen_seastate,SS6,bc_state,learned,97.1666666667,95.5,98.1666666667,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 unseen_heading,SS3,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 unseen_heading,SS4,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 unseen_heading,SS5,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
-unseen_heading,SS6,bc_state,learned,,,,withheld
+unseen_heading,SS6,bc_state,learned,88.8333333333,85.6666666667,91.6666666667,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 unseen_vessel,SS3,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 unseen_vessel,SS4,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"
 unseen_vessel,SS5,bc_state,learned,100,100,100,"IQM over 5 seeds, stratified-bootstrap 95 % CI"

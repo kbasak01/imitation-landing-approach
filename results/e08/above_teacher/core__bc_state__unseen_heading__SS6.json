@@ -722,6 +722,133 @@
       }
     ]
   },
+  "per_seed_recount": [
+    {
+      "discordant_teacher_failure_to_student_success": 6,
+      "discordant_teacher_success_to_student_failure": 16,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.052478790283203125,
+      "seed": 0,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 2,
+        "successes": 172,
+        "successes_minus_tunnelled_disagreement_or_near": 169,
+        "successes_minus_tunnelled_or_disagreement": 171,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 182,
+        "successes_minus_tunnelled_disagreement_or_near": 180,
+        "successes_minus_tunnelled_or_disagreement": 180,
+        "tunnelled_successes": 2
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 8,
+      "discordant_teacher_success_to_student_failure": 19,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.052238985896110535,
+      "seed": 1,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 2,
+        "successes": 171,
+        "successes_minus_tunnelled_disagreement_or_near": 167,
+        "successes_minus_tunnelled_or_disagreement": 168,
+        "tunnelled_successes": 3
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 182,
+        "successes_minus_tunnelled_disagreement_or_near": 180,
+        "successes_minus_tunnelled_or_disagreement": 180,
+        "tunnelled_successes": 2
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 7,
+      "discordant_teacher_success_to_student_failure": 5,
+      "flagged_above_teacher": true,
+      "mcnemar_exact_p_two_sided": 0.7744140625,
+      "seed": 2,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 4,
+        "successes": 184,
+        "successes_minus_tunnelled_disagreement_or_near": 179,
+        "successes_minus_tunnelled_or_disagreement": 183,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 182,
+        "successes_minus_tunnelled_disagreement_or_near": 180,
+        "successes_minus_tunnelled_or_disagreement": 180,
+        "tunnelled_successes": 2
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 8,
+      "discordant_teacher_success_to_student_failure": 8,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 1.0,
+      "seed": 3,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 3,
+        "successes": 182,
+        "successes_minus_tunnelled_disagreement_or_near": 176,
+        "successes_minus_tunnelled_or_disagreement": 177,
+        "tunnelled_successes": 5
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 182,
+        "successes_minus_tunnelled_disagreement_or_near": 180,
+        "successes_minus_tunnelled_or_disagreement": 180,
+        "tunnelled_successes": 2
+      }
+    },
+    {
+      "discordant_teacher_failure_to_student_success": 4,
+      "discordant_teacher_success_to_student_failure": 7,
+      "flagged_above_teacher": false,
+      "mcnemar_exact_p_two_sided": 0.548828125,
+      "seed": 4,
+      "student": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 179,
+        "successes_minus_tunnelled_disagreement_or_near": 177,
+        "successes_minus_tunnelled_or_disagreement": 178,
+        "tunnelled_successes": 1
+      },
+      "teacher": {
+        "disagreement_successes": 0,
+        "n_episodes": 200,
+        "near_threshold_successes": 1,
+        "successes": 182,
+        "successes_minus_tunnelled_disagreement_or_near": 180,
+        "successes_minus_tunnelled_or_disagreement": 180,
+        "tunnelled_successes": 2
+      }
+    }
+  ],
   "seeds": [
     0,
     1,
@@ -735,6 +862,7 @@
     "detectors_disagree": [],
     "metrics": {
       "closing_speed_normal_m_s": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -758,10 +886,12 @@
         "n_over_threshold": 19,
         "p50": 0.24866869756557375,
         "p95": 0.3033559912022309,
+        "success_criterion": true,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "closing_speed_world_z_m_s": {
+        "in_near_test": false,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -785,10 +915,12 @@
         "n_over_threshold": 22,
         "p50": 0.2505869467647454,
         "p95": 0.3214138839106135,
+        "success_criterion": false,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "lateral_offset_m": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -812,10 +944,12 @@
         "n_over_threshold": 18,
         "p50": 0.015527911059634643,
         "p95": 0.04980282879264384,
+        "success_criterion": true,
         "threshold": 0.1,
         "unit": "m model scale"
       },
       "rel_tilt_deg": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -839,13 +973,14 @@
         "n_over_threshold": 91,
         "p50": 5.6426820363898935,
         "p95": 17.76583513636896,
+        "success_criterion": true,
         "threshold": 15.0,
         "unit": "deg"
       }
     },
     "n_detectors_disagree": 0,
     "n_episodes": 1000,
-    "n_successes_near_threshold": 13,
+    "n_successes_near_threshold": 12,
     "n_touchdowns": 1000,
     "n_tunnelled": 55,
     "outcomes": {
@@ -855,6 +990,16 @@
       "off_pad": 18,
       "success": 888,
       "timeout": 0
+    },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5458333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
     },
     "success_min_dwell_s": 0.5,
     "successes": 888,
@@ -888,14 +1033,6 @@
         "index": 94,
         "margin_fraction": 0.03823624685955096,
         "metric": "rel_tilt_deg",
-        "outcome": "success",
-        "seed": 1
-      },
-      {
-        "episode_seed": 1617680287,
-        "index": 109,
-        "margin_fraction": 0.049605833730051785,
-        "metric": "closing_speed_world_z_m_s",
         "outcome": "success",
         "seed": 1
       },
@@ -966,334 +1103,664 @@
     ],
     "tunnelled": [
       {
+        "closing_speed_normal_m_s": 0.2676518826826856,
         "episode_seed": 1062018751,
         "index": 6,
+        "lateral_offset_m": 0.01899353637909939,
+        "max_penetration_m": -0.00504652351724083,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 17.574524115266225,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.5333333333333332,
+        "td_t_episode_contact_s": 1.5333333333333332
       },
       {
+        "closing_speed_normal_m_s": 0.129101512168892,
         "episode_seed": 1720660241,
         "index": 117,
+        "lateral_offset_m": 0.02757121682279511,
+        "max_penetration_m": -0.0054954527184083255,
         "outcome": "success",
-        "seed": 0
+        "rel_tilt_deg": 12.177661580465601,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.4375,
+        "td_t_episode_contact_s": 1.4375
       },
       {
+        "closing_speed_normal_m_s": 0.6014107045660313,
         "episode_seed": 1864754837,
         "index": 176,
+        "lateral_offset_m": 0.1705958893822788,
+        "max_penetration_m": -0.005047507411127482,
         "outcome": "off_pad",
-        "seed": 0
+        "rel_tilt_deg": 14.781512442380869,
+        "seed": 0,
+        "td_t_episode_analytic_s": 0.9791666666666666,
+        "td_t_episode_contact_s": 0.9833333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.2847027551617487,
         "episode_seed": 1512644369,
         "index": 186,
+        "lateral_offset_m": 0.003071102273217406,
+        "max_penetration_m": -0.005051305240563333,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 17.452122328326563,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.525,
+        "td_t_episode_contact_s": 1.525
       },
       {
+        "closing_speed_normal_m_s": 0.5510061756337203,
         "episode_seed": 1481003762,
         "index": 1,
+        "lateral_offset_m": 0.03609122272357137,
+        "max_penetration_m": -0.007777299521187186,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 19.05992670805366,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.8208333333333333,
+        "td_t_episode_contact_s": 1.825
       },
       {
+        "closing_speed_normal_m_s": 0.2061528147191084,
         "episode_seed": 1086898206,
         "index": 20,
+        "lateral_offset_m": 0.023831020803281516,
+        "max_penetration_m": -0.005151008567863477,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 19.154174079645852,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.7625,
+        "td_t_episode_contact_s": 1.7625
       },
       {
+        "closing_speed_normal_m_s": 0.15767476353714568,
         "episode_seed": 1147483369,
         "index": 37,
+        "lateral_offset_m": 0.014139319847186178,
+        "max_penetration_m": -0.005172298352470751,
         "outcome": "success",
-        "seed": 1
+        "rel_tilt_deg": 12.844833122280823,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.6333333333333333,
+        "td_t_episode_contact_s": 1.6333333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.45676457422463795,
         "episode_seed": 1747314499,
         "index": 61,
+        "lateral_offset_m": 0.02378959447211615,
+        "max_penetration_m": -0.008509090576849334,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 22.42194166986206,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.8333333333333333,
+        "td_t_episode_contact_s": 1.8333333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.09533926181834963,
         "episode_seed": 1349353291,
         "index": 64,
+        "lateral_offset_m": 0.014661926452646974,
+        "max_penetration_m": -0.005750966610349766,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 17.06508316266437,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.5833333333333333,
+        "td_t_episode_contact_s": 1.5833333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.1811731523829522,
         "episode_seed": 1887900598,
         "index": 80,
+        "lateral_offset_m": 0.02169468259414171,
+        "max_penetration_m": -0.005445289469253349,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 16.851702033648692,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.7,
+        "td_t_episode_contact_s": 1.7041666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.2261498674966481,
         "episode_seed": 981337911,
         "index": 94,
+        "lateral_offset_m": 0.016392576455233045,
+        "max_penetration_m": -0.005467157593988576,
         "outcome": "success",
-        "seed": 1
+        "rel_tilt_deg": 14.426456297106736,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.6791666666666667,
+        "td_t_episode_contact_s": 1.6791666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.6353082961254232,
         "episode_seed": 2000482344,
         "index": 97,
+        "lateral_offset_m": 0.0221895025800546,
+        "max_penetration_m": -0.007821648549302847,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 19.319319245976065,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.7416666666666667,
+        "td_t_episode_contact_s": 1.7458333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.5268828042828094,
         "episode_seed": 1457592021,
         "index": 113,
+        "lateral_offset_m": 0.030755560560557685,
+        "max_penetration_m": -0.005025649262720201,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 14.77224442245681,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.4541666666666666,
+        "td_t_episode_contact_s": 1.4541666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.2431136508549672,
         "episode_seed": 1950520823,
         "index": 123,
+        "lateral_offset_m": 0.029654301921345112,
+        "max_penetration_m": -0.005725538524170937,
         "outcome": "success",
-        "seed": 1
+        "rel_tilt_deg": 13.126851322537574,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.5125,
+        "td_t_episode_contact_s": 1.5125
       },
       {
+        "closing_speed_normal_m_s": 0.7236716592902227,
         "episode_seed": 337143381,
         "index": 130,
+        "lateral_offset_m": 0.028491270888844414,
+        "max_penetration_m": -0.006528923685611053,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 21.452566762708244,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.475,
+        "td_t_episode_contact_s": 1.4625
       },
       {
+        "closing_speed_normal_m_s": 0.7260066583015725,
         "episode_seed": 716498899,
         "index": 131,
+        "lateral_offset_m": 0.03281220909586723,
+        "max_penetration_m": -0.008292351252125284,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 19.641234853799318,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.5125,
+        "td_t_episode_contact_s": 1.5166666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.6325487070635166,
         "episode_seed": 727614805,
         "index": 140,
+        "lateral_offset_m": 0.14276531072169482,
+        "max_penetration_m": -0.008174754411906116,
         "outcome": "off_pad",
-        "seed": 1
+        "rel_tilt_deg": 27.270016290820998,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.0458333333333334,
+        "td_t_episode_contact_s": 1.05
       },
       {
+        "closing_speed_normal_m_s": 0.6056740227542408,
         "episode_seed": 2083462816,
         "index": 143,
+        "lateral_offset_m": 0.005023381762207635,
+        "max_penetration_m": -0.006437768403330159,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 24.58381154996114,
+        "seed": 1,
+        "td_t_episode_analytic_s": 0.7458333333333333,
+        "td_t_episode_contact_s": 0.7458333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.5593139378000771,
         "episode_seed": 882215954,
         "index": 167,
+        "lateral_offset_m": 0.17122326939271262,
+        "max_penetration_m": -0.0070040000726739205,
         "outcome": "off_pad",
-        "seed": 1
+        "rel_tilt_deg": 24.2410658221304,
+        "seed": 1,
+        "td_t_episode_analytic_s": 0.825,
+        "td_t_episode_contact_s": 0.8291666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.3091768939850154,
         "episode_seed": 1462283131,
         "index": 169,
+        "lateral_offset_m": 0.021697785909419814,
+        "max_penetration_m": -0.005040406266663103,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 15.044461081708942,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.5583333333333333,
+        "td_t_episode_contact_s": 1.5583333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.6009371724428784,
         "episode_seed": 1278380498,
         "index": 177,
+        "lateral_offset_m": 0.050397094425510866,
+        "max_penetration_m": -0.006704575530326731,
         "outcome": "hard_landing",
-        "seed": 1
+        "rel_tilt_deg": 20.623225750971528,
+        "seed": 1,
+        "td_t_episode_analytic_s": 1.35,
+        "td_t_episode_contact_s": 1.35
       },
       {
+        "closing_speed_normal_m_s": 0.09677392701776825,
         "episode_seed": 1481003762,
         "index": 1,
+        "lateral_offset_m": 0.012942993126752135,
+        "max_penetration_m": -0.005471236474997508,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 17.502659734017193,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.5833333333333333,
+        "td_t_episode_contact_s": 1.5833333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.2614473203438699,
         "episode_seed": 1062018751,
         "index": 6,
+        "lateral_offset_m": 0.018132654635561265,
+        "max_penetration_m": -0.005606380435339548,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 19.652400647001013,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.6541666666666666,
+        "td_t_episode_contact_s": 1.6541666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.11678291393944226,
         "episode_seed": 1887900598,
         "index": 80,
+        "lateral_offset_m": 0.035017744901147466,
+        "max_penetration_m": -0.005125522905076586,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 16.477448305860214,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.5625,
+        "td_t_episode_contact_s": 1.5625
       },
       {
+        "closing_speed_normal_m_s": 0.18178967793808118,
         "episode_seed": 981337911,
         "index": 94,
+        "lateral_offset_m": 0.013902931272622066,
+        "max_penetration_m": -0.005530056676001962,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 15.3279967627233,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.6416666666666666,
+        "td_t_episode_contact_s": 1.6416666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.06673774503017338,
         "episode_seed": 1720660241,
         "index": 117,
+        "lateral_offset_m": 0.012305162152286919,
+        "max_penetration_m": -0.0051954573906605106,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 16.933542455146355,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.5875,
+        "td_t_episode_contact_s": 1.5916666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.2771054186006386,
         "episode_seed": 2083462816,
         "index": 143,
+        "lateral_offset_m": 0.02657463890894843,
+        "max_penetration_m": -0.006189607756049194,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 25.641264303832664,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.75,
+        "td_t_episode_contact_s": 1.75
       },
       {
+        "closing_speed_normal_m_s": 0.17468594907472593,
         "episode_seed": 558255268,
         "index": 162,
+        "lateral_offset_m": 0.019398875879913558,
+        "max_penetration_m": -0.005109172872709173,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 18.595928239564515,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.8375,
+        "td_t_episode_contact_s": 1.8375
       },
       {
+        "closing_speed_normal_m_s": 0.2331774475975589,
         "episode_seed": 882215954,
         "index": 167,
+        "lateral_offset_m": 0.008782264834621595,
+        "max_penetration_m": -0.005958889679839502,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 20.772871341864697,
+        "seed": 2,
+        "td_t_episode_analytic_s": 1.8208333333333333,
+        "td_t_episode_contact_s": 1.8208333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.3259801675557029,
         "episode_seed": 1278380498,
         "index": 177,
+        "lateral_offset_m": 0.020148978616781395,
+        "max_penetration_m": -0.007015773566900432,
         "outcome": "hard_landing",
-        "seed": 2
+        "rel_tilt_deg": 24.403377015588894,
+        "seed": 2,
+        "td_t_episode_analytic_s": 2.120833333333333,
+        "td_t_episode_contact_s": 2.120833333333333
       },
       {
+        "closing_speed_normal_m_s": 0.26376042752996187,
         "episode_seed": 1859317951,
         "index": 180,
+        "lateral_offset_m": 0.0251484824266275,
+        "max_penetration_m": -0.005266631095722059,
         "outcome": "success",
-        "seed": 2
+        "rel_tilt_deg": 13.358595869426804,
+        "seed": 2,
+        "td_t_episode_analytic_s": 2.558333333333333,
+        "td_t_episode_contact_s": 2.558333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.19286629716283302,
         "episode_seed": 1062018751,
         "index": 6,
+        "lateral_offset_m": 0.021192349883740857,
+        "max_penetration_m": -0.00780048329209223,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 16.54574180168868,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.4666666666666666,
+        "td_t_episode_contact_s": 1.4666666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.24000345040357016,
         "episode_seed": 1399244713,
         "index": 9,
+        "lateral_offset_m": 0.014989069575660978,
+        "max_penetration_m": -0.005724058320894606,
         "outcome": "success",
-        "seed": 3
+        "rel_tilt_deg": 14.373155463615513,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.7458333333333333,
+        "td_t_episode_contact_s": 1.7458333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.48076440735813186,
         "episode_seed": 1747314499,
         "index": 61,
+        "lateral_offset_m": 0.025222879368033455,
+        "max_penetration_m": -0.0074128319193907674,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 22.485901623098123,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.9458333333333333,
+        "td_t_episode_contact_s": 1.9166666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.09756631691879046,
         "episode_seed": 656059954,
         "index": 93,
+        "lateral_offset_m": 0.010819263135653154,
+        "max_penetration_m": -0.005264527365138554,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 17.60833081689446,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.9124999999999999,
+        "td_t_episode_contact_s": 1.9124999999999999
       },
       {
+        "closing_speed_normal_m_s": 0.18493009281478262,
         "episode_seed": 981337911,
         "index": 94,
+        "lateral_offset_m": 0.015257425655076973,
+        "max_penetration_m": -0.00547676625529908,
         "outcome": "success",
-        "seed": 3
+        "rel_tilt_deg": 11.542279966880944,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.5666666666666667,
+        "td_t_episode_contact_s": 1.5666666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.14308612286210712,
         "episode_seed": 511532256,
         "index": 118,
+        "lateral_offset_m": 0.02091967762796341,
+        "max_penetration_m": -0.0054318696514204234,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 16.879589130199296,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.7,
+        "td_t_episode_contact_s": 1.7
       },
       {
+        "closing_speed_normal_m_s": 0.29557974827731287,
         "episode_seed": 1508199350,
         "index": 120,
+        "lateral_offset_m": 0.0349020809815335,
+        "max_penetration_m": -0.005224491012399508,
         "outcome": "success",
-        "seed": 3
+        "rel_tilt_deg": 8.540310887722006,
+        "seed": 3,
+        "td_t_episode_analytic_s": 2.2541666666666664,
+        "td_t_episode_contact_s": 2.2541666666666664
       },
       {
+        "closing_speed_normal_m_s": 0.41025831769256654,
         "episode_seed": 727614805,
         "index": 140,
+        "lateral_offset_m": 0.0872566639399265,
+        "max_penetration_m": -0.005054933354997164,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 25.731298052558866,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.2166666666666666,
+        "td_t_episode_contact_s": 1.2208333333333332
       },
       {
+        "closing_speed_normal_m_s": 0.15102943812689648,
         "episode_seed": 558255268,
         "index": 162,
+        "lateral_offset_m": 0.006111823266598164,
+        "max_penetration_m": -0.005531507882405499,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 18.592930501849334,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.7166666666666666,
+        "td_t_episode_contact_s": 1.7166666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.47839516072221405,
         "episode_seed": 1278380498,
         "index": 177,
+        "lateral_offset_m": 0.0642867511071818,
+        "max_penetration_m": -0.005239747565935049,
         "outcome": "hard_landing",
-        "seed": 3
+        "rel_tilt_deg": 22.951126214948836,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.3833333333333333,
+        "td_t_episode_contact_s": 1.3833333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.6804537963359993,
         "episode_seed": 1859317951,
         "index": 180,
+        "lateral_offset_m": 0.1554513698135424,
+        "max_penetration_m": -0.0061837704277665296,
         "outcome": "off_pad",
-        "seed": 3
+        "rel_tilt_deg": 20.508350215573216,
+        "seed": 3,
+        "td_t_episode_analytic_s": 4.125,
+        "td_t_episode_contact_s": 4.125
       },
       {
+        "closing_speed_normal_m_s": 0.25629595914317455,
         "episode_seed": 755700773,
         "index": 181,
+        "lateral_offset_m": 0.01966024035638658,
+        "max_penetration_m": -0.005629962073840667,
         "outcome": "success",
-        "seed": 3
+        "rel_tilt_deg": 6.970225939900826,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.9041666666666666,
+        "td_t_episode_contact_s": 1.9041666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.20905243482436967,
         "episode_seed": 1512644369,
         "index": 186,
+        "lateral_offset_m": 0.018544315605671668,
+        "max_penetration_m": -0.0054574665498687775,
         "outcome": "success",
-        "seed": 3
+        "rel_tilt_deg": 14.724149869340346,
+        "seed": 3,
+        "td_t_episode_analytic_s": 1.5583333333333333,
+        "td_t_episode_contact_s": 1.5583333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.3351436414711446,
         "episode_seed": 1481003762,
         "index": 1,
+        "lateral_offset_m": 0.015125281728217317,
+        "max_penetration_m": -0.005308363207689702,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 19.399794417626822,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.9,
+        "td_t_episode_contact_s": 1.9
       },
       {
+        "closing_speed_normal_m_s": 0.18571353236070354,
         "episode_seed": 1062018751,
         "index": 6,
+        "lateral_offset_m": 0.016217444406703255,
+        "max_penetration_m": -0.005404133916660155,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 18.135761971985403,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.6875,
+        "td_t_episode_contact_s": 1.6875
       },
       {
+        "closing_speed_normal_m_s": 0.16610667924730566,
         "episode_seed": 1887900598,
         "index": 80,
+        "lateral_offset_m": 0.05074578173154049,
+        "max_penetration_m": -0.005166041691214268,
         "outcome": "success",
-        "seed": 4
+        "rel_tilt_deg": 9.311338752748163,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.3916666666666666,
+        "td_t_episode_contact_s": 1.3916666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.1107856656033964,
         "episode_seed": 511532256,
         "index": 118,
+        "lateral_offset_m": 0.014773152846470503,
+        "max_penetration_m": -0.00513726389052207,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 16.70269512268038,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.8,
+        "td_t_episode_contact_s": 1.8
       },
       {
+        "closing_speed_normal_m_s": 0.08422107419859898,
         "episode_seed": 792119182,
         "index": 122,
+        "lateral_offset_m": 0.057700620699462836,
+        "max_penetration_m": -0.005183348586324482,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 17.753807553008837,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.5416666666666667,
+        "td_t_episode_contact_s": 1.5416666666666667
       },
       {
+        "closing_speed_normal_m_s": 0.7528210895336191,
         "episode_seed": 727614805,
         "index": 140,
+        "lateral_offset_m": 0.09648361688065017,
+        "max_penetration_m": -0.011171201819454794,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 23.343660631996357,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.1166666666666667,
+        "td_t_episode_contact_s": 1.1208333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.5745201695494133,
         "episode_seed": 2083462816,
         "index": 143,
+        "lateral_offset_m": 0.00423648611377428,
+        "max_penetration_m": -0.006589207399909151,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 19.98163127466552,
+        "seed": 4,
+        "td_t_episode_analytic_s": 0.8041666666666667,
+        "td_t_episode_contact_s": 0.8083333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.49423036678341026,
         "episode_seed": 882215954,
         "index": 167,
+        "lateral_offset_m": 0.11560866437024532,
+        "max_penetration_m": -0.006139055466591202,
         "outcome": "off_pad",
-        "seed": 4
+        "rel_tilt_deg": 17.76391158664031,
+        "seed": 4,
+        "td_t_episode_analytic_s": 0.9125,
+        "td_t_episode_contact_s": 0.9125
       },
       {
+        "closing_speed_normal_m_s": 0.7216948383177986,
         "episode_seed": 1864754837,
         "index": 176,
+        "lateral_offset_m": 0.16186380866398975,
+        "max_penetration_m": -0.006786593268419303,
         "outcome": "off_pad",
-        "seed": 4
+        "rel_tilt_deg": 18.28231460623669,
+        "seed": 4,
+        "td_t_episode_analytic_s": 0.9125,
+        "td_t_episode_contact_s": 0.9166666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.5396748618724367,
         "episode_seed": 1278380498,
         "index": 177,
+        "lateral_offset_m": 0.04160759418642315,
+        "max_penetration_m": -0.008225337926036302,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 20.84021326044429,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.2625,
+        "td_t_episode_contact_s": 1.2666666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.17292173927088442,
         "episode_seed": 2049299585,
         "index": 199,
+        "lateral_offset_m": 0.009730025540363044,
+        "max_penetration_m": -0.005361178009790067,
         "outcome": "hard_landing",
-        "seed": 4
+        "rel_tilt_deg": 17.569381965940497,
+        "seed": 4,
+        "td_t_episode_analytic_s": 1.4041666666666666,
+        "td_t_episode_contact_s": 1.4041666666666666
       }
     ]
   },
@@ -1303,6 +1770,7 @@
     "detectors_disagree": [],
     "metrics": {
       "closing_speed_normal_m_s": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1326,10 +1794,12 @@
         "n_over_threshold": 0,
         "p50": 0.24195149311546765,
         "p95": 0.28023427464410194,
+        "success_criterion": true,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "closing_speed_world_z_m_s": {
+        "in_near_test": false,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1353,10 +1823,12 @@
         "n_over_threshold": 0,
         "p50": 0.24475178969568911,
         "p95": 0.28614345044704614,
+        "success_criterion": false,
         "threshold": 0.5,
         "unit": "m/s model scale"
       },
       "lateral_offset_m": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1380,10 +1852,12 @@
         "n_over_threshold": 1,
         "p50": 0.016702006338021207,
         "p95": 0.045907487099655926,
+        "success_criterion": true,
         "threshold": 0.1,
         "unit": "m model scale"
       },
       "rel_tilt_deg": {
+        "in_near_test": true,
         "margin_histogram": {
           "bin_edges_fraction_of_threshold": [
             "-inf",
@@ -1407,6 +1881,7 @@
         "n_over_threshold": 16,
         "p50": 5.489130043588814,
         "p95": 16.31358886388613,
+        "success_criterion": true,
         "threshold": 15.0,
         "unit": "deg"
       }
@@ -1424,6 +1899,16 @@
       "success": 182,
       "timeout": 0
     },
+    "success_dwell": {
+      "in_near_test": false,
+      "max": 0.5333333333333334,
+      "min": 0.5,
+      "n_successes_not_ending_dwell_complete": 0,
+      "note": "dwell (contact >= 0.5 s) is a success criterion but not in the near test: a success ends at termination_reason dwell_complete, so its dwell sits just above 0.5 s by construction and carries no landing-quality margin; the observed range and the count of successes not ending at dwell_complete are reported instead",
+      "success_criterion": true,
+      "threshold": 0.5,
+      "unit": "s model scale"
+    },
     "success_min_dwell_s": 0.5,
     "successes": 182,
     "successes_near_threshold": [
@@ -1438,52 +1923,100 @@
     ],
     "tunnelled": [
       {
+        "closing_speed_normal_m_s": 0.2521284013644109,
         "episode_seed": 1062018751,
         "index": 6,
+        "lateral_offset_m": 0.03301041833097947,
+        "max_penetration_m": -0.005801229676134503,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 20.021298903495524,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.6583333333333332,
+        "td_t_episode_contact_s": 1.6583333333333332
       },
       {
+        "closing_speed_normal_m_s": 0.20683992280505725,
         "episode_seed": 1399244713,
         "index": 9,
+        "lateral_offset_m": 0.013098457764907373,
+        "max_penetration_m": -0.0051092831156799535,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 17.460163013777198,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.9083333333333332,
+        "td_t_episode_contact_s": 1.9083333333333332
       },
       {
+        "closing_speed_normal_m_s": 0.23949600490877485,
         "episode_seed": 1086898206,
         "index": 20,
+        "lateral_offset_m": 0.026407687170352145,
+        "max_penetration_m": -0.005723488301496387,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 17.054738801843275,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.7791666666666666,
+        "td_t_episode_contact_s": 1.7791666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.1003631073966029,
         "episode_seed": 1349353291,
         "index": 64,
+        "lateral_offset_m": 0.017057089894359584,
+        "max_penetration_m": -0.006002466082346556,
         "outcome": "success",
-        "seed": 0
+        "rel_tilt_deg": 14.257259882469741,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.8208333333333333,
+        "td_t_episode_contact_s": 1.8208333333333333
       },
       {
+        "closing_speed_normal_m_s": 0.1029652035022494,
         "episode_seed": 1887900598,
         "index": 80,
+        "lateral_offset_m": 0.03629006627311752,
+        "max_penetration_m": -0.005466820276564239,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 16.00473956181954,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.5291666666666666,
+        "td_t_episode_contact_s": 1.5291666666666666
       },
       {
+        "closing_speed_normal_m_s": 0.20611236177893866,
         "episode_seed": 2056594373,
         "index": 84,
+        "lateral_offset_m": 0.01060473961583875,
+        "max_penetration_m": -0.0063931041998841805,
         "outcome": "success",
-        "seed": 0
+        "rel_tilt_deg": 10.527170684305412,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.6,
+        "td_t_episode_contact_s": 1.6
       },
       {
+        "closing_speed_normal_m_s": 0.21915748446140493,
         "episode_seed": 981337911,
         "index": 94,
+        "lateral_offset_m": 0.005923219231849422,
+        "max_penetration_m": -0.00625342952994731,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 16.286112468989643,
+        "seed": 0,
+        "td_t_episode_analytic_s": 1.5875,
+        "td_t_episode_contact_s": 1.5875
       },
       {
+        "closing_speed_normal_m_s": 0.12914043758607127,
         "episode_seed": 727614805,
         "index": 140,
+        "lateral_offset_m": 0.02355634563725052,
+        "max_penetration_m": -0.0051519642984397835,
         "outcome": "hard_landing",
-        "seed": 0
+        "rel_tilt_deg": 24.228699559933006,
+        "seed": 0,
+        "td_t_episode_analytic_s": 2.0666666666666664,
+        "td_t_episode_contact_s": 2.0666666666666664
       }
     ]
   },

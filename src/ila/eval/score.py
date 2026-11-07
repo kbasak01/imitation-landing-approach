@@ -1143,8 +1143,18 @@ def _post_hoc_iqm(name: str, hypothesis: str, a: _Side, b: _Side) -> dict[str, A
     )
 
 
-def _rel_p95(name: str, hypothesis: str, a: _Side, b: _Side, *, note: str = "") -> dict[str, Any]:
+def _rel_p95(
+    name: str,
+    hypothesis: str,
+    a: _Side,
+    b: _Side,
+    *,
+    note: str = "",
+    names: tuple[str, str] | None = None,
+) -> dict[str, Any]:
+    """Relative p95 closing-speed contrast; ``names`` label the sides when both are one arm."""
     r = st.relative_p95(a.speeds, b.speeds)
+    na, nb = names if names is not None else (a.m.arm, b.m.arm)
     return _contrast_record(
         name,
         "descriptive, unscored",
@@ -1160,11 +1170,11 @@ def _rel_p95(name: str, hypothesis: str, a: _Side, b: _Side, *, note: str = "") 
         n_seeds_a=r.n_seeds_a,
         n_seeds_b=r.n_seeds_b,
         n_episodes=r.n_episodes,
-        reading=reading(r.lo, r.hi, a.m.arm, b.m.arm, up="softer than", down="harder than"),
+        reading=reading(r.lo, r.hi, na, nb, up="softer than", down="harder than"),
         status="computed",
         note=(
-            f"p95 closing speed (deck normal, m/s model scale): {a.m.arm} {fmt(r.p95_a)}, "
-            f"{b.m.arm} {fmt(r.p95_b)}; touchdowns {r.n_touchdowns_a} / {r.n_touchdowns_b}; "
+            f"p95 closing speed (deck normal, m/s model scale): {na} {fmt(r.p95_a)}, "
+            f"{nb} {fmt(r.p95_b)}; touchdowns {r.n_touchdowns_a} / {r.n_touchdowns_b}; "
             f"undefined replicates {r.n_reps_undefined}" + (f"; {note}" if note else "")
         ),
         inputs=_inputs(a, b),
@@ -1391,6 +1401,7 @@ def _score_h3(index: CellIndex, out: _Scored) -> None:
         s1,
         s8,
         note="same checkpoints; P8's function resamples seeds per side (not jointly)",
+        names=("dp Ta=1", "dp Ta=8"),
     )
     out.contrasts.append({**rel, "a": "dp Ta=1", "b": "dp Ta=8"})
 

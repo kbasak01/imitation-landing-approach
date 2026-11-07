@@ -1,4 +1,4 @@
 panel,x,series,kind,point,lo,hi,note
-id SS6,H4,D = P - I,scored,,,,withheld
-id SS6,H4 P,P = S(bc_state) - S(bc),component of the scored H4,,,,withheld
-id SS6,H4 I,I = S(teacher) - S(bc_state),component of the scored H4,,,,withheld
+id SS6,H4,D = P - I,scored,9.4,5.6,13.5,"three-arm bootstrap, 10 000 reps"
+id SS6,H4 P,P = S(bc_state) - S(bc),component of the scored H4,9.5,6.1,13.3,"three-arm bootstrap, 10 000 reps"
+id SS6,H4 I,I = S(teacher) - S(bc_state),component of the scored H4,0.1,-1.1,1.4,"three-arm bootstrap, 10 000 reps"

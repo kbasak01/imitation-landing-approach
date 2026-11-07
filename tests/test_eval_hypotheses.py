@@ -471,9 +471,11 @@ def test_h4_supported() -> None:
     b = _beside(r)
     assert b["perception gap P"].startswith("+35.0 points")
     assert b["imitation gap I"].startswith("+3.5 points")
+    # Teacher at 197/200: I cannot fall below -0.015 (stated beside I and as a caveat).
+    assert b["imitation gap I"].endswith("ceiling-limited: I >= -1.5 points (teacher at 98.5 %)")
     assert b["SS6 flip floor"] == hy.FLIP_FLOOR
     assert r.n_seeds == (("bc_state", 5), ("bc", 5), ("teacher ppo s0", 1))
-    for fragment in ("time_fraction", "fp32", "teacher seed 0", "seed-dependent"):
+    for fragment in ("time_fraction", "fp32", "teacher seed 0", "seed-dependent", "-0.015"):
         assert any(fragment in c for c in r.caveats), fragment
 
 
