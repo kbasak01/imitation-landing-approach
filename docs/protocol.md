@@ -3281,7 +3281,7 @@ was changed.
   `configs/eval/matrix.yaml`, including ablation `obs_variant` pass-through and `modular`'s CPU path.
   Then `privileged-leak-auditor` reviews it before any frozen list is flown.
 
-### P8-D1 — Evaluation matrix, scoring and above-teacher review (2026-11-06)
+### P8-D1 — Evaluation matrix, scoring and above-teacher review (2026-11-06; revised 2026-11-06 after the results-skeptic pre-gate review)
 *Decision.* The full Phase 8 matrix was flown once, scored under P3-D1 exactly, and every
 above-teacher cell was audited and reviewed before release. Nothing was re-flown, re-selected or
 re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer frames), model scale
@@ -3327,8 +3327,19 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
      supported.
    - Ceiling test: the reference arm's mean over seeds × episodes (the contrast's own quantity),
      printed beside. Ceiling and opposite direction together: the opposite-direction note is kept
-     and the ceiling sentence goes to the caveats. Beside a ceiling-limited verdict: H1-SS6 beside
-     H1, H1-DART-SS6 beside H1-DART-SS5.
+     and the ceiling sentence goes to the caveats.
+   - **Ceiling reading** (results-skeptic S1, 2026-11-06). P3-D1 §6 gives the printed form of a
+     ceiling-limited *null* ("not supported (ceiling-limited: …)", SS6 secondary beside it). It
+     does not say what to print when the rule gives "inconclusive" under the ceiling, which is
+     what H1 and H1-DART-SS5 give. Reading:
+     - the rule's verdict is kept (no verdict changes);
+     - the ceiling-limited wording is printed as a caveat with the largest attainable gain,
+       1 − the reference arm's rate, computed by the scorer from the rows: 4.0 points for H1
+       (`bc_matched` 960/1000 at `id` SS5) and 4.3 for H1-DART-SS5 (`bc` 957/1000), both below
+       +5, so "supported" was unattainable (`hypotheses.json` caveats);
+     - the SS6 secondary is attached whenever the ceiling applies, whatever the verdict: H1-SS6
+       beside H1, H1-DART-SS6 beside H1-DART-SS5 (before the review, only beside a "not
+       supported"). `hypotheses.json` records `ceiling_limited` per hypothesis.
    - Touched down = finite `time_to_touchdown_s`. P′ and `modular` vs best end-to-end: P8
      `paired_bootstrap`, two-sided, unscored. H1's labelled frames are per arm per seed.
    - Seed counts are enforced (core 0–4, ablations 0–2).
@@ -3343,7 +3354,9 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
 4. **Leak review** (`privileged-leak-auditor`, 2026-11-05, on `9c7ed79`): no LEAK, 2 RISK, 8 NOTE.
    - RISK 1, `obs_variant` not checked against the arm at run time for arms without a recorded
      variant: fixed in `6a8623d` (`verify_checkpoint_bytes` checks the checkpoint's arm and
-     `obs_variant` before every job). All 73 selected checkpoints were already consistent.
+     `obs_variant` before every job). All 71 selected checkpoints were already consistent:
+     35 core + 33 ablation + 3 R1 (`selection_pins.json`). This entry said 73 until the
+     results-skeptic pre-gate review (M1); 71 is the pinned count.
    - RISK 2, selections not pinned across resumed invocations: fixed in `6a8623d` (selection
      pins in `run_info.json`, `selection_pins.json`).
    - NOTEs: the shadow teacher is clean (`dp`, `modular` and `bc_plus_clock` rows byte-identical
@@ -3381,8 +3394,11 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
      | `appearance_shift bc_dagger id SS6 shift-mount_tilt_m2` | MINOR | s0: 198/197 → 197/197 → 193/197 | 1.000 |
 
      Source: `above_teacher/<cell>.json` `per_seed_recount` (and `audit.md`).
-   - Only `bc_mix` id SS6 stays above its reference after removing tunnelled and disagreement
-     successes. Its gained episodes are `T_mix` timeouts: 85 of 90 teacher-failure →
+   - Only `bc_mix` id SS6 stays above its reference at IQM. After B (tunnelled and
+     disagreement successes removed), two flagged seeds of other cells also stay above in that
+     seed: `bc_mix` id SS5 s1 (189 vs 187, +2) and `bc_state` unseen_heading SS6 s2 (183 vs 180,
+     +3) (`per_seed_recount`; corrected after the pre-gate review, S2). `bc_mix` id SS6's gained
+     episodes are `T_mix` timeouts: 85 of 90 teacher-failure →
      student-success seed-episodes, all `gated`-assigned with `ppo` landing them (28 / 28 / 29
      per seed); the other 5 are `ppo`-assigned hard landings that `gated` timed out
      (`ablation__bc_mix__id__SS6.json`). It is below P8 `ppo` s0 (IQM 0.877 vs 0.985) and above
@@ -3411,6 +3427,22 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
        "not above ppo s0, the better of its two teachers" (`bc_mix` is above `gated` alone), and
        "unpaired reading" added to the SS5 `gated` comparison.
      - NOTE: H4's I is ceiling-limited (item 8).
+   - **Changes after the pre-gate review** (results-skeptic, 2026-11-06):
+     - The audit reports grace-used successes (`contact_events > 1` among successes; P8 counts a
+       new contact event only after a gap longer than the 50 ms contact-loss grace), per cell and
+       per seed, counted and removed from nothing. Flagged student seeds: 0–2
+       (`bc_dagger` mount_tilt_m2 s0 2; `bc_state` unseen_heading s2 1; `bc_mix` SS5 s1 1;
+       `bc_mix` SS6 s0 1; the other flagged seeds 0). Teacher: 0 in four cells, 1 in two
+       (`ppo` s0 unseen_seastate SS6 index 15; `T_mix` id SS5 index 119), so the review's
+       "teacher 0 in every flagged cell" holds for four of six (`audit.md`, `*.json`
+       `grace_used_successes`).
+     - `run_audits` no longer deletes `reviewed.json`: its stale-audit sweep removed every
+       `*.json` that was not a flagged cell's audit, which included the review record (test
+       added).
+     - `reviewed.json` (recorded in its `source`): the `bc_state` unseen_heading SS6 finding gains
+       P8's flip-floor sentence, stated as measured on `id` SS6 only (M7); in the `bc_mix` id SS5
+       finding, "Unpaired reading:" now opens the IQM sentence, so it covers all three
+       IQM-vs-reference comparisons (`T_mix`, `ppo` s0, `gated`).
      - Not a review item: the H3 relative-p95 row's reading said "dp softer than dp"; it now
        names "dp Ta=1" and "dp Ta=8" (`contrasts.csv`; estimate unchanged).
 8. **Hypotheses** (`hypotheses.csv`; verdict words P3-D1's; no multiplicity correction; every
@@ -3431,10 +3463,19 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
    Caveats stated with each (verbatim in `hypotheses.json` and `results.md` §5):
    - **H1:** P8's `paired_bootstrap` treats seeds as unpaired, conservative because both arms
      share iteration 0; the arms differ only in who chose the actions on the second 1 000;
-     `bc_matched` is above 95 % at `id` SS5 (96.0 %); labelled frames `bc_dagger` 616 053,
-     `bc_matched` 614 365. The primary is inconclusive; only the SS6 secondary is supported.
-   - **H1-DART:** equal N = 1 000 on the same starting conditions; `bc` above 95 % at SS5
-     (95.7 %); `bc_dart` − `bc_matched` is descriptive (unequal data).
+     labelled frames `bc_dagger` 616 053, `bc_matched` 614 365. **Ceiling-limited** (item 3):
+     `bc_matched` is at 96.0 % (960/1000) at `id` SS5, so the largest attainable gain is 4.0
+     points, below +5, and "supported" was unattainable; the rule's verdict (inconclusive) is
+     kept and H1-SS6 is printed beside it. The primary is inconclusive; only the SS6 secondary is
+     supported.
+   - **H1-SS6:** it clears +5 by 9 seed-episodes. Printed beside it, descriptive (no CI): with
+     P8-tunnelled successes removed (`bc_dagger` 14, `bc_matched` 6) the difference is +5.1
+     points (938 vs 887 of 1000). The verdict uses success as P8 scores it and is unchanged
+     (pre-gate review M10). The same line is printed beside H1 and both DART contrasts.
+   - **H1-DART:** equal N = 1 000 on the same starting conditions; `bc_dart` − `bc_matched` is
+     descriptive (unequal data). **Ceiling-limited** at SS5: `bc` is at 95.7 % (957/1000), so
+     the largest attainable gain is 4.3 points and "supported" was unattainable; the verdict
+     (inconclusive) is kept and H1-DART-SS6 is printed beside it.
    - **H2:** 3 seeds per arm; mixture 500 : 478 episodes but about 1 : 2 by frames; all 22
      filtered episodes `gated`; `last_action` can reveal the mode; W₁'s bias grows as touchdowns
      fall; `dp_mix`'s gain over `dp` is not shown to come from multimodality; `select` W₁ is not
@@ -3442,6 +3483,14 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
    - **H3:** checkpoints selected at Ta = 8; Ta = 1 without ensembling can switch modes between
      replans; `dp_minus_last_action` is a competing input-freshness explanation (stale
      `last_action`), so no sentence may say `dp` fails "because of chunking" without naming it.
+     **P6-D5's binding caveat** (added after the pre-gate review, B1; the scorer computes the
+     numbers from the rows): "P6-D5: a Ta contrast cannot attribute the loss to deck motion. On
+     the frozen lists the gain is +53.3 / +53.2 / +47.4 points at SS4 / SS5 / SS6 (Ta = 1 minus
+     Ta = 8, mean over seeds x episodes, same checkpoints; comparing the gains across sea states
+     is an unpaired reading), and `dp` at Ta = 8 succeeds on 41.0 % (410/1000) of the
+     static-deck episodes." Not a claim, a pointer: `dp_pid` (3 seeds, from `pid_feedforward`) at
+     Ta = 8 has IQM 96.5 / 89.2 / 79.8 at `id` SS4–SS6 (`aggregate.csv`), which points to the
+     teacher's actions rather than deck motion; unpaired reading (teacher and data differ).
      `dp` at its frozen Ta = 8 is reported as is; P6-D5's README statements (chunking effect on
      `select`, noise-dominated and optimistic selection, held-out loss not a selection proxy) are
      pointed to from `results.md` §7a.
@@ -3477,3 +3526,44 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
     Makefile target fails on any diff); `make figures` regenerates `results/e08/figures/` from
     committed CSVs with identical SHA-256 on repeat. The released cells now appear in
     `success_vs_seastate` and `h4_gaps`.
+11. **Before you start (Phase 9/10)**, for the README (pre-gate review M11; a note, no code
+    change).
+    - Core `dp` (Ta = 8) and R1 fail the same way, mostly `off_pad`: 1 767 of 2 479 `dp`
+      failures and 1 199 of 1 655 R1 failures at `id` SS3–SS6. Their per-seed median lateral
+      offsets sit around the 0.10 m threshold: 0.076–0.107 m for `dp` (20 seed-cells) and
+      0.096–0.120 m for R1 (12), model scale (`summary.csv` `lateral_p50_m`, `n_off_pad`,
+      `n_success`).
+    - Any README sentence about `dp` must say "this `dp`, distilled from P8 `ppo` s0". Neither
+      that row nor H3 supports a claim about Diffusion Policy in general.
+
+*Review response (results-skeptic pre-gate review of `ae63980`, 2026-11-06; one BLOCKER).*
+- **B1.** H3 now carries P6-D5's deck-motion caveat, with the per-sea-state gains and the
+  static-deck rate computed by the scorer (`hypotheses.json`, `results.md` §5; item 8). Verdict
+  unchanged.
+- **S1.** The ceiling reading is recorded in item 3: the rule's verdict is kept, the ceiling
+  wording is a caveat with the computed largest attainable gain (4.0 / 4.3 points), and the SS6
+  secondary is attached whenever the ceiling applies (H1, H1-DART-SS5). Verdicts unchanged.
+- **S2.** Item 7's sentence was corrected: only `bc_mix` id SS6 stays above at IQM; after B,
+  `bc_mix` SS5 s1 (+2) and `bc_state` unseen_heading SS6 s2 (+3) also stay above.
+- **M1.** 73 → 71 selected checkpoints (item 4).
+- **M2.** `h4_gaps.png`'s caption now states I's ceiling (from the teacher's committed `id` SS6
+  rate) and P8's flip floor.
+- **M3.** The `oracle_gated` legend reads "commit-timing oracle, not a bound".
+- **M4.** `dp_k_sweep.png` (and `h3_ta_curve.png`) now show the y-axis label and the full title.
+- **M5.** `results.md` §6 is split into 6a (core inputs) and 6b (an ablation or `+clock`
+  input), with an input-tag column in both.
+- **M6.** Every learned cell in §7a–e prints N (seeds × episodes); the 6a / 6b tables print
+  seeds per side × episodes.
+- **M7.** The `bc_state` unseen_heading SS6 finding carries the flip-floor sentence (item 7).
+- **M8.** The duplicate `n_success` column is gone from `summary.csv` and `baselines.csv`.
+- **M9.** The verdict note is printed only where it adds a reason ("**Verdict: supported**.",
+  "**Verdict: inconclusive** (CI excludes 0; …)").
+- **M10.** The tunnel-removed difference is printed beside H1-SS6 (+5.1 points) and the other H1
+  contrasts, descriptive (item 8).
+- **M11.** Recorded as a Phase 9/10 before-you-start item (item 11).
+- **On the eval-auditor's edits.** All accepted. "Unpaired reading" now opens the `bc_mix` SS5
+  IQM sentence. Optional grace-used successes are reported (item 7); the review's teacher count
+  holds in four of six cells, not six.
+- **Unchanged.** `hypotheses.csv` (verdict, estimate, CI and every other column) and
+  `contrasts.csv` are byte-identical to `ae63980`; `aggregate.csv`, `above_teacher.csv` and
+  `missing.csv` too.
