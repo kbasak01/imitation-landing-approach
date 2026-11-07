@@ -1,0 +1,4 @@
+panel,x,series,kind,point,lo,hi,note
+id SS6,H4,D = P - I,scored,,,,withheld
+id SS6,H4 P,P = S(bc_state) - S(bc),component of the scored H4,,,,withheld
+id SS6,H4 I,I = S(teacher) - S(bc_state),component of the scored H4,,,,withheld

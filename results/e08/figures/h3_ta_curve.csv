@@ -1,0 +1,31 @@
+panel,x,series,kind,point,lo,hi,note
+id SS4,1,no ensembling,learned,94.1666666667,92.5,96,IQM over 5 seeds
+id SS4,1,ensembling,learned,94.1666666667,92.5,96,IQM over 5 seeds
+id SS4,2,no ensembling,learned,87,86.5,88.1666666667,IQM over 5 seeds
+id SS4,2,ensembling,learned,94.3333333333,91.5,95.6666666667,IQM over 5 seeds
+id SS4,4,no ensembling,learned,58.5,55.6666666667,60.5,IQM over 5 seeds
+id SS4,4,ensembling,learned,82,76.1666666667,85.6666666667,IQM over 5 seeds
+id SS4,8,no ensembling,learned,40,37.1666666667,46,IQM over 5 seeds
+id SS4,8,ensembling,learned,82.8333333333,76.6666666667,86.6666666667,IQM over 5 seeds
+id SS4,12,no ensembling,learned,40.1666666667,35.5,44.6666666667,IQM over 5 seeds
+id SS4,12,ensembling,learned,84.3333333333,80.5,88,IQM over 5 seeds
+id SS5,1,no ensembling,learned,89.1666666667,87.5,91.1666666667,IQM over 5 seeds
+id SS5,1,ensembling,learned,89.1666666667,87.5,91.1666666667,IQM over 5 seeds
+id SS5,2,no ensembling,learned,78.6666666667,76.1666666667,81.3333333333,IQM over 5 seeds
+id SS5,2,ensembling,learned,89.3333333333,85.1666666667,92.5,IQM over 5 seeds
+id SS5,4,no ensembling,learned,51.3333333333,44.5,54.6666666667,IQM over 5 seeds
+id SS5,4,ensembling,learned,76.8333333333,72.3333333333,81,IQM over 5 seeds
+id SS5,8,no ensembling,learned,36.3333333333,32.3333333333,39.8333333333,IQM over 5 seeds
+id SS5,8,ensembling,learned,74,72.3333333333,76.6666666667,IQM over 5 seeds
+id SS5,12,no ensembling,learned,32.5,27.3333333333,41,IQM over 5 seeds
+id SS5,12,ensembling,learned,78.3333333333,75,80.5,IQM over 5 seeds
+id SS6,1,no ensembling,learned,82.1666666667,76.8333333333,84,IQM over 5 seeds
+id SS6,1,ensembling,learned,82.1666666667,76.8333333333,84,IQM over 5 seeds
+id SS6,2,no ensembling,learned,75.1666666667,65.5,78.3333333333,IQM over 5 seeds
+id SS6,2,ensembling,learned,79,75.6666666667,83,IQM over 5 seeds
+id SS6,4,no ensembling,learned,52.3333333333,44.3333333333,56.5,IQM over 5 seeds
+id SS6,4,ensembling,learned,71.6666666667,62.6666666667,76.1666666667,IQM over 5 seeds
+id SS6,8,no ensembling,learned,33.1666666667,30.8333333333,37.5,IQM over 5 seeds
+id SS6,8,ensembling,learned,71.6666666667,62.6666666667,73.8333333333,IQM over 5 seeds
+id SS6,12,no ensembling,learned,34.3333333333,31,38.3333333333,IQM over 5 seeds
+id SS6,12,ensembling,learned,74.3333333333,71.5,76.3333333333,IQM over 5 seeds
