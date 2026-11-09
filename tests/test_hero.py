@@ -111,6 +111,44 @@ def test_header_name_and_labels() -> None:
     assert hero._font(16).size >= 16 and hero._font(18, True).size >= 16
 
 
+def test_outcome_classes_are_p8s() -> None:
+    from ila.train import select as train_select
+
+    assert set(hero.OUTCOME_CLASSES) == set(train_select.OUTCOME_ORDER)
+
+
+@pytest.mark.parametrize("panel", gifs.PANELS)
+@pytest.mark.parametrize("outcome", hero.OUTCOME_CLASSES)
+def test_label_and_badge_never_collide(panel: str, outcome: str) -> None:
+    """Every label x outcome word: badge on its own row under the label, inside the column."""
+    w = hero.CAMERA.width_px
+    label, badge, text = hero.header_boxes(panel, outcome, w)
+    assert label[3] < badge[1]  # the badge's row starts below the label's text
+    for box in (label, badge):
+        assert box[0] >= 0 and box[2] <= w - 6 and box[1] >= 0 and box[3] <= hero.LABEL_H
+    assert badge[0] < text[0] and text[2] < badge[2] and badge[1] < text[1] and text[3] < badge[3]
+
+
+def test_header_boxes_refuse_a_label_that_does_not_fit() -> None:
+    with pytest.raises(ValueError, match="does not fit"):
+        hero.header_boxes("dp", "hard_landing", 120)
+
+
+def test_badge_is_drawn_on_its_own_row() -> None:
+    s = 2
+    cols = [_column(p, 4, s, "hard_landing", k) for k, p in enumerate(gifs.PANELS)]
+    last = np.asarray(hero.compose(_pick(), cols, s)[-1])
+    w = hero.CAMERA.width_px
+    for k, p in enumerate(gifs.PANELS):
+        label, badge, _ = hero.header_boxes(p, "hard_landing", w)
+        y0 = hero.HEADER_H
+        red = np.all(last[y0 : y0 + hero.LABEL_H, k * w : (k + 1) * w] == hero.FAILURE_RGB, axis=2)
+        rows = np.nonzero(red.any(axis=1))[0]
+        assert rows.min() >= int(badge[1]) - 1 > int(label[3])
+        cols_hit = np.nonzero(red.any(axis=0))[0]
+        assert cols_hit.max() <= int(badge[2]) + 1 < w
+
+
 @pytest.mark.parametrize("stride", [1, 2, 3])
 def test_durations_track_model_scale_real_time(stride: int) -> None:
     n = 50

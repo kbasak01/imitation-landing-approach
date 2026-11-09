@@ -1,6 +1,6 @@
 # imitation-landing-approach
 
-**Teaching a camera to land a quadrotor on a heaving ship deck, by imitating a privileged
+**Teaching a rendered camera to land a quadrotor on a heaving ship deck, by imitating a privileged
 controller, in simulation.**
 
 [![ci](https://github.com/kbasak01/imitation-landing-approach/actions/workflows/ci.yml/badge.svg)](https://github.com/kbasak01/imitation-landing-approach/actions/workflows/ci.yml)
@@ -14,7 +14,7 @@ controller, in simulation.**
 right: the P8 `ppo` seed-0 teacher, then three of its vision students (`bc`, `bc_dagger` and `dp`,
 seed 0). The top row is a third-person view. The bottom row is the 96 px frame each student sees,
 rendered (PyBullet TinyRenderer). Here the teacher, `bc` and `bc_dagger` land, and `dp` lands
-`off_pad`. The episode is **hand-picked by a stated rule** ([`RULE.md`](results/e08/gifs/RULE.md)),
+`off_pad`: its centre touches down more than 0.10 m from the pad centre. The episode is **hand-picked by a stated rule** ([`RULE.md`](results/e08/gifs/RULE.md)),
 so it is an illustration, not a sample. Every panel was re-flown and checked equal to its committed
 evaluation row before the GIF was written. Playback is real time at model scale (λ = 1/25); at full
 scale the motion is 5× slower.*
@@ -88,21 +88,28 @@ committed files.
 
 All results are in simulation, and every core student is distilled from P8 `ppo` seed 0.
 
-- **At `id` SS6, images cost success mainly through perception; the imitation step costs almost
-  none.** A state-based clone of the teacher loses 0.1 points [−1.1, +1.4]. The same recipe on
-  rendered images loses a further 9.5 points [+6.1, +13.3]. That 9.5 is the perception gap; it also
-  includes withholding the clock and a change of training precision (H4, **supported**).
-- **On-policy or noise-injected data keeps the image students near the teacher.** At `id` SS3–SS5,
-  `bc_dagger` lands 100.0 / 100.0 / 98.7 % and `bc_dart` lands 100.0 / 100.0 / 99.3 % (IQM over
-  5 seeds); the teacher lands 200/200 in each cell. Those cells are near the ceiling, so H1's
-  primary is **inconclusive**. Its SS6 secondaries, which are outside the training distribution,
-  are **supported**.
+- **At `id` SS6 †, the loss is mainly in the step from state to rendered images; the imitation
+  step costs almost none.** A state-based clone of the teacher loses 0.1 points [−1.1, +1.4]. The
+  same recipe on rendered images loses a further 9.5 points [+6.1, +13.3]. That step also withholds
+  the clock and changes training precision. H4 scores D = P − I = +9.4 [+5.6, +13.5]
+  (**supported**).
+- **The image students trained with on-policy (`bc_dagger`) or noise-injected (`bc_dart`) data
+  land near the teacher at `id` SS3–SS5** (unpaired reading). `bc_dagger` lands
+  100.0 / 100.0 / 98.7 % and `bc_dart` lands 100.0 / 100.0 / 99.3 % (IQM over 5 seeds); the teacher
+  lands 200/200 in each cell.
+  - Against their data-matched controls, those cells are near the ceiling, so H1's primary
+    (+2.6 [+0.6, +4.8]) and its DART secondary at SS5 are **inconclusive**.
+  - The SS6 † secondaries are **supported**: +5.9 [+2.3, +9.7] for DAgger and +8.1 [+4.6, +11.9]
+    for DART.
 - **This Diffusion Policy is far below** the other students: 33–41 % in every `id` cell at its
-  frozen inference (Ta = 8, K = 10). Most of its losses are `off_pad`. Executing one action per
-  replan instead of eight recovers +47.4 points on the same checkpoints (H3, **supported**). A
-  stale `last_action` input is a competing explanation.
-- **A diffusion head did not handle multimodal demonstrations better** than a regression head on
-  this measure (H2, **not supported**).
+  frozen inference (Ta = 8, K = 10). Its main failure is `off_pad`: it touches down with its centre
+  more than 0.10 m (model scale) from the pad centre. At `id` SS6 †, executing one action per replan
+  instead of eight recovers +47.4 [+41.0, +53.8] points on the same checkpoints (H3,
+  **supported**). A stale `last_action` input is a competing explanation.
+- **A diffusion head did not match multimodal demonstrations better** than a regression head on
+  this measure (H2, **not supported**: +0.088 [−0.100, +0.263] s, model scale).
+  - H2's `bc_mix` and `dp_mix` learn from `T_mix`: P8 `ppo` seed 0 plus `gated`, assigned per
+    episode.
 - **Latency.** No scored export of `dp` passes both parity checks, and none meets the 33.3 ms
   control period at p99 (H5(a), **not supported**). Putting the measured delay back into the loop
   costs `dp` 15.9 points (H5(b), **not supported**). `bc_dagger` exports cleanly at 4.3 ms p99 on
@@ -110,7 +117,7 @@ All results are in simulation, and every core student is distilled from P8 `ppo`
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/hypotheses_dark.png">
-  <img src="docs/figures/hypotheses.png" alt="Forest plot of the eight pre-registered contrasts with their 95 % CIs, margins and verdicts">
+  <img src="docs/figures/hypotheses.png" alt="Forest plot of the pre-registered contrasts with their 95 % CIs, margins and verdicts">
 </picture>
 
 | hypothesis | cell | contrast | estimate [95 % CI] | margin | verdict |
@@ -125,19 +132,22 @@ All results are in simulation, and every core student is distilled from P8 `ppo`
 | H5(a) latency | `dp` export, batch 1 | p99 < 33.3 ms on a provider that passes both parity checks | no provider passes | — | **not supported** |
 | H5(b) latency in the loop | `id` SS5 | `dp` with d = 6 − `dp` synchronous | −15.9 [−21.5, −10.5] points | CI ≥ −3 | **not supported** |
 
-Seven contrasts were pre-registered and scored as frozen in P3-D1, with no multiplicity
-correction (P3-D1 §1).
-
-<details>
-<summary><b>Footnotes to the table</b> (†, ‡, ¶)</summary>
+Nine pre-registered verdicts were scored as frozen in P3-D1, with no multiplicity correction
+(P3-D1 §1). Eight of them are contrasts with CIs; the ninth, H5(a), is a latency bound.
 
 **† SS6 is outside the training distribution.** Every SS6 contrast carries P8's one-ulp flip floor:
 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median
-1.9 %). It was measured on P8's MLPs, not on these students.
-
+1.9 %). It was measured on P8's MLPs, not on these students.<br>
 **‡ `bc_dart` seed 0 is the σ = 0.10 tuning trial**, kept as frozen (P4-D5 item 2). σ* = 0.10 was
-chosen on `select` over 3 seed-0 trials; `bc` was not tuned.
-- **The seeds 1–4 sensitivity** is labelled "post hoc: added after `select`, before any frozen-list
+chosen on `select` over 3 seed-0 trials; `bc` was not tuned. A seeds 1–4 sensitivity is below.<br>
+**¶ `dp_mix` seed 0 flips 22 of 150 `select` outcomes** under numeric perturbations of order 1e-5
+(L4).
+
+<details>
+<summary><b>More on ‡, ¶ and H1</b></summary>
+
+**‡ The `bc_dart` seeds 1–4 sensitivity.**
+- **What it is.** It is labelled "post hoc: added after `select`, before any frozen-list
   read". It is never substituted and is given no verdict (`results/e08/bc_dart_s1_4.csv`;
   `results/results.md` §2 and §5). It was specified in P4-D4 before any frozen-list read, but it was
   computed only in Phase 10, after Gate 8 had passed without it (P10-D2 item 2).
@@ -145,8 +155,7 @@ chosen on `select` over 3 seed-0 trials; `bc` was not tuned.
 - **H1 DART**, `bc_dart` seeds 1–4 − `bc` seeds 0–4: +3.5 [+1.6, +5.7] at `id` SS5 and
   +8.0 [+4.3, +11.9] at `id` SS6 †.
 
-**¶ `dp_mix` seed 0 is numerically sensitive.** It flips 22 of 150 `select` outcomes under numeric
-perturbations of order 1e-5 (L4; `results/phase10/dp_sensitivity/sensitivity.csv`). The "not
+**¶ `dp_mix`.** The 22 of 150 is in `results/phase10/dp_sensitivity/sensitivity.csv`. The "not
 measured for `dp_mix`" notes in `results/results.md` §6b and `results/e08/contrasts.csv` predate
 that measurement (P10-D2 item 6).
 
@@ -270,10 +279,11 @@ distribution. Note that the two panels have different y-ranges.*
 - **The teacher is at the ceiling.** It lands 100 % at SS3–SS5, so those cells can only show a
   student losing to it.
 - **The BC family stays close to it.** `bc_dart` and `bc_dagger` stay within 1.3 points of the
-  teacher at SS3–SS5. At SS6, plain `bc` and `bc_matched` drop to 89 %, about where
-  `pid_feedforward` sits (90.5 %; unpaired reading).
+  teacher at SS3–SS5 (IQM against a P8 rate; unpaired reading). At SS6 † (flip floor 6.6 %), plain
+  `bc` and `bc_matched` drop to 89 %, about where `pid_feedforward` sits (90.5 %; unpaired
+  reading).
 - **`modular` sits below its own teacher.** It loses −11.9 [−16.3, −8.0] points at `id` SS5 and
-  −17.6 [−22.0, −13.3] at `id` SS6 (with the flip floor above). Its state-estimation error is at or
+  −17.6 [−22.0, −13.3] at `id` SS6 (P8's one-ulp flip floor 6.6 %, measured on P8's MLPs). Its state-estimation error is at or
   slightly above P8's 2 cm / 0.10 m/s perception-noise condition and below 4 cm / 0.20 m/s
   (P7-D3 item 3).
 
@@ -312,9 +322,11 @@ above the teacher; this was audited (below).
 distribution. Students are shown as IQM over 5 seeds and P8 rows as a rate over 200 episodes; the
 CIs and N are in `docs/figures/conditions.csv`. In simulation.*
 
-- **The ordering holds on every list.** It is the same as on `id`: `bc_dart` and `bc_dagger` are
-  closest to the teacher, plain BC and `modular` lose more as the sea state rises, and `dp` stays
-  between 29.5 and 40.8 %.
+- **The ordering holds on every list** (point estimates, unpaired reading; several neighbouring
+  pairs are within each other's CIs). It is the same as on `id`: `bc_dart` and `bc_dagger` are
+  closest to the teacher, and plain BC and `modular` lose more as the sea state rises.
+- **`dp` stays low.** In the plotted cells (SS5, SS6 and static), `dp` stays between 29.5 and
+  40.8 %. Across all 14 core cells it ranges 29.5–46.8 % (IQM; `results/e08/aggregate.csv`).
 - **The static deck.** On it, `dp` lands 40.8 %, about as often as at `id` SS3–SS4 (unpaired
   reading), so its loss cannot be attributed to deck motion.
 
@@ -328,8 +340,12 @@ CIs and N are in `docs/figures/conditions.csv`. In simulation.*
 *P8's six outcome classes per arm at `id` SS5 and SS6. Students are pooled over 5 seeds × 200
 episodes; the teacher and baselines show 200 episodes each. In simulation.*
 
-- **`dp` misses the pad.** At `id` SS5 it lands `off_pad` in 462 of 1 000 seed-episodes, more
-  often than it succeeds (361), with some hard landings (103) and bounces (72).
+- **`dp`'s main failure is `off_pad`.** At `id` SS5 it lands `off_pad` in 462 of 1 000
+  seed-episodes, more often than it succeeds (361), with some hard landings (103) and bounces (72).
+  - `off_pad` means the centre touched down more than 0.10 m (model scale) from the pad centre,
+    which is the lateral criterion.
+  - The painted ring is wider (0.15 m, context only, per P8's `success.yaml`). So in the GIFs a
+    `dp` drone can sit on the ring under an `off_pad` badge.
 - **The BC students fail by landing hard.** Their few failures are mostly `hard_landing`.
 - **`oracle_gated` times out.** All 71 of its 200 `id` SS6 failures are timeouts.
 
@@ -349,7 +365,7 @@ Sources: `results/results.md` §2–§4 and §7; `results/e08/summary.csv`, `agg
 <table>
 <tr><td><b>(a) all four land</b> · <code>id</code> SS5</td></tr>
 <tr><td><img src="docs/media/hero_a_all_four_succeed__id_SS5_ep2.gif" alt="All four policies land the same SS5 episode"></td></tr>
-<tr><td><b>(c) <code>dp</code> lands off the pad</b> · <code>id</code> SS5</td></tr>
+<tr><td><b>(c) <code>dp</code> lands <code>off_pad</code> (centre more than 0.10 m from the pad centre)</b> · <code>id</code> SS5</td></tr>
 <tr><td><img src="docs/media/hero_c_dp_off_pad__id_SS5_ep1.gif" alt="dp lands off the pad while the others land"></td></tr>
 <tr><td><b>(d) the teacher fails, outside training</b> · <code>id</code> SS6</td></tr>
 <tr><td><img src="docs/media/hero_d_teacher_ss6_failure__id_SS6_ep10.gif" alt="An SS6 episode in which the teacher lands hard"></td></tr>
@@ -404,11 +420,15 @@ Sources: `results/e08/hypotheses.csv` (H4); figure data in `docs/figures/gaps.cs
   <img src="docs/figures/chunking.png" alt="dp success against the number of actions executed per chunk, with and without temporal ensembling">
 </picture>
 
-*Success of this `dp` (distilled from P8 `ppo` s0) against Ta, the number of actions executed per
-predicted chunk, on the same checkpoints with K = 10. Results are shown with and without temporal
+*Success of this `dp` (distilled from P8 `ppo` s0) against Ta: without ensembling, the number of
+actions executed per predicted chunk; with ensembling, the averaging window, on the same checkpoints with K = 10. Results are shown with and without temporal
 ensembling. In simulation.*
 
-- **Shorter chunks recover most of the loss.** Temporal ensembling recovers much of it at every Ta.
+- **Shorter chunks recover most of the loss.** With temporal ensembling, `dp` replans every step
+  and Ta is only the averaging window, so the two curves are identical at Ta = 1 by construction.
+  The ensembled curve still falls as Ta grows (at `id` SS5, IQM 89.2 % at Ta = 1 and 74.0 % at
+  Ta = 8), with no open-loop
+  execution. That fits the stale-input explanation below as well as chunk length.
 - **The checkpoints were selected at Ta = 8**, so the curve is not a fair tuning of each Ta.
 - **This is consistent with a stale `last_action` copycat channel.** Feeding `dp` its own executed
   previous action raises open-loop lateral RMSE by 29–38 % (P7-D3 item 7). That is a competing

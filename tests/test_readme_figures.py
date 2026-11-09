@@ -45,6 +45,7 @@ INPUTS = (
     "results/latency/parity.csv",
     "results/latency/closed_loop.csv",
     "results/latency/delay.json",
+    "results/latency/h5a.csv",
 )
 
 

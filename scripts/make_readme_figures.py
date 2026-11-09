@@ -2,7 +2,7 @@
 
 Simulation only. Reads ``results/e08/{aggregate,baselines,hypotheses}.csv``,
 ``results/e08/hypotheses.json``, ``results/e08/figures/{h3_ta_curve,h4_gaps}.csv`` and
-``results/latency/{latency,parity,closed_loop}.csv`` + ``delay.json``; writes
+``results/latency/{latency,parity,closed_loop,h5a}.csv`` + ``delay.json``; writes
 ``docs/figures/<name>.png`` (light), ``<name>_dark.png`` (dark) and ``<name>.csv`` (the values
 plotted, each traced to its source file, row and column). Same inputs, same bytes.
 

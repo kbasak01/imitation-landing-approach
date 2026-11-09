@@ -90,6 +90,7 @@ __all__ = [
     "TITLES",
     "TOTAL_LIMIT_BYTES",
     "Column",
+    "OUTCOME_CLASSES",
     "HeroResult",
     "check_picks",
     "compose",
@@ -97,6 +98,7 @@ __all__ = [
     "encode_gif",
     "fly_hero_panel",
     "gif_name",
+    "header_boxes",
     "header_text",
     "load_picks",
     "n_composite_frames",
@@ -164,7 +166,18 @@ INK: Final = (20, 20, 20)
 INK_2: Final = (82, 81, 78)
 SURFACE: Final = (252, 252, 251)
 HEADER_H: Final[int] = 62
-LABEL_H: Final[int] = 36
+#: Column header: the arm label on row 1, the outcome badge (once ended) on row 2 beneath it,
+#: so the two never share a row and cannot collide for any label or outcome word.
+LABEL_H: Final[int] = 62
+#: P8's outcome classes (the badge words), matched in P8's order.
+OUTCOME_CLASSES: Final[tuple[str, ...]] = (
+    "crash",
+    "off_pad",
+    "hard_landing",
+    "bounce",
+    "success",
+    "timeout",
+)
 ONBOARD_H: Final[int] = 96 * ONBOARD_ZOOM + 18
 FOOTER_H: Final[int] = 24
 
@@ -474,6 +487,37 @@ def _font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(str(Path(matplotlib.get_data_path()) / "fonts" / "ttf" / name), size)
 
 
+type Box = tuple[float, float, float, float]
+
+
+def header_boxes(panel: str, outcome: str, column_width: int) -> tuple[Box, Box, Box]:
+    """Column-header geometry relative to the column's top-left corner, px.
+
+    Args:
+        panel: ``teacher`` or a student arm (its :data:`ARM_LABELS` text).
+        outcome: The outcome word on the badge.
+        column_width: Column width, px.
+
+    Returns:
+        ``(label text box, badge box, badge text box)``, each ``(x0, y0, x1, y1)``. The badge
+        sits on its own row under the label, left-aligned with it.
+
+    Raises:
+        ValueError: If the label or the badge does not fit inside the column and the header.
+    """
+    label_font, badge_font = _font(18, True), _font(16, True)
+    label = label_font.getbbox(ARM_LABELS[panel])
+    label_box = (10.0 + label[0], 6.0 + label[1], 10.0 + label[2], 6.0 + label[3])
+    text = badge_font.getbbox(outcome)
+    top = 33.0
+    text_box = (19.0 + text[0], top + 3 + text[1], 19.0 + text[2], top + 3 + text[3])
+    badge = (10.0, top, text_box[2] + 9.0, LABEL_H - 5.0)
+    for box in (label_box, badge):
+        if box[2] > column_width - 6 or box[3] > LABEL_H:
+            raise ValueError(f"{panel}/{outcome}: {box} does not fit {column_width} x {LABEL_H}")
+    return label_box, badge, text_box
+
+
 def _layout(columns: Sequence[Column]) -> tuple[int, int, int, int]:
     """``(column width, outside height, canvas width, canvas height)``, px."""
     oh, ow = columns[0].outside[0].shape[:2]
@@ -498,6 +542,7 @@ def compose(pick: gifs.Pick, columns: Sequence[Column], stride: int) -> list[PIL
     zoom = 96 * ONBOARD_ZOOM
     f_title, f_sub, f_label = _font(20, True), _font(16), _font(18, True)
     f_badge, f_tag, f_foot = _font(16, True), _font(14), _font(13)
+    geometry = {c.panel: header_boxes(c.panel, c.outcome, cw) for c in columns}
     title = f"{TITLES[pick.category]} · id {pick.ss} episode {pick.index}"
     out: list[PILImage.Image] = []
     for j in range(n_composite_frames(columns)):
@@ -512,14 +557,14 @@ def compose(pick: gifs.Pick, columns: Sequence[Column], stride: int) -> list[PIL
         for p, col in enumerate(columns):
             i = min(j, len(col.steps) - 1)
             x0, y = p * cw, HEADER_H
-            draw.text((x0 + 10, y + 8), ARM_LABELS[col.panel], fill=INK, font=f_label)
+            _, badge, _ = geometry[col.panel]
+            draw.text((x0 + 10, y + 6), ARM_LABELS[col.panel], fill=INK, font=f_label)
             if ended(col, j, stride):
-                w = draw.textlength(col.outcome, font=f_badge)
                 colour = SUCCESS_RGB if col.outcome == "success" else FAILURE_RGB
                 draw.rounded_rectangle(
-                    (x0 + cw - w - 26, y + 5, x0 + cw - 8, y + LABEL_H - 5), 5, fill=colour
+                    (x0 + badge[0], y + badge[1], x0 + badge[2], y + badge[3]), 5, fill=colour
                 )
-                draw.text((x0 + cw - w - 17, y + 8), col.outcome, fill=SURFACE, font=f_badge)
+                draw.text((x0 + 19, y + badge[1] + 3), col.outcome, fill=SURFACE, font=f_badge)
             y += LABEL_H
             canvas.paste(Image.fromarray(np.asarray(col.outside[i])), (x0, y))
             y += oh

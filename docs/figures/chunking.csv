@@ -31,4 +31,3 @@ id SS6,no ensembling,12,34.3333333333,31,38.3333333333,,%,1,,IQM over 5 seeds,re
 id SS6,ensembling,12,74.3333333333,71.5,76.3333333333,,%,1,,IQM over 5 seeds,results/e08/figures/h3_ta_curve.csv,panel=id SS6;x=12;series=ensembling,point,lo,hi,,
 all,selected Ta,,8,,,,control steps,1,Checkpoints were selected at Ta = 8 (P3-D1 §6 H3).,Ta parsed from the caveat text,results/e08/hypotheses.json,hypothesis=H3,,,,,caveats[]
 meta,n_seeds,,5,,,,,1,,uniform over the 30 plotted rows,results/e08/aggregate.csv,tag=dp_Ta;arm=dp;list=id;ss=SS4;Ta=1;ensemble=True,n_seeds,,,,
-meta,control period,,33.333,,,,ms (model scale),1,,,results/latency/delay.json,,control_period_ms,,,,

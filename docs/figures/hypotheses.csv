@@ -20,3 +20,7 @@ seconds,H2,id SS4,0.0877735690236,-0.100140630261,0.263002196905,,s (model scale
 seconds,H2 margin,id SS4,0.033,,,,s (model scale),1,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H2,magnitude,,,,
 text,H5(a),"exported dp (K = 10), dp_e2e, batch 1",,,,,,1,not supported,no CI; verdict only,results/e08/hypotheses.csv,hypothesis=H5(a),,,,,verdict
 text,H5(a) margin,"exported dp (K = 10), dp_e2e, batch 1",33.3,,,,ms,1,,"threshold, ms",results/e08/hypotheses.csv,hypothesis=H5(a),magnitude,,,,
+text,H5(a) scored p99,ort_cpu_fp32,122.911,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=ort_cpu_fp32;batch_size=1,p99_ms,,,,parity_pass
+text,H5(a) scored p99,ort_cuda_fp32,52.6441,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=ort_cuda_fp32;batch_size=1,p99_ms,,,,parity_pass
+text,H5(a) scored p99,torch_cuda_fp32,89.3851,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=torch_cuda_fp32;batch_size=1,p99_ms,,,,parity_pass
+text,H5(a) scored p99,ort_trt_fp16,,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=ort_trt_fp16;batch_size=1,p99_ms,,,,parity_pass

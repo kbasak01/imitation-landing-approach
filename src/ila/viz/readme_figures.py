@@ -15,7 +15,7 @@ scale factor (x100 for percent and points).
 
 Inputs (never a row file, never P8): ``results/e08/{aggregate,baselines,hypotheses}.csv``,
 ``results/e08/hypotheses.json`` (H3's selection caveat), ``results/e08/figures/{h3_ta_curve,
-h4_gaps}.csv``, ``results/latency/{latency,parity,closed_loop}.csv`` and
+h4_gaps}.csv``, ``results/latency/{latency,parity,closed_loop,h5a}.csv`` and
 ``results/latency/delay.json``. Cells withheld by the above-teacher rule
 (:attr:`ila.eval.report.ReportInputs.withheld`) or not complete are not plotted; their CSV row
 carries an empty value and the reason.
@@ -34,6 +34,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import textwrap
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -42,7 +43,7 @@ from typing import Any, Final
 from ila import p8_adapter
 from ila.eval import report as rp
 from ila.eval import score as sc
-from ila.viz.figures import _plt, _write_table
+from ila.viz.figures import _plt, _write_table, plain
 
 __all__ = [
     "ARM_SLOT",
@@ -112,6 +113,9 @@ _LATENCY: Final[str] = f"{_LAT}/latency.csv"
 _PARITY: Final[str] = f"{_LAT}/parity.csv"
 _CLOSED: Final[str] = f"{_LAT}/closed_loop.csv"
 _DELAY: Final[str] = f"{_LAT}/delay.json"
+_H5A: Final[str] = f"{_LAT}/h5a.csv"
+#: Froude time scale for lambda = 1/25: full-scale time = model time x sqrt(25) (derived).
+_TIME_SCALE: Final[float] = math.sqrt(25.0)
 
 #: Core students in canonical order; slot i of the categorical palette is arm i's colour.
 STUDENTS: Final[tuple[str, ...]] = (
@@ -259,6 +263,7 @@ class _Inputs:
     parity: Sequence[Row]
     closed: Sequence[Row]
     delay: Mapping[str, Any]
+    h5a: Sequence[Row]
 
 
 def _load(repo: Path) -> _Inputs:
@@ -271,6 +276,7 @@ def _load(repo: Path) -> _Inputs:
         parity=sc.read_csv(repo / _PARITY),
         closed=sc.read_csv(repo / _CLOSED),
         delay=json.loads((repo / _DELAY).read_text(encoding="utf-8")),
+        h5a=sc.read_csv(repo / _H5A),
     )
 
 
@@ -545,6 +551,15 @@ def hypotheses_table(inp: _Inputs) -> list[Rec]:
                             note="no CI; verdict only"))  # fmt: skip
             out.append(_rec(panel, f"{h} margin", cell, _HYP, row, key, value_col="magnitude",
                             unit=unit, note="threshold, ms"))  # fmt: skip
+            for r5 in inp.h5a:
+                if r5["scored"] != "True":
+                    continue
+                k5 = {"hypothesis": r5["hypothesis"], "row": r5["row"],
+                      "provider": r5["provider"], "batch_size": r5["batch_size"]}  # fmt: skip
+                timed = r5["latency_status"] == "timed"
+                out.append(_rec(panel, "H5(a) scored p99", r5["provider"], _H5A, r5, k5,
+                                value_col="p99_ms", text_col="parity_pass", unit="ms",
+                                plot=timed, note="scored; text = parity_pass"))  # fmt: skip
             continue
         out.append(_rec(panel, h, cell, _HYP, row, key, value_col="estimate", lo_col="ci_lo",
                         hi_col="ci_hi", text_col="verdict", scale=scale, unit=unit,
@@ -600,7 +615,6 @@ def chunking_table(inp: _Inputs) -> list[Rec]:
             for ss in ("SS4", "SS5", "SS6") for ta in ("1", "2", "4", "8", "12")
             for e in ("True", "False")]  # fmt: skip
     out.append(_meta("n_seeds", _AGG, inp.report.aggregate, keys, "n_seeds"))
-    out.append(_period_meta(inp))
     return out
 
 
@@ -797,9 +811,11 @@ def _draw_success_id(recs: Sequence[Rec], t: Theme, path: Path) -> None:
             ax.grid(True, axis="y", zorder=0)
             for m in _BASELINES:
                 b = _pts(recs, panel, m)
+                # The teacher is drawn above the students (thinner) so it is never hidden.
                 ax.plot([pos[r["x"]] for r in b], [r["value"] for r in b],
                         color=t.ink if m == "ppo" else t.baseline, ls=_BASE_LS[m],
-                        lw=_LW * (1.15 if m == "ppo" else 1.0), zorder=2)  # fmt: skip
+                        lw=_LW * (0.8 if m == "ppo" else 1.0),
+                        zorder=4 if m == "ppo" else 2)  # fmt: skip
             n = len(arms)
             lows = [100.0]
             for k, arm in enumerate(arms):
@@ -830,7 +846,7 @@ def _draw_success_id(recs: Sequence[Rec], t: Theme, path: Path) -> None:
                       bbox_to_anchor=(0.0, 0.74) if low_panel else None, ncol=1,
                       handlelength=1.6, borderaxespad=0.3)  # fmt: skip
         handles = [Line2D([], [], color=t.ink if m == "ppo" else t.baseline, ls=_BASE_LS[m],
-                          lw=_LW * (1.15 if m == "ppo" else 1.0)) for m in _BASELINES]  # fmt: skip
+                          lw=_LW * (0.8 if m == "ppo" else 1.0)) for m in _BASELINES]  # fmt: skip
         fig.legend(handles, [_BASE_LABEL[m] for m in _BASELINES], loc="upper left", ncol=4,
                    bbox_to_anchor=(0.005, 0.895), handlelength=2.4, columnspacing=1.4,
                    handletextpad=0.5)  # fmt: skip
@@ -865,7 +881,16 @@ _GROUP_LABEL: Final[Mapping[str, str]] = {
     "unseen_vessel": "unseen vessel",
     "unseen_seastate": "unseen\nseastate",
 }
-_HEAT_LO: Final[float] = 70.0  # % ; colour saturates at or below this (value still printed)
+_HEAT_BREAK: Final[float] = 70.0  # % ; break of the two-segment colour scale
+_HEAT_W_BREAK: Final[float] = 0.36  # colour weight at the break (0 = surface, 1 = full hue)
+
+
+def _heat_weight(v: float) -> float:
+    """Two linear segments: 0-70 % -> weight 0.04-0.36, 70-100 % -> 0.36-1.0 (stretched)."""
+    v = min(100.0, max(0.0, v))
+    if v <= _HEAT_BREAK:
+        return 0.04 + (_HEAT_W_BREAK - 0.04) * v / _HEAT_BREAK
+    return _HEAT_W_BREAK + (1.0 - _HEAT_W_BREAK) * (v - _HEAT_BREAK) / (100.0 - _HEAT_BREAK)
 
 
 def _draw_conditions(recs: Sequence[Rec], t: Theme, path: Path) -> None:
@@ -886,8 +911,7 @@ def _draw_conditions(recs: Sequence[Rec], t: Theme, path: Path) -> None:
                     ax.text(j + 0.5, i + 0.5, "—", ha="center", va="center", color=t.secondary)
                     continue
                 v = float(r["value"])
-                w = 0.06 + 0.94 * min(1.0, max(0.0, (v - _HEAT_LO) / (100.0 - _HEAT_LO)))
-                fill = _mix(t.surface, hue, w)
+                fill = _mix(t.surface, hue, _heat_weight(v))
                 ax.add_patch(plt.Rectangle((j, i), 1, 1, facecolor=fill, edgecolor=t.surface,
                                            lw=2.0))  # fmt: skip
                 surf_l = _lum(_mix(t.surface, t.surface, 0.0))
@@ -923,17 +947,18 @@ def _draw_conditions(recs: Sequence[Rec], t: Theme, path: Path) -> None:
                     clip_on=False)  # fmt: skip
             ax.text((a + b) / 2, -0.8, _GROUP_LABEL.get(lst, lst), ha="center", va="bottom",
                     fontsize=_FS - 0.5, linespacing=1.05)  # fmt: skip
-        ax.text(len(cols), -1.75, "shaded = outside the training distribution "
-                "(SS6 or 90° heading)", ha="right", va="bottom", fontsize=_FS - 0.5,
-                color=t.secondary)  # fmt: skip
-        _title(fig, "Simulated landing success (%) across held-out conditions")
+        _title(fig, "Simulated landing success (%) across lists and sea states")
         fig.text(0.012, 0.925, f"Students: IQM over {_mv(recs, 'n_seeds')} seeds; P8 rows: "
                  f"rate over {_mv(recs, 'n_episodes_p8')} episodes.  CIs and N in "
                  "conditions.csv.", fontsize=_FS, color=t.secondary, ha="left",
                  va="top")  # fmt: skip
-        _note(fig, t, f"{_SIM_NOTE} · cells ≤ {_HEAT_LO:.0f} % share one shade",
+        fig.text(0.012, 0.885, "Shaded = SS6 or 90° heading (outside training, P3-D1); "
+                 "unseen_vessel is a vessel never trained on.", fontsize=_FS,
+                 color=t.secondary, ha="left", va="top")  # fmt: skip
+        _note(fig, t, f"Colour: two linear segments, 0–{_HEAT_BREAK:.0f} % and "
+              f"{_HEAT_BREAK:.0f}–100 % (upper segment stretched).  — = withheld or missing.",
               y=0.045)  # fmt: skip
-        _note(fig, t, _TEACHER_NOTE + "  — = withheld or missing.", y=0.012)
+        _note(fig, t, f"{_SIM_NOTE} · {_TEACHER_NOTE}", y=0.012)
         _save(fig, path)
 
 
@@ -997,18 +1022,38 @@ def _draw_outcomes(recs: Sequence[Rec], t: Theme, path: Path) -> None:
 # --------------------------------------------------------------------------- F4 hypotheses
 
 
-def _flip_pct(text: str) -> str:
-    m = re.match(r"\s*([\d.]+ %)", text)
-    return m.group(1) if m else ""
+def _h5a_text(recs: Sequence[Rec], margin: Rec | None) -> str:
+    """H5(a)'s text row from the scored providers in ``h5a.csv`` (parity, p99 range)."""
+    scored = [r for r in recs if r["series"] == "H5(a) scored p99"]
+    timed = [float(r["value"]) for r in scored if "value" in r]
+    thr = float(margin["value"]) if margin and "value" in margin else math.nan
+    no_parity = bool(scored) and all(r.get("text") == "False" for r in scored)
+    if not (no_parity and timed and all(v > thr for v in timed)):
+        return "no estimate (see hypotheses.csv H5(a))"
+    return (
+        "no estimate: no scored provider passes both parities, and every scored p99 is "
+        f"above {thr:.1f} ms ({min(timed):.1f}–{max(timed):.1f} ms)"
+    )
+
+
+def _flip_sentence(text: str) -> str:
+    """P8's flip floor in full (P3-D1 §1), verbatim from ``flip_floor`` (backticks dropped)."""
+    return f"P8 one-ulp flip floor: {plain(text)}" if text.strip() else ""
+
+
+def _wrap(text: str, width: int) -> str:
+    # A no-break space keeps a number with its unit ("1.9 %", "33.3 ms") on one line.
+    text = re.sub(r"(\d) (%|ms)", "\\1\u00a0\\2", text)
+    return "\n".join(textwrap.wrap(text, width=width, break_on_hyphens=False))
 
 
 def _draw_hypotheses(recs: Sequence[Rec], t: Theme, path: Path) -> None:
     plt = _plt()
     by = {r["series"]: r for r in recs}
     with plt.rc_context(_rc(t)):
-        fig = plt.figure(figsize=(_W, 8.0))
-        top = fig.add_axes((0.36, 0.415, 0.44, 0.46))
-        bot = fig.add_axes((0.36, 0.235, 0.44, 0.066))
+        fig = plt.figure(figsize=(_W, 8.8))
+        top = fig.add_axes((0.36, 0.445, 0.44, 0.43))
+        bot = fig.add_axes((0.36, 0.28, 0.44, 0.06))
         flip = ""
         for ax, names in ((top, _H_POINTS), (bot, ("H2",))):
             labels = []
@@ -1017,7 +1062,7 @@ def _draw_hypotheses(recs: Sequence[Rec], t: Theme, path: Path) -> None:
                 dag = ""
                 if f"{h} flip floor" in by:
                     dag = " †"
-                    flip = flip or _flip_pct(by[f"{h} flip floor"].get("text", ""))
+                    flip = flip or _flip_sentence(by[f"{h} flip floor"].get("text", ""))
                 labels.append(f"{h} · {r['x'] if r else ''}{dag}\n{_H_LABEL[h]}")
                 if r is None or "value" not in r:
                     ax.text(0.5, i, "not scored", transform=ax.get_yaxis_transform(),
@@ -1048,22 +1093,21 @@ def _draw_hypotheses(recs: Sequence[Rec], t: Theme, path: Path) -> None:
         a5 = by.get("H5(a)")
         a5m = by.get("H5(a) margin")
         thr = f"{a5m['value']:.1f}" if a5m and "value" in a5m else "?"
-        y5 = 0.115
+        y5 = 0.155
         fig.text(0.352, y5, f"H5(a) · dp_e2e, batch 1\np99 < {thr} ms, parity-passing provider",
                  fontsize=_FS - 0.5, ha="right", va="center", linespacing=1.15)  # fmt: skip
-        fig.text(0.58, y5, "no estimate: no scored provider\npasses closed-loop parity",
+        fig.text(0.58, y5, _wrap(_h5a_text(recs, a5m), 42),
                  fontsize=_FS - 0.5, ha="center", va="center", color=t.secondary,
                  linespacing=1.15)  # fmt: skip
         fig.text(0.8132, y5, a5.get("text", "") if a5 else "", fontsize=_FS,
                  fontweight="bold", ha="left", va="center")  # fmt: skip
-        fig.add_artist(plt.Line2D([0.03, 0.97], [0.165, 0.165], color=t.grid, lw=0.8))
+        fig.add_artist(plt.Line2D([0.03, 0.97], [0.215, 0.215], color=t.grid, lw=0.8))
         _title(fig, "Pre-registered hypotheses: estimate, 95 % CI, verdict")
         fig.text(0.012, 0.925, "Dot = estimate, bar = 95 % CI, red tick = pre-registered "
                  "margin; verdict judged on point estimate and CI.", fontsize=_FS,
                  color=t.secondary, ha="left", va="top")  # fmt: skip
         if flip:
-            _note(fig, t, f"† SS6 contrast: P8's one-ulp outcome-flip rate at id SS6 is {flip} "
-                  "of policy-episodes.", y=0.045)  # fmt: skip
+            _note(fig, t, _wrap(f"† SS6 contrast. {flip}.", 118), y=0.042)
         _note(fig, t, _SIM_NOTE + " · no multiplicity correction")
         _save(fig, path)
 
@@ -1082,10 +1126,10 @@ def _draw_chunking(recs: Sequence[Rec], t: Theme, path: Path) -> None:
         "no ensembling": {"ls": "-", "mfc": colour, "marker": "o", "label": "no ensembling"},
     }  # fmt: skip
     with plt.rc_context(_rc(t)):
-        fig = plt.figure(figsize=(_W, 6.0))
-        big = fig.add_axes((0.075, 0.155, 0.52, 0.655))
-        s4 = fig.add_axes((0.70, 0.535, 0.28, 0.275), sharey=big)
-        s6 = fig.add_axes((0.70, 0.155, 0.28, 0.275), sharey=big)
+        fig = plt.figure(figsize=(_W, 6.6))
+        big = fig.add_axes((0.075, 0.185, 0.52, 0.575))
+        s4 = fig.add_axes((0.70, 0.525, 0.28, 0.235), sharey=big)
+        s6 = fig.add_axes((0.70, 0.185, 0.28, 0.235), sharey=big)
         for ax, panel, large in ((big, "id SS5", True), (s4, "id SS4", False),
                                  (s6, "id SS6", False)):  # fmt: skip
             if panel.endswith("SS6"):
@@ -1121,15 +1165,18 @@ def _draw_chunking(recs: Sequence[Rec], t: Theme, path: Path) -> None:
         if sel_ta is not None:
             big.text(sel_ta * 0.94, 4, f"checkpoints selected at Ta = {sel_ta:.0f}",
                      ha="right", va="bottom", fontsize=_FS - 0.5, color=t.secondary)  # fmt: skip
-        big.set_xlabel("Ta, actions executed per chunk (log scale)")
+        big.set_xlabel("Ta (log scale)\nno ensembling: actions executed per chunk; "
+                       "ensembling: window", linespacing=1.3)  # fmt: skip
         big.set_ylabel(f"success, %  (IQM over {_mv(recs, 'n_seeds')} seeds, 95 % CI)")
         s6.set_xlabel("Ta")
-        _title(fig, "dp: success falls as more of each chunk is executed open-loop")
+        _title(fig, "dp: success against Ta (same checkpoints)")
         sub = (
-            "Same dp checkpoints flown at each Ta (control steps of "
-            f"{_mv(recs, 'control period')} ms, model scale); dp distilled from P8 ppo s0."
+            "No ensembling: Ta actions executed per chunk.  Ensembling: replans every step, "
+            "Ta = averaging window (identical at Ta = 1).  Competing explanation: stale "
+            "last_action input (P7-D3 item 7)."
         )
-        fig.text(0.012, 0.925, sub, fontsize=_FS, color=t.secondary, ha="left", va="top")
+        fig.text(0.012, 0.93, _wrap(sub, 100), fontsize=_FS, color=t.secondary, ha="left",
+                 va="top", linespacing=1.3)  # fmt: skip
         _note(fig, t, _SIM_NOTE)
         _save(fig, path)
 
@@ -1146,8 +1193,8 @@ def _draw_gaps(recs: Sequence[Rec], t: Theme, path: Path) -> None:
              "bc": "bc\n(rendered images)"}  # fmt: skip
     colours = {"ppo": t.ink, "bc_state": t.arm("bc_state"), "bc": t.arm("bc")}
     with plt.rc_context(_rc(t)):
-        fig = plt.figure(figsize=(_W, 6.0))
-        ax = fig.add_axes((0.09, 0.15, 0.56, 0.67))
+        fig = plt.figure(figsize=(_W, 6.6))
+        ax = fig.add_axes((0.09, 0.215, 0.56, 0.61))
         ax.set_facecolor(t.shade)
         ax.grid(True, axis="y", zorder=0)
         vals: dict[str, float] = {}
@@ -1188,7 +1235,7 @@ def _draw_gaps(recs: Sequence[Rec], t: Theme, path: Path) -> None:
         # Right column: the scored statistic and the verdict.
         d = gap.get("H4")
         verdict = gap.get("H4 verdict", {}).get("text", "")
-        flip = _flip_pct(gap.get("H4 flip floor", {}).get("text", ""))
+        flip = _flip_sentence(gap.get("H4 flip floor", {}).get("text", ""))
         x0 = 0.69
         fig.text(x0, 0.78, "H4 scores D = P − I", fontsize=_FS + 1, fontweight="bold")
         if d is not None and "value" in d:
@@ -1197,21 +1244,23 @@ def _draw_gaps(recs: Sequence[Rec], t: Theme, path: Path) -> None:
         fig.text(x0, 0.60, f"verdict: {verdict}", fontsize=_FS + 1, fontweight="bold")
         lines = [
             "P: perception gap",
-            "  (privileged state → images)",
+            "  (privileged state → images);",
+            "  also includes: no time_fraction;",
+            "  bf16 vs fp32 training",
             "I: imitation gap",
             "  (teacher → state student)",
         ]
         if "ceiling-limited" in gap.get("H4 notes", {}).get("text", ""):
             lines += ["", "I is ceiling-limited (the", "  teacher is near 100 %)."]
-        if flip:
-            lines += ["", "P8 one-ulp flip rate", f"  at id SS6: {flip}"]
         fig.text(x0, 0.53, "\n".join(lines), fontsize=_FS - 0.5, color=t.secondary, va="top",
                  linespacing=1.3)  # fmt: skip
-        _title(fig, "Where the image student loses success (id SS6)")
+        _title(fig, "id SS6: from teacher to state student to image student")
         fig.text(0.012, 0.925, f"Levels: mean over {_mv(recs, 'n_seeds')} seeds × "
                  f"{_mv(recs, 'n_episodes_per_seed')} episodes (teacher: "
                  f"{_mv(recs, 'n_episodes_p8')}).  Gaps: three-arm bootstrap 95 % CI.",
                  fontsize=_FS, color=t.secondary, ha="left", va="top")  # fmt: skip
+        if flip:
+            _note(fig, t, _wrap(flip + ".", 118), y=0.045)
         _note(fig, t, f"{_SIM_NOTE} · {_TEACHER_NOTE}")
         _save(fig, path)
 
@@ -1232,7 +1281,7 @@ def _draw_latency(recs: Sequence[Rec], t: Theme, path: Path) -> None:
     with plt.rc_context(_rc(t)):
         fig = plt.figure(figsize=(_W, 8.2))
         axes = {
-            "bc_dagger": fig.add_axes((0.25, 0.545, 0.53, 0.30)),
+            "bc_dagger": fig.add_axes((0.25, 0.535, 0.53, 0.29)),
             "dp": fig.add_axes((0.25, 0.135, 0.53, 0.30)),
         }
         for arm, ax in axes.items():
@@ -1282,12 +1331,14 @@ def _draw_latency(recs: Sequence[Rec], t: Theme, path: Path) -> None:
         _title(fig, "Inference latency vs the control period")
         if period is not None:
             sub = (
-                f"Dashed line: {period:.1f} ms = one {1000.0 / period:.0f} Hz control step "
-                "(model scale).  Hatched: fails closed-loop parity."
+                f"Dashed line: one {1000.0 / period:.0f} Hz control step, {period:.1f} ms model "
+                f"scale = {period * _TIME_SCALE:.1f} ms full scale (derived: ×5 for λ = 1/25)."
+                "\nHatched: fails closed-loop parity."
             )
         else:
             sub = "Hatched: fails closed-loop parity."
-        fig.text(0.012, 0.935, sub, fontsize=_FS, color=t.secondary, ha="left", va="top")
+        fig.text(0.012, 0.935, sub, fontsize=_FS, color=t.secondary, ha="left", va="top",
+                 linespacing=1.3)  # fmt: skip
         _note(fig, t, "Wall clock on this machine (RTX A4000, WSL2), not scaled · simulation "
               "(PyBullet; TinyRenderer images)")  # fmt: skip
         _save(fig, path)
