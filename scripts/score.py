@@ -4,7 +4,8 @@ Simulation only. Reads ``results/e08/rows/`` (finished files: sidecar present, S
 P8's committed teacher and baseline rows, the committed Phase 4/5 run manifests (H1's labelled
 frames) and selection records (H4's best end-to-end student). Writes, deterministically:
 ``summary.csv``, ``baselines.csv``, ``aggregate.csv``, ``contrasts.csv``, ``hypotheses.csv`` /
-``.json``, ``above_teacher.csv``, ``missing.csv``, ``h2_touchdown_times.csv`` and
+``.json``, ``above_teacher.csv``, ``missing.csv``, ``h2_touchdown_times.csv``,
+``bc_dart_s1_4.csv`` (the ``bc_dart`` seeds 1-4 sensitivity, P4-D5 item 2) and
 ``score_info.json`` under ``--out`` (default ``results/e08``). Runs on a partial matrix: every
 missing cell is listed in ``missing.csv`` and marked in every table.
 

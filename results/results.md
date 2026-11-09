@@ -37,7 +37,9 @@ Losses per 1 000 seed-episodes (learned) or per N (baselines): C crash, O off_pa
 | P8 committed rows `oracle_gated` | `results/e01/episodes.csv` SHA-256 `c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b` (2800 rows) |
 | P8 committed rows `gated` | `results/e01/episodes.csv` SHA-256 `c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b` (2800 rows) |
 | ila commit(s) of the Phase 9 latency stages (`results/latency/run_info.json`, rows' `ila_commit`) | `362e31ca3a85a9e61e1773b9276967ab917509e8` (latency, latency.csv rows; clean tree); `3b2ae853487678c16d40b9e813f4edb43435983b` (closed_loop, closed_loop.csv rows, latency.csv rows; dirty only under `results/`); `6d6165e894f4725b844c866fbb528db15c26029c` (d0_check; clean tree); `cdee30aa14db8fd498b76f8c12624d7e55ab52bd` (export, inputs, parity; dirty only under `results/`); `efec6283fee07ab357fec3bca94fdf801a892426` (closed_loop_recheck; clean tree) |
-| H4 best end-to-end student | `bc_dart`: highest mean select success (99.87 %) |
+| H4 best end-to-end student | `bc_dart` ◇: highest mean select success (99.87 %) — all five seeds, as frozen (P3-D1 §6 H4). Beside it, ◇ sensitivity (post hoc: added after `select`, before any frozen-list read; never substituted): `bc_dart` on seeds 1–4 has 99.83 % mean select success; the same rule with bc_dart on seeds 1-4 picks bc_dart (highest mean select success (99.83 %)); other end-to-end arms on their five frozen seeds: bc 97.73 %, bc_matched 97.73 %, bc_dagger 99.33 %, dp 43.47 % |
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
 
 Matrix invocations (from `run_info.json`):
 
@@ -50,6 +52,8 @@ Matrix invocations (from `run_info.json`):
 
 Sources: `results/e08/run_info.json`, `results/e08/score_info.json` (the latency-stage commits are copied there by the scorer from `results/latency/run_info.json`, `latency.csv` and `closed_loop.csv`).
 
+◇ seeds 1–4 value: `results/e08/bc_dart_s1_4.csv` (`kind` best_end_to_end; `estimate`, `reading`).
+
 ## 2. Success per list and sea state (core arms; simulated landings)
 
 Teacher and the three P8 baselines are printed beside every student, from P8's committed rows. Never pooled across sea states.
@@ -61,7 +65,8 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `bc_state` (state input (P8's 25-d obs incl. `time_fraction`), BC; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 |
 | `bc` (vision BC, 1 000 demos; from P8 `ppo` seed 0) | **99.8** [99.5, 100.0]; seeds 99.5–100.0; losses/1 000: O 1 · H 1 |
 | `bc_matched` (vision BC, 2 000 demos on `bc_dagger`'s schedule; from P8 `ppo` seed 0) | **99.7** [99.5, 100.0]; seeds 99.5–100.0; losses/1 000: O 1 · H 2 |
-| `bc_dart` (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 |
+| `bc_dart` ◇ (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 |
+| `bc_dart` ◇ seeds 1–4 only — sensitivity (post hoc: added after `select`, before any frozen-list read); beside the 5-seed row above, never substituted for it | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0; N = 800 (4 seeds × 200) |
 | `bc_dagger` (vision BC + DAgger, 2 000 labelled episodes; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 |
 | `dp` (vision Diffusion Policy, Ta = 8, K = 10; from P8 `ppo` seed 0) | **40.8** [38.5, 44.0]; seeds 38.0–44.5; losses/1 000: C 2 · O 438 · H 97 · B 53 |
 | `modular` (estimator + frozen teacher (true `time_fraction` to the teacher); from P8 `ppo` seed 0) | **99.3** [97.7, 99.8]; seeds 97.0–100.0; losses/1 000: H 7 · B 3 |
@@ -70,6 +75,8 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `pid_track_descend` (P8 e01) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 |
 
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
 ### `id`
 
 | arm | SS3 | SS4 | SS5 | SS6 † |
@@ -77,7 +84,8 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `bc_state` (state input (P8's 25-d obs incl. `time_fraction`), BC; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **99.7** [99.5, 100.0]; seeds 99.5–100.0; losses/1 000: H 2 · B 1 | **98.5** [97.8, 98.8]; seeds 97.5–99.0; losses/1 000: H 15 · B 1 ‡ |
 | `bc` (vision BC, 1 000 demos; from P8 `ppo` seed 0) | **99.5** [99.0, 100.0]; seeds 99.0–100.0; losses/1 000: O 2 · H 3 | **98.0** [97.0, 99.3]; seeds 97.0–99.5; losses/1 000: O 5 · H 12 · B 2 | **95.7** [94.7, 96.8]; seeds 94.5–97.0; losses/1 000: O 11 · H 28 · B 4 | **89.2** [86.7, 90.8]; seeds 85.5–91.5; losses/1 000: O 18 · H 85 · B 8 |
 | `bc_matched` (vision BC, 2 000 demos on `bc_dagger`'s schedule; from P8 `ppo` seed 0) | **98.8** [98.2, 99.7]; seeds 98.0–100.0; losses/1 000: O 5 · H 4 · B 1 · T 1 | **98.8** [97.7, 99.8]; seeds 97.5–100.0; losses/1 000: O 5 · H 2 · B 2 · T 3 | **96.3** [95.0, 96.5]; seeds 94.5–96.5; losses/1 000: O 10 · H 24 · B 6 | **89.0** [87.5, 91.8]; seeds 87.5–92.0; losses/1 000: O 15 · H 81 · B 11 |
-| `bc_dart` (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **99.3** [99.0, 99.5]; seeds 99.0–99.5; losses/1 000: O 1 · H 5 · B 1 | **97.2** [96.2, 97.5]; seeds 96.0–97.5; losses/1 000: H 25 · B 5 |
+| `bc_dart` ◇ (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **99.3** [99.0, 99.5]; seeds 99.0–99.5; losses/1 000: O 1 · H 5 · B 1 | **97.2** [96.2, 97.5]; seeds 96.0–97.5; losses/1 000: H 25 · B 5 |
+| `bc_dart` ◇ seeds 1–4 only — sensitivity (post hoc: added after `select`, before any frozen-list read); beside the 5-seed row above, never substituted for it | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0; N = 800 (4 seeds × 200) | **100.0** [99.5, 100.0]; seeds 99.5–100.0; losses/1 000: B 1.2; N = 800 (4 seeds × 200) | **99.2** [99.0, 99.5]; seeds 99.0–99.5; losses/1 000: O 1.2 · H 5 · B 1.2; N = 800 (4 seeds × 200) | **97.0** [96.0, 97.5]; seeds 96.0–97.5; losses/1 000: H 26.2 · B 5; N = 800 (4 seeds × 200) |
 | `bc_dagger` (vision BC + DAgger, 2 000 labelled episodes; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **98.7** [97.7, 99.5]; seeds 97.5–99.5; losses/1 000: H 9 · B 5 | **95.2** [93.8, 96.8]; seeds 93.5–97.0; losses/1 000: O 4 · H 33 · B 11 |
 | `dp` (vision Diffusion Policy, Ta = 8, K = 10; from P8 `ppo` seed 0) | **40.8** [36.3, 46.8]; seeds 36.0–48.0; losses/1 000: C 3 · O 423 · H 123 · B 38 | **40.0** [37.2, 46.0]; seeds 36.5–48.0; losses/1 000: C 3 · O 434 · H 96 · B 58 | **36.3** [32.3, 39.8]; seeds 31.5–40.0; losses/1 000: C 2 · O 462 · H 103 · B 72 | **33.2** [30.8, 37.5]; seeds 30.5–39.0; losses/1 000: O 448 · H 156 · B 58 |
 | `modular` (estimator + frozen teacher (true `time_fraction` to the teacher); from P8 `ppo` seed 0) | **98.7** [97.7, 99.7]; seeds 97.5–100.0; losses/1 000: O 3 · H 6 · B 4 | **95.8** [93.8, 97.0]; seeds 93.0–97.5; losses/1 000: O 6 · H 33 · B 5 | **88.5** [84.5, 90.8]; seeds 83.5–91.5; losses/1 000: O 10 · H 98 · B 11 | **80.5** [79.3, 83.0]; seeds 79.0–84.0; losses/1 000: O 25 · H 155 · B 11 |
@@ -85,6 +93,10 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `pid_feedforward` (P8 e01) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 99.0 [96.4, 99.7] 198/200; losses/200: H 1 · B 1 | 90.5 [85.6, 93.8] 181/200; losses/200: H 8 · B 11 |
 | `pid_track_descend` (P8 e01) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 96.0 [92.3, 98.0] 192/200; losses/200: H 4 · B 4 | 85.0 [79.4, 89.3] 170/200; losses/200: H 12 · B 18 | 80.0 [73.9, 85.0] 160/200; losses/200: H 17 · B 23 |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 98.5 [95.7, 99.5] 197/200; losses/200: T 3 | 89.0 [83.9, 92.6] 178/200; losses/200: B 1 · T 21 | 64.5 [57.7, 70.8] 129/200; losses/200: T 71 |
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
+◇ seeds 1–4 row, SS6 cells: SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students.
 
 ‡ `core bc_state id SS6` is above its own teacher in at least one seed; released by results-skeptic (2026-11-06) after the touchdown audit (`results/e08/above_teacher/audit.md`): One seed of five (s4) is 1 episode above P8 ppo seed 0 (margin 0.005); IQM equal (0.985). Not an exploit: s4's one tunnelled success accounts for the margin, 0 detector disagreements, 5 of 984 successes within 5 % of a success-criterion threshold (teacher 0 of 197). bc_state sees P8's 25-d obs incl. time_fraction, the teacher's own input (privileged by design, never a vision row). SS6 is outside the training distribution; P8's one-ulp flip floor: 6.6 % of id SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. In simulation; model scale, lambda = 1/25.
 
@@ -95,7 +107,8 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `bc_state` (state input (P8's 25-d obs incl. `time_fraction`), BC; from P8 `ppo` seed 0) | **97.2** [95.5, 98.2]; seeds 95.0–98.5; losses/1 000: O 4 · H 24 · B 2 ‡ |
 | `bc` (vision BC, 1 000 demos; from P8 `ppo` seed 0) | **87.2** [84.3, 88.8]; seeds 83.5–89.0; losses/1 000: O 19 · H 99 · B 14 |
 | `bc_matched` (vision BC, 2 000 demos on `bc_dagger`'s schedule; from P8 `ppo` seed 0) | **87.2** [85.7, 88.3]; seeds 85.0–88.5; losses/1 000: O 24 · H 90 · B 16 |
-| `bc_dart` (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **96.2** [95.2, 97.2]; seeds 95.0–97.5; losses/1 000: H 30 · B 8 |
+| `bc_dart` ◇ (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **96.2** [95.2, 97.2]; seeds 95.0–97.5; losses/1 000: H 30 · B 8 |
+| `bc_dart` ◇ seeds 1–4 only — sensitivity (post hoc: added after `select`, before any frozen-list read); beside the 5-seed row above, never substituted for it | **96.0** [95.0, 96.5]; seeds 95.0–96.5; losses/1 000: H 31.2 · B 10; N = 800 (4 seeds × 200) |
 | `bc_dagger` (vision BC + DAgger, 2 000 labelled episodes; from P8 `ppo` seed 0) | **93.5** [91.8, 95.0]; seeds 91.5–95.5; losses/1 000: O 1 · H 58 · B 6 |
 | `dp` (vision Diffusion Policy, Ta = 8, K = 10; from P8 `ppo` seed 0) | **33.8** [31.2, 36.0]; seeds 31.0–36.0; losses/1 000: C 2 · O 459 · H 143 · B 59 |
 | `modular` (estimator + frozen teacher (true `time_fraction` to the teacher); from P8 `ppo` seed 0) | **78.2** [75.3, 78.8]; seeds 74.0–79.0; losses/1 000: O 24 · H 186 · B 15 |
@@ -103,6 +116,10 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `pid_feedforward` (P8 e01) | 90.0 [85.1, 93.4] 180/200; losses/200: H 6 · B 14 |
 | `pid_track_descend` (P8 e01) | 81.0 [75.0, 85.8] 162/200; losses/200: H 15 · B 23 |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | 65.0 [58.2, 71.3] 130/200; losses/200: T 70 |
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
+◇ seeds 1–4 row, SS6 cells: SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students.
 
 ‡ `core bc_state unseen_seastate SS6` is above its own teacher in at least one seed; released by results-skeptic (2026-11-06) after the touchdown audit (`results/e08/above_teacher/audit.md`): One seed of five (s3) is 2 episodes above P8 ppo seed 0 (margin 0.01); IQM 0.972 is below the teacher's 0.975. s3's two tunnelled successes (penetration > 5 mm, which P8 does not reclassify) account for the margin; 0 detector disagreements. Outside the training distribution; P8 did not audit tunnelling outside id, and its flip floor was measured on id SS6 only. In simulation.
 
@@ -113,7 +130,8 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `bc_state` (state input (P8's 25-d obs incl. `time_fraction`), BC; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **88.8** [85.7, 91.7]; seeds 85.5–92.0; losses/1 000: O 18 · H 81 · B 13 ‡ |
 | `bc` (vision BC, 1 000 demos; from P8 `ppo` seed 0) | **99.8** [99.2, 100.0]; seeds 99.0–100.0; losses/1 000: H 3 | **99.5** [98.5, 99.8]; seeds 98.0–100.0; losses/1 000: O 2 · H 5 | **98.0** [97.3, 98.3]; seeds 97.0–98.5; losses/1 000: O 8 · H 7 · B 6 | **80.5** [75.8, 83.3]; seeds 74.5–83.5; losses/1 000: O 43 · H 146 · B 12 |
 | `bc_matched` (vision BC, 2 000 demos on `bc_dagger`'s schedule; from P8 `ppo` seed 0) | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: O 1 | **99.7** [99.2, 100.0]; seeds 99.0–100.0; losses/1 000: O 2 · H 1 · B 1 | **96.5** [95.2, 97.8]; seeds 95.0–98.0; losses/1 000: O 14 · H 19 · B 2 | **76.0** [74.8, 77.2]; seeds 74.5–77.5; losses/1 000: O 50 · H 174 · B 16 |
-| `bc_dart` (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **99.7** [99.2, 100.0]; seeds 99.0–100.0; losses/1 000: B 4 | **87.5** [85.8, 89.3]; seeds 85.5–89.5; losses/1 000: C 2 · O 1 · H 108 · B 14 |
+| `bc_dart` ◇ (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **99.7** [99.2, 100.0]; seeds 99.0–100.0; losses/1 000: B 4 | **87.5** [85.8, 89.3]; seeds 85.5–89.5; losses/1 000: C 2 · O 1 · H 108 · B 14 |
+| `bc_dart` ◇ seeds 1–4 only — sensitivity (post hoc: added after `select`, before any frozen-list read); beside the 5-seed row above, never substituted for it | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0; N = 800 (4 seeds × 200) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0; N = 800 (4 seeds × 200) | **99.8** [99.0, 100.0]; seeds 99.0–100.0; losses/1 000: B 3.8; N = 800 (4 seeds × 200) | **88.0** [85.5, 89.5]; seeds 85.5–89.5; losses/1 000: C 1.2 · O 1.2 · H 108.8 · B 11.2; N = 800 (4 seeds × 200) |
 | `bc_dagger` (vision BC + DAgger, 2 000 labelled episodes; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **99.8** [99.5, 100.0]; seeds 99.5–100.0; losses/1 000: H 2 | **99.8** [99.2, 100.0]; seeds 99.0–100.0; losses/1 000: H 3 | **83.2** [80.0, 85.0]; seeds 79.0–85.0; losses/1 000: O 11 · H 145 · B 17 |
 | `dp` (vision Diffusion Policy, Ta = 8, K = 10; from P8 `ppo` seed 0) | **46.8** [43.8, 48.7]; seeds 43.0–49.5; losses/1 000: C 3 · O 397 · H 89 · B 45 | **41.8** [40.0, 45.0]; seeds 39.5–46.0; losses/1 000: C 5 · O 408 · H 99 · B 66 | **36.3** [31.5, 40.0]; seeds 30.5–41.0; losses/1 000: C 4 · O 469 · H 109 · B 57 | **29.5** [27.2, 35.2]; seeds 27.0–36.0; losses/1 000: C 1 · O 470 · H 188 · B 38 |
 | `modular` (estimator + frozen teacher (true `time_fraction` to the teacher); from P8 `ppo` seed 0) | **97.3** [95.7, 99.0]; seeds 95.0–99.0; losses/1 000: O 2 · H 25 · B 1 | **96.2** [95.0, 97.8]; seeds 95.0–98.0; losses/1 000: O 5 · H 29 · B 3 | **86.5** [85.2, 89.0]; seeds 85.0–90.0; losses/1 000: O 11 · H 118 · B 2 | **69.8** [62.0, 71.3]; seeds 59.0–71.5; losses/1 000: O 79 · H 226 · B 15 |
@@ -121,6 +139,10 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `pid_feedforward` (P8 e01) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 99.5 [97.2, 99.9] 199/200; losses/200: B 1 | 77.0 [70.7, 82.3] 154/200; losses/200: H 24 · B 22 |
 | `pid_track_descend` (P8 e01) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 97.5 [94.3, 98.9] 195/200; losses/200: B 5 | 72.5 [65.9, 78.2] 145/200; losses/200: H 22 · B 33 |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 99.5 [97.2, 99.9] 199/200; losses/200: T 1 | 46.5 [39.7, 53.4] 93/200; losses/200: T 107 |
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
+◇ seeds 1–4 row, SS6 cells: SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students.
 
 ‡ `core bc_state unseen_heading SS6` is above its own teacher in at least one seed; released by results-skeptic (2026-11-06) after the touchdown audit (`results/e08/above_teacher/audit.md`): One seed of five (s2) is 2 episodes above P8 ppo seed 0 (margin 0.01); IQM 0.888 is below the teacher's 0.91. Within binomial noise for 200 episodes; tunnelled 55 over five seeds vs 8 for the single teacher run, 12 of 888 successes within 5 % of a success-criterion threshold (teacher 1 of 182). 90 deg heading and SS6 are outside the training distribution; P8 did not audit tunnelling outside id. P8's one-ulp flip floor: 6.6 % of id SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs on id SS6 only, not on these students or this list. Regimes share realizations, so the three bc_state flags are not independent. In simulation.
 
@@ -131,7 +153,8 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `bc_state` (state input (P8's 25-d obs incl. `time_fraction`), BC; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **99.5** [99.2, 99.5]; seeds 99.0–99.5; losses/1 000: H 4 · B 2 |
 | `bc` (vision BC, 1 000 demos; from P8 `ppo` seed 0) | **99.3** [99.0, 99.8]; seeds 99.0–100.0; losses/1 000: O 1 · H 5 | **98.7** [98.2, 99.0]; seeds 98.0–99.0; losses/1 000: O 2 · H 11 · B 1 | **94.0** [92.8, 94.8]; seeds 92.5–95.0; losses/1 000: O 13 · H 45 · B 3 | **90.2** [87.5, 92.3]; seeds 87.5–93.0; losses/1 000: O 29 · H 62 · B 7 |
 | `bc_matched` (vision BC, 2 000 demos on `bc_dagger`'s schedule; from P8 `ppo` seed 0) | **99.2** [98.2, 99.5]; seeds 98.0–99.5; losses/1 000: O 3 · H 6 · B 1 | **98.5** [98.2, 99.5]; seeds 98.0–100.0; losses/1 000: O 5 · H 7 · B 1 | **95.0** [94.5, 96.2]; seeds 94.5–96.5; losses/1 000: O 15 · H 27 · B 5 · T 1 | **91.2** [88.7, 92.8]; seeds 88.5–93.0; losses/1 000: O 23 · H 55 · B 12 |
-| `bc_dart` (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **99.5** [99.2, 99.8]; seeds 99.0–100.0; losses/1 000: O 1 · H 1 · B 3 | **97.8** [96.3, 98.8]; seeds 96.0–99.0; losses/1 000: O 2 · H 10 · B 11 |
+| `bc_dart` ◇ (vision BC on DART σ* = 0.10 demos; from P8 `ppo` seed 0) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0 | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: B 1 | **99.5** [99.2, 99.8]; seeds 99.0–100.0; losses/1 000: O 1 · H 1 · B 3 | **97.8** [96.3, 98.8]; seeds 96.0–99.0; losses/1 000: O 2 · H 10 · B 11 |
+| `bc_dart` ◇ seeds 1–4 only — sensitivity (post hoc: added after `select`, before any frozen-list read); beside the 5-seed row above, never substituted for it | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0; N = 800 (4 seeds × 200) | **100.0** [100.0, 100.0]; seeds 100.0–100.0; losses/1 000: 0; N = 800 (4 seeds × 200) | **99.5** [99.0, 100.0]; seeds 99.0–100.0; losses/1 000: H 1.2 · B 3.8; N = 800 (4 seeds × 200) | **97.5** [96.0, 98.5]; seeds 96.0–98.5; losses/1 000: O 1.2 · H 12.5 · B 12.5; N = 800 (4 seeds × 200) |
 | `bc_dagger` (vision BC + DAgger, 2 000 labelled episodes; from P8 `ppo` seed 0) | **100.0** [99.7, 100.0]; seeds 99.5–100.0; losses/1 000: H 1 | **99.8** [99.2, 100.0]; seeds 99.0–100.0; losses/1 000: H 2 · B 1 | **98.7** [98.0, 99.3]; seeds 98.0–99.5; losses/1 000: H 12 · B 1 | **95.7** [94.2, 96.7]; seeds 94.0–97.0; losses/1 000: O 6 · H 32 · B 6 |
 | `dp` (vision Diffusion Policy, Ta = 8, K = 10; from P8 `ppo` seed 0) | **43.8** [42.2, 46.8]; seeds 42.0–48.5; losses/1 000: C 2 · O 411 · H 90 · B 53 | **37.8** [34.2, 42.0]; seeds 33.0–43.5; losses/1 000: C 4 · O 460 · H 98 · B 57 · T 1 | **35.3** [31.0, 39.8]; seeds 30.5–41.0; losses/1 000: C 5 · O 451 · H 120 · B 69 | **36.5** [32.5, 37.8]; seeds 31.0–38.0; losses/1 000: C 6 · O 436 · H 146 · B 55 |
 | `modular` (estimator + frozen teacher (true `time_fraction` to the teacher); from P8 `ppo` seed 0) | **97.0** [95.2, 98.5]; seeds 94.5–99.0; losses/1 000: O 3 · H 23 · B 5 | **95.8** [95.2, 96.3]; seeds 95.0–96.5; losses/1 000: O 2 · H 37 · B 3 | **88.7** [84.3, 90.7]; seeds 83.0–91.0; losses/1 000: O 14 · H 98 · B 8 | **80.7** [77.3, 82.5]; seeds 76.0–83.0; losses/1 000: O 31 · H 155 · B 12 |
@@ -140,7 +163,11 @@ Teacher and the three P8 baselines are printed beside every student, from P8's c
 | `pid_track_descend` (P8 e01) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 97.5 [94.3, 98.9] 195/200; losses/200: B 5 | 90.0 [85.1, 93.4] 180/200; losses/200: H 14 · B 6 | 81.5 [75.5, 86.3] 163/200; losses/200: H 20 · B 17 |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 100.0 [98.1, 100.0] 200/200; losses/200: 0 | 95.0 [91.0, 97.3] 190/200; losses/200: T 10 | 89.0 [83.9, 92.6] 178/200; losses/200: T 22 |
 
-Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
+◇ seeds 1–4 row, SS6 cells: SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students.
+
+Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`; ◇ seeds 1–4 rows: `results/e08/bc_dart_s1_4.csv` (`kind` iqm).
 
 ## 3. Outcome breakdown (all six classes, counts pooled over seeds within a cell; % of N)
 
@@ -149,7 +176,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | static | static | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | static | static | 1000 | 0 (0.0) | 1 (0.1) | 1 (0.1) | 0 (0.0) | 998 (99.8) | 0 (0.0) |
 | `bc_matched` | static | static | 1000 | 0 (0.0) | 1 (0.1) | 2 (0.2) | 0 (0.0) | 997 (99.7) | 0 (0.0) |
-| `bc_dart` | static | static | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
+| `bc_dart` ◇ | static | static | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc_dagger` | static | static | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `dp` | static | static | 1000 | 2 (0.2) | 438 (43.8) | 97 (9.7) | 53 (5.3) | 410 (41.0) | 0 (0.0) |
 | `modular` | static | static | 1000 | 0 (0.0) | 0 (0.0) | 7 (0.7) | 3 (0.3) | 990 (99.0) | 0 (0.0) |
@@ -160,7 +187,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | id | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | id | SS3 | 1000 | 0 (0.0) | 2 (0.2) | 3 (0.3) | 0 (0.0) | 995 (99.5) | 0 (0.0) |
 | `bc_matched` | id | SS3 | 1000 | 0 (0.0) | 5 (0.5) | 4 (0.4) | 1 (0.1) | 989 (98.9) | 1 (0.1) |
-| `bc_dart` | id | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
+| `bc_dart` ◇ | id | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
 | `bc_dagger` | id | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `dp` | id | SS3 | 1000 | 3 (0.3) | 423 (42.3) | 123 (12.3) | 38 (3.8) | 413 (41.3) | 0 (0.0) |
 | `modular` | id | SS3 | 1000 | 0 (0.0) | 3 (0.3) | 6 (0.6) | 4 (0.4) | 987 (98.7) | 0 (0.0) |
@@ -171,7 +198,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | id | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | id | SS4 | 1000 | 0 (0.0) | 5 (0.5) | 12 (1.2) | 2 (0.2) | 981 (98.1) | 0 (0.0) |
 | `bc_matched` | id | SS4 | 1000 | 0 (0.0) | 5 (0.5) | 2 (0.2) | 2 (0.2) | 988 (98.8) | 3 (0.3) |
-| `bc_dart` | id | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
+| `bc_dart` ◇ | id | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
 | `bc_dagger` | id | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
 | `dp` | id | SS4 | 1000 | 3 (0.3) | 434 (43.4) | 96 (9.6) | 58 (5.8) | 409 (40.9) | 0 (0.0) |
 | `modular` | id | SS4 | 1000 | 0 (0.0) | 6 (0.6) | 33 (3.3) | 5 (0.5) | 956 (95.6) | 0 (0.0) |
@@ -182,7 +209,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | id | SS5 | 1000 | 0 (0.0) | 0 (0.0) | 2 (0.2) | 1 (0.1) | 997 (99.7) | 0 (0.0) |
 | `bc` | id | SS5 | 1000 | 0 (0.0) | 11 (1.1) | 28 (2.8) | 4 (0.4) | 957 (95.7) | 0 (0.0) |
 | `bc_matched` | id | SS5 | 1000 | 0 (0.0) | 10 (1.0) | 24 (2.4) | 6 (0.6) | 960 (96.0) | 0 (0.0) |
-| `bc_dart` | id | SS5 | 1000 | 0 (0.0) | 1 (0.1) | 5 (0.5) | 1 (0.1) | 993 (99.3) | 0 (0.0) |
+| `bc_dart` ◇ | id | SS5 | 1000 | 0 (0.0) | 1 (0.1) | 5 (0.5) | 1 (0.1) | 993 (99.3) | 0 (0.0) |
 | `bc_dagger` | id | SS5 | 1000 | 0 (0.0) | 0 (0.0) | 9 (0.9) | 5 (0.5) | 986 (98.6) | 0 (0.0) |
 | `dp` | id | SS5 | 1000 | 2 (0.2) | 462 (46.2) | 103 (10.3) | 72 (7.2) | 361 (36.1) | 0 (0.0) |
 | `modular` | id | SS5 | 1000 | 0 (0.0) | 10 (1.0) | 98 (9.8) | 11 (1.1) | 881 (88.1) | 0 (0.0) |
@@ -193,7 +220,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` ‡ | id | SS6 † | 1000 | 0 (0.0) | 0 (0.0) | 15 (1.5) | 1 (0.1) | 984 (98.4) | 0 (0.0) |
 | `bc` | id | SS6 † | 1000 | 0 (0.0) | 18 (1.8) | 85 (8.5) | 8 (0.8) | 889 (88.9) | 0 (0.0) |
 | `bc_matched` | id | SS6 † | 1000 | 0 (0.0) | 15 (1.5) | 81 (8.1) | 11 (1.1) | 893 (89.3) | 0 (0.0) |
-| `bc_dart` | id | SS6 † | 1000 | 0 (0.0) | 0 (0.0) | 25 (2.5) | 5 (0.5) | 970 (97.0) | 0 (0.0) |
+| `bc_dart` ◇ | id | SS6 † | 1000 | 0 (0.0) | 0 (0.0) | 25 (2.5) | 5 (0.5) | 970 (97.0) | 0 (0.0) |
 | `bc_dagger` | id | SS6 † | 1000 | 0 (0.0) | 4 (0.4) | 33 (3.3) | 11 (1.1) | 952 (95.2) | 0 (0.0) |
 | `dp` | id | SS6 † | 1000 | 0 (0.0) | 448 (44.8) | 156 (15.6) | 58 (5.8) | 338 (33.8) | 0 (0.0) |
 | `modular` | id | SS6 † | 1000 | 0 (0.0) | 25 (2.5) | 155 (15.5) | 11 (1.1) | 809 (80.9) | 0 (0.0) |
@@ -204,7 +231,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` ‡ | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 4 (0.4) | 24 (2.4) | 2 (0.2) | 970 (97.0) | 0 (0.0) |
 | `bc` | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 19 (1.9) | 99 (9.9) | 14 (1.4) | 868 (86.8) | 0 (0.0) |
 | `bc_matched` | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 24 (2.4) | 90 (9.0) | 16 (1.6) | 870 (87.0) | 0 (0.0) |
-| `bc_dart` | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 0 (0.0) | 30 (3.0) | 8 (0.8) | 962 (96.2) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 0 (0.0) | 30 (3.0) | 8 (0.8) | 962 (96.2) | 0 (0.0) |
 | `bc_dagger` | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 1 (0.1) | 58 (5.8) | 6 (0.6) | 935 (93.5) | 0 (0.0) |
 | `dp` | unseen_seastate | SS6 † | 1000 | 2 (0.2) | 459 (45.9) | 143 (14.3) | 59 (5.9) | 337 (33.7) | 0 (0.0) |
 | `modular` | unseen_seastate | SS6 † | 1000 | 0 (0.0) | 24 (2.4) | 186 (18.6) | 15 (1.5) | 775 (77.5) | 0 (0.0) |
@@ -215,7 +242,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_heading | SS3 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | unseen_heading | SS3 † | 1000 | 0 (0.0) | 0 (0.0) | 3 (0.3) | 0 (0.0) | 997 (99.7) | 0 (0.0) |
 | `bc_matched` | unseen_heading | SS3 † | 1000 | 0 (0.0) | 1 (0.1) | 0 (0.0) | 0 (0.0) | 999 (99.9) | 0 (0.0) |
-| `bc_dart` | unseen_heading | SS3 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_heading | SS3 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc_dagger` | unseen_heading | SS3 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `dp` | unseen_heading | SS3 † | 1000 | 3 (0.3) | 397 (39.7) | 89 (8.9) | 45 (4.5) | 466 (46.6) | 0 (0.0) |
 | `modular` | unseen_heading | SS3 † | 1000 | 0 (0.0) | 2 (0.2) | 25 (2.5) | 1 (0.1) | 972 (97.2) | 0 (0.0) |
@@ -226,7 +253,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_heading | SS4 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | unseen_heading | SS4 † | 1000 | 0 (0.0) | 2 (0.2) | 5 (0.5) | 0 (0.0) | 993 (99.3) | 0 (0.0) |
 | `bc_matched` | unseen_heading | SS4 † | 1000 | 0 (0.0) | 2 (0.2) | 1 (0.1) | 1 (0.1) | 996 (99.6) | 0 (0.0) |
-| `bc_dart` | unseen_heading | SS4 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_heading | SS4 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc_dagger` | unseen_heading | SS4 † | 1000 | 0 (0.0) | 0 (0.0) | 2 (0.2) | 0 (0.0) | 998 (99.8) | 0 (0.0) |
 | `dp` | unseen_heading | SS4 † | 1000 | 5 (0.5) | 408 (40.8) | 99 (9.9) | 66 (6.6) | 422 (42.2) | 0 (0.0) |
 | `modular` | unseen_heading | SS4 † | 1000 | 0 (0.0) | 5 (0.5) | 29 (2.9) | 3 (0.3) | 963 (96.3) | 0 (0.0) |
@@ -237,7 +264,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_heading | SS5 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | unseen_heading | SS5 † | 1000 | 0 (0.0) | 8 (0.8) | 7 (0.7) | 6 (0.6) | 979 (97.9) | 0 (0.0) |
 | `bc_matched` | unseen_heading | SS5 † | 1000 | 0 (0.0) | 14 (1.4) | 19 (1.9) | 2 (0.2) | 965 (96.5) | 0 (0.0) |
-| `bc_dart` | unseen_heading | SS5 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 4 (0.4) | 996 (99.6) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_heading | SS5 † | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 4 (0.4) | 996 (99.6) | 0 (0.0) |
 | `bc_dagger` | unseen_heading | SS5 † | 1000 | 0 (0.0) | 0 (0.0) | 3 (0.3) | 0 (0.0) | 997 (99.7) | 0 (0.0) |
 | `dp` | unseen_heading | SS5 † | 1000 | 4 (0.4) | 469 (46.9) | 109 (10.9) | 57 (5.7) | 361 (36.1) | 0 (0.0) |
 | `modular` | unseen_heading | SS5 † | 1000 | 0 (0.0) | 11 (1.1) | 118 (11.8) | 2 (0.2) | 869 (86.9) | 0 (0.0) |
@@ -248,7 +275,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` ‡ | unseen_heading | SS6 † | 1000 | 0 (0.0) | 18 (1.8) | 81 (8.1) | 13 (1.3) | 888 (88.8) | 0 (0.0) |
 | `bc` | unseen_heading | SS6 † | 1000 | 0 (0.0) | 43 (4.3) | 146 (14.6) | 12 (1.2) | 799 (79.9) | 0 (0.0) |
 | `bc_matched` | unseen_heading | SS6 † | 1000 | 0 (0.0) | 50 (5.0) | 174 (17.4) | 16 (1.6) | 760 (76.0) | 0 (0.0) |
-| `bc_dart` | unseen_heading | SS6 † | 1000 | 2 (0.2) | 1 (0.1) | 108 (10.8) | 14 (1.4) | 875 (87.5) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_heading | SS6 † | 1000 | 2 (0.2) | 1 (0.1) | 108 (10.8) | 14 (1.4) | 875 (87.5) | 0 (0.0) |
 | `bc_dagger` | unseen_heading | SS6 † | 1000 | 0 (0.0) | 11 (1.1) | 145 (14.5) | 17 (1.7) | 827 (82.7) | 0 (0.0) |
 | `dp` | unseen_heading | SS6 † | 1000 | 1 (0.1) | 470 (47.0) | 188 (18.8) | 38 (3.8) | 303 (30.3) | 0 (0.0) |
 | `modular` | unseen_heading | SS6 † | 1000 | 0 (0.0) | 79 (7.9) | 226 (22.6) | 15 (1.5) | 680 (68.0) | 0 (0.0) |
@@ -259,7 +286,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_vessel | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | unseen_vessel | SS3 | 1000 | 0 (0.0) | 1 (0.1) | 5 (0.5) | 0 (0.0) | 994 (99.4) | 0 (0.0) |
 | `bc_matched` | unseen_vessel | SS3 | 1000 | 0 (0.0) | 3 (0.3) | 6 (0.6) | 1 (0.1) | 990 (99.0) | 0 (0.0) |
-| `bc_dart` | unseen_vessel | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_vessel | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc_dagger` | unseen_vessel | SS3 | 1000 | 0 (0.0) | 0 (0.0) | 1 (0.1) | 0 (0.0) | 999 (99.9) | 0 (0.0) |
 | `dp` | unseen_vessel | SS3 | 1000 | 2 (0.2) | 411 (41.1) | 90 (9.0) | 53 (5.3) | 444 (44.4) | 0 (0.0) |
 | `modular` | unseen_vessel | SS3 | 1000 | 0 (0.0) | 3 (0.3) | 23 (2.3) | 5 (0.5) | 969 (96.9) | 0 (0.0) |
@@ -270,7 +297,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_vessel | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | unseen_vessel | SS4 | 1000 | 0 (0.0) | 2 (0.2) | 11 (1.1) | 1 (0.1) | 986 (98.6) | 0 (0.0) |
 | `bc_matched` | unseen_vessel | SS4 | 1000 | 0 (0.0) | 5 (0.5) | 7 (0.7) | 1 (0.1) | 987 (98.7) | 0 (0.0) |
-| `bc_dart` | unseen_vessel | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_vessel | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1 (0.1) | 999 (99.9) | 0 (0.0) |
 | `bc_dagger` | unseen_vessel | SS4 | 1000 | 0 (0.0) | 0 (0.0) | 2 (0.2) | 1 (0.1) | 997 (99.7) | 0 (0.0) |
 | `dp` | unseen_vessel | SS4 | 1000 | 4 (0.4) | 460 (46.0) | 98 (9.8) | 57 (5.7) | 380 (38.0) | 1 (0.1) |
 | `modular` | unseen_vessel | SS4 | 1000 | 0 (0.0) | 2 (0.2) | 37 (3.7) | 3 (0.3) | 958 (95.8) | 0 (0.0) |
@@ -281,7 +308,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_vessel | SS5 | 1000 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 1000 (100.0) | 0 (0.0) |
 | `bc` | unseen_vessel | SS5 | 1000 | 0 (0.0) | 13 (1.3) | 45 (4.5) | 3 (0.3) | 939 (93.9) | 0 (0.0) |
 | `bc_matched` | unseen_vessel | SS5 | 1000 | 0 (0.0) | 15 (1.5) | 27 (2.7) | 5 (0.5) | 952 (95.2) | 1 (0.1) |
-| `bc_dart` | unseen_vessel | SS5 | 1000 | 0 (0.0) | 1 (0.1) | 1 (0.1) | 3 (0.3) | 995 (99.5) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_vessel | SS5 | 1000 | 0 (0.0) | 1 (0.1) | 1 (0.1) | 3 (0.3) | 995 (99.5) | 0 (0.0) |
 | `bc_dagger` | unseen_vessel | SS5 | 1000 | 0 (0.0) | 0 (0.0) | 12 (1.2) | 1 (0.1) | 987 (98.7) | 0 (0.0) |
 | `dp` | unseen_vessel | SS5 | 1000 | 5 (0.5) | 451 (45.1) | 120 (12.0) | 69 (6.9) | 355 (35.5) | 0 (0.0) |
 | `modular` | unseen_vessel | SS5 | 1000 | 0 (0.0) | 14 (1.4) | 98 (9.8) | 8 (0.8) | 880 (88.0) | 0 (0.0) |
@@ -292,7 +319,7 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `bc_state` | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 0 (0.0) | 4 (0.4) | 2 (0.2) | 994 (99.4) | 0 (0.0) |
 | `bc` | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 29 (2.9) | 62 (6.2) | 7 (0.7) | 902 (90.2) | 0 (0.0) |
 | `bc_matched` | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 23 (2.3) | 55 (5.5) | 12 (1.2) | 910 (91.0) | 0 (0.0) |
-| `bc_dart` | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 2 (0.2) | 10 (1.0) | 11 (1.1) | 977 (97.7) | 0 (0.0) |
+| `bc_dart` ◇ | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 2 (0.2) | 10 (1.0) | 11 (1.1) | 977 (97.7) | 0 (0.0) |
 | `bc_dagger` | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 6 (0.6) | 32 (3.2) | 6 (0.6) | 956 (95.6) | 0 (0.0) |
 | `dp` | unseen_vessel | SS6 † | 1000 | 6 (0.6) | 436 (43.6) | 146 (14.6) | 55 (5.5) | 357 (35.7) | 0 (0.0) |
 | `modular` | unseen_vessel | SS6 † | 1000 | 0 (0.0) | 31 (3.1) | 155 (15.5) | 12 (1.2) | 802 (80.2) | 0 (0.0) |
@@ -300,6 +327,8 @@ Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.
 | `pid_feedforward` (P8 e01) | unseen_vessel | SS6 † | 200 | 0 (0.0) | 0 (0.0) | 1 (0.5) | 2 (1.0) | 197 (98.5) | 0 (0.0) |
 | `pid_track_descend` (P8 e01) | unseen_vessel | SS6 † | 200 | 0 (0.0) | 0 (0.0) | 20 (10.0) | 17 (8.5) | 163 (81.5) | 0 (0.0) |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | unseen_vessel | SS6 † | 200 | 0 (0.0) | 0 (0.0) | 0 (0.0) | 0 (0.0) | 178 (89.0) | 22 (11.0) |
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
 
 Sources: `results/e08/aggregate.csv`, `results/e08/baselines.csv`.
 
@@ -351,20 +380,20 @@ Learned arms: the mean over seeds of each seed's cell value (sums for counts); b
 | `bc_matched` | unseen_vessel | SS4 | 0.270 | 0.399 | 0.399 | 0.018 | 0.048 | 4.129 | 1.550 | 0.237 | 0.215 | 0 | 2 | 0.085 | 64.205 |
 | `bc_matched` | unseen_vessel | SS5 | 0.280 | 0.458 | 0.458 | 0.019 | 0.072 | 5.173 | 1.552 | 0.242 | 0.217 | 0 | 7 | 0.107 | 64.670 |
 | `bc_matched` | unseen_vessel | SS6 † | 0.302 | 0.507 | 0.511 | 0.024 | 0.077 | 9.032 | 1.585 | 0.249 | 0.221 | 3 | 23 | 0.129 | 64.880 |
-| `bc_dart` | static | static | 0.242 | 0.282 | 0.282 | 0.013 | 0.026 | 3.440 | 1.529 | 0.240 | 0.211 | 0 | 0 | 0.028 | 61.097 |
-| `bc_dart` | id | SS3 | 0.240 | 0.306 | 0.307 | 0.012 | 0.025 | 3.786 | 1.532 | 0.240 | 0.212 | 0 | 0 | 0.032 | 61.318 |
-| `bc_dart` | id | SS4 | 0.237 | 0.340 | 0.340 | 0.013 | 0.026 | 5.093 | 1.545 | 0.242 | 0.213 | 0 | 0 | 0.039 | 61.568 |
-| `bc_dart` | id | SS5 | 0.236 | 0.347 | 0.349 | 0.014 | 0.029 | 8.025 | 1.543 | 0.243 | 0.218 | 0 | 1 | 0.054 | 62.092 |
-| `bc_dart` | id | SS6 † | 0.249 | 0.368 | 0.371 | 0.013 | 0.031 | 12.168 | 1.539 | 0.251 | 0.223 | 0 | 9 | 0.064 | 61.897 |
-| `bc_dart` | unseen_seastate | SS6 † | 0.247 | 0.354 | 0.358 | 0.013 | 0.031 | 12.581 | 1.528 | 0.248 | 0.225 | 1 | 17 | 0.062 | 61.363 |
-| `bc_dart` | unseen_heading | SS3 † | 0.244 | 0.290 | 0.290 | 0.013 | 0.027 | 3.442 | 1.542 | 0.242 | 0.212 | 0 | 0 | 0.029 | 61.426 |
-| `bc_dart` | unseen_heading | SS4 † | 0.242 | 0.304 | 0.303 | 0.013 | 0.027 | 4.016 | 1.530 | 0.242 | 0.212 | 0 | 0 | 0.032 | 61.274 |
-| `bc_dart` | unseen_heading | SS5 † | 0.246 | 0.327 | 0.329 | 0.013 | 0.027 | 6.502 | 1.542 | 0.244 | 0.216 | 0 | 0 | 0.041 | 61.379 |
-| `bc_dart` | unseen_heading | SS6 † | 0.247 | 0.343 | 0.350 | 0.015 | 0.040 | 18.462 | 1.516 | 0.257 | 0.233 | 0 | 43 | 0.081 | 60.414 |
-| `bc_dart` | unseen_vessel | SS3 | 0.242 | 0.300 | 0.300 | 0.013 | 0.027 | 3.392 | 1.526 | 0.240 | 0.212 | 0 | 0 | 0.031 | 61.277 |
-| `bc_dart` | unseen_vessel | SS4 | 0.239 | 0.324 | 0.325 | 0.013 | 0.026 | 4.076 | 1.546 | 0.239 | 0.214 | 0 | 0 | 0.039 | 61.712 |
-| `bc_dart` | unseen_vessel | SS5 | 0.237 | 0.349 | 0.349 | 0.012 | 0.028 | 5.569 | 1.545 | 0.242 | 0.214 | 0 | 1 | 0.049 | 62.025 |
-| `bc_dart` | unseen_vessel | SS6 † | 0.231 | 0.350 | 0.352 | 0.014 | 0.032 | 9.181 | 1.559 | 0.249 | 0.219 | 4 | 2 | 0.060 | 62.473 |
+| `bc_dart` ◇ | static | static | 0.242 | 0.282 | 0.282 | 0.013 | 0.026 | 3.440 | 1.529 | 0.240 | 0.211 | 0 | 0 | 0.028 | 61.097 |
+| `bc_dart` ◇ | id | SS3 | 0.240 | 0.306 | 0.307 | 0.012 | 0.025 | 3.786 | 1.532 | 0.240 | 0.212 | 0 | 0 | 0.032 | 61.318 |
+| `bc_dart` ◇ | id | SS4 | 0.237 | 0.340 | 0.340 | 0.013 | 0.026 | 5.093 | 1.545 | 0.242 | 0.213 | 0 | 0 | 0.039 | 61.568 |
+| `bc_dart` ◇ | id | SS5 | 0.236 | 0.347 | 0.349 | 0.014 | 0.029 | 8.025 | 1.543 | 0.243 | 0.218 | 0 | 1 | 0.054 | 62.092 |
+| `bc_dart` ◇ | id | SS6 † | 0.249 | 0.368 | 0.371 | 0.013 | 0.031 | 12.168 | 1.539 | 0.251 | 0.223 | 0 | 9 | 0.064 | 61.897 |
+| `bc_dart` ◇ | unseen_seastate | SS6 † | 0.247 | 0.354 | 0.358 | 0.013 | 0.031 | 12.581 | 1.528 | 0.248 | 0.225 | 1 | 17 | 0.062 | 61.363 |
+| `bc_dart` ◇ | unseen_heading | SS3 † | 0.244 | 0.290 | 0.290 | 0.013 | 0.027 | 3.442 | 1.542 | 0.242 | 0.212 | 0 | 0 | 0.029 | 61.426 |
+| `bc_dart` ◇ | unseen_heading | SS4 † | 0.242 | 0.304 | 0.303 | 0.013 | 0.027 | 4.016 | 1.530 | 0.242 | 0.212 | 0 | 0 | 0.032 | 61.274 |
+| `bc_dart` ◇ | unseen_heading | SS5 † | 0.246 | 0.327 | 0.329 | 0.013 | 0.027 | 6.502 | 1.542 | 0.244 | 0.216 | 0 | 0 | 0.041 | 61.379 |
+| `bc_dart` ◇ | unseen_heading | SS6 † | 0.247 | 0.343 | 0.350 | 0.015 | 0.040 | 18.462 | 1.516 | 0.257 | 0.233 | 0 | 43 | 0.081 | 60.414 |
+| `bc_dart` ◇ | unseen_vessel | SS3 | 0.242 | 0.300 | 0.300 | 0.013 | 0.027 | 3.392 | 1.526 | 0.240 | 0.212 | 0 | 0 | 0.031 | 61.277 |
+| `bc_dart` ◇ | unseen_vessel | SS4 | 0.239 | 0.324 | 0.325 | 0.013 | 0.026 | 4.076 | 1.546 | 0.239 | 0.214 | 0 | 0 | 0.039 | 61.712 |
+| `bc_dart` ◇ | unseen_vessel | SS5 | 0.237 | 0.349 | 0.349 | 0.012 | 0.028 | 5.569 | 1.545 | 0.242 | 0.214 | 0 | 1 | 0.049 | 62.025 |
+| `bc_dart` ◇ | unseen_vessel | SS6 † | 0.231 | 0.350 | 0.352 | 0.014 | 0.032 | 9.181 | 1.559 | 0.249 | 0.219 | 4 | 2 | 0.060 | 62.473 |
 | `bc_dagger` | static | static | 0.248 | 0.322 | 0.322 | 0.013 | 0.026 | 3.456 | 1.538 | 0.238 | 0.211 | 0 | 0 | 0.047 | 61.664 |
 | `bc_dagger` | id | SS3 | 0.251 | 0.330 | 0.330 | 0.013 | 0.026 | 3.706 | 1.546 | 0.239 | 0.213 | 0 | 0 | 0.052 | 61.818 |
 | `bc_dagger` | id | SS4 | 0.251 | 0.358 | 0.359 | 0.013 | 0.029 | 4.416 | 1.555 | 0.241 | 0.214 | 0 | 0 | 0.062 | 61.979 |
@@ -464,6 +493,8 @@ Learned arms: the mean over seeds of each seed's cell value (sums for counts); b
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | unseen_vessel | SS6 † | 0.193 | 0.235 | 0.235 | 0.019 | 0.035 | 5.442 | 4.808 | 0.048 | 0.015 | 0 | 0 | — | — |
 | `oracle_gated` (P8 e01; commit-timing oracle, privileged, not a bound) | static | static | 0.193 | 0.204 | 0.204 | 0.024 | 0.045 | 4.457 | 3.142 | 0.043 | 0.006 | 0 | 0 | — | — |
 
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
 Sources: `results/e08/summary.csv`, `results/e08/baselines.csv`.
 
 ## 5. Hypotheses (scored exactly as frozen in P3-D1 §6)
@@ -509,7 +540,7 @@ Stated with the result (verbatim from the scorer):
 - bc_dagger and bc_matched share iteration 0, the loop, the step count, the candidate set and the 2 000 starting conditions; they differ only in who chose the actions on the second 1 000 (P3-D1 §6 H1).
 - No multiplicity correction is applied (P3-D1 §1).
 
-### H1 DART secondary (SS5): `bc_dart` − `bc` — `id SS5`
+### H1 DART secondary (SS5): `bc_dart` ◇ − `bc` — `id SS5`
 
 - **Verdict: inconclusive** (CI excludes 0; estimate positive but below +5 points).
 - Estimate: +3.6 points [+1.7, +5.8]; magnitude +5 points; in simulation.
@@ -521,6 +552,7 @@ Stated with the result (verbatim from the scorer):
 - labelled frames: bc_dart: 304,535 (per seed 60,907, 60,907, 60,907, 60,907, 60,907); bc: 307,590 (per seed 61,518, 61,518, 61,518, 61,518, 61,518).
 - descriptive, not scored: success minus tunnelled successes: bc_dart 992/1000 (tunnelled successes removed: 1); bc 952/1000 (tunnelled successes removed: 5); difference +4.0 points (point estimate only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it).
 - H1-DART-SS6 beside it: +8.1 points [+4.6, +11.9] (1 decimal): supported.
+- ◇ Sensitivity, `bc_dart` on seeds 1–4 only (post hoc: added after `select`, before any frozen-list read); printed beside the 5-seed result above, never substituted for it; no verdict is given on it: success(bc_dart seeds 1, 2, 3, 4) − success(bc seeds 0, 1, 2, 3, 4) = +3.5 points [+1.6, +5.7] (1 decimal), separates: bc_dart (seeds 1-4) above bc (CI wholly above 0); N: 200 paired episodes, seeds `bc_dart` 4, `bc` 5; statistic: P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023). `bc_dart` IQM at `id SS5`: seeds 1–4 99.2 [99.0, 99.5]; five seeds as frozen 99.3 [99.0, 99.5].
 
 Stated with the result (verbatim from the scorer):
 
@@ -528,7 +560,9 @@ Stated with the result (verbatim from the scorer):
 - Ceiling-limited: bc is at 95.7 % (957/1000) in id SS5, so the largest attainable gain is 4.3 points, below +5; 'supported' was unattainable. The rule's verdict is kept (P3-D1 §6 ceilings; P8-D1 item 3).
 - No multiplicity correction is applied (P3-D1 §1).
 
-### H1 DART secondary (SS6): `bc_dart` − `bc` — `id SS6`
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
+
+### H1 DART secondary (SS6): `bc_dart` ◇ − `bc` — `id SS6`
 
 - **Verdict: supported**.
 - Estimate: +8.1 points [+4.6, +11.9]; magnitude +5 points; in simulation.
@@ -540,11 +574,14 @@ Stated with the result (verbatim from the scorer):
 - labelled frames: bc_dart: 304,535 (per seed 60,907, 60,907, 60,907, 60,907, 60,907); bc: 307,590 (per seed 61,518, 61,518, 61,518, 61,518, 61,518).
 - descriptive, not scored: success minus tunnelled successes: bc_dart 966/1000 (tunnelled successes removed: 4); bc 881/1000 (tunnelled successes removed: 8); difference +8.5 points (point estimate only, no CI; P8's tunnelled flag; the verdict uses success as P8 scores it).
 - SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students.
+- ◇ Sensitivity, `bc_dart` on seeds 1–4 only (post hoc: added after `select`, before any frozen-list read); printed beside the 5-seed result above, never substituted for it; no verdict is given on it: success(bc_dart seeds 1, 2, 3, 4) − success(bc seeds 0, 1, 2, 3, 4) = +8.0 points [+4.3, +11.9] (1 decimal), separates: bc_dart (seeds 1-4) above bc (CI wholly above 0); N: 200 paired episodes, seeds `bc_dart` 4, `bc` 5; statistic: P8 paired_bootstrap (seeds per arm, shared episodes; 10 000 reps, seed 20261023). `bc_dart` IQM at `id SS6`: seeds 1–4 97.0 [96.0, 97.5]; five seeds as frozen 97.2 [96.2, 97.5]. SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students.
 
 Stated with the result (verbatim from the scorer):
 
 - bc_dart and bc are both at N = 1 000 labelled episodes on the same 1 000 starting conditions; bc_dart - bc_matched (1 000 vs 2 000) is reported descriptively, unscored (P3-D1 §6 H1).
 - No multiplicity correction is applied (P3-D1 §1).
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
 
 ### H2 — multimodality: W₁(`bc_mix`, ref) − W₁(`dp_mix`, ref) — `id SS4`
 
@@ -656,7 +693,7 @@ Stated with the result (verbatim from the scorer):
 - Synchronous core dp at Ta = 8 succeeds on 36.1 % (361/1000) at id SS5; 33.8 % (338/1000) at id SS6; 41.0 % (410/1000) at static (mean over seeds x episodes). H5(b) compares this dp, distilled from P8 ppo s0, with itself, so a low baseline does not invalidate the contrast; non-inferiority is relative to that baseline (Phase 9 before-you-start).
 - No multiplicity correction is applied (P3-D1 §1).
 
-Sources: `results/e08/hypotheses.json`, `results/e08/hypotheses.csv`, `results/latency/closed_loop.csv`, `results/latency/closed_loop/dp/ort_cpu_fp32.json`, `results/latency/closed_loop/dp/ort_cuda_fp32.json`, `results/latency/closed_loop/dp/torch_cuda_fp32.json`, `results/latency/delay.json`, `results/latency/h5a.csv`, `results/latency/latency.csv`, `results/latency/parity.csv`.
+Sources: `results/e08/hypotheses.json`, `results/e08/hypotheses.csv`, `results/latency/closed_loop.csv`, `results/latency/closed_loop/dp/ort_cpu_fp32.json`, `results/latency/closed_loop/dp/ort_cuda_fp32.json`, `results/latency/closed_loop/dp/torch_cuda_fp32.json`, `results/latency/delay.json`, `results/latency/h5a.csv`, `results/latency/latency.csv`, `results/latency/parity.csv`; ◇ seeds 1–4 bullets: `results/e08/bc_dart_s1_4.csv`.
 
 ## 6. Unscored contrasts: post hoc, descriptive and teacher checks (no verdicts)
 
@@ -668,16 +705,16 @@ Sources: `results/e08/hypotheses.json`, `results/e08/hypotheses.csv`, `results/l
 | H1 relative p95 closing speed | `core` | id SS5 | 5 / 5 × 200 | 0.123 [0.059, 0.189] | separates: bc_dagger softer than bc_matched (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dagger 0.403349810109, bc_matched 0.459746378684; touchdowns 1000 / 1000; undefined replicates 0 |
 | H1-SS6 post hoc IQM | `core` | id SS6 | 5 / 5 × 200 | +6.2 points [+1.7, +10.3] | separates: bc_dagger above bc_matched (CI wholly above 0) | printed beside the scored contrast as post hoc, not scored (P3-D1 §1) SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
 | H1-SS6 relative p95 closing speed | `core` | id SS6 | 5 / 5 × 200 | 0.139 [0.056, 0.224] | separates: bc_dagger softer than bc_matched (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dagger 0.441293328044, bc_matched 0.512324083094; touchdowns 1000 / 1000; undefined replicates 0 SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
-| H1-DART-SS5 post hoc IQM | `core` | id SS5 | 5 / 5 × 200 | +3.7 points [+1.5, +6.0] | separates: bc_dart above bc (CI wholly above 0) | printed beside the scored contrast as post hoc, not scored (P3-D1 §1) |
-| H1-DART-SS5 relative p95 closing speed | `core` | id SS5 | 5 / 5 × 200 | 0.256 [0.193, 0.317] | separates: bc_dart softer than bc (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.348499685698, bc 0.468380063097; touchdowns 1000 / 1000; undefined replicates 0 |
-| H1-DART-SS6 post hoc IQM | `core` | id SS6 | 5 / 5 × 200 | +8.0 points [+4.2, +12.3] | separates: bc_dart above bc (CI wholly above 0) | printed beside the scored contrast as post hoc, not scored (P3-D1 §1) SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
-| H1-DART-SS6 relative p95 closing speed | `core` | id SS6 | 5 / 5 × 200 | 0.297 [0.240, 0.370] | separates: bc_dart softer than bc (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.369810575082, bc 0.526065429991; touchdowns 1000 / 1000; undefined replicates 0 SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
+| H1-DART-SS5 post hoc IQM ◇ | `core` | id SS5 | 5 / 5 × 200 | +3.7 points [+1.5, +6.0] | separates: bc_dart above bc (CI wholly above 0) | printed beside the scored contrast as post hoc, not scored (P3-D1 §1) |
+| H1-DART-SS5 relative p95 closing speed ◇ | `core` | id SS5 | 5 / 5 × 200 | 0.256 [0.193, 0.317] | separates: bc_dart softer than bc (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.348499685698, bc 0.468380063097; touchdowns 1000 / 1000; undefined replicates 0 |
+| H1-DART-SS6 post hoc IQM ◇ | `core` | id SS6 | 5 / 5 × 200 | +8.0 points [+4.2, +12.3] | separates: bc_dart above bc (CI wholly above 0) | printed beside the scored contrast as post hoc, not scored (P3-D1 §1) SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
+| H1-DART-SS6 relative p95 closing speed ◇ | `core` | id SS6 | 5 / 5 × 200 | 0.297 [0.240, 0.370] | separates: bc_dart softer than bc (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.369810575082, bc 0.526065429991; touchdowns 1000 / 1000; undefined replicates 0 SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
 | H3 relative p95 closing speed | `dp_Ta` | id SS6 | 5 / 5 × 200 | 0.123 [0.020, 0.200] | separates: dp Ta=1 softer than dp Ta=8 (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): dp Ta=1 0.596004468888, dp Ta=8 0.679737390302; touchdowns 1000 / 1000; undefined replicates 0; same checkpoints; P8's function resamples seeds per side (not jointly); dp closed-loop flip rate (Phase 9): 32/150–44/150 episodes (21.3–29.3 %) change outcome class against the torch_cpu_fp32 reference under numeric perturbations of order 1e-5 (open-loop chunk max-abs <= 2.8e-05), the range over the flown scored fp32 providers (ort_cpu_fp32 33/150, ort_cuda_fp32 44/150, torch_cuda_fp32 32/150); measured on this dp's 150 select episodes in Phase 9 (closed-loop parity), not on a frozen list (seed 0's selected checkpoint; results/latency/closed_loop.csv, parity.csv). SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
-| H4 modular vs best end-to-end (unscored) | `core` | id SS6 | 5 / 5 × 200 | -16.1 points [-20.6, -11.7] | separates: modular below bc_dart (CI wholly below 0) | modular's frozen teacher receives the true time_fraction (P3-D1 §3). Unscored; no direction predicted. No multiplicity correction is applied (P3-D1 §1). best end-to-end: bc_dart: highest mean select success (99.87 %) SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
-| bc_dart - bc_matched (SS5, unscored) | `core` | id SS5 | 5 / 5 × 200 | +3.3 points [+1.5, +5.3] | separates: bc_dart above bc_matched (CI wholly above 0) | Unequal data: bc_dart has 1 000 labelled episodes, bc_matched 2 000 (P3-D1 §6 H1). Unscored; no direction predicted. No multiplicity correction is applied (P3-D1 §1). |
-| bc_dart - bc_matched (SS5, unscored) relative p95 closing speed | `core` | id SS5 | 5 / 5 × 200 | 0.242 [0.186, 0.295] | separates: bc_dart softer than bc_matched (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.348499685698, bc_matched 0.459746378684; touchdowns 1000 / 1000; undefined replicates 0 |
-| bc_dart - bc_matched (SS6, unscored) | `core` | id SS6 | 5 / 5 × 200 | +7.7 points [+4.3, +11.3] | separates: bc_dart above bc_matched (CI wholly above 0) | Unequal data: bc_dart has 1 000 labelled episodes, bc_matched 2 000 (P3-D1 §6 H1). Unscored; no direction predicted. No multiplicity correction is applied (P3-D1 §1). SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
-| bc_dart - bc_matched (SS6, unscored) relative p95 closing speed | `core` | id SS6 | 5 / 5 × 200 | 0.278 [0.219, 0.341] | separates: bc_dart softer than bc_matched (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.369810575082, bc_matched 0.512324083094; touchdowns 1000 / 1000; undefined replicates 0 SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
+| H4 modular vs best end-to-end (unscored) ◇ | `core` | id SS6 | 5 / 5 × 200 | -16.1 points [-20.6, -11.7] | separates: modular below bc_dart (CI wholly below 0) | modular's frozen teacher receives the true time_fraction (P3-D1 §3). Unscored; no direction predicted. No multiplicity correction is applied (P3-D1 §1). best end-to-end: bc_dart: highest mean select success (99.87 %) SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
+| bc_dart - bc_matched (SS5, unscored) ◇ | `core` | id SS5 | 5 / 5 × 200 | +3.3 points [+1.5, +5.3] | separates: bc_dart above bc_matched (CI wholly above 0) | Unequal data: bc_dart has 1 000 labelled episodes, bc_matched 2 000 (P3-D1 §6 H1). Unscored; no direction predicted. No multiplicity correction is applied (P3-D1 §1). |
+| bc_dart - bc_matched (SS5, unscored) relative p95 closing speed ◇ | `core` | id SS5 | 5 / 5 × 200 | 0.242 [0.186, 0.295] | separates: bc_dart softer than bc_matched (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.348499685698, bc_matched 0.459746378684; touchdowns 1000 / 1000; undefined replicates 0 |
+| bc_dart - bc_matched (SS6, unscored) ◇ | `core` | id SS6 | 5 / 5 × 200 | +7.7 points [+4.3, +11.3] | separates: bc_dart above bc_matched (CI wholly above 0) | Unequal data: bc_dart has 1 000 labelled episodes, bc_matched 2 000 (P3-D1 §6 H1). Unscored; no direction predicted. No multiplicity correction is applied (P3-D1 §1). SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
+| bc_dart - bc_matched (SS6, unscored) relative p95 closing speed ◇ | `core` | id SS6 | 5 / 5 × 200 | 0.278 [0.219, 0.341] | separates: bc_dart softer than bc_matched (CI wholly above 0) | p95 closing speed (deck normal, m/s model scale): bc_dart 0.369810575082, bc_matched 0.512324083094; touchdowns 1000 / 1000; undefined replicates 0 SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
 | teacher check: modular - ppo (static static) | `core`, `P8 rows` | static static | 5 / 1 × 200 | -1.0 points [-2.5, -0.1] | separates: modular below ppo (CI wholly below 0) | teacher = P8 committed ppo rows (one row set; Phase 8 before-you-start) |
 | teacher check: modular - ppo (static static) relative p95 closing speed | `core`, `P8 rows` | static static | 5 / 1 × 200 | -0.557 [-0.633, -0.510] | separates: modular harder than ppo (CI wholly below 0) | p95 closing speed (deck normal, m/s model scale): modular 0.410971445303, ppo 0.263940971974; touchdowns 1000 / 200; undefined replicates 0 |
 | teacher check: modular - ppo (id SS3) | `core`, `P8 rows` | id SS3 | 5 / 1 × 200 | -1.3 points [-2.8, -0.3] | separates: modular below ppo (CI wholly below 0) | teacher = P8 committed ppo rows (one row set; Phase 8 before-you-start) |
@@ -706,6 +743,8 @@ Sources: `results/e08/hypotheses.json`, `results/e08/hypotheses.csv`, `results/l
 | teacher check: modular - ppo (unseen_vessel SS5) relative p95 closing speed | `core`, `P8 rows` | unseen_vessel SS5 | 5 / 1 × 200 | -1.010 [-1.220, -0.917] | separates: modular harder than ppo (CI wholly below 0) | p95 closing speed (deck normal, m/s model scale): modular 0.549051736754, ppo 0.273184484182; touchdowns 1000 / 200; undefined replicates 0 |
 | teacher check: modular - ppo (unseen_vessel SS6) | `core`, `P8 rows` | unseen_vessel SS6 | 5 / 1 × 200 | -19.3 points [-24.1, -14.7] | separates: modular below ppo (CI wholly below 0) | teacher = P8 committed ppo rows (one row set; Phase 8 before-you-start) SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
 | teacher check: modular - ppo (unseen_vessel SS6) relative p95 closing speed | `core`, `P8 rows` | unseen_vessel SS6 | 5 / 1 × 200 | -1.135 [-1.349, -1.042] | separates: modular harder than ppo (CI wholly below 0) | p95 closing speed (deck normal, m/s model scale): modular 0.592618708753, ppo 0.277562386992; touchdowns 1000 / 200; undefined replicates 0 SS6 flip floor: 6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students. |
+
+◇ `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds 0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A sensitivity on seeds 1–4 alone (post hoc: added after `select`, before any frozen-list read) is printed beside the 5-seed results in §1, §2 and §5 and is never substituted for them (`results/e08/bc_dart_s1_4.csv`).
 
 Sources: `results/e08/contrasts.csv` (`inputs` column for the tags).
 

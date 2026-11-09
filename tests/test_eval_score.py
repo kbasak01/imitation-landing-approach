@@ -34,6 +34,7 @@ OUTPUTS = (
     "above_teacher.csv",
     "missing.csv",
     "h2_touchdown_times.csv",
+    "bc_dart_s1_4.csv",
     "score_info.json",
 )
 
@@ -587,3 +588,117 @@ def test_latency_stage_commits_read_tree_state_from_job_records(tmp_path: Path) 
     assert set(by) == {"aaa", "bbb"}
     assert by["aaa"]["dirty_inside_results_only"] and not by["aaa"]["dirty_outside_results"]
     assert not by["bbb"]["dirty_inside_results_only"]
+
+
+# --------------------------------------------------------------------------- bc_dart seeds 1-4
+
+#: P4-D5 item 2's label, typed out here (not imported) so a reworded constant fails the test.
+_POST_HOC = "post hoc: added after `select`, before any frozen-list read"
+
+
+@pytest.fixture(scope="module")
+def dart(tmp_path_factory: pytest.TempPathFactory) -> tuple[sc.ScoreInputs, Path]:
+    root = tmp_path_factory.mktemp("e08_dart")
+    inp = es.dart_s0_tree(root)
+    sc.run_score(inp)
+    return inp, root
+
+
+def test_dart_s1_4_known_answers(dart: tuple[sc.ScoreInputs, Path]) -> None:
+    """Seeds 1-4 only, P8's IQM and paired bootstrap, frozen 5-seed values copied beside."""
+    _, root = dart
+    rows = sc.read_csv(root / sc.DART_S1_4_FILE)
+    assert rows and all(r["label"] == _POST_HOC for r in rows)
+    assert sc.DART_S1_4_LABEL == _POST_HOC
+    iqm = {r["ss"]: r for r in rows if r["kind"] == "iqm"}
+    assert set(iqm) == {"SS3", "SS4", "SS5", "SS6"}
+    for ss, r in iqm.items():
+        assert r["status"] == "complete" and r["seeds"] == "1|2|3|4" and r["n_seeds"] == "4"
+        assert r["success_per_seed"] == "0.6|0.7|0.8|0.9", ss
+        assert float(r["success_iqm"]) == pytest.approx(0.75), ss
+        assert float(r["frozen_estimate"]) == pytest.approx(0.80), ss
+        assert r["frozen_seeds"] == "0|1|2|3|4" and r["frozen_source"] == "aggregate.csv"
+        assert int(r["n_hard_landing"]) == 4 + 3 + 2 + 1
+        assert r["flip_floor"] == (p8_adapter.FLIP_FLOOR_SS6.sentence if ss == "SS6" else "")
+        assert r["reps"] == "2000" and r["bootstrap_seed"] == "20261023"
+    agg = {r["ss"]: r for r in sc.read_csv(root / "aggregate.csv") if r["arm"] == "bc_dart"}
+    frozen_cols = (
+        ("frozen_estimate", "success_iqm"),
+        ("frozen_ci_lo", "success_iqm_lo"),
+        ("frozen_ci_hi", "success_iqm_hi"),
+    )
+    for ss, r in iqm.items():
+        for mine, theirs in frozen_cols:
+            assert r[mine] == agg[ss][theirs], (ss, mine)
+    con = {r["hypothesis"]: r for r in rows if r["kind"] == "contrast"}
+    assert set(con) == {"H1-DART-SS5", "H1-DART-SS6"}
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
+    for name, r in con.items():
+        assert r["status"] == "computed"
+        assert (r["seeds"], r["seeds_b"], r["n_seeds"], r["n_seeds_b"]) == (
+            "1|2|3|4", "0|1|2|3|4", "4", "5")  # fmt: skip
+        assert float(r["estimate"]) == pytest.approx(-0.15)
+        assert float(r["ci_lo"]) <= -0.15 <= float(r["ci_hi"])
+        assert r["reps"] == "10000" and r["bootstrap_seed"] == "20261023"
+        assert "paired_bootstrap" in r["statistic"]
+        # The frozen verdict is copied from the scored 5-seed hypothesis, never re-derived.
+        assert r["frozen_estimate"] == hyp[name]["estimate"]
+        assert r["frozen_verdict"] == hyp[name]["verdict"]
+        assert float(hyp[name]["estimate"]) == pytest.approx(-0.12)
+        assert r["inputs"] == hyp[name]["inputs"]
+        assert r["flip_floor"] == (p8_adapter.FLIP_FLOOR_SS6.sentence if "SS6" in name else "")
+
+
+def test_dart_s1_4_is_never_substituted(dart: tuple[sc.ScoreInputs, Path]) -> None:
+    """Every scored output keeps all five bc_dart seeds; the sensitivity lives in its own file."""
+    _, root = dart
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
+    for name in ("H1-DART-SS5", "H1-DART-SS6"):
+        assert hyp[name]["status"] == "scored"
+        assert hyp[name]["n_seeds"] == "bc_dart 5; bc 5"
+    rec = {r["hypothesis"]: r for r in json.loads(
+        (root / "hypotheses.json").read_text(encoding="utf-8"))["hypotheses"]}  # fmt: skip
+    assert rec["H1-DART-SS5"]["n_seeds"] == [
+        {"arm": "bc_dart", "seeds": 5}, {"arm": "bc", "seeds": 5}]  # fmt: skip
+    for r in sc.read_csv(root / "aggregate.csv"):
+        if r["arm"] == "bc_dart":
+            assert r["seeds"] == "0|1|2|3|4" and float(r["success_iqm"]) == pytest.approx(0.8)
+    con = sc.read_csv(root / "contrasts.csv")
+    assert not [r for r in con if "seeds 1-4" in r["name"] or "1-4" in r["note"]]
+    assert all("seeds 1-4" not in json.dumps(r) for r in rec.values())
+
+
+def test_dart_s1_4_best_end_to_end(dart: tuple[sc.ScoreInputs, Path]) -> None:
+    """H4's rule stays on five seeds as frozen; the seeds 1-4 value is printed beside it."""
+    inp, root = dart
+    info = json.loads((root / "score_info.json").read_text(encoding="utf-8"))
+    assert info["best_end_to_end"]["arm"] == "bc_dart" == inp.best_end_to_end[0]
+    (best,) = [r for r in sc.read_csv(root / sc.DART_S1_4_FILE) if r["kind"] == "best_end_to_end"]
+    assert best["seeds"] == "1|2|3|4" and best["label"] == _POST_HOC
+    assert float(best["estimate"]) == pytest.approx(146 / 150)
+    assert float(best["frozen_estimate"]) == pytest.approx((150 + 4 * 146) / 750)
+    assert best["reading"].startswith("the same rule with bc_dart on seeds 1-4 picks bc (")
+    assert "bc_dart (highest mean select success (97.87 %))" in best["frozen_verdict"]
+    assert "bc 97.73 %" in best["reading"]
+
+
+def test_dart_s1_4_without_select_scores_omits_the_h4_row(tmp_path: Path) -> None:
+    inp = es.dart_s0_tree(tmp_path)
+    sc.run_score(dataclasses.replace(inp, select_scores={}))
+    rows = sc.read_csv(tmp_path / sc.DART_S1_4_FILE)
+    assert rows and not [r for r in rows if r["kind"] == "best_end_to_end"]
+
+
+def test_dart_s1_4_missing_seed_is_marked(tmp_path: Path) -> None:
+    """A missing bc_dart seed 2 marks the seeds 1-4 cells incomplete; nothing is dropped."""
+    inp = es.dart_s0_tree(tmp_path)
+    job = next(j for j in inp.matrix.jobs if j.arm == "bc_dart" and j.seed == 2)
+    (tmp_path / job.rel_path).with_name(
+        job.rel_path.name.removesuffix(".csv.gz") + ".json").unlink()  # fmt: skip
+    sc.run_score(inp)
+    rows = sc.read_csv(tmp_path / sc.DART_S1_4_FILE)
+    iqm = [r for r in rows if r["kind"] == "iqm"]
+    assert iqm and all(r["status"] == "incomplete: seeds 2 missing" for r in iqm)
+    assert all(r["success_iqm"] == "" for r in iqm)
+    con = [r for r in rows if r["kind"] == "contrast"]
+    assert con and all(r["status"].startswith("missing:") for r in con)

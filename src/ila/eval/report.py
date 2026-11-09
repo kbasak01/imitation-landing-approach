@@ -6,10 +6,11 @@ lengths, x5 for times and speeds at full scale). One control step is 33.3 ms mod
 
 Inputs (all under ``results/e08``; nothing is recomputed from rows and no P8 file is read):
 ``run_info.json``, ``score_info.json``, ``summary.csv``, ``baselines.csv``, ``aggregate.csv``,
-``contrasts.csv``, ``hypotheses.json``, ``above_teacher.csv``, ``missing.csv`` and, when the
-review exists, ``above_teacher/reviewed.json``. :func:`render` is a pure function of those
-bytes (no clock, no environment, no dict-order dependence: every table follows the CSV row
-order, which :mod:`ila.eval.score` sorts), so ``make report`` re-renders byte-identically.
+``contrasts.csv``, ``hypotheses.json``, ``above_teacher.csv``, ``missing.csv`` and, when they
+exist, ``above_teacher/reviewed.json`` and ``bc_dart_s1_4.csv``. :func:`render` is a pure
+function of those bytes (no clock, no environment, no dict-order dependence: every table follows
+the CSV row order, which :mod:`ila.eval.score` sorts), so ``make report`` re-renders
+byte-identically.
 
 Withholding rule (CLAUDE.md non-negotiable 8; eval-auditor rule 5). A student cell listed in
 ``above_teacher.csv`` is printed as *withheld* -- and so is every contrast or hypothesis whose
@@ -30,6 +31,13 @@ unscored context contrasts (their inputs carry the ``latency_arm`` tag), and §7
 latency arm beside its synchronous core rows with all six outcome classes and the four
 baselines. Every Phase 9 addition renders only when its data exist, so a Phase 8 tree renders
 exactly as before.
+
+``bc_dart`` seed 0 (``docs/protocol.md`` P4-D4 correction 2, P4-D5 item 2). Every ``bc_dart``
+label in every table and in H1's DART secondaries carries the ``◇`` marker, and each table that
+prints it is followed by :data:`S0_NOTE` (:func:`_table` adds it). The seeds 1-4 sensitivity
+(``bc_dart_s1_4.csv``, labelled :data:`ila.eval.score.DART_S1_4_LABEL`) is printed beside the
+5-seed results -- a row under ``bc_dart`` in every §2 table, a bullet in each H1 DART block of
+§5, and beside H4's best end-to-end student in §1 -- and never replaces them.
 """
 
 from __future__ import annotations
@@ -97,11 +105,24 @@ _BASELINE_LABEL: Final[Mapping[str, str]] = {
     sc.TMIX: "`T_mix` reference (assign_rows over P8 `ppo` s0 + `gated`)",
 }
 
+#: The ``bc_dart`` seed 0 footnote marker (P4-D4 correction 2, P4-D5 item 2).
+S0_MARK: Final[str] = "◇"
+#: The footnote printed after every table (and H1 DART block) that prints a ``bc_dart`` label.
+S0_NOTE: Final[str] = (
+    f"{S0_MARK} `bc_dart` seed 0 is the σ = 0.10 DART tuning trial: training is deterministic, "
+    "so the re-trained seed 0 is the model whose `select` score chose σ*. It is kept and seeds "
+    "0–4 stay as frozen: every `bc_dart` number and verdict here uses all five seeds (deviation "
+    "from P3-D1 §4, user-approved; `docs/protocol.md` P4-D4 correction 2, P4-D5 item 2). A "
+    f"sensitivity on seeds 1–4 alone ({sc.DART_S1_4_LABEL}) is printed beside the 5-seed "
+    "results in §1, §2 and §5 and is never substituted for them "
+    "(`results/e08/bc_dart_s1_4.csv`)."
+)
+
 _HYP_TITLES: Final[Mapping[str, str]] = {
     "H1": "H1 — compounding error: `bc_dagger` − `bc_matched`",
     "H1-SS6": "H1 secondary (SS6): `bc_dagger` − `bc_matched`",
-    "H1-DART-SS5": "H1 DART secondary (SS5): `bc_dart` − `bc`",
-    "H1-DART-SS6": "H1 DART secondary (SS6): `bc_dart` − `bc`",
+    "H1-DART-SS5": f"H1 DART secondary (SS5): `bc_dart` {S0_MARK} − `bc`",
+    "H1-DART-SS6": f"H1 DART secondary (SS6): `bc_dart` {S0_MARK} − `bc`",
     "H2": "H2 — multimodality: W₁(`bc_mix`, ref) − W₁(`dp_mix`, ref)",
     "H3": "H3 — chunk length: `dp` Ta = 1 − Ta = 8 (same checkpoints)",
     "H4": "H4 — where the shortfall comes from: D = P − I",
@@ -140,6 +161,7 @@ class ReportInputs:
         above: ``above_teacher.csv`` rows.
         missing: ``missing.csv`` rows.
         released: Labels released by ``above_teacher/reviewed.json`` -> its record.
+        dart_s1_4: ``bc_dart_s1_4.csv`` rows (the ``bc_dart`` seeds 1-4 sensitivity), or empty.
     """
 
     run_info: Mapping[str, Any]
@@ -152,6 +174,7 @@ class ReportInputs:
     above: Sequence[Mapping[str, str]]
     missing: Sequence[Mapping[str, str]]
     released: Mapping[str, Mapping[str, Any]]
+    dart_s1_4: Sequence[Mapping[str, str]] = ()
 
     @property
     def withheld(self) -> frozenset[str]:
@@ -171,6 +194,7 @@ def _json(path: Path) -> Any:
 def load_inputs(root: Path = sc.OUT_ROOT) -> ReportInputs:
     """Read the committed inputs under ``root`` (``results/e08``)."""
     reviewed = root / "above_teacher" / "reviewed.json"
+    dart = root / sc.DART_S1_4_FILE
     released = {}
     if reviewed.is_file():
         for rec in _json(reviewed).get("released", []):
@@ -186,6 +210,7 @@ def load_inputs(root: Path = sc.OUT_ROOT) -> ReportInputs:
         above=_csv(root / "above_teacher.csv"),
         missing=_csv(root / "missing.csv"),
         released=released,
+        dart_s1_4=_csv(dart) if dart.is_file() else [],
     )
 
 
@@ -246,6 +271,20 @@ def _f3(v: Any) -> str:
 def _pts(v: Any) -> str:
     x = _x(v)
     return "n/a" if math.isnan(x) else f"{100.0 * x:+.1f}"
+
+
+def _s0(arm: str) -> str:
+    """`` ◇`` for ``bc_dart`` (its seed 0 is the tuning trial; :data:`S0_NOTE`), else ``""``."""
+    return f" {S0_MARK}" if arm == "bc_dart" else ""
+
+
+def _arm_md(arm: str) -> str:
+    """An arm name as printed in a table: code-formatted, with :func:`_s0`'s marker."""
+    return f"`{arm}`{_s0(arm)}"
+
+
+def _dart_rows(inp: ReportInputs, kind: str) -> list[Mapping[str, str]]:
+    return [r for r in inp.dart_s1_4 if r["kind"] == kind]
 
 
 def _losses(r: Mapping[str, str], prefix: str) -> str:
@@ -342,8 +381,12 @@ def _baseline_cell(r: Mapping[str, str] | None) -> str:
 
 
 def _table(header: Sequence[str], rows: Iterable[Sequence[str]]) -> list[str]:
+    """A markdown table; followed by :data:`S0_NOTE` when a cell carries :data:`S0_MARK`."""
+    rows = [list(row) for row in rows]
     out = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
     out += ["| " + " | ".join(c.replace("|", "\\|") for c in row) + " |" for row in rows]
+    if any(S0_MARK in c for row in rows for c in row):
+        out += ["", S0_NOTE]
     return out
 
 
@@ -353,7 +396,7 @@ def _ss_head(list_name: str, ss: str) -> str:
 
 def _student_name(arm: str, teacher: str) -> str:
     note = ARM_NOTES.get(arm, "ablation")
-    return f"`{arm}` ({note}; from {_TEACHER_NAME.get(teacher, teacher)})"
+    return f"{_arm_md(arm)} ({note}; from {_TEACHER_NAME.get(teacher, teacher)})"
 
 
 # --------------------------------------------------------------------------- sections
@@ -499,7 +542,14 @@ def _provenance(inp: ReportInputs) -> list[str]:
             )
         )
     best = si.get("best_end_to_end", {})
-    rows.append(("H4 best end-to-end student", f"`{best.get('arm')}`: {best.get('reason')}"))
+    best_txt = f"{_arm_md(str(best.get('arm')))}: {best.get('reason')}"
+    for d in _dart_rows(inp, "best_end_to_end"):
+        best_txt += (
+            f" — all five seeds, as frozen (P3-D1 §6 H4). Beside it, {S0_MARK} sensitivity "
+            f"({sc.DART_S1_4_LABEL}; never substituted): `bc_dart` on seeds 1–4 has "
+            f"{100.0 * _x(d['estimate']):.2f} % mean select success; {d['reading']}"
+        )
+    rows.append(("H4 best end-to-end student", best_txt))
     lines = ["## 1. Provenance", ""]
     lines += _table(("item", "value"), rows)
     invs = ri.get("invocations", [])
@@ -539,6 +589,15 @@ def _provenance(inp: ReportInputs) -> list[str]:
         "`latency.csv` and `closed_loop.csv`)."
         if si.get("latency_arm", {}).get("stage_commits")
         else "Sources: `results/e08/run_info.json`, `results/e08/score_info.json`.",
+        *(
+            [
+                "",
+                f"{S0_MARK} seeds 1–4 value: `results/e08/{sc.DART_S1_4_FILE}` "
+                "(`kind` best_end_to_end; `estimate`, `reading`).",
+            ]
+            if _dart_rows(inp, "best_end_to_end")
+            else []
+        ),
         "",
     ]
     return lines
@@ -557,6 +616,7 @@ def _stage_commit_text(c: Mapping[str, Any]) -> str:
 
 def _core(inp: ReportInputs) -> list[str]:
     agg = _agg_index(inp)
+    dart = _dart_rows(inp, "iqm")
     lines = [
         "## 2. Success per list and sea state (core arms; simulated landings)",
         "",
@@ -569,6 +629,7 @@ def _core(inp: ReportInputs) -> list[str]:
         header = ["arm", *(_ss_head(list_name, ss) for ss in cells)]
         rows = []
         notes: list[str] = []
+        flips: list[str] = []
         for arm, teacher in _arms(inp, "core"):
             rows.append(
                 [_student_name(arm, teacher)]
@@ -577,12 +638,29 @@ def _core(inp: ReportInputs) -> list[str]:
                     for ss in cells
                 ]
             )
+            sens = {r["ss"]: r for r in dart if r["list"] == list_name}
+            if arm == "bc_dart" and sens:
+                rows.append(
+                    [
+                        f"{_arm_md(arm)} seeds 1–4 only — sensitivity ({sc.DART_S1_4_LABEL}); "
+                        "beside the 5-seed row above, never substituted for it"
+                    ]
+                    + [_cell(sens.get(ss), inp, notes, show_n=True) for ss in cells]
+                )
+                flips = sorted({r["flip_floor"] for r in sens.values() if r["flip_floor"]})
         rows += _baseline_rows(inp, list_name, cells)
         lines += _table(header, rows)
+        if flips:
+            lines += ["", f"{S0_MARK} seeds 1–4 row, SS6 cells: SS6 flip floor: {flips[0]}."]
         lines += _footnotes(inp, notes)
         lines.append("")
     lines += [
-        "Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`.",
+        "Sources: `results/e08/aggregate.csv` (tag `core`), `results/e08/baselines.csv`"
+        + (
+            f"; {S0_MARK} seeds 1–4 rows: `results/e08/{sc.DART_S1_4_FILE}` (`kind` iqm)."
+            if dart
+            else "."
+        ),
         "",
     ]
     return lines
@@ -608,15 +686,15 @@ def _breakdown(inp: ReportInputs) -> list[str]:
                 if r is None:
                     continue
                 if label_of(r) in withheld:
-                    rows.append([f"`{arm}`", list_name, ss, "withheld", *([""] * 6)])
+                    rows.append([_arm_md(arm), list_name, ss, "withheld", *([""] * 6)])
                     continue
                 if r["status"] != "complete":
-                    rows.append([f"`{arm}`", list_name, ss, "missing", *([""] * 6)])
+                    rows.append([_arm_md(arm), list_name, ss, "missing", *([""] * 6)])
                     continue
                 n = int(r["n_seeds"]) * int(r["n_episodes_per_seed"])
                 mark = f" {_RELEASED}" if label_of(r) in inp.released else ""
                 rows.append(
-                    [f"`{arm}`{mark}", list_name, _ss_head(list_name, ss), str(n)]
+                    [f"{_arm_md(arm)}{mark}", list_name, _ss_head(list_name, ss), str(n)]
                     + [f"{r[f'n_{o}']} ({100.0 * int(r[f'n_{o}']) / n:.1f})" for o in sc.OUTCOMES]
                 )
             for m in sc.ALWAYS_PRINTED:
@@ -678,12 +756,13 @@ def _secondary(inp: ReportInputs) -> list[str]:
         r0 = rs[0]
         if lab in withheld:
             rows.append(
-                [f"`{r0['arm']}`", r0["list"], r0["ss"], "withheld"] + [""] * (len(_SECONDARY) - 1)
+                [_arm_md(r0["arm"]), r0["list"], r0["ss"], "withheld"]
+                + [""] * (len(_SECONDARY) - 1)
             )
             continue
         if any(r["status"] == "missing" for r in rs):
             rows.append(
-                [f"`{r0['arm']}`", r0["list"], r0["ss"], "missing"] + [""] * (len(_SECONDARY) - 1)
+                [_arm_md(r0["arm"]), r0["list"], r0["ss"], "missing"] + [""] * (len(_SECONDARY) - 1)
             )
             continue
         vals = []
@@ -695,7 +774,9 @@ def _secondary(inp: ReportInputs) -> list[str]:
             else:
                 vals.append(_f3(sum(finite) / len(finite)) if finite else "n/a")
         mark = f" {_RELEASED}" if lab in inp.released else ""
-        rows.append([f"`{r0['arm']}`{mark}", r0["list"], _ss_head(r0["list"], r0["ss"]), *vals])
+        rows.append(
+            [f"{_arm_md(r0['arm'])}{mark}", r0["list"], _ss_head(r0["list"], r0["ss"]), *vals]
+        )
     for b in inp.baselines:
         if b["method"] not in sc.ALWAYS_PRINTED:
             continue
@@ -742,7 +823,6 @@ def verdict_line(verdict: str, note: str) -> str:
 
 
 def _hypotheses(inp: ReportInputs) -> list[str]:
-    withheld = inp.withheld
     lines = [
         "## 5. Hypotheses (scored exactly as frozen in P3-D1 §6)",
         "",
@@ -752,57 +832,109 @@ def _hypotheses(inp: ReportInputs) -> list[str]:
     ]
     for rec in inp.hypotheses.get("hypotheses", []):
         name = str(rec["hypothesis"])
-        lines += [f"### {_HYP_TITLES.get(name, name)} — `{rec.get('cell')}`", ""]
-        status = str(rec.get("status", ""))
-        if status != "scored":
-            lines += [f"**{status}**", ""]
-            if str(rec.get("cell", "")).endswith("SS6"):
-                lines += [f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.", ""]
-            continue
-        held = withheld_inputs(rec.get("inputs", []), withheld)
-        if held:
-            lines += [
-                "**withheld**: an input cell is above its teacher and under `results-skeptic` "
-                f"review ({', '.join(f'`{h}`' for h in held)}; "
-                "`results/e08/above_teacher/audit.md`).",
-                "",
-            ]
-            if str(rec.get("cell", "")).endswith("SS6"):
-                lines += [f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.", ""]
-            continue
-        if rec.get("kind") == "latency":
-            lines += _latency_hypothesis(rec)
-            continue
-        mag = rec.get("magnitude")
-        mag_txt = "D > 0" if mag is None else (
-            f"{_x(mag):.3f} s" if str(rec.get("units", "")).startswith("seconds")
-            else f"non-inferiority margin: CI lower bound ≥ {100.0 * _x(mag):+.0f} points"
-            if _x(mag) < 0.0
-            else f"+{100.0 * _x(mag):.0f} points"
-        )  # fmt: skip
-        lines += [
-            f"- {verdict_line(str(rec['verdict']), str(rec['verdict_note']))}",
-            f"- Estimate: {_hyp_estimate(rec)}; magnitude {mag_txt}; in simulation.",
-            f"- Contrast: {rec['contrast']}; statistic: {rec['statistic']}.",
-            f"- N: {rec['n_episodes']} paired episodes; seeds "
-            + ", ".join(f"`{s['arm']}` {s['seeds']}" for s in rec.get("n_seeds", []))
-            + ".",
-            f"- Inputs: {', '.join(f'`{i}`' for i in rec.get('inputs', []))}.",
-        ]
-        for b in rec.get("beside", []):
-            lines.append(f"- {b['label']}: {b['text']}.")
-        if str(rec.get("cell", "")).endswith("SS6") and not any(
-            b["label"] == "SS6 flip floor" for b in rec.get("beside", [])
-        ):
-            lines.append(f"- SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.")
-        lines += ["", "Stated with the result (verbatim from the scorer):", ""]
-        lines += [f"- {c}" for c in rec.get("caveats", [])]
-        lines.append("")
+        title = _HYP_TITLES.get(name, name)
+        lines += [f"### {title} — `{rec.get('cell')}`", ""]
+        lines += _hyp_block(rec, inp)
+        if S0_MARK in title:
+            lines += [S0_NOTE, ""]
     sources = "Sources: `results/e08/hypotheses.json`, `results/e08/hypotheses.csv`"
     for r in inp.hypotheses.get("hypotheses", []):
         if r.get("kind") == "latency" and r.get("status") == "scored":
             sources += "".join(f", `{i}`" for i in r.get("inputs", []))
+    if _dart_rows(inp, "contrast"):
+        sources += f"; {S0_MARK} seeds 1–4 bullets: `results/e08/{sc.DART_S1_4_FILE}`"
     lines += [f"{sources}.", ""]
+    return lines
+
+
+def _dart_beside(rec: Mapping[str, Any], inp: ReportInputs) -> list[str]:
+    """The ``bc_dart`` seeds 1-4 sensitivity bullet beside an H1 DART secondary (P4-D5 item 2).
+
+    Prints the contrast on seeds 1-4 (no verdict) and ``bc_dart``'s IQM in the cell on seeds
+    1-4 beside its 5-seed IQM, from ``bc_dart_s1_4.csv`` only; the SS6 flip floor beside SS6.
+    """
+    name = str(rec["hypothesis"])
+    con = [r for r in _dart_rows(inp, "contrast") if r["hypothesis"] == name]
+    if not con:
+        return []
+    c = con[0]
+    head = (
+        f"- {S0_MARK} Sensitivity, `bc_dart` on seeds 1–4 only ({sc.DART_S1_4_LABEL}); printed "
+        "beside the 5-seed result above, never substituted for it; no verdict is given on it: "
+    )
+    if c["status"] != "computed":
+        return [f"{head}{c['status']}."]
+    if withheld_inputs(c["inputs"], inp.withheld):
+        return [f"{head}withheld (input under above-teacher review)."]
+    text = (
+        f"{head}success(bc_dart seeds {c['seeds'].replace('|', ', ')}) − success(bc seeds "
+        f"{c['seeds_b'].replace('|', ', ')}) = {_pts(c['estimate'])} points "
+        f"[{_pts(c['ci_lo'])}, {_pts(c['ci_hi'])}] (1 decimal), {c['reading']}; N: "
+        f"{c['n_episodes']} paired episodes, seeds `bc_dart` {c['n_seeds']}, `bc` "
+        f"{c['n_seeds_b']}; statistic: {c['statistic']}."
+    )
+    iqm = [r for r in _dart_rows(inp, "iqm") if (r["list"], r["ss"]) == (c["list"], c["ss"])]
+    if iqm and iqm[0]["status"] == "complete":
+        q = iqm[0]
+        text += (
+            f" `bc_dart` IQM at `{q['list']} {q['ss']}`: seeds 1–4 {_pct(q['success_iqm'])} "
+            f"[{_pct(q['success_iqm_lo'])}, {_pct(q['success_iqm_hi'])}]; five seeds as frozen "
+            f"{_pct(q['frozen_estimate'])} [{_pct(q['frozen_ci_lo'])}, "
+            f"{_pct(q['frozen_ci_hi'])}]."
+        )
+    if c["flip_floor"]:
+        text += f" SS6 flip floor: {c['flip_floor']}."
+    return [text]
+
+
+def _hyp_block(rec: Mapping[str, Any], inp: ReportInputs) -> list[str]:
+    """One §5 hypothesis block below its title."""
+    lines: list[str] = []
+    status = str(rec.get("status", ""))
+    if status != "scored":
+        lines += [f"**{status}**", ""]
+        if str(rec.get("cell", "")).endswith("SS6"):
+            lines += [f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.", ""]
+        return lines
+    held = withheld_inputs(rec.get("inputs", []), inp.withheld)
+    if held:
+        lines += [
+            "**withheld**: an input cell is above its teacher and under `results-skeptic` "
+            f"review ({', '.join(f'`{h}`' for h in held)}; "
+            "`results/e08/above_teacher/audit.md`).",
+            "",
+        ]
+        if str(rec.get("cell", "")).endswith("SS6"):
+            lines += [f"SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.", ""]
+        return lines
+    if rec.get("kind") == "latency":
+        return _latency_hypothesis(rec)
+    mag = rec.get("magnitude")
+    mag_txt = "D > 0" if mag is None else (
+        f"{_x(mag):.3f} s" if str(rec.get("units", "")).startswith("seconds")
+        else f"non-inferiority margin: CI lower bound ≥ {100.0 * _x(mag):+.0f} points"
+        if _x(mag) < 0.0
+        else f"+{100.0 * _x(mag):.0f} points"
+    )  # fmt: skip
+    lines += [
+        f"- {verdict_line(str(rec['verdict']), str(rec['verdict_note']))}",
+        f"- Estimate: {_hyp_estimate(rec)}; magnitude {mag_txt}; in simulation.",
+        f"- Contrast: {rec['contrast']}; statistic: {rec['statistic']}.",
+        f"- N: {rec['n_episodes']} paired episodes; seeds "
+        + ", ".join(f"`{s['arm']}` {s['seeds']}" for s in rec.get("n_seeds", []))
+        + ".",
+        f"- Inputs: {', '.join(f'`{i}`' for i in rec.get('inputs', []))}.",
+    ]
+    for b in rec.get("beside", []):
+        lines.append(f"- {b['label']}: {b['text']}.")
+    if str(rec.get("cell", "")).endswith("SS6") and not any(
+        b["label"] == "SS6 flip floor" for b in rec.get("beside", [])
+    ):
+        lines.append(f"- SS6 flip floor: {p8_adapter.FLIP_FLOOR_SS6.sentence}.")
+    lines += _dart_beside(rec, inp)
+    lines += ["", "Stated with the result (verbatim from the scorer):", ""]
+    lines += [f"- {c}" for c in rec.get("caveats", [])]
+    lines.append("")
     return lines
 
 
@@ -887,9 +1019,10 @@ def _contrasts(
         note = r["note"]
         if r["flip_floor"]:
             note = f"{note} SS6 flip floor: {r['flip_floor']}.".strip()
+        dart_in = any(lab.split(" ")[1:2] == ["bc_dart"] for lab in r.get("inputs", "").split("; "))
         rows.append(
             [
-                r["name"],
+                r["name"] + (f" {S0_MARK}" if dart_in else ""),
                 ", ".join(f"`{t}`" for t in contrast_tags(r.get("inputs", ""))),
                 f"{r['list']} {r['ss']}",
                 _contrast_n(r),
@@ -1040,7 +1173,7 @@ def _tagged(inp: ReportInputs) -> list[str]:
         )
         for v in variants:
             shift_rows.append(
-                [f"`{arm}`, `{v}`"]
+                [f"{_arm_md(arm)}, `{v}`"]
                 + [
                     _tcell(agg.get(("appearance_shift", arm, "id", ss, *inf, v)), inp, notes)
                     for ss in ("SS5", "SS6")
@@ -1161,7 +1294,7 @@ def _latency_section(inp: ReportInputs) -> list[str]:
                 r = agg.get((tag, arm, "id", ss, *inf, ""))
                 if r is None:
                     continue
-                label = f"`{arm}` {side}"
+                label = f"{_arm_md(arm)} {side}"
                 if label_of(r) in withheld:
                     brows.append([label, _ss_head("id", ss), "withheld", *([""] * 6)])
                     continue
@@ -1217,7 +1350,7 @@ def _above(inp: ReportInputs) -> list[str]:
         n_seeds = len([s for s in r["seeds_above"].split("|") if s])
         rows.append(
             [
-                f"`{lab}`",
+                f"`{lab}`{_s0(r['arm'])}",
                 _TEACHER_NAME.get(r["teacher"], r["teacher"]),
                 "yes" if r["iqm_above"] == "True" else "no",
                 str(n_seeds),
@@ -1249,7 +1382,7 @@ def _missing(inp: ReportInputs) -> list[str]:
     ]
     lines += _table(
         ("tag", "arm", "missing (cell, seed) entries"),
-        [[t, f"`{a}`", str(n)] for (t, a), n in counts.items()],
+        [[t, _arm_md(a), str(n)] for (t, a), n in counts.items()],
     )
     return [*lines, ""]
 

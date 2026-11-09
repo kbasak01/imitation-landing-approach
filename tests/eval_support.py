@@ -19,6 +19,7 @@ from pathlib import Path
 
 from ila import p8_adapter
 from ila.eval import arms as ev_arms
+from ila.eval import hypotheses as hy
 from ila.eval import matrix as ev_matrix
 from ila.eval import runner
 from ila.eval import score as sc
@@ -455,4 +456,60 @@ def synthetic_tree(
         list_cells=list_cells,
         episodes_per_cell=n,
         latency_dir=latency_dir,
+    )
+
+
+# --------------------------------------------------------------------------- bc_dart seeds 1-4
+
+#: Failing episodes per ``bc_dart`` seed (of 10) in :func:`dart_s0_tree`: success rates
+#: s0 0.9, s1 0.6, s2 0.7, s3 0.8, s4 0.9. Known answers: P8's IQM (25 % trimmed mean) is 0.75
+#: on seeds 1-4 (mean of 0.7, 0.8) and 0.80 on seeds 0-4 (mean of 0.7, 0.8, 0.9); with ``bc`` at
+#: 0.9 on every seed, success(bc_dart) - success(bc) is -0.15 on seeds 1-4 and -0.12 on 0-4.
+DART_FAILS: Mapping[int, int] = {0: 1, 1: 4, 2: 3, 3: 2, 4: 1}
+
+#: ``select`` successes (of 150) per seed: ``bc_dart`` leads on five seeds (146.8 vs ``bc``'s
+#: 146.6) and trails on seeds 1-4 (146.0), so the H4 rule picks ``bc`` there.
+DART_SELECT: Mapping[str, tuple[int, ...]] = {
+    "bc": (147, 146, 147, 146, 147),
+    "bc_matched": (140,) * 5,
+    "bc_dart": (150, 146, 146, 146, 146),
+    "bc_dagger": (140,) * 5,
+    "dp": (60,) * 5,
+}
+
+
+def _dart_keep(job: ev_arms.Job) -> bool:
+    return (
+        job.tag == "core"
+        and job.arm in ("bc", "bc_dart", "bc_dagger", "bc_matched")
+        and job.list_name == "id"
+    )
+
+
+def dart_outcome(
+    arm: str, seed: int, list_name: str, ss: str, i: int, shift: str | None, ta: int | None
+) -> str:
+    """:data:`DART_FAILS` for ``bc_dart``; one bounce (episode 5) for every other arm.
+
+    Nothing exceeds the synthetic teacher (1.0 at SS3-SS5, 0.9 at SS6).
+    """
+    if arm == "bc_dart":
+        return "hard_landing" if i in (3, 0, 1, 2)[: DART_FAILS[seed]] else "success"
+    return "bounce" if i == 5 else "success"
+
+
+def dart_select_scores() -> dict[str, hy.SelectScore]:
+    """Synthetic :data:`DART_SELECT` scores (150 episodes per seed; no rows files needed)."""
+    return {
+        arm: hy.SelectScore(arm, hy.CORE_SEEDS, succ, (150,) * 5, ((Path("unused.csv"),),) * 5)
+        for arm, succ in DART_SELECT.items()
+    }
+
+
+def dart_s0_tree(root: Path, *, n: int = 10) -> sc.ScoreInputs:
+    """Core ``bc``, ``bc_dart``, ``bc_dagger``, ``bc_matched`` on ``id`` with known answers."""
+    inp = synthetic_tree(root, n=n, outcome=dart_outcome, matrix=reduced_matrix(_dart_keep))
+    scores = dart_select_scores()
+    return dataclasses.replace(
+        inp, select_scores=scores, best_end_to_end=hy.best_end_to_end(scores)
     )
