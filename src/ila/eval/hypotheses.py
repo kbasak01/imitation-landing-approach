@@ -103,6 +103,7 @@ __all__ = [
     "DP_FLIP_LABEL",
     "H2Reference",
     "HypothesisResult",
+    "LAST_ACTION_CONFOUND",
     "LatencyFacts",
     "ProviderFlips",
     "RowError",
@@ -1709,7 +1710,10 @@ class LatencyFacts:
         return tuple(out)
 
     def bc_context_caveats(self, d: int) -> tuple[str, ...]:
-        """The bc_dagger latency-context reading (M4): a whole control step, not the compute."""
+        """The bc_dagger latency-context reading (M4): a whole control step, not the compute.
+
+        :data:`LAST_ACTION_CONFOUND` is stated by :func:`latency_context` for every arm.
+        """
         rec = self._delay("bc_dagger", d)
         if rec is None:
             return ()
@@ -1721,9 +1725,6 @@ class LatencyFacts:
             f"p99 to {word} {CONTROL_STEP_MS:.1f} ms model-scale {steps}), not of "
             f"{_ms_short(p99)} ms of compute (results/latency/delay.json: {rec.get('provider')}, "
             f"{rec.get('row')} batch-1 p99; {WALL_CLOCK_NOT_SCALED}).",
-            "last_action in proprio carries the applied (delayed) action, a feedback channel the "
-            "student never saw in training; no teacher-under-delay reference exists to "
-            "attribute the loss.",
         )
 
 
@@ -1859,6 +1860,14 @@ def read_latency_facts(latency_dir: Path) -> LatencyFacts | None:
     )
 
 
+#: The latency arm feeds the student its own delayed action (``last_action[t]`` is the
+#: action executed at ``t - 1``, ``ila.obs.split``), which no training data contained.
+LAST_ACTION_CONFOUND: Final[str] = (
+    "last_action in proprio carries the applied (delayed) action, a feedback channel the "
+    "student never saw in training; no teacher-under-delay reference exists to attribute the "
+    "loss."
+)
+
 _H5B_CAVEATS: Final[tuple[str, ...]] = (
     "No two-sided reading for H5(b): a CI wholly above 0 is non-inferior and reported as such "
     "(P3-D1 §6).",
@@ -1874,6 +1883,7 @@ _H5B_CAVEATS: Final[tuple[str, ...]] = (
     "action of an episode is zero until the first result lands (P3-D1 §7).",
     "d comes from a p99 measured on this machine (RTX A4000, i9-10980XE, WSL2); no embedded "
     "target is measured (P3-D1 §6 H5).",
+    LAST_ACTION_CONFOUND,
 )
 
 
@@ -1996,8 +2006,8 @@ def latency_context(
     rest (``bc_dagger`` at SS4-SS6, ``dp`` at SS4 and SS6) as context. Statistic:
     :func:`ila.eval.stats.joint_seed_contrast` (the same checkpoints on both sides). With
     ``facts`` (Phase 9's results), ``bc_dagger`` cells state that the contrast is the cost of
-    whole control steps and that ``last_action`` carries the delayed action, and ``dp`` cells
-    carry this ``dp``'s measured closed-loop flip rate beside the P8 flip floor.
+    whole control steps, and ``dp`` cells carry this ``dp``'s measured closed-loop flip rate
+    beside the P8 flip floor. Every cell states :data:`LAST_ACTION_CONFOUND`.
 
     Raises:
         RowError: If the sides are not one arm's same checkpoints in one cell.
@@ -2033,6 +2043,7 @@ def latency_context(
         caveats=(
             "Unscored context: P3-D1 §7 scores H5(b) at id SS5 only (dp).",
             *bc_reading,
+            LAST_ACTION_CONFOUND,
             f"Outcome classes, seed-episodes: {a}: {_outcomes_text(latency)}; {b}: "
             f"{_outcomes_text(sync)}.",
             NO_MULTIPLICITY,

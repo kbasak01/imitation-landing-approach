@@ -735,6 +735,12 @@ def test_h5b_supported_ci_includes_zero_with_everything_beside() -> None:
     assert any("seed indices jointly" in c for c in r.caveats)
     assert any("PyBullet does not advance" in c for c in r.caveats)
     assert any("no embedded target" in c for c in r.caveats)
+    assert hy.LAST_ACTION_CONFOUND in r.caveats  # the delayed-action feedback channel
+    assert hy.LAST_ACTION_CONFOUND == (
+        "last_action in proprio carries the applied (delayed) action, a feedback channel the "
+        "student never saw in training; no teacher-under-delay reference exists to attribute "
+        "the loss."
+    )
     assert (
         "Synchronous core dp at Ta = 8 succeeds on 75.0 % (750/1000) at id SS5; 35.0 % (350/1000) "
         "at id SS6; 41.0 % (410/1000) at static (mean over seeds x episodes). H5(b) compares this "
@@ -942,11 +948,7 @@ def test_latency_context_bc_dagger_reading_and_dp_flip(tmp_path: Path) -> None:
         "torch_cuda_fp32, bc_dagger_e2e batch-1 p99; the measured wall-clock latency itself is "
         "on this machine (RTX A4000, WSL2) and is not scaled)."
     ) in u.caveats
-    assert (
-        "last_action in proprio carries the applied (delayed) action, a feedback channel the "
-        "student never saw in training; no teacher-under-delay reference exists to attribute "
-        "the loss."
-    ) in u.caveats
+    assert hy.LAST_ACTION_CONFOUND in u.caveats
     assert hy.DP_FLIP_LABEL not in _beside(u)
     assert "provider torch_cuda_fp32" in _beside(u)["delay"]
     u6 = hy.latency_context(*_lat("dp", "SS6", 150, 3), delay_steps=3, facts=facts)
@@ -954,6 +956,9 @@ def test_latency_context_bc_dagger_reading_and_dp_flip(tmp_path: Path) -> None:
     assert labels == ["delay", "SS6 flip floor", hy.DP_FLIP_LABEL]
     assert _beside(u6)[hy.DP_FLIP_LABEL] == _FAIL_FLIP
     assert not any("control-step delay" in c for c in u6.caveats)
+    assert hy.LAST_ACTION_CONFOUND in u6.caveats  # dp contexts too (SS4 and SS6)
+    u4 = hy.latency_context(*_lat("dp", "SS4", 150, 3), delay_steps=3)
+    assert hy.LAST_ACTION_CONFOUND in u4.caveats  # stated with or without Phase 9 facts
 
 
 def test_latency_context_one_step_wording(tmp_path: Path) -> None:
@@ -966,7 +971,7 @@ def test_latency_context_one_step_wording(tmp_path: Path) -> None:
         )
     )  # fmt: skip
     assert facts is not None
-    (c, _) = facts.bc_context_caveats(1)
+    (c,) = facts.bc_context_caveats(1)
     assert c.startswith(
         "This contrast is the cost of a one-control-step delay (ceil of a 20.00 ms p99 to one "
         "33.3 ms model-scale step), not of 20 ms of compute"

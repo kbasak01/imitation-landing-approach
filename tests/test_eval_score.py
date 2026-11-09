@@ -416,6 +416,7 @@ def test_latency_arm_scores_h5a_h5b_and_context(
             assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)" in con[name]["note"]
             assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)" in p95_note
             assert "control-step delay" not in con[name]["note"]
+            assert hy.LAST_ACTION_CONFOUND in con[name]["note"]  # dp contexts at SS4 and SS6
         else:  # M4: the cost of whole control steps, and the last_action feedback channel
             assert (
                 "the cost of a two-control-step delay (ceil of a 53.33 ms p99"
@@ -494,6 +495,7 @@ def test_parity_failure_texts_reach_every_output(tmp_path: Path) -> None:
     for name in ("H3", "H3 relative p95 closing speed", "H5(b)",
                  "H5(b) context: dp latency arm - synchronous (SS6, unscored)"):  # fmt: skip
         assert f"{hy.DP_FLIP_LABEL}: 4/10–5/10 episodes" in con[name]["note"], name
+    assert hy.LAST_ACTION_CONFOUND in recs["H5(b)"]["caveats"]
 
 
 def test_latency_delay_mismatch_is_refused(
@@ -538,7 +540,15 @@ def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
         assert hyp[h]["status"] == "scored", h
         assert hyp[h]["verdict"] in ("supported", "not supported", "inconclusive")
         assert hyp[h]["inputs"], h
-    names = {r["name"] for r in sc.read_csv(tmp_path / "contrasts.csv")}
+    con = {r["name"]: r for r in sc.read_csv(tmp_path / "contrasts.csv")}
+    names = set(con)
+    # The measured dp flip rate beside the H2 secondaries that include dp (core dp only).
+    flip = f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)"
+    for want in ("H2 secondary: success drop dp - dp_mix (unscored)",
+                 "H2 secondary: drop(bc) - drop(dp) (unscored)"):  # fmt: skip
+        assert flip in con[want]["note"], want
+        assert con[want]["note"].endswith("(core dp only; not measured for dp_mix)."), want
+    assert hy.DP_FLIP_LABEL not in con["H2 secondary: success drop bc - bc_mix (unscored)"]["note"]
     for want in (
         "H1 post hoc IQM",
         "H4 P",

@@ -1806,7 +1806,16 @@ def _score_h4(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
         )
 
 
-def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
+#: Which dp the Phase 9 flip rate was measured on, where a contrast also has dp_mix.
+_CORE_DP_ONLY: Final[str] = " (core dp only; not measured for dp_mix)"
+
+
+def _descriptives(
+    index: CellIndex, inp: ScoreInputs, out: _Scored, facts: hy.LatencyFacts | None = None
+) -> None:
+    """Unscored descriptives; ``facts`` add the measured dp flip rate beside dp's H2 rows."""
+    flip_note = _dp_flip_note(facts)
+    dp_flip = f"; {flip_note[:-1]}{_CORE_DP_ONLY}." if flip_note else ""
     # bc_dart - bc_matched at id SS5 and SS6 (1 000 vs 2 000 labelled episodes).
     for ss in ("SS5", "SS6"):
         sd, why1 = _student_side(index, _g(index, "bc_dart", ss, tag="core"))
@@ -1843,7 +1852,8 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
             "H2",
             sb,
             sx,
-            note="different training data as well as teacher; 5 vs 3 seeds (P3-D1 §8)",
+            note="different training data as well as teacher; 5 vs 3 seeds (P3-D1 §8)"
+            + (dp_flip if base == "dp" else ""),
         )
         drops[base] = float(rec["estimate"])
         drop_inputs.append(str(rec["inputs"]))
@@ -1863,7 +1873,7 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                 units=_UNITS_SUCCESS,
                 reading=f"{UNPAIRED}: point estimate only, no CI (unscored, P3-D1 §8)",
                 status="computed",
-                note="plan §1.8's directional secondary, unscored by P3-D1 §8",
+                note="plan §1.8's directional secondary, unscored by P3-D1 §8" + dp_flip,
                 inputs="; ".join(drop_inputs),
             )
         )
@@ -2169,7 +2179,7 @@ def run_score(inp: ScoreInputs, out_dir: Path | None = None) -> dict[str, Any]:
     facts = None if inp.latency_dir is None else hy.read_latency_facts(inp.latency_dir)
     _score_h3(index, scored, facts)
     _score_h4(index, inp, scored)
-    _descriptives(index, inp, scored)
+    _descriptives(index, inp, scored, facts)
     latency_info = _check_delays(inp)
     _score_h5a(inp, scored)
     _score_h5b(index, inp, scored, facts)
