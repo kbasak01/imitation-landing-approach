@@ -32,7 +32,7 @@ EVAL    ?=
 .PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all \
         bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check \
-        bench-recheck-reference bench-d0-check
+        bench-recheck-reference bench-d0-check release release-check
 
 # --- implemented ------------------------------------------------------------------
 
@@ -179,6 +179,13 @@ bench-recheck-reference: ; $(PY) scripts/deploy/bench.py recheck-reference $(BEN
 #   mkdir -p artifacts/runs/bench && nohup make bench-d0-check > artifacts/runs/bench/d0_check.log 2>&1 &
 bench-d0-check:    ; $(PY) scripts/deploy/bench.py d0-check $(BENCH)
 bench: bench-export bench-inputs bench-parity bench-closed-loop bench-d0-check bench-latency bench-score
+
+# Phase 10 release assets (logic: ila.release): every pinned student checkpoint as stored, the R1
+# ONNX exports and the Phase 9 graphs, each re-hashed against its committed SHA-256 ->
+# results/release/{SHA256SUMS.txt,manifest.json}; `release` also hardlinks them into
+# artifacts/release/ (gitignored) for upload. Needs the local checkpoints; ~1 min for 16.7 GiB.
+release:       ; $(PY) scripts/release_manifest.py --stage
+release-check: ; $(PY) scripts/release_manifest.py --check
 
 # The project in methodology order. Long jobs (collect, train-bg, dagger-bg) are launched by
 # hand from /train-job and are not in `all`.

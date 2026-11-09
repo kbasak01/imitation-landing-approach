@@ -25,7 +25,7 @@ each row. This project is MIT. Notices and attributions are in
 | huggingface-hub, safetensors (pulled in by diffusers) | 1.33.0 / 0.8.0 | Apache-2.0 | metadata / classifier | yes |
 | certifi (pulled in by requests) | 2026.10.23 | MPL-2.0 | metadata | yes (unmodified, not vendored) |
 | LeRobot (`.venv-lerobot` only) | 0.6.1 | Apache-2.0 | `pip show` | yes; not imported from `src/ila` and not redistributed |
-| diffusion_policy (reference) | — | MIT | upstream `LICENSE` | yes; notice slot in `THIRD_PARTY_NOTICES.md` |
+| diffusion_policy (reference) | — | MIT | upstream `LICENSE` | yes. Three upstream files (`main` at `5ba07ac6`) are adapted into `src/ila/policies/dp/unet1d.py` (Phase 6); the MIT notice is in its header and in `THIRD_PARTY_NOTICES.md` |
 
 The full resolved environments are committed as `results/env/pip_freeze_main.txt` and
 `results/env/pip_freeze_lerobot.txt`.
@@ -43,7 +43,15 @@ The full resolved environments are committed as `results/env/pip_freeze_main.txt
 | LeRobot coexistence with P8 pins | **Resolved: they cannot coexist.** LeRobot 0.6.1 resolves torch 2.11.0+cu130, torchvision 0.26.0, numpy 2.2.6 and gymnasium 1.4.0, all different from P8's pins. Coexistence was not attempted in `.venv`; the separate venv stands | `results/env/pip_freeze_lerobot.txt` |
 | Xing et al., arXiv:2403.12203 venue | **Resolved: CoRL 2024** (PMLR vol. 270, published 2025) | <https://proceedings.mlr.press/v270/xing25a.html> |
 
-## 3. Still open
+## 3. Later phases (rows added 2026-11-09, Phase 10)
 
-- None of the Phase 0 items. Each later phase adds its own rows here, for example any adapted
-  `ConditionalUnet1D` code (Phase 6) or the licence of a published demo-store export (stretch).
+| Item | Verdict | Evidence |
+|---|---|---|
+| Adapted `ConditionalUnet1D` (Phase 6) | **MIT, notice kept.** `conditional_unet1d.py`, `conv1d_components.py` and `positional_embedding.py` from diffusion_policy `main` at `5ba07ac6` are adapted into one file | `src/ila/policies/dp/unet1d.py` header; `THIRD_PARTY_NOTICES.md` |
+| Pretrained weights | **None used or redistributed.** The ResNet-18 trunk is randomly initialised (`weights=None`), and the encoder refuses `pretrained: true`. R1 sets `pretrained_backbone_weights: null`. No ImageNet statistics are used either: images are scaled to [0, 1] (`encoder.py` module docstring) | `src/ila/policies/encoder.py`; `configs/train/r1_lerobot_dp.yaml` |
+| Release assets (student checkpoints, ONNX graphs) | **MIT**, as trained or exported by this project. They are derived from P8's MIT teacher and P8's MIT environment; no third-party weights are inside | `results/release/manifest.json` |
+| Demo-store export (stretch) | **Not published.** Only a 256-frame sample could ship as a release asset; none does | — |
+
+## 4. Still open
+
+- None.

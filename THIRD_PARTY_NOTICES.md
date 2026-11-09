@@ -2,8 +2,9 @@
 
 This project is MIT-licensed (see [LICENSE](LICENSE)). It depends on Project 8 as a git submodule,
 which in turn pins two submodules of its own, and on other packages at runtime. No third-party
-source code was copied into this repository in Phase 0; Phase 2 adapts one file from
-diffusion_policy (below). The per-dependency licence check is in
+source code was copied into this repository in Phase 0. Phase 6 adapted three upstream files of
+diffusion_policy into one file (below). No pretrained weights are used or redistributed anywhere
+(see `docs/LICENSES.md` §3). The per-dependency licence check is in
 [`docs/LICENSES.md`](docs/LICENSES.md).
 
 ## Git submodule (`external/`, never modified)
@@ -35,9 +36,11 @@ diffusion_policy (below). The per-dependency licence check is in
 
 ### diffusion_policy (reference implementation)
 
-- **Upstream:** <https://github.com/real-stanford/diffusion_policy>, commit **(verify)**. The
-  upstream commit the adaptation was taken from has not been recorded yet; it is to be checked
-  and written here, not guessed.
+- **Upstream:** <https://github.com/real-stanford/diffusion_policy>, `main` at
+  `5ba07ac6661db573af695b419a7947ecb704690f` (2024-12-24). That was the head of `main` on the
+  adaptation date, Phase 6, 2026-10-30, and it still is: the last push was 2024-12-24
+  (`gh api repos/real-stanford/diffusion_policy`, checked 2026-11-09). The commit was not recorded at
+  adaptation time. It is resolved here as the only upstream state available then.
 - **License:** MIT, Copyright (c) 2023 Columbia Artificial Intelligence and Robotics Lab (full
   text below).
 - **What is adapted:** `src/ila/policies/dp/unet1d.py` is adapted from

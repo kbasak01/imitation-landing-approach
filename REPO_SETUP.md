@@ -42,7 +42,7 @@ resolves on the reference machine (record in protocol P0-D1):
 | package | why | note |
 |---|---|---|
 | `torchvision` | ResNet-18 trunk | the build matching torch 2.13.0 / the same CUDA wheel index as P8 |
-| `diffusers` | DDPM/DDIM schedulers only | 0.41.0 is current (2026-10-06) **(verify it does not move torch/numpy)** |
+| `diffusers` | DDPM/DDIM schedulers only | 0.41.0 is current (2026-10-06) (checked: it does not move torch or numpy; `docs/LICENSES.md` §2) |
 | `h5py` | demo store | lzf compression is built in; no hdf5plugin needed |
 | `einops` | DP tensor reshapes | optional |
 
@@ -58,7 +58,7 @@ pip install "lerobot==0.6.1"     # Apache-2.0; requires Python >= 3.12 (PyPI, 20
 ```
 
 Never `import lerobot` from `src/ila`. Only two things cross between the venvs: the exported
-LeRobotDataset (written by `scripts/export_lerobot.py` run in `.venv`, read in `.venv-lerobot`) and
+LeRobotDataset (written by `scripts/r1/export_dataset.py` + `scripts/r1/build_lerobot_dataset.py`, i.e. `make r1-export r1-dataset`, read in `.venv-lerobot`) and
 the trained policy as ONNX (written in `.venv-lerobot`, flown in `.venv`).
 
 ## 4. Layout

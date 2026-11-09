@@ -1,0 +1,868 @@
+{
+  "assets": [
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_onnx",
+      "name": "R1_lerobot_dp_s0_step100000_denoiser.onnx",
+      "record": "results/phase6/runs/R1_lerobot_dp/s0/selection.json -> meta.json onnx_sha256",
+      "seed": 0,
+      "sha256": "92d5420ca6f9788ec5dd4d35d771047f71173afe650be207fa0c7559b66c48b8",
+      "size_bytes": 69763347,
+      "source": "artifacts/runs/R1_lerobot_dp/s0/onnx/step100000/denoiser.onnx"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_onnx",
+      "name": "R1_lerobot_dp_s0_step100000_encoder.onnx",
+      "record": "results/phase6/runs/R1_lerobot_dp/s0/selection.json -> meta.json onnx_sha256",
+      "seed": 0,
+      "sha256": "36a11112c6af5df38c219238a151faee204dca88e2ea3d252919006e30a0c469",
+      "size_bytes": 44826550,
+      "source": "artifacts/runs/R1_lerobot_dp/s0/onnx/step100000/encoder.onnx"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_meta",
+      "name": "R1_lerobot_dp_s0_step100000_meta.json",
+      "record": "results/phase6/runs/R1_lerobot_dp/s0/selection.json",
+      "seed": 0,
+      "sha256": "ae7d2f37f24afe26101a579b1f9e3c20269341a0944d43678af97983827d6366",
+      "size_bytes": 12784,
+      "source": "artifacts/runs/R1_lerobot_dp/s0/onnx/step100000/meta.json"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_onnx",
+      "name": "R1_lerobot_dp_s1_step40000_denoiser.onnx",
+      "record": "results/phase6/runs/R1_lerobot_dp/s1/selection.json -> meta.json onnx_sha256",
+      "seed": 1,
+      "sha256": "3bb1cc7f9c11ff4ecfd5e8b7bfa6f34adf7ac895deed3b80da3154be990e8c4a",
+      "size_bytes": 69763347,
+      "source": "artifacts/runs/R1_lerobot_dp/s1/onnx/step40000/denoiser.onnx"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_onnx",
+      "name": "R1_lerobot_dp_s1_step40000_encoder.onnx",
+      "record": "results/phase6/runs/R1_lerobot_dp/s1/selection.json -> meta.json onnx_sha256",
+      "seed": 1,
+      "sha256": "5dbdb8a1b2cf8df89efb70e1a96bc592bf90de515d9c34131124b2aa71e29a0e",
+      "size_bytes": 44826550,
+      "source": "artifacts/runs/R1_lerobot_dp/s1/onnx/step40000/encoder.onnx"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_meta",
+      "name": "R1_lerobot_dp_s1_step40000_meta.json",
+      "record": "results/phase6/runs/R1_lerobot_dp/s1/selection.json",
+      "seed": 1,
+      "sha256": "9fd99fec652525ae8ecdb7601fc33c1205aa8729445d9cb178fd8e3a797fd7a7",
+      "size_bytes": 12780,
+      "source": "artifacts/runs/R1_lerobot_dp/s1/onnx/step40000/meta.json"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_onnx",
+      "name": "R1_lerobot_dp_s2_step50000_denoiser.onnx",
+      "record": "results/phase6/runs/R1_lerobot_dp/s2/selection.json -> meta.json onnx_sha256",
+      "seed": 2,
+      "sha256": "0ba1ae1e99c69b494ec18e580462bc48477767557ad5581fff022ae2a58a2e9f",
+      "size_bytes": 69763347,
+      "source": "artifacts/runs/R1_lerobot_dp/s2/onnx/step50000/denoiser.onnx"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_onnx",
+      "name": "R1_lerobot_dp_s2_step50000_encoder.onnx",
+      "record": "results/phase6/runs/R1_lerobot_dp/s2/selection.json -> meta.json onnx_sha256",
+      "seed": 2,
+      "sha256": "e169913ac14ca3fb5a35d1ef59b1d77d9c629609bf13126530509ebdfc635c08",
+      "size_bytes": 44826550,
+      "source": "artifacts/runs/R1_lerobot_dp/s2/onnx/step50000/encoder.onnx"
+    },
+    {
+      "arm": "R1_lerobot_dp",
+      "kind": "r1_meta",
+      "name": "R1_lerobot_dp_s2_step50000_meta.json",
+      "record": "results/phase6/runs/R1_lerobot_dp/s2/selection.json",
+      "seed": 2,
+      "sha256": "c92621a995b76eafffe192f969eb4ad2bababc56309308526235434e961e80a3",
+      "size_bytes": 12779,
+      "source": "artifacts/runs/R1_lerobot_dp/s2/onnx/step50000/meta.json"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "graph",
+      "name": "bc_dagger.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "23ce916d05d09865b6a6acb52e24624259bb2cdce96c50619b81c810dddb3294",
+      "size_bytes": 45425735,
+      "source": "artifacts/deploy/graphs/bc_dagger.onnx"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "graph",
+      "name": "bc_dagger_fp16.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "8368aa786ed28a380ac3525ab639fde4bd2c51308734a1a37c188b6f92ae9c2c",
+      "size_bytes": 22765747,
+      "source": "artifacts/deploy/graphs/bc_dagger_fp16.onnx"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "checkpoint",
+      "name": "bc_dagger_s0_s5_step005000.pt",
+      "record": "results/phase5/runs/bc_dagger/s0/selection.json",
+      "seed": 0,
+      "sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+      "size_bytes": 181402267,
+      "source": "artifacts/runs/bc_dagger/s0/checkpoints/s5_step005000.pt"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "checkpoint",
+      "name": "bc_dagger_s1_s5_step010000.pt",
+      "record": "results/phase5/runs/bc_dagger/s1/selection.json",
+      "seed": 1,
+      "sha256": "191a66003864afa126e6ab56fab0d0f27242a69d2082d8f3159d4beae5ab9075",
+      "size_bytes": 181402267,
+      "source": "artifacts/runs/bc_dagger/s1/checkpoints/s5_step010000.pt"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "checkpoint",
+      "name": "bc_dagger_s2_s5_step005000.pt",
+      "record": "results/phase5/runs/bc_dagger/s2/selection.json",
+      "seed": 2,
+      "sha256": "751210e85a5239c37c8258233e3bd1bce1c3f15bf279212c175010106316ba22",
+      "size_bytes": 181402267,
+      "source": "artifacts/runs/bc_dagger/s2/checkpoints/s5_step005000.pt"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "checkpoint",
+      "name": "bc_dagger_s3_s5_step010000.pt",
+      "record": "results/phase5/runs/bc_dagger/s3/selection.json",
+      "seed": 3,
+      "sha256": "b4b7eb20a3642b2e2a74771841b511ef951de08b977cc83e5713d48777d8dc98",
+      "size_bytes": 181402267,
+      "source": "artifacts/runs/bc_dagger/s3/checkpoints/s5_step010000.pt"
+    },
+    {
+      "arm": "bc_dagger",
+      "kind": "checkpoint",
+      "name": "bc_dagger_s4_s5_step005000.pt",
+      "record": "results/phase5/runs/bc_dagger/s4/selection.json",
+      "seed": 4,
+      "sha256": "2d8b480e4feab55cbdfc87cb423a311400ed32972dce0a015ac9a97b44f1ba25",
+      "size_bytes": 181402267,
+      "source": "artifacts/runs/bc_dagger/s4/checkpoints/s5_step005000.pt"
+    },
+    {
+      "arm": "bc_dart",
+      "kind": "checkpoint",
+      "name": "bc_dart_s0_s0_step030000.pt",
+      "record": "results/phase4/runs/bc_dart/s0/selection.json",
+      "seed": 0,
+      "sha256": "f6f63d660eff25c78a5379428c839e6f8ab1f4ae1ccc3c90471c3e0dedbfe188",
+      "size_bytes": 181401307,
+      "source": "artifacts/runs/bc_dart/s0/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "bc_dart",
+      "kind": "checkpoint",
+      "name": "bc_dart_s1_s0_step020000.pt",
+      "record": "results/phase4/runs/bc_dart/s1/selection.json",
+      "seed": 1,
+      "sha256": "f4c8a83f4eba109a6a3efb4c50d93ab305e14c46d2ce266df34438a35f7c7bd5",
+      "size_bytes": 181401307,
+      "source": "artifacts/runs/bc_dart/s1/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_dart",
+      "kind": "checkpoint",
+      "name": "bc_dart_s2_s0_step030000.pt",
+      "record": "results/phase4/runs/bc_dart/s2/selection.json",
+      "seed": 2,
+      "sha256": "9d8f38754644d13303dbdf752134d2d3af6eab9a755b6db2c5e60a4ba313bf63",
+      "size_bytes": 181401307,
+      "source": "artifacts/runs/bc_dart/s2/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "bc_dart",
+      "kind": "checkpoint",
+      "name": "bc_dart_s3_s0_step015000.pt",
+      "record": "results/phase4/runs/bc_dart/s3/selection.json",
+      "seed": 3,
+      "sha256": "30b82fff8bd03bbedc0ba82b9ea9b7a9a5f1a9be2093a51995a3f37cfd188f4b",
+      "size_bytes": 181401307,
+      "source": "artifacts/runs/bc_dart/s3/checkpoints/s0_step015000.pt"
+    },
+    {
+      "arm": "bc_dart",
+      "kind": "checkpoint",
+      "name": "bc_dart_s4_s0_step020000.pt",
+      "record": "results/phase4/runs/bc_dart/s4/selection.json",
+      "seed": 4,
+      "sha256": "a9eb048b23bbc548292b46e8730e33465474f99f5d959025e4287ade4ae6c07a",
+      "size_bytes": 181401307,
+      "source": "artifacts/runs/bc_dart/s4/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_matched",
+      "kind": "checkpoint",
+      "name": "bc_matched_s0_s5_step010000.pt",
+      "record": "results/phase4/runs/bc_matched/s0/selection.json",
+      "seed": 0,
+      "sha256": "d901fb00e4bbf46fd1ded56825a05fc28aed9c9593ce8d2fd1463a7ce574f420",
+      "size_bytes": 181401883,
+      "source": "artifacts/runs/bc_matched/s0/checkpoints/s5_step010000.pt"
+    },
+    {
+      "arm": "bc_matched",
+      "kind": "checkpoint",
+      "name": "bc_matched_s1_s5_step010000.pt",
+      "record": "results/phase4/runs/bc_matched/s1/selection.json",
+      "seed": 1,
+      "sha256": "f1b4b2b0e4b8ed483a9ac05ff08e217e631e15ee6d440578e7ff410a6452abe7",
+      "size_bytes": 181401883,
+      "source": "artifacts/runs/bc_matched/s1/checkpoints/s5_step010000.pt"
+    },
+    {
+      "arm": "bc_matched",
+      "kind": "checkpoint",
+      "name": "bc_matched_s2_s5_step010000.pt",
+      "record": "results/phase4/runs/bc_matched/s2/selection.json",
+      "seed": 2,
+      "sha256": "dc104bcd1e6af4d4caf6e1c61ca0a71a450c49b33558140c65e5b90d2657c609",
+      "size_bytes": 181401883,
+      "source": "artifacts/runs/bc_matched/s2/checkpoints/s5_step010000.pt"
+    },
+    {
+      "arm": "bc_matched",
+      "kind": "checkpoint",
+      "name": "bc_matched_s3_s5_step005000.pt",
+      "record": "results/phase4/runs/bc_matched/s3/selection.json",
+      "seed": 3,
+      "sha256": "0d03168044fe21821756325371665e48ba483088cbc333a650caee1aa018a9f7",
+      "size_bytes": 181401883,
+      "source": "artifacts/runs/bc_matched/s3/checkpoints/s5_step005000.pt"
+    },
+    {
+      "arm": "bc_matched",
+      "kind": "checkpoint",
+      "name": "bc_matched_s4_s5_step005000.pt",
+      "record": "results/phase4/runs/bc_matched/s4/selection.json",
+      "seed": 4,
+      "sha256": "37eeb6a0f56ff2b2ccff9294870b5d0d56ea350de1970b79cd975574bc02d95f",
+      "size_bytes": 181401883,
+      "source": "artifacts/runs/bc_matched/s4/checkpoints/s5_step005000.pt"
+    },
+    {
+      "arm": "bc_minus_last_action",
+      "kind": "checkpoint",
+      "name": "bc_minus_last_action_s0_s0_step030000.pt",
+      "record": "results/phase7/runs/bc_minus_last_action/s0/selection.json",
+      "seed": 0,
+      "sha256": "161bbee3fdeca358511a71ba40093f226c2cccbddc23eb1c6dcc1667f29f82f0",
+      "size_bytes": 181398235,
+      "source": "artifacts/runs/bc_minus_last_action/s0/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "bc_minus_last_action",
+      "kind": "checkpoint",
+      "name": "bc_minus_last_action_s1_s0_step015000.pt",
+      "record": "results/phase7/runs/bc_minus_last_action/s1/selection.json",
+      "seed": 1,
+      "sha256": "6173597880f610138d2fb9acc0d6442ba891202e7ddf1f13faa274bc58ca1a2f",
+      "size_bytes": 181398235,
+      "source": "artifacts/runs/bc_minus_last_action/s1/checkpoints/s0_step015000.pt"
+    },
+    {
+      "arm": "bc_minus_last_action",
+      "kind": "checkpoint",
+      "name": "bc_minus_last_action_s2_s0_step030000.pt",
+      "record": "results/phase7/runs/bc_minus_last_action/s2/selection.json",
+      "seed": 2,
+      "sha256": "cb0ae4e6f3d00ec6d0d4a875c1de8fe71473d18185cbcc18f4a30f617ed1b3dd",
+      "size_bytes": 181398235,
+      "source": "artifacts/runs/bc_minus_last_action/s2/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "bc_mix",
+      "kind": "checkpoint",
+      "name": "bc_mix_s0_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_mix/s0/selection.json",
+      "seed": 0,
+      "sha256": "920e4d7040d7ba3b6b099b2c60e09a0094c104ba76b65f294894e541d0e56666",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_mix/s0/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_mix",
+      "kind": "checkpoint",
+      "name": "bc_mix_s1_s0_step020000.pt",
+      "record": "results/phase7/runs/bc_mix/s1/selection.json",
+      "seed": 1,
+      "sha256": "8b7d8b8d769b49abc643fa5adbc8cc721078a4db61b272d74afcec185ced6287",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_mix/s1/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_mix",
+      "kind": "checkpoint",
+      "name": "bc_mix_s2_s0_step020000.pt",
+      "record": "results/phase7/runs/bc_mix/s2/selection.json",
+      "seed": 2,
+      "sha256": "edbd991e7c5ec2b2abac2d4bc4b69c1e8585f890dd582cca6a3d53414ca77c2a",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_mix/s2/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_n100",
+      "kind": "checkpoint",
+      "name": "bc_n100_s0_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_n100/s0/selection.json",
+      "seed": 0,
+      "sha256": "4e3a4928bc147186154c01350a41f2a231ed4ac4e2f014e32bd244ae783e957b",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_n100/s0/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_n100",
+      "kind": "checkpoint",
+      "name": "bc_n100_s1_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_n100/s1/selection.json",
+      "seed": 1,
+      "sha256": "c20ccad72223a667cfaa7619f1256594df1b56977bd06c8625d690980d73625c",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_n100/s1/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_n100",
+      "kind": "checkpoint",
+      "name": "bc_n100_s2_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_n100/s2/selection.json",
+      "seed": 2,
+      "sha256": "fd3f54fac1a4e12b9057cbcbc8213381ec30ef697b12303c4a35f903496a7dbc",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_n100/s2/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_n300",
+      "kind": "checkpoint",
+      "name": "bc_n300_s0_s0_step020000.pt",
+      "record": "results/phase7/runs/bc_n300/s0/selection.json",
+      "seed": 0,
+      "sha256": "b2c2ae6ffb6c3030709c82f8a38a7f04409ee97215a6c4f3718f463b4a9295be",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_n300/s0/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_n300",
+      "kind": "checkpoint",
+      "name": "bc_n300_s1_s0_step020000.pt",
+      "record": "results/phase7/runs/bc_n300/s1/selection.json",
+      "seed": 1,
+      "sha256": "86fa971195fcd65d3400bbe985ca421ee74390e2189d29fc5a22b304fb501caa",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_n300/s1/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_n300",
+      "kind": "checkpoint",
+      "name": "bc_n300_s2_s0_step010000.pt",
+      "record": "results/phase7/runs/bc_n300/s2/selection.json",
+      "seed": 2,
+      "sha256": "d314947470cd14e9331c9c48558ac6dae595946cb2d255d055f66f46437ad5b3",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_n300/s2/checkpoints/s0_step010000.pt"
+    },
+    {
+      "arm": "bc_pid",
+      "kind": "checkpoint",
+      "name": "bc_pid_s0_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_pid/s0/selection.json",
+      "seed": 0,
+      "sha256": "fe8726f561136a09a2ac03b38552dc3ecd4a487c3ed99ffa4d1faea184bc2e75",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_pid/s0/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_pid",
+      "kind": "checkpoint",
+      "name": "bc_pid_s1_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_pid/s1/selection.json",
+      "seed": 1,
+      "sha256": "efd88baab5a454e2a741d975088b6a579ea3aeb8729b977344068183d9985c2d",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_pid/s1/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_pid",
+      "kind": "checkpoint",
+      "name": "bc_pid_s2_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_pid/s2/selection.json",
+      "seed": 2,
+      "sha256": "3196489eb36bd926f96a406b2e0d200a092970d22729cd9b72e64bcfba819621",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc_pid/s2/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc_plus_clock",
+      "kind": "checkpoint",
+      "name": "bc_plus_clock_s0_s0_step020000.pt",
+      "record": "results/phase7/runs/bc_plus_clock/s0/selection.json",
+      "seed": 0,
+      "sha256": "ce4313b2ee7cf7070b9d2da5f6137f627263f1c167c0c4464a0a9dfe9cf1aeb1",
+      "size_bytes": 181402331,
+      "source": "artifacts/runs/bc_plus_clock/s0/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_plus_clock",
+      "kind": "checkpoint",
+      "name": "bc_plus_clock_s1_s0_step015000.pt",
+      "record": "results/phase7/runs/bc_plus_clock/s1/selection.json",
+      "seed": 1,
+      "sha256": "fdc94245d735cfea8348111a182f3be529b376773be6573ccff30fe64dd32270",
+      "size_bytes": 181402331,
+      "source": "artifacts/runs/bc_plus_clock/s1/checkpoints/s0_step015000.pt"
+    },
+    {
+      "arm": "bc_plus_clock",
+      "kind": "checkpoint",
+      "name": "bc_plus_clock_s2_s0_step005000.pt",
+      "record": "results/phase7/runs/bc_plus_clock/s2/selection.json",
+      "seed": 2,
+      "sha256": "dab48a1cf1c31db337a4fab82074b4889b36d4180f72d6dda8622efc86b16d1f",
+      "size_bytes": 181402331,
+      "source": "artifacts/runs/bc_plus_clock/s2/checkpoints/s0_step005000.pt"
+    },
+    {
+      "arm": "bc",
+      "kind": "checkpoint",
+      "name": "bc_s0_s0_step010000.pt",
+      "record": "results/phase4/runs/bc/s0/selection.json",
+      "seed": 0,
+      "sha256": "1c907c35678615859395e63cb9cc3ace5d0f63d5071781b842f688edbd548a3f",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc/s0/checkpoints/s0_step010000.pt"
+    },
+    {
+      "arm": "bc",
+      "kind": "checkpoint",
+      "name": "bc_s1_s0_step030000.pt",
+      "record": "results/phase4/runs/bc/s1/selection.json",
+      "seed": 1,
+      "sha256": "ec1a7f9ba06dc6ee5c44ec525af7757434b97b1ad92e0bbd72d7be6d1900ac7b",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc/s1/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "bc",
+      "kind": "checkpoint",
+      "name": "bc_s2_s0_step025000.pt",
+      "record": "results/phase4/runs/bc/s2/selection.json",
+      "seed": 2,
+      "sha256": "cf8648ae5c7694a53146ac9c3a559819e59953a572f2bb683d07867c59d8c425",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc/s2/checkpoints/s0_step025000.pt"
+    },
+    {
+      "arm": "bc",
+      "kind": "checkpoint",
+      "name": "bc_s3_s0_step025000.pt",
+      "record": "results/phase4/runs/bc/s3/selection.json",
+      "seed": 3,
+      "sha256": "8f611f3a6e16ec2808a087abd78b764447cf228ad39b20e8a810d567e9d661da",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc/s3/checkpoints/s0_step025000.pt"
+    },
+    {
+      "arm": "bc",
+      "kind": "checkpoint",
+      "name": "bc_s4_s0_step030000.pt",
+      "record": "results/phase4/runs/bc/s4/selection.json",
+      "seed": 4,
+      "sha256": "a9cb4276cb0675ad784f08f2ecc9d5b3ccdc8c98b7cd622f992f6904ae908a4d",
+      "size_bytes": 181401243,
+      "source": "artifacts/runs/bc/s4/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "bc_state",
+      "kind": "checkpoint",
+      "name": "bc_state_s0_s0_step015000.pt",
+      "record": "results/phase4/runs/bc_state/s0/selection.json",
+      "seed": 0,
+      "sha256": "cb56367963199faae0cdee123b41c008a33e25e5d8383a101fd0e4965b4e7de5",
+      "size_bytes": 1189363,
+      "source": "artifacts/runs/bc_state/s0/checkpoints/s0_step015000.pt"
+    },
+    {
+      "arm": "bc_state",
+      "kind": "checkpoint",
+      "name": "bc_state_s1_s0_step020000.pt",
+      "record": "results/phase4/runs/bc_state/s1/selection.json",
+      "seed": 1,
+      "sha256": "452f73d66e916093c507e28580ced5d042860058df29d0ce162b525fff568122",
+      "size_bytes": 1189363,
+      "source": "artifacts/runs/bc_state/s1/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "bc_state",
+      "kind": "checkpoint",
+      "name": "bc_state_s2_s0_step015000.pt",
+      "record": "results/phase4/runs/bc_state/s2/selection.json",
+      "seed": 2,
+      "sha256": "60a3ad249fa15c121757b7cb869605d644eb0432ee56fa115d036c7c5bdf0818",
+      "size_bytes": 1189363,
+      "source": "artifacts/runs/bc_state/s2/checkpoints/s0_step015000.pt"
+    },
+    {
+      "arm": "bc_state",
+      "kind": "checkpoint",
+      "name": "bc_state_s3_s0_step025000.pt",
+      "record": "results/phase4/runs/bc_state/s3/selection.json",
+      "seed": 3,
+      "sha256": "37385d853971f65b569be6441b321174eeaaba0f7c4822052ace0991007a955a",
+      "size_bytes": 1189363,
+      "source": "artifacts/runs/bc_state/s3/checkpoints/s0_step025000.pt"
+    },
+    {
+      "arm": "bc_state",
+      "kind": "checkpoint",
+      "name": "bc_state_s4_s0_step030000.pt",
+      "record": "results/phase4/runs/bc_state/s4/selection.json",
+      "seed": 4,
+      "sha256": "fced1c075016aec51e1be7e57ae430c1f16dc06bb8c943a08d92d1da80c338af",
+      "size_bytes": 1189363,
+      "source": "artifacts/runs/bc_state/s4/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "dp",
+      "kind": "graph",
+      "name": "dp_K10.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "a0bf2c88ee7da03ca0737082dbf61cc76d8f3a6fa0465934882b75619ad55759",
+      "size_bytes": 74165520,
+      "source": "artifacts/deploy/graphs/dp_K10.onnx"
+    },
+    {
+      "arm": "dp",
+      "kind": "graph",
+      "name": "dp_K10_fp16.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "6610c876c7bee63bf0ff94f4fc782c4c244d5beb0647d5ad659f8b4f472f7339",
+      "size_bytes": 37846311,
+      "source": "artifacts/deploy/graphs/dp_K10_fp16.onnx"
+    },
+    {
+      "arm": "dp",
+      "kind": "graph",
+      "name": "dp_denoise_step.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "a553183d5ea3f4aedfcd84ec86c88d57c65b859386eac25965326c70bac90f8a",
+      "size_bytes": 72770992,
+      "source": "artifacts/deploy/graphs/dp_denoise_step.onnx"
+    },
+    {
+      "arm": "dp",
+      "kind": "graph",
+      "name": "dp_denoise_step_fp16.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "a4b3f1b2d6dac15634f0e7c1353152aefae35c0287054a43fc1f67811d0479e7",
+      "size_bytes": 36460172,
+      "source": "artifacts/deploy/graphs/dp_denoise_step_fp16.onnx"
+    },
+    {
+      "arm": "dp",
+      "kind": "graph",
+      "name": "dp_encoder.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "2d0001f5fd4cdcae259a9a70c11064265151c51b09ccf9311db24d3bcce1a2ca",
+      "size_bytes": 44888506,
+      "source": "artifacts/deploy/graphs/dp_encoder.onnx"
+    },
+    {
+      "arm": "dp",
+      "kind": "graph",
+      "name": "dp_encoder_fp16.onnx",
+      "record": "results/latency/graphs.json",
+      "seed": 0,
+      "sha256": "b1c0911d8c074b73fa1ad4783f9dac02818ecf233d5ea5ed9a250f000b5541ef",
+      "size_bytes": 22493230,
+      "source": "artifacts/deploy/graphs/dp_encoder_fp16.onnx"
+    },
+    {
+      "arm": "dp_minus_last_action",
+      "kind": "checkpoint",
+      "name": "dp_minus_last_action_s0_s0_step070000.pt",
+      "record": "results/phase7/runs/dp_minus_last_action/s0/selection.json",
+      "seed": 0,
+      "sha256": "ecf3d31c66f6538b47bab9a634e7e4f14949759e8a8c2275be19aaf4fe9e79e8",
+      "size_bytes": 469975679,
+      "source": "artifacts/runs/dp_minus_last_action/s0/checkpoints/s0_step070000.pt"
+    },
+    {
+      "arm": "dp_minus_last_action",
+      "kind": "checkpoint",
+      "name": "dp_minus_last_action_s1_s0_step060000.pt",
+      "record": "results/phase7/runs/dp_minus_last_action/s1/selection.json",
+      "seed": 1,
+      "sha256": "e92467a328e223a0e856ab24847006252b13ff78f0a501ced16f2a2d8cbd5fab",
+      "size_bytes": 469975679,
+      "source": "artifacts/runs/dp_minus_last_action/s1/checkpoints/s0_step060000.pt"
+    },
+    {
+      "arm": "dp_minus_last_action",
+      "kind": "checkpoint",
+      "name": "dp_minus_last_action_s2_s0_step060000.pt",
+      "record": "results/phase7/runs/dp_minus_last_action/s2/selection.json",
+      "seed": 2,
+      "sha256": "541d12daed8dd7e5860a79b2f8ae885931477eeb5c37a749d43188825606aa10",
+      "size_bytes": 469975679,
+      "source": "artifacts/runs/dp_minus_last_action/s2/checkpoints/s0_step060000.pt"
+    },
+    {
+      "arm": "dp_mix",
+      "kind": "checkpoint",
+      "name": "dp_mix_s0_s0_step060000.pt",
+      "record": "results/phase7/runs/dp_mix/s0/selection.json",
+      "seed": 0,
+      "sha256": "28eca6aa6331c4f2a8dc04b04f520167a2a8244b162a9c33cf69e4a152c13e5a",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_mix/s0/checkpoints/s0_step060000.pt"
+    },
+    {
+      "arm": "dp_mix",
+      "kind": "checkpoint",
+      "name": "dp_mix_s1_s0_step050000.pt",
+      "record": "results/phase7/runs/dp_mix/s1/selection.json",
+      "seed": 1,
+      "sha256": "24fbfc16db59917dc32335555a98b29166a201119086923753b87ad40016f591",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_mix/s1/checkpoints/s0_step050000.pt"
+    },
+    {
+      "arm": "dp_mix",
+      "kind": "checkpoint",
+      "name": "dp_mix_s2_s0_step100000.pt",
+      "record": "results/phase7/runs/dp_mix/s2/selection.json",
+      "seed": 2,
+      "sha256": "182af621d22cc7e6b4715f20633a0aa927e1a321d753dd9b7f4d7e2b99d739ee",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_mix/s2/checkpoints/s0_step100000.pt"
+    },
+    {
+      "arm": "dp_n100",
+      "kind": "checkpoint",
+      "name": "dp_n100_s0_s0_step010000.pt",
+      "record": "results/phase7/runs/dp_n100/s0/selection.json",
+      "seed": 0,
+      "sha256": "1939cf9ab57d82d34019ebc3c166eed38b07bbc449e37756b29b12865adf1a66",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_n100/s0/checkpoints/s0_step010000.pt"
+    },
+    {
+      "arm": "dp_n100",
+      "kind": "checkpoint",
+      "name": "dp_n100_s1_s0_step060000.pt",
+      "record": "results/phase7/runs/dp_n100/s1/selection.json",
+      "seed": 1,
+      "sha256": "9ab0031f04bcef6a60ba0b4af3483b70c92a7df60af9369e2bb552378db13f94",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_n100/s1/checkpoints/s0_step060000.pt"
+    },
+    {
+      "arm": "dp_n100",
+      "kind": "checkpoint",
+      "name": "dp_n100_s2_s0_step030000.pt",
+      "record": "results/phase7/runs/dp_n100/s2/selection.json",
+      "seed": 2,
+      "sha256": "7f94ed7ccec190210a07b084857b33152bbafa7f4c636f4cd7bc31a46976c3d0",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_n100/s2/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "dp_n300",
+      "kind": "checkpoint",
+      "name": "dp_n300_s0_s0_step040000.pt",
+      "record": "results/phase7/runs/dp_n300/s0/selection.json",
+      "seed": 0,
+      "sha256": "93779e50474d814f32e56bd8bdbf68eebb4619db4d3cc14ff468bd4fa1c00af7",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_n300/s0/checkpoints/s0_step040000.pt"
+    },
+    {
+      "arm": "dp_n300",
+      "kind": "checkpoint",
+      "name": "dp_n300_s1_s0_step070000.pt",
+      "record": "results/phase7/runs/dp_n300/s1/selection.json",
+      "seed": 1,
+      "sha256": "d495bb95d37c597ef267c6d924da82195397365cc6c0dad2d210b71eeda376b2",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_n300/s1/checkpoints/s0_step070000.pt"
+    },
+    {
+      "arm": "dp_n300",
+      "kind": "checkpoint",
+      "name": "dp_n300_s2_s0_step050000.pt",
+      "record": "results/phase7/runs/dp_n300/s2/selection.json",
+      "seed": 2,
+      "sha256": "af7e3b8375c91f9d35d6f547192fce0537069a9a496f239425865aba0d5a0ee4",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_n300/s2/checkpoints/s0_step050000.pt"
+    },
+    {
+      "arm": "dp_pid",
+      "kind": "checkpoint",
+      "name": "dp_pid_s0_s0_step070000.pt",
+      "record": "results/phase7/runs/dp_pid/s0/selection.json",
+      "seed": 0,
+      "sha256": "fa218a87881b7435a3d8bdd50d543f0d1c2562d9f502d53ff0f72cdf741fcdc3",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_pid/s0/checkpoints/s0_step070000.pt"
+    },
+    {
+      "arm": "dp_pid",
+      "kind": "checkpoint",
+      "name": "dp_pid_s1_s0_step070000.pt",
+      "record": "results/phase7/runs/dp_pid/s1/selection.json",
+      "seed": 1,
+      "sha256": "b4c37139e196191181d1b920e8798e490a646433924ecbd55944e3de89555b17",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_pid/s1/checkpoints/s0_step070000.pt"
+    },
+    {
+      "arm": "dp_pid",
+      "kind": "checkpoint",
+      "name": "dp_pid_s2_s0_step060000.pt",
+      "record": "results/phase7/runs/dp_pid/s2/selection.json",
+      "seed": 2,
+      "sha256": "bd1c0b5efc7f5abeed46de908b5717cb72c97585ac71fc865ea8c0d5f62b88e2",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp_pid/s2/checkpoints/s0_step060000.pt"
+    },
+    {
+      "arm": "dp",
+      "kind": "checkpoint",
+      "name": "dp_s0_s0_step100000.pt",
+      "record": "results/phase6/runs/dp/s0/selection.json",
+      "seed": 0,
+      "sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp/s0/checkpoints/s0_step100000.pt"
+    },
+    {
+      "arm": "dp",
+      "kind": "checkpoint",
+      "name": "dp_s1_s0_step050000.pt",
+      "record": "results/phase6/runs/dp/s1/selection.json",
+      "seed": 1,
+      "sha256": "f2d663227d2eb7fbd715a10a4acf84147d16fc39a7d4a317f31567fbd5f36eeb",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp/s1/checkpoints/s0_step050000.pt"
+    },
+    {
+      "arm": "dp",
+      "kind": "checkpoint",
+      "name": "dp_s2_s0_step060000.pt",
+      "record": "results/phase6/runs/dp/s2/selection.json",
+      "seed": 2,
+      "sha256": "40c71347f4dc3e166d33ac4f13676d876d0e080947e23f20835e388d6038f3a7",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp/s2/checkpoints/s0_step060000.pt"
+    },
+    {
+      "arm": "dp",
+      "kind": "checkpoint",
+      "name": "dp_s3_s0_step100000.pt",
+      "record": "results/phase6/runs/dp/s3/selection.json",
+      "seed": 3,
+      "sha256": "ac8dfbe63e88c75243fd91a553016cd310f6a9faf519fd758746407994bcd9d6",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp/s3/checkpoints/s0_step100000.pt"
+    },
+    {
+      "arm": "dp",
+      "kind": "checkpoint",
+      "name": "dp_s4_s0_step100000.pt",
+      "record": "results/phase6/runs/dp/s4/selection.json",
+      "seed": 4,
+      "sha256": "0179fdc7e659521812bafae33bd2546597ef14dec47e9b3039f70b4ae6e94777",
+      "size_bytes": 469978687,
+      "source": "artifacts/runs/dp/s4/checkpoints/s0_step100000.pt"
+    },
+    {
+      "arm": "",
+      "kind": "graph_meta",
+      "name": "graphs_meta.json",
+      "record": "results/latency/graphs.json meta_sha256",
+      "seed": null,
+      "sha256": "6e6a5cfd97de70c7afc537529ac671303d1e064d77f48764830f564870ce2e5f",
+      "size_bytes": 9099,
+      "source": "artifacts/deploy/graphs/meta.json"
+    },
+    {
+      "arm": "modular",
+      "kind": "checkpoint",
+      "name": "modular_s0_s0_step020000.pt",
+      "record": "results/phase7/runs/modular/s0/selection.json",
+      "seed": 0,
+      "sha256": "ad2abdcf65ddd87d9bd1db512fa0c895b4b14553cbadecf1b0d058031a237d7d",
+      "size_bytes": 181435435,
+      "source": "artifacts/runs/modular/s0/checkpoints/s0_step020000.pt"
+    },
+    {
+      "arm": "modular",
+      "kind": "checkpoint",
+      "name": "modular_s1_s0_step010000.pt",
+      "record": "results/phase7/runs/modular/s1/selection.json",
+      "seed": 1,
+      "sha256": "414ec26d1984628d85944b8847784f850fa6628ec0a0761526a35c78623681dd",
+      "size_bytes": 181435435,
+      "source": "artifacts/runs/modular/s1/checkpoints/s0_step010000.pt"
+    },
+    {
+      "arm": "modular",
+      "kind": "checkpoint",
+      "name": "modular_s2_s0_step025000.pt",
+      "record": "results/phase7/runs/modular/s2/selection.json",
+      "seed": 2,
+      "sha256": "bc484cf0ee4fe77b41466dc7c5ccf7550d8d6161dbc2a52d9a701e7d2469b0f7",
+      "size_bytes": 181435435,
+      "source": "artifacts/runs/modular/s2/checkpoints/s0_step025000.pt"
+    },
+    {
+      "arm": "modular",
+      "kind": "checkpoint",
+      "name": "modular_s3_s0_step030000.pt",
+      "record": "results/phase7/runs/modular/s3/selection.json",
+      "seed": 3,
+      "sha256": "7ed47fbb57362ebb13214821b21e2b7ca2cce8bea333958fe283f035a8fa0cdd",
+      "size_bytes": 181435435,
+      "source": "artifacts/runs/modular/s3/checkpoints/s0_step030000.pt"
+    },
+    {
+      "arm": "modular",
+      "kind": "checkpoint",
+      "name": "modular_s4_s0_step025000.pt",
+      "record": "results/phase7/runs/modular/s4/selection.json",
+      "seed": 4,
+      "sha256": "1d2c24ae2a6d1ece604c37d3cfbb6f501769db010bfe30a4d89d35c64ddfc4f9",
+      "size_bytes": 181435435,
+      "source": "artifacts/runs/modular/s4/checkpoints/s0_step025000.pt"
+    }
+  ],
+  "n_assets": 86,
+  "total_bytes": 17906572166,
+  "verify": "sha256sum -c SHA256SUMS.txt in the directory holding the downloaded assets",
+  "what": "release assets: pinned student checkpoints as stored, R1 ONNX exports, Phase 9 graphs; every SHA-256 from a committed record, re-hashed before staging (simulation only)"
+}
