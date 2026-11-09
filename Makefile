@@ -29,7 +29,7 @@ DIAG    ?= --arm dp --seeds 0 1 2 3 4
 # eval / eval-bg take EVAL (e.g. EVAL="--dry-run", EVAL="--only core s0").
 EVAL    ?=
 
-.PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
+.PHONY: readme-figures hero-gifs model-specs model-specs-check r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all \
         bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check \
         bench-recheck-reference bench-d0-check release release-check sensitivity sensitivity-check
@@ -148,6 +148,19 @@ figures: ; $(PY) scripts/make_figures.py
 # re-flown on the CPU single-sample path (<= 4 workers), each asserted equal to its committed row.
 # Background job: mkdir -p artifacts/runs/gifs && nohup make gifs > artifacts/runs/gifs/run.log 2>&1 &
 gifs: ; $(PY) scripts/make_gifs.py
+
+# Phase 11 README figures from committed CSVs only -> docs/figures/<name>{,_dark}.png + <name>.csv;
+# deterministic bytes (Agg, no metadata stamps); CI re-renders and diffs them.
+readme-figures: ; $(PY) scripts/make_readme_figures.py
+# Phase 11 README hero GIFs: the e08 gallery picks (results/e08/gifs/manifest.json; no new
+# selection) seen from outside plus the onboard frame, each re-flight asserted equal to its
+# committed row; refuses a dirty tree (docs/media excepted).
+# Background job: mkdir -p artifacts/runs/hero && nohup make hero-gifs > artifacts/runs/hero/run.log 2>&1 &
+hero-gifs: ; $(PY) scripts/make_hero_gifs.py
+# Phase 11 controller and network specs -> results/readme/model_specs.json (parameter counts from
+# configs; checkpoint cross-checks where checkpoints exist). The check re-derives and diffs.
+model-specs:       ; $(PY) scripts/model_specs.py
+model-specs-check: ; $(PY) scripts/model_specs.py --check
 
 # Phase 9 (P9-D1; configs/deploy/bench.yaml): ONNX export, open-loop parity on 1 000 select
 # inputs, closed-loop parity on the 150 select episodes, latency, H5(a) and the delay d ->

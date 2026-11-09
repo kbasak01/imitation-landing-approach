@@ -1,0 +1,58 @@
+panel,series,x,value,lo,hi,n,unit,scale,text,note,source_file,source_row,value_col,lo_col,hi_col,n_col,text_col
+bc_dagger,torch_cpu_fp32,p99,33.3797,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-torch_cpu_fp32-b1-t1,p99_ms,,,timed_iters,status
+bc_dagger,torch_cpu_fp32,scored,,,,,,1,False,,results/latency/latency.csv,label=bc_e2e-torch_cpu_fp32-b1-t1,,,,,scored
+bc_dagger,torch_cpu_fp32,closed_loop_pass,,,,,,1,reference,,results/latency/closed_loop.csv,arm=bc_dagger;provider=torch_cpu_fp32,,,,,closed_loop_pass
+bc_dagger,ort_cpu_fp32,p99,17.7832,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-ort_cpu_fp32-b1-t1,p99_ms,,,timed_iters,status
+bc_dagger,ort_cpu_fp32,scored,,,,,,1,True,,results/latency/latency.csv,label=bc_e2e-ort_cpu_fp32-b1-t1,,,,,scored
+bc_dagger,ort_cpu_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=bc_dagger;provider=ort_cpu_fp32,,,,,open_loop_pass
+bc_dagger,ort_cpu_fp32,closed_loop_pass,,,,,,1,True,,results/latency/closed_loop.csv,arm=bc_dagger;provider=ort_cpu_fp32,,,,,closed_loop_pass
+bc_dagger,torch_cuda_fp32,p99,4.3237,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-torch_cuda_fp32-b1-t1,p99_ms,,,timed_iters,status
+bc_dagger,torch_cuda_fp32,scored,,,,,,1,True,,results/latency/latency.csv,label=bc_e2e-torch_cuda_fp32-b1-t1,,,,,scored
+bc_dagger,torch_cuda_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=bc_dagger;provider=torch_cuda_fp32,,,,,open_loop_pass
+bc_dagger,torch_cuda_fp32,closed_loop_pass,,,,,,1,True,,results/latency/closed_loop.csv,arm=bc_dagger;provider=torch_cuda_fp32,,,,,closed_loop_pass
+bc_dagger,ort_cuda_fp32,p99,5.99467,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-ort_cuda_fp32-b1-t1,p99_ms,,,timed_iters,status
+bc_dagger,ort_cuda_fp32,scored,,,,,,1,True,,results/latency/latency.csv,label=bc_e2e-ort_cuda_fp32-b1-t1,,,,,scored
+bc_dagger,ort_cuda_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=bc_dagger;provider=ort_cuda_fp32,,,,,open_loop_pass
+bc_dagger,ort_cuda_fp32,closed_loop_pass,,,,,,1,True,,results/latency/closed_loop.csv,arm=bc_dagger;provider=ort_cuda_fp32,,,,,closed_loop_pass
+bc_dagger,ort_trt_fp32,p99,1.83233,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-ort_trt_fp32-b1-t1,p99_ms,,,timed_iters,status
+bc_dagger,ort_trt_fp32,scored,,,,,,1,False,,results/latency/latency.csv,label=bc_e2e-ort_trt_fp32-b1-t1,,,,,scored
+bc_dagger,ort_trt_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=bc_dagger;provider=ort_trt_fp32,,,,,open_loop_pass
+bc_dagger,ort_trt_fp32,closed_loop_pass,,,,,,1,True,,results/latency/closed_loop.csv,arm=bc_dagger;provider=ort_trt_fp32,,,,,closed_loop_pass
+bc_dagger,ort_trt_fp16,p99,,,,,ms,1,refused (open-loop parity not passed),"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-ort_trt_fp16-b1-t1,p99_ms,,,,status
+bc_dagger,ort_trt_fp16,scored,,,,,,1,True,,results/latency/latency.csv,label=bc_e2e-ort_trt_fp16-b1-t1,,,,,scored
+bc_dagger,ort_trt_fp16,open_loop_pass,,,,,,1,False,,results/latency/parity.csv,arm=bc_dagger;provider=ort_trt_fp16,,,,,open_loop_pass
+bc_dagger,ort_trt_fp16,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=bc_dagger;provider=ort_trt_fp16,,,,,closed_loop_pass
+bc_dagger,ort_cuda_fp16,p99,,,,,ms,1,refused (open-loop parity not passed),"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=bc_e2e-ort_cuda_fp16-b1-t1,p99_ms,,,,status
+bc_dagger,ort_cuda_fp16,scored,,,,,,1,False,,results/latency/latency.csv,label=bc_e2e-ort_cuda_fp16-b1-t1,,,,,scored
+bc_dagger,ort_cuda_fp16,open_loop_pass,,,,,,1,False,,results/latency/parity.csv,arm=bc_dagger;provider=ort_cuda_fp16,,,,,open_loop_pass
+bc_dagger,ort_cuda_fp16,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=bc_dagger;provider=ort_cuda_fp16,,,,,closed_loop_pass
+bc_dagger,torch_cuda_fp32,latency-arm delay d,1,,,,control steps,1,torch_cuda_fp32,provider used for the latency arm,results/latency/delay.json,arms.bc_dagger,d,,,,provider
+dp,torch_cpu_fp32,p99,181.334,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-torch_cpu_fp32-b1-t1,p99_ms,,,timed_iters,status
+dp,torch_cpu_fp32,scored,,,,,,1,False,,results/latency/latency.csv,label=dp_e2e-torch_cpu_fp32-b1-t1,,,,,scored
+dp,torch_cpu_fp32,closed_loop_pass,,,,,,1,reference,,results/latency/closed_loop.csv,arm=dp;provider=torch_cpu_fp32,,,,,closed_loop_pass
+dp,ort_cpu_fp32,p99,122.911,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-ort_cpu_fp32-b1-t1,p99_ms,,,timed_iters,status
+dp,ort_cpu_fp32,scored,,,,,,1,True,,results/latency/latency.csv,label=dp_e2e-ort_cpu_fp32-b1-t1,,,,,scored
+dp,ort_cpu_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=dp;provider=ort_cpu_fp32,,,,,open_loop_pass
+dp,ort_cpu_fp32,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=dp;provider=ort_cpu_fp32,,,,,closed_loop_pass
+dp,torch_cuda_fp32,p99,89.3851,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-torch_cuda_fp32-b1-t1,p99_ms,,,timed_iters,status
+dp,torch_cuda_fp32,scored,,,,,,1,True,,results/latency/latency.csv,label=dp_e2e-torch_cuda_fp32-b1-t1,,,,,scored
+dp,torch_cuda_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=dp;provider=torch_cuda_fp32,,,,,open_loop_pass
+dp,torch_cuda_fp32,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=dp;provider=torch_cuda_fp32,,,,,closed_loop_pass
+dp,ort_cuda_fp32,p99,52.6441,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-ort_cuda_fp32-b1-t1,p99_ms,,,timed_iters,status
+dp,ort_cuda_fp32,scored,,,,,,1,True,,results/latency/latency.csv,label=dp_e2e-ort_cuda_fp32-b1-t1,,,,,scored
+dp,ort_cuda_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=dp;provider=ort_cuda_fp32,,,,,open_loop_pass
+dp,ort_cuda_fp32,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=dp;provider=ort_cuda_fp32,,,,,closed_loop_pass
+dp,ort_trt_fp32,p99,25.7171,,,2000,ms,1,timed,"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-ort_trt_fp32-b1-t1,p99_ms,,,timed_iters,status
+dp,ort_trt_fp32,scored,,,,,,1,False,,results/latency/latency.csv,label=dp_e2e-ort_trt_fp32-b1-t1,,,,,scored
+dp,ort_trt_fp32,open_loop_pass,,,,,,1,True,,results/latency/parity.csv,arm=dp;provider=ort_trt_fp32,,,,,open_loop_pass
+dp,ort_trt_fp32,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=dp;provider=ort_trt_fp32,,,,,closed_loop_pass
+dp,ort_trt_fp16,p99,,,,,ms,1,refused (open-loop parity not passed),"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-ort_trt_fp16-b1-t1,p99_ms,,,,status
+dp,ort_trt_fp16,scored,,,,,,1,True,,results/latency/latency.csv,label=dp_e2e-ort_trt_fp16-b1-t1,,,,,scored
+dp,ort_trt_fp16,open_loop_pass,,,,,,1,False,,results/latency/parity.csv,arm=dp;provider=ort_trt_fp16,,,,,open_loop_pass
+dp,ort_trt_fp16,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=dp;provider=ort_trt_fp16,,,,,closed_loop_pass
+dp,ort_cuda_fp16,p99,,,,,ms,1,refused (open-loop parity not passed),"batch 1, end-to-end, wall clock",results/latency/latency.csv,label=dp_e2e-ort_cuda_fp16-b1-t1,p99_ms,,,,status
+dp,ort_cuda_fp16,scored,,,,,,1,False,,results/latency/latency.csv,label=dp_e2e-ort_cuda_fp16-b1-t1,,,,,scored
+dp,ort_cuda_fp16,open_loop_pass,,,,,,1,False,,results/latency/parity.csv,arm=dp;provider=ort_cuda_fp16,,,,,open_loop_pass
+dp,ort_cuda_fp16,closed_loop_pass,,,,,,1,False,,results/latency/closed_loop.csv,arm=dp;provider=ort_cuda_fp16,,,,,closed_loop_pass
+dp,torch_cpu_fp32,latency-arm delay d,6,,,,control steps,1,torch_cpu_fp32,provider used for the latency arm,results/latency/delay.json,arms.dp,d,,,,provider
+meta,control period,,33.333,,,,ms (model scale),1,,,results/latency/delay.json,,control_period_ms,,,,
