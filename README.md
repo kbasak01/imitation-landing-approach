@@ -30,7 +30,8 @@ was used, and no sim-to-real claim is made.**
 - **Gate 2** failed its first attempt on 2026-10-27 and passed the same day. At the first attempt:
   - no committed artifact showed that frames were rendered during the reproduction gate;
   - `privileged-leak-auditor` returned a RISK, closed in `e54fa2e`.
-- **Gates 1 and 3–8** passed at their first attempt.
+- **Gates 1 and 3–8** passed at their first attempt. Gate 8 passed without the binding `bc_dart` s0
+  footnote and seeds 1–4 row (P4-D4); they were added in Phase 10 (P10-D2 item 2).
 - **Gate 9** passed with `dp`'s closed-loop export parity **failed**: 32–44 of 150 flips on the
   scored providers, against a bound of ≤ 3. Gate 9 recorded the test as run as frozen, and H5(a)
   is not supported (P10-D1 item 4).
@@ -72,25 +73,32 @@ Everything below is in simulation:
 | H1 secondary | `id` SS6 † | same | +5.9 [+2.3, +9.7] points | +5 | **supported** |
 | H1 DART secondary | `id` SS5 | `bc_dart` ‡ − `bc` (1 000 labelled each) | +3.6 [+1.7, +5.8] points | +5 | **inconclusive** (ceiling-limited) |
 | H1 DART secondary | `id` SS6 † | same | +8.1 [+4.6, +11.9] points | +5 | **supported** |
-| H2 multimodality | `id` SS4 | W₁(`bc_mix`, ref) − W₁(`dp_mix`, ref), touchdown time | +0.088 [−0.100, +0.263] s, model scale | +0.033 s | **not supported** |
+| H2 multimodality | `id` SS4 | W₁(`bc_mix`, ref) − W₁(`dp_mix`, ref), touchdown time | +0.088 [−0.100, +0.263] s, model scale | +0.033 s | **not supported** ¶ |
 | H3 chunk length | `id` SS6 † | `dp` Ta = 1 − Ta = 8, same checkpoints | +47.4 [+41.0, +53.8] points | +5 | **supported** |
 | H4 shortfall | `id` SS6 † | D = P − I (perception − imitation gap) | +9.4 [+5.6, +13.5] points | D > 0 | **supported** |
 | H5(a) latency | `dp` export, batch 1 | p99 < 33.3 ms on a provider passing both parities | no provider passes | — | **not supported** |
 | H5(b) latency in the loop | `id` SS5 | `dp` with d = 6 − `dp` synchronous | −15.9 [−21.5, −10.5] points | CI ≥ −3 | **not supported** |
 
 † SS6 is outside the training distribution; the 6.6 % one-ulp flip floor applies.
-‡ `bc_dart` seed 0 is the σ = 0.10 tuning trial, kept as frozen (P4-D5 item 2). The
-sensitivity on seeds 1–4 alone is post hoc: added after `select`, before any frozen-list read; it is
-never substituted and given no verdict (`results/e08/bc_dart_s1_4.csv`; `results/results.md` §2 and
-§5).
-- IQM: 99.2 [99.0, 99.5] at `id` SS5 and 97.0 [96.0, 97.5] at SS6.
-- H1 DART, `bc_dart` seeds 1–4 − `bc` seeds 0–4: +3.5 [+1.6, +5.7] at SS5 and +8.0 [+4.3, +11.9]
-  at SS6.
+‡ `bc_dart` seed 0 is the σ = 0.10 tuning trial, kept as frozen (P4-D5 item 2). σ* = 0.10 was
+chosen on `select` over 3 seed-0 trials; `bc` was not tuned.
+- **The seeds 1–4 sensitivity.**
+  - Labelled "post hoc: added after `select`, before any frozen-list read"; it is never substituted
+    and given no verdict (`results/e08/bc_dart_s1_4.csv`; `results/results.md` §2 and §5).
+  - It was specified in P4-D4 before any frozen-list read, but computed only in Phase 10, after
+    Gate 8 had passed without it (P10-D2 item 2).
+- IQM: 99.2 [99.0, 99.5] at `id` SS5 and 97.0 [96.0, 97.5] at `id` SS6 †.
+- H1 DART, `bc_dart` seeds 1–4 − `bc` seeds 0–4: +3.5 [+1.6, +5.7] at `id` SS5 and
+  +8.0 [+4.3, +11.9] at `id` SS6 †.
+
+¶ H2's `dp_mix` seed 0 flips 22 of 150 `select` outcomes under numeric perturbations of order 1e-5
+(L4; `results/phase10/dp_sensitivity/sensitivity.csv`). The "not measured for `dp_mix`" notes in
+`results/results.md` §6b and `results/e08/contrasts.csv` predate that measurement (P10-D2 item 6).
 
 - **Near the teacher at SS3–SS5 (unpaired reading).** On the frigate (`id`), the vision students
   trained with on-policy or noise-injected data land close to the teacher:
   - `bc_dagger` lands 100.0 / 100.0 / 98.7 % (IQM over 5 seeds);
-  - `bc_dart` lands 100.0 / 100.0 / 99.3 %;
+  - `bc_dart` ‡ lands 100.0 / 100.0 / 99.3 %;
   - the teacher lands 200/200 in each cell.
 - **This `dp` is far below.** This `dp`, distilled from P8 `ppo` s0, lands 33–41 % (IQM) in every
   `id` cell at its frozen inference (Ta = 8, K = 10). Most of its losses are `off_pad`.
@@ -98,7 +106,7 @@ never substituted and given no verdict (`results/e08/bc_dart_s1_4.csv`; `results
   - The CI excludes 0, but +2.6 is below the +5 margin.
   - The cell is ceiling-limited: `bc_matched` lands 960/1 000 (mean over seeds × episodes; IQM
     96.3), so +5 was unattainable.
-  - The SS6 secondary clears +5 by 0.9 points (+5.1 with tunnelled successes removed).
+  - The secondary at `id` SS6 † clears +5 by 0.9 points (+5.1 with tunnelled successes removed).
   - The DART secondaries compare equal labelled-episode counts. σ* = 0.10 was chosen on `select`
     over 3 seed-0 trials; `bc` was not tuned.
 - **H3.** Executing 1 action per replan instead of 8 lands +47.4 points more on the same `dp`
@@ -113,7 +121,7 @@ never substituted and given no verdict (`results/e08/bc_dart_s1_4.csv`; `results
     (P9-D2 item 1).
   - On `select` at Ta = 1, `dp` lands a mean of 139.0/150, still below `bc`'s 145–149 in every seed
     (unpaired; P6-D5).
-- **H4.** The **perception gap** P = S(`bc_state`) − S(`bc`) is +9.5 [+6.1, +13.3]. The
+- **H4, at `id` SS6 †.** The **perception gap** P = S(`bc_state`) − S(`bc`) is +9.5 [+6.1, +13.3]. The
   **imitation gap** I = S(teacher) − S(`bc_state`) is +0.1 [−1.1, +1.4], and it is ceiling-limited.
   P also includes:
   - withholding `time_fraction` from the vision student;
@@ -360,7 +368,8 @@ condensed here).
   - Byte-identical rows for `dp`, `dp_*` and R1 hold only on this software stack: torch 2.13.0 on
     the CPU fp32 single-sample path, and for R1, ONNX Runtime CPU with one thread.
 - **L5 Ceilings and thin margins.**
-  - The teacher is at 100 % at SS3–SS5, so both H1 primaries are ceiling-limited.
+  - Both H1 primaries are ceiling-limited: their reference arms are within 5 points of 100 % at
+    `id` SS5 (`bc_matched` 96.0 %, `bc` 95.7 %, mean over seeds × episodes).
   - Beyond the +5 margin, H1-SS6 clears by 0.9 points and H1-DART-SS6 by 3.1 points. The flip floor
     at SS6 is 6.6 %, measured on P8's MLPs.
   - Every core student comes from one teacher seed, P8 `ppo` seed 0.
@@ -426,7 +435,7 @@ make figures && git diff --exit-code results/e08/figures      # figures, byte-id
 | demo collection (6 stores) | 52–102 s each | `results/demos_summary.json` (`manifest.wall_s`) |
 | training, all 71 pinned runs plus 3 σ trials (one RTX A4000) | 95.4 GPU-h (17.5 + 7.1 + 19.8 + 51.0) | `results/phase{4,5,6,7}/runs_summary.csv` (`gpu_hours`) |
 | evaluation matrix (`make eval`, CPU, 24 workers) | 22.3 h, summed over jobs | `results/e08/run_info.json` |
-| `dp_*` sensitivity (`make sensitivity`) | about 2 min per arm | `results/phase10/dp_sensitivity/run_info.json` |
+| `dp_*` sensitivity (`make sensitivity`) | 2–4 min per arm (115–253 s) | `results/phase10/dp_sensitivity/run_info.json` |
 | `make test` (full suite, workstation) | 23 min 25 s | `docs/LIMITATIONS.md` |
 
 The full order of operations is in the `Makefile` and `docs/IMPLEMENTATION_PLAN.md`. Long jobs are

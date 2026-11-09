@@ -27,15 +27,15 @@ items*).
 |---|---|
 | `make verify-p8` | `all_match: true`; 8/8 checks; `results/p8_provenance.json` unchanged (`git diff` empty) |
 | `make reproduce-p8` (out-dir in scratch, render full, 24 workers) | `pid_feedforward` 2 800/2 800 and `ppo` 400/400 rows identical, 0 differ, 0 missing. `comparison.json` byte-identical to the committed one. Run record: `results/reproduce_p8/rerun_phase10/` |
-| `make report` (ends in `git diff --exit-code results/results.md`) | exit 0, byte-identical (951 lines) |
+| `make report` (ends in `git diff --exit-code results/results.md`) | exit 0, byte-identical: 951 lines at `8f4c9e0`; 990 lines at `a00d46a`, after the `bc_dart` obligation (P10-D2 item 2) |
 | `make figures` then `git status` | `results/e08/figures/` unchanged |
 | `make bench-check` | `results/latency` re-renders byte-identically; `d0_check.json` agrees with its rows files |
 | `make bench-recheck-reference` | Decision unchanged (`reference_equals_selection_rows` re-decided True, same rows SHA-256s). It rewrites only its `ila_commit`/`time_utc` stamps; restored, since it is a write mode, not a check |
-| `scripts/score.py --out <scratch>` + `scripts/above_teacher.py --out <scratch>` | 17/17 files byte-identical to `results/e08/`: `summary`, `baselines`, `aggregate`, `contrasts`, `hypotheses`, `above_teacher`, `missing` and `h2_touchdown_times` CSVs, `hypotheses.json`, `score_info.json`, and `above_teacher/*.json` + `audit.md` |
+| `scripts/score.py --out <scratch>` + `scripts/above_teacher.py --out <scratch>` | at `8f4c9e0` 17/17, at `a00d46a` 18/18 (with `bc_dart_s1_4.csv`, re-run by `results-skeptic`) files byte-identical to `results/e08/`: `summary`, `baselines`, `aggregate`, `contrasts`, `hypotheses`, `above_teacher`, `missing` and `h2_touchdown_times` CSVs, `hypotheses.json`, `score_info.json`, and `above_teacher/*.json` + `audit.md` |
 | `make sensitivity-check` (Phase 10) | records agree with their rows; `sensitivity.csv` re-renders byte for byte (also runs without `artifacts/`) |
 | `make release-check` (Phase 10) | 86 assets, 16.68 GiB, every SHA-256 equal to its committed record; `results/release/{SHA256SUMS.txt,manifest.json}` identical |
 | `make lint` | ruff clean, format clean (163 files), mypy strict clean (81 source files) |
-| `make test` | `make test` at `8f4c9e0`: 1 244 passed, 0 failed (23 min 25 s), on an unchanging tree |
+| `make test` | `make test` at `8f4c9e0`: 1 244 passed, 0 failed (23 min 25 s). At `a00d46a`, the final code commit: 1 308 passed, 0 failed (22 min 58 s). Both ran on an unchanging tree |
 
 ## A. Inheritance from P8
 
@@ -97,12 +97,12 @@ items*).
 |---|---|---|---|
 | F1 Exact frozen lists; start-state check on every reset | ★ | met | `runner.check_start` on every reset (batched path included); `matrix.check_rows` checks list order, 200 per cell, regime and render SHA. Leak auditor's re-check: 185 200 e08 rows, 0 mismatches against P8's lists on (ss, index) → (episode_seed, realization_seed, heading, vessel); every arm flew exactly its declared lists |
 | F2 Teacher and three baselines beside every student | ★ | met | `results/results.md` §2–§4 and §7a–§7f: teacher, `pid_feedforward`, `pid_track_descend` and `oracle_gated` in every tagged section, from `results/e08/baselines.csv` (P8's committed rows). `oracle_gated` labelled "commit-timing oracle, privileged, not a bound" |
-| F3 Wilson CI and N; six outcome classes; no pooling | | met | `results/e08/summary.csv`: `success_wilson_lo/hi` and `n_episodes` on all 961 rows. All six classes in `results.md` §3 and §7f. No core table pools sea states. The one pooled sentence planned for the README (P8-D1 item 11) must be split per sea state or labelled descriptive (P10-D1 item 4) |
+| F3 Wilson CI and N; six outcome classes; no pooling | | met | `results/e08/summary.csv`: `success_wilson_lo/hi` and `n_episodes` on all 961 rows. All six classes in `results.md` §3 and §7f. No core table pools sea states. The pooled sentence once planned for the README (P8-D1 item 11) is not used; the README quotes per cell (P10-D1 item 5) |
 | F4 H1–H5 scored as frozen in P3-D1; synthetic tests | ★ | met | P3-D1 block hash recomputed `00e22330…3fc5`, as at Gate 3; every §1–§3 config SHA matches. `results/e08/hypotheses.{csv,json}`. Synthetic branch tests in `tests/test_eval_hypotheses.py` (`test_h1_*` … `test_h5a_*`, `test_magnitude_rule`, `test_noninferiority_rule`); `tests/test_deploy_latency.py::test_delay_is_ceil_of_p99_over_the_control_step`; `tests/test_eval_score.py::test_full_matrix_scores_every_hypothesis` |
 | F5 Every SS6 contrast with P8's one-ulp flip rate | | met-with-caveat | `results/e08/contrasts.csv`: 33/33 SS6 rows carry `flip_floor`; `results.md` §5–§6 and every SS6 number in the README print it. The `dp_*` ablations' own sensitivity is now measured (`results/phase10/dp_sensitivity/sensitivity.csv`, P10-D2) and quoted beside them in the README (L4). Caveat: older protocol prose (P8-D1 item 9, P9-D2 item 5, the Gate 8 row) quotes some SS6 contrasts without the floor. Rule (P10-D1 item 5): quote from `contrasts.csv`/`hypotheses.json`, never from that prose |
 | F6 Determinism contract met for every configuration | | met-with-caveat | Every e08 row flew the CPU fp32 single-sample path (`results/e08/run_info.json` `inference_path`, P8-D1 item 2), so the GPU re-measurement is moot. Bit-identity is re-checked by the P9-D2 reference re-flights, `results/latency/d0_check.json` (0 flips) and the GIF re-flights. Caveat: `dp` flips 32–44 of 150 `select` episodes under numeric perturbations of order 1e-5 (P9-D2 item 1). Byte-identical `dp`, `dp_*` and R1 rows therefore hold only on this software stack (torch 2.13, CPU fp32, i9-10980XE); another BLAS build would move about a quarter of `dp` outcomes while leaving rates near 58–67 of 150 vs 63 |
 | F7 Above-teacher cells investigated before reporting | | met | `results/e08/above_teacher.csv` (6 cells); `above_teacher/audit.md` and per-cell JSONs (tunnelling, detector disagreement, near-threshold, grace, McNemar); `reviewed.json` (6 released, results-skeptic, 2026-11-06). The scan covers every group, `latency_arm` included |
-| F8 `make report` byte-identical | | met | `make report` at `8f4c9e0`: exit 0, `git diff --exit-code results/results.md` clean |
+| F8 `make report` byte-identical | | met | `make report` at `8f4c9e0` and at `a00d46a`: exit 0, `git diff --exit-code results/results.md` clean. CI runs it on every push |
 
 ## G. Deployment
 
@@ -139,7 +139,7 @@ All open items from the first walk are closed in Phase 10. The commits are on `p
 | 7 | F5, F6, G4 | Wording risks for `dp` and SS6 contrasts | README rules (P10-D1 items 3–7) applied in the README | closed |
 | 8 | — | CI does not exercise the results path | CI runs `make report`, `bench-check`, `sensitivity-check`, `figures` + diff (`53b56bd`, `d8a21df`) | closed |
 | 9 | L4, F5 | `dp_*` closed-loop sensitivity not measured | `make sensitivity` (`fa364b1`); results `d8a21df`; P10-D2 | closed |
-| 10 | — (P4-D5 item 2) | The binding `bc_dart` s0 footnote and seeds 1–4 sensitivity row were never produced in Phase 8 (found by both README reviews) | The scorer and report add them from the committed rows; footnote ‡ on every `bc_dart` row in `results/results.md` and the README (P10-D2) | closed |
+| 10 | — (P4-D5 item 2) | The binding `bc_dart` s0 footnote and seeds 1–4 sensitivity row were never produced in Phase 8 (found by both README reviews) | The scorer and report add them from the committed rows; footnote ◇ on every `bc_dart` row in `results/results.md` (‡ in the README) (P10-D2 item 2) | closed |
 
 ## Limitations (for the README)
 
@@ -181,8 +181,8 @@ Every number below traces to the committed file named beside it.
   seed-0 trials, decided by one episode; `results/phase4/dart_tune/sigma_star.json`). `bc` is
   untuned.
 - **L9 Tunnelled successes.** P8 counts a success even when the touchdown penetration exceeds
-  5 mm (P8's `tunnelled` flag, not reclassified). Core `dp` has 354 such successes of 5 356
-  (6.6 %), and the latency arm 8.4 % (results-skeptic scan of `results/e08/rows/**`). The H1 and
+  5 mm (P8's `tunnelled` flag, not reclassified). Core `dp` has 354 such successes of 5 356, and
+  the latency arm 51 of 605 (results-skeptic scan of `results/e08/rows/**`). The H1 and
   H1-DART contrasts print success minus tunnelled successes beside them
   (`results/results.md` §5). Tunnelled successes favour the Ta = 8 side of H3, so its direction
   stands.

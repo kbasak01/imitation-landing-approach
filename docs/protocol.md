@@ -4164,3 +4164,61 @@ No threshold, list, frozen config, verdict or existing result row changed.
    - **Markers:** the `SOURCES.md` and `REPO_SETUP.md` "(verify)" markers are resolved.
    - **CI** now re-renders `results.md`, the latency tables, the sensitivity records and the
      figures on every push.
+6. **The e08 `dp_mix` notes predate the measurement.** `results/results.md` §6b and two H2-secondary
+   rows of `results/e08/contrasts.csv` still say "(core dp only; not measured for dp_mix)". Those
+   committed Phase 8 outputs are left as they are. The measurement is item 1: `dp_mix` s0 flips 22
+   of 150. The README places it beside H2 (`results-skeptic` confirmation review, SHOULD FIX 2).
+7. **Confirmation review** (`results-skeptic`, at `a00d46a`): nothing blocks Gate 10. Its four
+   SHOULD FIX items were applied in the README and LIMITATIONS: the flip floor beside every SS6
+   number, the `dp_mix` note beside H2, the σ-tuning caveat in the ‡ footnote, and when the seeds 1–4
+   row was computed. Its NOTEs were applied too: stale counts, the L5 cause, the sensitivity wall
+   clock, and the L9 wording.
+
+### Gate 10 passed (2026-11-09)
+
+| Criterion (plan Phase 10 exit gate, plus the plan's Phase 10 tasks) | Measured value / evidence | Result |
+|---|---|---|
+| Every `VALIDATION_CHECKLIST.md` line has a verdict, with evidence | `docs/LIMITATIONS.md`: 47/47 lines (17 ★): 34 met, 13 met-with-caveat, 0 unmet. Each cites a test, a committed artifact with its field, a protocol entry or a commit | PASS |
+| No critical finding open | All 17 ★ lines are met (15) or met-with-caveat (2: A1, no hook log exists; C2, frozen lists were flown before P3-D1 by scripted actions and teachers only). `/full-audit`: no BLOCKING from any of the 4 reviewers. README draft reviews: every BLOCKING item applied. Confirmation review at `a00d46a`: "nothing blocks Gate 10". Every LIMITATIONS open item is closed (P10-D1, P10-D2) | PASS |
+| `/full-audit` run | `docs/audit_report.md`: leak auditor GO, no LEAK; diagnostician 71/71 usable, 0 EXCLUDE (`dp` s0–s4 re-rated CAVEAT, P10-D1 item 1); results-skeptic nothing BLOCKING; publication dry run HOLD on Phase 11 items only, then closed in P10-D2 | PASS |
+| `make report` and every `--check` mode re-run and diffed | At `a00d46a`, all byte-identical or identical: `make report`, `make bench-check`, `make sensitivity-check`, `make release-check`, `make figures` + `git diff`; `scripts/score.py` + `above_teacher.py` into scratch, 18/18 files (results-skeptic). At `8f4c9e0`, `bench-recheck-reference` decided the same; it is a write mode and was restored | PASS |
+| P8 inheritance on the final tree | `make verify-p8`: `all_match: true`, file unchanged. Reproduction gate re-run at `8f4c9e0`: 3 200/3 200 rows identical, render full (`results/reproduce_p8/rerun_phase10/`). `runner.py`, `p8_adapter.py`, `render/` and `obs/` are unchanged since | PASS |
+| CPU tests green | `make lint` clean (83 source files) at HEAD. `make test` at `a00d46a` (the final code commit): 1 308 passed, 0 failed (22 min 58 s), on an unchanging tree. Later commits change docs only; the tests that read `docs/protocol.md` were re-run after this entry | PASS |
+
+*Reviewers.* `/full-audit` (`docs/audit_report.md` §1–§4):
+- `privileged-leak-auditor` GO;
+- `training-run-diagnostician` 0 EXCLUDE;
+- `results-skeptic` nothing BLOCKING;
+- `repo-publication-reviewer` dry run, Phase 11 items only.
+
+Second round (§5):
+- `results-skeptic` README draft, 6 BLOCKING, applied;
+- `repo-publication-reviewer`, 2 BLOCKING, applied;
+- `results-skeptic` confirmation at `a00d46a`, nothing blocks Gate 10, 4 SHOULD FIX applied (P10-D2 item 7).
+
+*Deviations this phase.* None. No threshold, list, criterion, frozen config or verdict changed.
+- P10-D1 item 1 changes a run-trust label only.
+- P10-D2 item 2 implements an obligation that P4-D4/P4-D5 had already bound. It was missed in
+  Phase 8 and is recorded as such.
+- The draft release and the README were pulled forward from Phase 11 at the user's request.
+
+## Phase 11
+
+*Before you start (from Phase 10).*
+- **The README is written and reviewed** (P10-D2 item 3). Phase 11 re-checks it at the release
+  commit with `repo-publication-reviewer` (SHIP needed) and claim-trace. It must not drift from the
+  committed files.
+- **Release.** The draft `phase-11-complete` holds all 86 assets plus `SHA256SUMS.txt` and
+  `manifest.json` (P10-D2 item 4).
+  - Publish it only after `phase-10` (and any Phase 11 commits) are on `main`, so that the tag
+    lands on a tree that contains `results/release/`.
+  - Re-run `make release-check` first.
+- **P8's `ppo` checkpoint is not publicly released.** The README says so. Releasing it is a
+  decision for the P8 repository, not this one.
+- **Open NOTEs:**
+  - the GIF manifest has no `ila` commit;
+  - per-run Phase 6/7 verdict JSONs do not exist;
+  - `REPO_SETUP.md` is still starter-kit text;
+  - the e08 `dp_mix` "not measured" notes predate P10-D2 (item 6).
+- **First task:** `repo-publication-reviewer` full review of `main` after the merge, then make the
+  repository public, publish the draft release and tag `phase-11-complete`.
