@@ -1,0 +1,30 @@
+# Phase 10: closed-loop outcome sensitivity of the Diffusion-Policy students (LIMITATIONS L4).
+# Read by ila.deploy.sensitivity.load_sensitivity_settings into a frozen SensitivitySettings and
+# cross-checked against configs/deploy/bench.yaml (frozen for Phase 9; never edited for this).
+# Descriptive only: no threshold, no verdict. Simulation only. Control steps are 1/30 s model
+# scale (33.333 ms model, 166.7 ms full scale; lambda = 1/25).
+#
+# Definition (Phase 9's for core dp, P9-D2 item 1, so the numbers are comparable): the 150 select
+# episodes flown twice with each arm's seed-0 pinned checkpoint at its selection inference
+# (Ta 8, K 10, no ensembling, EMA weights): the reference on the CPU fp32 single-sample path
+# (asserted byte-identical to the committed selection rows), the perturbation with the identical
+# Python sampler in torch eager on the GPU (fp32, TF32 off). A flip is an episode whose P8
+# outcome class differs between the two.
+arms: [dp, dp_mix, dp_pid, dp_n100, dp_n300, dp_minus_last_action]
+seed: 0
+inference: {Ta: 8, K: 10, temporal_ensembling: false}   # selection's (selection.json / config)
+list: select                                 # splits/select.parquet; never a frozen list
+n_episodes: 150
+reference: torch_cpu_fp32                    # selection's path: CPU, fp32, B = 1, 1 thread/worker
+perturbed: torch_cuda_fp32                   # same sampler, torch eager on CUDA, fp32, TF32 off
+workers_cpu: 24                              # = bench.yaml closed_loop.workers_cpu
+workers_gpu: 6                               # = bench.yaml closed_loop.workers_gpu (one CUDA context each)
+chunk: 10                                    # = bench.yaml closed_loop.chunk
+selection_pins: results/e08/selection_pins.json
+bench_yaml: configs/deploy/bench.yaml        # values above are checked equal to it
+control:                                     # core dp s0 must reproduce Phase 9's torch_cuda_fp32 flight
+  arm: dp
+  record: results/latency/closed_loop/dp/torch_cuda_fp32.json
+  rows: results/latency/closed_loop/dp/torch_cuda_fp32_rows.csv
+  reference_rows: results/latency/closed_loop/dp/torch_cpu_fp32_rows.csv
+results_dir: results/phase10/dp_sensitivity

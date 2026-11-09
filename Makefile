@@ -32,7 +32,7 @@ EVAL    ?=
 .PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all \
         bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check \
-        bench-recheck-reference bench-d0-check release release-check
+        bench-recheck-reference bench-d0-check release release-check sensitivity sensitivity-check
 
 # --- implemented ------------------------------------------------------------------
 
@@ -179,6 +179,20 @@ bench-recheck-reference: ; $(PY) scripts/deploy/bench.py recheck-reference $(BEN
 #   mkdir -p artifacts/runs/bench && nohup make bench-d0-check > artifacts/runs/bench/d0_check.log 2>&1 &
 bench-d0-check:    ; $(PY) scripts/deploy/bench.py d0-check $(BENCH)
 bench: bench-export bench-inputs bench-parity bench-closed-loop bench-d0-check bench-latency bench-score
+
+# Phase 10 (LIMITATIONS L4; configs/deploy/sensitivity.yaml): closed-loop outcome sensitivity of
+# the dp students (dp, dp_mix, dp_pid, dp_n100, dp_n300, dp_minus_last_action; seed 0, pinned,
+# Ta 8, K 10, no ensembling). Per arm: the 150 select episodes on torch_cpu_fp32 (24 workers;
+# rows asserted byte-identical to the selection rows) and on torch_cuda_fp32 (6 workers, same
+# sampler, TF32 off); outcome flips counted. Core dp is the control (Phase 9: 32 flips).
+# Descriptive, no threshold -> results/phase10/dp_sensitivity/. Resumable per arm (an arm with a
+# record is kept; SENS="--force" re-flies; SENS="--arms dp" for one). Refuses a dirty tree
+# outside results/phase10/. Needs CUDA. Background (~15-25 min):
+#   mkdir -p artifacts/runs/sensitivity && nohup make sensitivity > artifacts/runs/sensitivity/run.log 2>&1 &
+SENS ?=
+sensitivity:       ; $(PY) scripts/deploy/bench.py sensitivity $(SENS)
+# Re-decides each record from its rows files and re-renders sensitivity.csv byte for byte (no flight).
+sensitivity-check: ; $(PY) scripts/deploy/bench.py sensitivity-check
 
 # Phase 10 release assets (logic: ila.release): every pinned student checkpoint as stored, the R1
 # ONNX exports and the Phase 9 graphs, each re-hashed against its committed SHA-256 ->

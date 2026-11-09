@@ -146,13 +146,18 @@ def git_state() -> dict[str, Any]:
 # --------------------------------------------------------------------------- checkpoints
 
 
-def resolve_pinned(arm: str, seed: int, pins_path: Path) -> ev_arms.Checkpoint:
+def resolve_pinned(
+    arm: str, seed: int, pins_path: Path, *, tag: str = "core"
+) -> ev_arms.Checkpoint:
     """Resolve (arm, seed) to its pinned, byte-verified selected checkpoint.
 
     Args:
-        arm: ``bc_dagger`` or ``dp``.
+        arm: ``bc_dagger`` or ``dp`` (Phase 9); any ``dp_*`` ablation for the Phase 10
+            sensitivity stage (:mod:`ila.deploy.sensitivity`).
         seed: Training seed (0).
         pins_path: ``results/e08/selection_pins.json``.
+        tag: The arm's matrix tag (``core``; ``ablation`` for the ablations), checked against
+            the tag its ``selection.json`` records.
 
     Returns:
         The checkpoint record (path, SHA-256, ``selection.json`` and its SHA-256).
@@ -164,7 +169,7 @@ def resolve_pinned(arm: str, seed: int, pins_path: Path) -> ev_arms.Checkpoint:
     inference = ev_arms.Inference(8, 10, False) if ev_arms.is_diffusion(arm) else None
     spec = ev_arms.ArmSpec(
         arm=arm,
-        tag="core",
+        tag=tag,
         seeds=(int(seed),),
         teacher=ev_arms.expected_teacher(arm),
         obs_variant=ev_arms.expected_obs_variant(arm),
@@ -202,20 +207,23 @@ class LoadedArm:
     obs_variant: str
 
 
-def load_arm(arm: str, seed: int, pins_path: Path) -> LoadedArm:
+def load_arm(arm: str, seed: int, pins_path: Path, *, tag: str = "core") -> LoadedArm:
     """:func:`resolve_pinned`, then build the EMA network from the checkpoint's own config.
+
+    A diffusion arm (``dp``, ``dp_*``) must build a :class:`DiffusionPolicyNet`, any other a
+    :class:`BCNet`.
 
     Raises:
         ExportError: If the checkpoint is not the arm's family.
     """
-    ckpt = resolve_pinned(arm, seed, pins_path)
+    ckpt = resolve_pinned(arm, seed, pins_path, tag=tag)
     raw = read_checkpoint(ckpt.path)
     net = build_net_from_config(
         raw["kind"], raw["config"], int(raw["run_seed"]), str(raw["obs_variant"])
     )
     net.load_state_dict(raw["ema"])
     net.eval()
-    want = DiffusionPolicyNet if arm == "dp" else BCNet
+    want = DiffusionPolicyNet if ev_arms.is_diffusion(arm) else BCNet
     if not isinstance(net, want):
         raise ExportError(f"{arm}: checkpoint builds {type(net).__name__}, not {want.__name__}")
     return LoadedArm(arm, int(seed), ckpt, net, net.encoder.cfg, str(raw["obs_variant"]))

@@ -54,7 +54,7 @@ from ila import p8_adapter
 from ila.data import episodes as data_episodes
 from ila.deploy import backends as bk
 from ila.deploy.export import LoadedArm, git_state, load_arm, sha256_file
-from ila.deploy.settings import GPU_PROVIDERS, BenchSettings
+from ila.deploy.settings import DEPLOY_ARMS, GPU_PROVIDERS, BenchSettings
 from ila.eval import arms as ev_arms
 from ila.eval import runner
 from ila.policies.dp.policy import ChunkedDiffusionStudent, DPConfig, SeedTuple, initial_noise
@@ -164,28 +164,52 @@ def provider_policy(
     pins: str,
     trt_cache_root: str,
     cfgs: p8_adapter.EvalConfigs,
+    *,
+    seed: int = 0,
+    tag: str = "core",
 ) -> Any:
     """Picklable ``PolicySpec.build``: the arm's student on a provider (in the worker).
 
     The pinned checkpoint is resolved and byte-verified again here (its config gives the
-    encoder and sampler settings; torch providers also take its EMA weights).
+    encoder and sampler settings; torch providers also take its EMA weights). A ``dp_*``
+    ablation (Phase 10 sensitivity, :mod:`ila.deploy.sensitivity`) runs as ``dp`` does, on a
+    torch provider only: only ``bc_dagger`` and ``dp`` were exported, so an ORT provider would
+    run another arm's graphs.
+
+    Args:
+        arm: ``bc_dagger``, ``dp`` or a ``dp_*`` ablation.
+        provider: An ``ila`` provider name.
+        graph_dir: The exported graphs (ORT providers).
+        pins: ``results/e08/selection_pins.json``.
+        trt_cache_root: Root of the TensorRT caches.
+        cfgs: P8's configs (unused).
+        seed: Training seed of the pinned checkpoint (0).
+        tag: The arm's matrix tag (``core`` or ``ablation``).
+
+    Raises:
+        ValueError: If an arm without exported graphs is asked for on an ORT provider.
     """
     del cfgs
+    if arm not in DEPLOY_ARMS and not provider.startswith("torch_"):
+        raise ValueError(f"{arm}: no exported graphs; only torch providers can fly it")
     torch.set_num_threads(1)
-    loaded: LoadedArm = load_arm(arm, 0, Path(pins))
+    loaded: LoadedArm = load_arm(arm, int(seed), Path(pins), tag=tag)
+    diffusion = ev_arms.is_diffusion(arm)
     # bc never samples; its backend's host sampler config is unused.
-    dp_cfg = loaded.net.cfg if arm == "dp" else DPConfig()
+    dp_cfg = loaded.net.cfg if diffusion else DPConfig()
     assert isinstance(dp_cfg, DPConfig)
+    # The backend holds its networks under the exported arms' names.
+    key = "dp" if diffusion else "bc_dagger"
     backend = bk.make_backend(
         provider,
         graph_dir=Path(graph_dir),
         dp_cfg=dp_cfg,
-        arms_loader=lambda: {arm: loaded},
+        arms_loader=lambda: {key: loaded},
         batch=1,
         threads=1,
         trt_cache_root=Path(trt_cache_root),
     )
-    if arm == "dp":
+    if diffusion:
         return ProviderDPStudent(backend, loaded.encoder_cfg, dp_cfg, loaded.seed)
     return ProviderBCStudent(backend, loaded.encoder_cfg)
 
@@ -271,9 +295,27 @@ def fly_provider(
     *,
     graph_dir: Path,
     workers: int,
+    seed: int | None = None,
+    tag: str = "core",
 ) -> list[dict[str, Any]]:
-    """Fly one arm on one provider (or the reference path) through the runner."""
-    loaded = load_arm(arm, settings.arm_seeds[arm], settings.selection_pins)
+    """Fly one arm on one provider (or the reference path) through the runner.
+
+    Args:
+        arm: ``bc_dagger``, ``dp``, or a ``dp_*`` ablation (torch providers only).
+        provider: Provider; ``settings.reference`` flies selection's own path
+            (:func:`ila.train.select.fly_checkpoint`).
+        settings: Bench settings (reference, pins, chunk, caches).
+        episodes: Listed episodes, in order.
+        graph_dir: Exported graphs (ORT providers).
+        workers: Processes (CPU rows do not depend on it).
+        seed: Training seed (``None``: ``settings.arm_seeds[arm]``).
+        tag: The arm's matrix tag (``core`` or ``ablation``).
+
+    Returns:
+        Runner rows, in episode order.
+    """
+    seed = settings.arm_seeds[arm] if seed is None else int(seed)
+    loaded = load_arm(arm, seed, settings.selection_pins, tag=tag)
     ck = loaded.ckpt
     if provider == settings.reference:
         from ila.train.select import fly_checkpoint
@@ -295,6 +337,8 @@ def fly_provider(
         str(graph_dir),
         str(settings.selection_pins),
         str(settings.out_dir / "trt_cache"),
+        seed=loaded.seed,
+        tag=tag,
     )
     spec = p8_adapter.callable_spec(arm, build, run_seed=loaded.seed)
     tags = runner.RowTags(
