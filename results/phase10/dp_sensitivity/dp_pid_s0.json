@@ -1,0 +1,157 @@
+{
+  "arm": "dp_pid",
+  "checkpoint": {
+    "arm": "dp_pid",
+    "global_step": 70000,
+    "kind": "checkpoint",
+    "obs_variant": "default",
+    "path": "artifacts/runs/dp_pid/s0/checkpoints/s0_step070000.pt",
+    "seed": 0,
+    "select_n": 150,
+    "select_success": 143,
+    "selection_json": "results/phase7/runs/dp_pid/s0/selection.json",
+    "selection_json_sha256": "211047a7dced059b628bf83e643389e4415b37fe7156df80f41517296355cdff",
+    "sha256": "fa218a87881b7435a3d8bdd50d543f0d1c2562d9f502d53ff0f72cdf741fcdc3",
+    "teacher": "T_pid"
+  },
+  "checkpoint_sha256": "fa218a87881b7435a3d8bdd50d543f0d1c2562d9f502d53ff0f72cdf741fcdc3",
+  "committed_selection_rows_file": "results/phase7/runs/dp_pid/s0/select/s0_step070000_rows.csv.gz",
+  "control": null,
+  "env": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "cpu_count": "36",
+    "cuda": "13.0",
+    "cudnn": "92000",
+    "git_commit": "fa364b1",
+    "gpu": "NVIDIA RTX A4000",
+    "nvidia_driver": "596.71",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "onnxruntime_package": "onnxruntime-gpu",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "tensorrt": "10.16.1.11",
+    "torch": "2.13.0+cu130",
+    "torch_cuda_available": true,
+    "torch_default_threads": "1"
+  },
+  "flip_rate": 0.03333333333333333,
+  "flipped": [
+    {
+      "index": "17",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "21",
+      "provider": "success",
+      "reference": "bounce",
+      "ss": "SS4"
+    },
+    {
+      "index": "13",
+      "provider": "success",
+      "reference": "bounce",
+      "ss": "SS5"
+    },
+    {
+      "index": "24",
+      "provider": "success",
+      "reference": "bounce",
+      "ss": "SS5"
+    },
+    {
+      "index": "38",
+      "provider": "success",
+      "reference": "bounce",
+      "ss": "SS5"
+    }
+  ],
+  "flips": 5,
+  "gained": 4,
+  "git": {
+    "dirty": false,
+    "dirty_outside_results": false,
+    "dirty_paths": [],
+    "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728"
+  },
+  "inference": {
+    "K": 10,
+    "Ta": 8,
+    "temporal_ensembling": false
+  },
+  "list": "select",
+  "lost": 1,
+  "n": 150,
+  "obs_variant": "default",
+  "outcomes_perturbed": {
+    "bounce": 3,
+    "crash": 0,
+    "hard_landing": 1,
+    "off_pad": 0,
+    "success": 146,
+    "timeout": 0
+  },
+  "outcomes_ref": {
+    "bounce": 6,
+    "crash": 0,
+    "hard_landing": 1,
+    "off_pad": 0,
+    "success": 143,
+    "timeout": 0
+  },
+  "perturbed": {
+    "outcomes": {
+      "bounce": 3,
+      "crash": 0,
+      "hard_landing": 1,
+      "off_pad": 0,
+      "success": 146,
+      "timeout": 0
+    },
+    "provider": "torch_cuda_fp32",
+    "rows_file": "dp_pid_s0_torch_cuda_fp32_rows.csv",
+    "rows_sha256": "27351deedc04cc2ca2d38fffc570f79fb9325e51ea2f26f38bf495639df5331e",
+    "success": 146,
+    "wall_s": 157.47864959802246,
+    "workers": 6
+  },
+  "reference": {
+    "outcomes": {
+      "bounce": 6,
+      "crash": 0,
+      "hard_landing": 1,
+      "off_pad": 0,
+      "success": 143,
+      "timeout": 0
+    },
+    "provider": "torch_cpu_fp32",
+    "rows_file": "dp_pid_s0_torch_cpu_fp32_rows.csv",
+    "rows_sha256": "e1b8075ba5ce41f85d604735d266dda68dd4814bf88304523b5766cd493332ec",
+    "success": 143,
+    "wall_s": 95.90185692999512,
+    "workers": 24
+  },
+  "reference_equals_committed_selection_rows": true,
+  "reference_equals_selection_rows": true,
+  "rows_text_differ": 150,
+  "seed": 0,
+  "selection_pin": "211047a7dced059b628bf83e643389e4415b37fe7156df80f41517296355cdff",
+  "selection_pins_file": "results/e08/selection_pins.json",
+  "selection_rows_file": "artifacts/runs/dp_pid/s0/select/s0_step070000_rows.csv",
+  "selection_rows_flips": 0,
+  "selection_rows_sha256": "e1b8075ba5ce41f85d604735d266dda68dd4814bf88304523b5766cd493332ec",
+  "status": "flown",
+  "success_perturbed": 146,
+  "success_ref": 143,
+  "tag": "ablation",
+  "teacher": "T_pid",
+  "time_utc": "2026-11-09T15:36:49+00:00",
+  "transitions": {
+    "bounce->success": 4,
+    "success->bounce": 1
+  },
+  "wall_s": 253.390591112955,
+  "what": "outcome flips on the 150 select episodes between the arm's seed-0 pinned checkpoint flown on torch_cpu_fp32 (selection's CPU fp32 single-sample path; rows asserted byte-identical to the committed selection rows) and the identical Python sampler in torch eager on torch_cuda_fp32 (fp32, TF32 off, batch 1 per worker); Ta 8, K 10, no ensembling, EMA weights; Phase 9's definition for core dp (P9-D2 item 1). Descriptive: no threshold"
+}

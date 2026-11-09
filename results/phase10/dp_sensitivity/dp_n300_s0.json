@@ -1,0 +1,344 @@
+{
+  "arm": "dp_n300",
+  "checkpoint": {
+    "arm": "dp_n300",
+    "global_step": 40000,
+    "kind": "checkpoint",
+    "obs_variant": "default",
+    "path": "artifacts/runs/dp_n300/s0/checkpoints/s0_step040000.pt",
+    "seed": 0,
+    "select_n": 150,
+    "select_success": 63,
+    "selection_json": "results/phase7/runs/dp_n300/s0/selection.json",
+    "selection_json_sha256": "16d9d530d3044d3cd75effeab2984520a3810927fa65b2a38a9612a0abe34fa7",
+    "sha256": "93779e50474d814f32e56bd8bdbf68eebb4619db4d3cc14ff468bd4fa1c00af7",
+    "teacher": "T_ppo"
+  },
+  "checkpoint_sha256": "93779e50474d814f32e56bd8bdbf68eebb4619db4d3cc14ff468bd4fa1c00af7",
+  "committed_selection_rows_file": "results/phase7/runs/dp_n300/s0/select/s0_step040000_rows.csv.gz",
+  "control": null,
+  "env": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "cpu_count": "36",
+    "cuda": "13.0",
+    "cudnn": "92000",
+    "git_commit": "fa364b1",
+    "gpu": "NVIDIA RTX A4000",
+    "nvidia_driver": "596.71",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "onnxruntime_package": "onnxruntime-gpu",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "tensorrt": "10.16.1.11",
+    "torch": "2.13.0+cu130",
+    "torch_cuda_available": true,
+    "torch_default_threads": "1"
+  },
+  "flip_rate": 0.23333333333333334,
+  "flipped": [
+    {
+      "index": "2",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "4",
+      "provider": "hard_landing",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "6",
+      "provider": "bounce",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "10",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "14",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "19",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "20",
+      "provider": "hard_landing",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "22",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "33",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "41",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "42",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "43",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "1",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "2",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "7",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "17",
+      "provider": "success",
+      "reference": "hard_landing",
+      "ss": "SS4"
+    },
+    {
+      "index": "20",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS4"
+    },
+    {
+      "index": "30",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS4"
+    },
+    {
+      "index": "37",
+      "provider": "off_pad",
+      "reference": "hard_landing",
+      "ss": "SS4"
+    },
+    {
+      "index": "45",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS4"
+    },
+    {
+      "index": "49",
+      "provider": "bounce",
+      "reference": "off_pad",
+      "ss": "SS4"
+    },
+    {
+      "index": "1",
+      "provider": "off_pad",
+      "reference": "hard_landing",
+      "ss": "SS5"
+    },
+    {
+      "index": "2",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS5"
+    },
+    {
+      "index": "9",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS5"
+    },
+    {
+      "index": "10",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "16",
+      "provider": "hard_landing",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "17",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "19",
+      "provider": "off_pad",
+      "reference": "bounce",
+      "ss": "SS5"
+    },
+    {
+      "index": "22",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "23",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "26",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "34",
+      "provider": "success",
+      "reference": "hard_landing",
+      "ss": "SS5"
+    },
+    {
+      "index": "35",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "41",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "47",
+      "provider": "hard_landing",
+      "reference": "off_pad",
+      "ss": "SS5"
+    }
+  ],
+  "flips": 35,
+  "gained": 10,
+  "git": {
+    "dirty": false,
+    "dirty_outside_results": false,
+    "dirty_paths": [],
+    "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728"
+  },
+  "inference": {
+    "K": 10,
+    "Ta": 8,
+    "temporal_ensembling": false
+  },
+  "list": "select",
+  "lost": 17,
+  "n": 150,
+  "obs_variant": "default",
+  "outcomes_perturbed": {
+    "bounce": 18,
+    "crash": 0,
+    "hard_landing": 10,
+    "off_pad": 66,
+    "success": 56,
+    "timeout": 0
+  },
+  "outcomes_ref": {
+    "bounce": 9,
+    "crash": 0,
+    "hard_landing": 10,
+    "off_pad": 68,
+    "success": 63,
+    "timeout": 0
+  },
+  "perturbed": {
+    "outcomes": {
+      "bounce": 18,
+      "crash": 0,
+      "hard_landing": 10,
+      "off_pad": 66,
+      "success": 56,
+      "timeout": 0
+    },
+    "provider": "torch_cuda_fp32",
+    "rows_file": "dp_n300_s0_torch_cuda_fp32_rows.csv",
+    "rows_sha256": "074472f9889fa10a30ce3cbfcabca8cd2fb8ca7aa362582b6b3e67040f108bc2",
+    "success": 56,
+    "wall_s": 70.03486224199878,
+    "workers": 6
+  },
+  "reference": {
+    "outcomes": {
+      "bounce": 9,
+      "crash": 0,
+      "hard_landing": 10,
+      "off_pad": 68,
+      "success": 63,
+      "timeout": 0
+    },
+    "provider": "torch_cpu_fp32",
+    "rows_file": "dp_n300_s0_torch_cpu_fp32_rows.csv",
+    "rows_sha256": "2453885fc64dd1b35364e661cf71a19db8c6e6694d97a1174fe6f1ea0f76e8d0",
+    "success": 63,
+    "wall_s": 44.641063691000454,
+    "workers": 24
+  },
+  "reference_equals_committed_selection_rows": true,
+  "reference_equals_selection_rows": true,
+  "rows_text_differ": 150,
+  "seed": 0,
+  "selection_pin": "16d9d530d3044d3cd75effeab2984520a3810927fa65b2a38a9612a0abe34fa7",
+  "selection_pins_file": "results/e08/selection_pins.json",
+  "selection_rows_file": "artifacts/runs/dp_n300/s0/select/s0_step040000_rows.csv",
+  "selection_rows_flips": 0,
+  "selection_rows_sha256": "2453885fc64dd1b35364e661cf71a19db8c6e6694d97a1174fe6f1ea0f76e8d0",
+  "status": "flown",
+  "success_perturbed": 56,
+  "success_ref": 63,
+  "tag": "ablation",
+  "teacher": "T_ppo",
+  "time_utc": "2026-11-09T15:40:54+00:00",
+  "transitions": {
+    "bounce->off_pad": 1,
+    "hard_landing->off_pad": 2,
+    "hard_landing->success": 2,
+    "off_pad->bounce": 2,
+    "off_pad->hard_landing": 3,
+    "off_pad->success": 8,
+    "success->bounce": 8,
+    "success->hard_landing": 1,
+    "success->off_pad": 8
+  },
+  "wall_s": 114.68607586098369,
+  "what": "outcome flips on the 150 select episodes between the arm's seed-0 pinned checkpoint flown on torch_cpu_fp32 (selection's CPU fp32 single-sample path; rows asserted byte-identical to the committed selection rows) and the identical Python sampler in torch eager on torch_cuda_fp32 (fp32, TF32 off, batch 1 per worker); Ta 8, K 10, no ensembling, EMA weights; Phase 9's definition for core dp (P9-D2 item 1). Descriptive: no threshold"
+}
