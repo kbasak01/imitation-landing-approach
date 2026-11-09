@@ -4273,10 +4273,12 @@ equality.
      unchanged). There is no new selection.
    - **Layout:** each pick is shown from a P8-style third-person camera (`rld.viz.gifs.Camera` via
      `p8_adapter.OutsideCamera`), with each policy's own onboard frame below it.
-   - **Run:** 16 panels re-flown at `a66b053` on a clean tree, CPU fp32 single-sample path.
+   - **Run:** 16 panels re-flown on a clean tree, CPU fp32 single-sample path. The first run was at
+     `a66b053`. The committed GIFs are the re-run at `0d36da1`, after the badge-layout fix from the
+     review.
    - **Check:** every row was asserted equal to its committed row before any GIF was written: the
      students on the whole CSV line, the teacher with P8's `compare_to_reference`.
-   - **Output:** `docs/media/` holds the 4 GIFs (4 693 352 bytes) and `manifest.json`, which records
+   - **Output:** `docs/media/` holds the 4 GIFs (4 750 213 bytes) and `manifest.json`, which records
      the picks, SHA-256s, camera parameters, the `ila` commit and `dirty: false`. This closes the
      Phase 10 NOTE "the GIF manifest has no `ila` commit" for these GIFs.
    - **How the grab works:** `p8_adapter.grab_outside_view` is the only new PyBullet access. It
@@ -4305,3 +4307,28 @@ equality.
 
    The numbers carried over from the Phase 10 README are unchanged. New numbers are traced to
    `docs/figures/*.csv`, `results/readme/model_specs.json` or `results/e08/` and `results/latency/`.
+6. **`results-skeptic` README review** at `273bc3e`: 2 BLOCKING, 7 SHOULD FIX, several NOTEs, all
+   applied in `0d36da1`.
+   - **What it verified:** 812 plotted values against their source cells, with 0 mismatches. The
+     figures re-render byte-identically. Every README table cell, every parameter count and the
+     GIF SHA-256s all check out.
+   - **B1, applied:** the SS6 flip floor and the †/‡/¶ footnotes were hidden in a collapsed block.
+     They are now visible under the hypothesis table and beside every SS6 number.
+   - **B2, applied:** the `dp` range "29.5–40.8 %" held only for the plotted cells. The README now
+     scopes it to those cells and gives 29.5–46.8 % over all 14 core cells.
+   - **SHOULD FIX, applied:**
+     - `off_pad` is defined: the centre more than 0.10 m from the pad centre; the 0.15 m ring is
+       context only;
+     - the chunking figure is retitled, because with ensembling `dp` replans every step and Ta is
+       the averaging window;
+     - H4 is worded as D = P − I;
+     - unpaired-reading qualifiers are added;
+     - `T_mix` is named;
+     - the verdict count is nine: eight contrasts plus H5(a);
+     - the full flip-floor wording appears in the figures.
+   - **NOTEs, applied:**
+     - the latency full-scale period;
+     - the conditions scale and title;
+     - the teacher line drawn above `bc_state`;
+     - the hero badge no longer overlaps its label.
+

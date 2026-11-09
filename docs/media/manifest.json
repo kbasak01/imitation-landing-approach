@@ -45,7 +45,7 @@
   },
   "gifs": [
     {
-      "bytes": 1230620,
+      "bytes": 1250559,
       "category": "a_all_four_succeed",
       "file": "hero_a_all_four_succeed__id_SS5_ep2.gif",
       "frame_ms_model_scale": 33.333,
@@ -90,10 +90,10 @@
           "steps": 68
         }
       ],
-      "sha256": "bed6d524d0531cfc7c46048e91d0ec1227aedb1bbddc717c2c9a1a17d8e35b8c"
+      "sha256": "e5a13cbddc87f322e1ddfcb7f6d33ff7c585d9ee812bb633acdac12e6029b14e"
     },
     {
-      "bytes": 1325878,
+      "bytes": 1330632,
       "category": "b_students_split",
       "file": "hero_b_students_split__id_SS5_ep0.gif",
       "frame_ms_model_scale": 33.333,
@@ -138,10 +138,10 @@
           "steps": 81
         }
       ],
-      "sha256": "2c1a8adfa5942182268881642d0bd47949ad9b626b132947dcfc278f0e8a100f"
+      "sha256": "b2abb9f12fd41c3645a4961a62a9074eaf14d81de5d273199a377c98ccd8b032"
     },
     {
-      "bytes": 1109574,
+      "bytes": 1131330,
       "category": "c_dp_off_pad",
       "file": "hero_c_dp_off_pad__id_SS5_ep1.gif",
       "frame_ms_model_scale": 33.333,
@@ -186,10 +186,10 @@
           "steps": 67
         }
       ],
-      "sha256": "b8e3b04338b479699596ca70919afde0f430c752d94c2a979c195dc0bca8ce84"
+      "sha256": "8c2be4592d2512385f47783d668f1c949d515b3a3fc048bbaaeadc58f7e9fc52"
     },
     {
-      "bytes": 1027280,
+      "bytes": 1037692,
       "category": "d_teacher_ss6_failure",
       "file": "hero_d_teacher_ss6_failure__id_SS6_ep10.gif",
       "frame_ms_model_scale": 33.333,
@@ -234,10 +234,10 @@
           "steps": 46
         }
       ],
-      "sha256": "9a7c9b2cabf622fd352eac7f0f5455005dc12cd03c80494b303ca23e1aef50fb"
+      "sha256": "476f568a2a80e7f0a6c8030fe0f35f3b0a81a4a87f468a1f0a589b0c85adf03f"
     }
   ],
-  "ila_commit": "a66b053f843f322ecc6d4e4538d280b84faffd2a",
+  "ila_commit": "0d36da1f37acd69fae80d1f8d0c78dbdc89532fe",
   "illustrative": "hand-picked by the stated rule (results/e08/gifs/RULE.md); not evidence",
   "limits_bytes": {
     "per_gif": 2500000,
@@ -312,5 +312,5 @@
     "path": "results/e08/gifs/manifest.json",
     "sha256": "d53de4762a3a7220d247e368f18b0f80ae6154c97091dc81805846f6dc032c6f"
   },
-  "total_bytes": 4693352
+  "total_bytes": 4750213
 }
