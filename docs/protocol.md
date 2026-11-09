@@ -3997,3 +3997,246 @@ P9-D2; both are decisions, not deviations.
   assets with SHA-256s matching `results/latency/graphs.json`.
 - **First task:** walk `VALIDATION_CHECKLIST.md` line by line into `docs/LIMITATIONS.md`, then run
   `/full-audit`.
+
+### P10-D1: Validation sweep, verdict correction, evidence committed, README rules (2026-11-09)
+
+Phase 10 walked `VALIDATION_CHECKLIST.md` into `docs/LIMITATIONS.md` and ran `/full-audit`
+(`docs/audit_report.md`) at `8f4c9e0`. No threshold, list, criterion, frozen config or result
+changed. The items below are a verdict correction, committed evidence and wording rules.
+
+1. **Core `dp` s0–s4: TRUSTWORTHY → CAVEAT.**
+   - The `training-run-diagnostician` re-review found that P6-D5's TRUSTWORTHY ×5 predates
+     evidence about the same checkpoints that meets the CAVEAT bar:
+     - the `last_action` copycat channel: lateral RMSE +29–38 % when `dp` is fed its own executed
+       action (P7-D3 item 7);
+     - 32–44 of 150 outcome flips under perturbations of order 1e-5 (P9-D2 item 1);
+     - closed-loop chunk-boundary jerk ratio 1.35–1.47, against the teacher's 1.09;
+     - under-dispersed samples;
+     - 3 of 5 seeds picked at 100 k, past the 41–45 k held-out minimum.
+   - The `dp_n100` and `dp_n300` CAVEATs rest on the same selection grounds.
+   - No defect is implied: a ±1 label shift gives 506× worse MSE, and R1 parity confirms the
+     execution indices. So this is not EXCLUDE.
+   - Nothing is re-run and no number changes. The disclosures were already binding (the H3
+     confound, P9-D2 *Consequence*).
+   - The tally is now 34 TRUSTWORTHY / 37 CAVEAT / 0 EXCLUDE over 71 runs.
+2. **DAgger audits committed; path corrected.**
+   - P5-D2 cites `runs/bc_dagger/s<n>/rollouts/iter<i>.audit.json`, which does not exist. The
+     audits are at `${data_root}/dagger/bc_dagger/s<n>/iter<i>.audit.json`, as P5-D1 states.
+   - A 25-row digest is now committed at `results/phase5/dagger_audits.csv`: seed, iteration, β,
+     counts, relabel, replay, summed attribute violations, `clean` and each audit's SHA-256.
+     - All 25 are clean.
+     - Relabel 1000/1000, max-abs 0.0.
+     - Replay 20/20.
+     - 0 attribute violations.
+   - It was produced by a one-off read of the audit JSONs. The SHA-256 column ties each row to its
+     source file.
+3. **Reproduction gate re-run on the final tree.** `runner.py` and `p8_adapter.py` changed in 5
+   commits after the Phase 2 record (`5d09486`). The gate was re-run at `8f4c9e0`:
+   - render full, 24 workers;
+   - `pid_feedforward` 2 800/2 800 and `ppo` 400/400 rows identical;
+   - `comparison.json` byte-identical.
+
+   Record: `results/reproduce_p8/rerun_phase10/`. The Phase 2 files are kept as they were. The rows
+   went to a session scratch directory (`run_info.json` `rows_dir`) and were not kept;
+   `comparison.json` holds the row-by-row result.
+4. **README rules for `dp`** (results-skeptic SHOULD FIX 1–3).
+   - "Closed-loop export parity" for `dp` is written as **failed** (32/33/44 of 150 flips against a
+     bound of 3). Gate 9's "PASS (test run as frozen)" means the test ran as frozen.
+   - Any byte-identical or reproducible claim for `dp`, `dp_*` or R1 rows is scoped to the CPU fp32
+     single-sample path on this stack.
+   - Beside H2 (`dp_mix`) and the `dp_pid` / `dp_minus_last_action` rows, write: "closed-loop
+     sensitivity of the `dp_*` ablations not measured; core `dp` seed 0 flips 21–29 % on `select`".
+5. **README rules for pooling and quoting** (results-skeptic SHOULD FIX 4–5).
+   - P8-D1 item 11's "1 767 of 2 479 `dp` failures" is quoted per sea state or labelled "pooled,
+     descriptive".
+   - SS6 contrasts are quoted from `results/e08/contrasts.csv` / `hypotheses.json`, which carry the
+     flip floor, never from protocol prose.
+6. **H1-DART caveat** (results-skeptic SHOULD FIX 6). Beside any H1-DART number, write: "σ* = 0.10
+   chosen on `select` over 3 seed-0 trials; `bc` untuned".
+7. **Background-only frames at contact** (repo-publication-reviewer SHOULD FIX 4).
+   - Once the vehicle rests on the deck, the camera (`offset_body_m` −0.02 m) sits below the deck
+     surface and the frame is uniform background until the episode ends.
+   - Physics and outcomes are unaffected; the demo stores contain the same frames.
+   - This is documented as `docs/LIMITATIONS.md` L3 and goes in the README's "what a rendered camera
+     can and cannot show" box and the GIF captions. Nothing is re-rendered, because the GIF RULE is
+     fixed.
+8. **`bc_mix` averaging caveat is arm-level** (diagnostician NOTE 2). P7-D3 records it on s0 only,
+   but 0.36–0.54 of touchdowns fall in the mode gap in every seed
+   (`results/phase7/h2/h2_touchdown_select.json`). It is H2's subject, not a trust defect; the
+   verdicts stand.
+
+*Reviews.* The verdicts are in `docs/audit_report.md`:
+- `privileged-leak-auditor`: GO, no LEAK;
+- `training-run-diagnostician`: 0 EXCLUDE, with item 1;
+- `results-skeptic`: nothing BLOCKING;
+- `repo-publication-reviewer` dry run: HOLD for publication, nothing blocking Gate 10.
+
+### P10-D2: Open items closed in Phase 10, covering `dp_*` sensitivity, the missed `bc_dart` obligation, README and release (2026-11-09)
+
+The user asked for every LIMITATIONS open item to be fixed in this phase. That pulls the README and
+the release assets forward from Phase 11; making the repository public and the tag stay in
+Phase 11.
+
+The user decided two things on 2026-11-09:
+- the release is a draft GitHub release, with the 71 selections as stored;
+- the `dp_*` sensitivity is measured, not only disclosed.
+
+No threshold, list, frozen config, verdict or existing result row changed.
+
+1. **The `dp_*` closed-loop outcome sensitivity** (LIMITATIONS L4; this supersedes P10-D1 item 4's
+   "not measured" wording).
+   - **Code and config.** The stage is `make sensitivity` (`ila.deploy.sensitivity`,
+     `configs/deploy/sensitivity.yaml`, `fa364b1`). `configs/deploy/bench.yaml` is unedited.
+   - **Arms and episodes.** The seed-0 pinned `dp`, `dp_mix`, `dp_pid`, `dp_n100`, `dp_n300` and
+     `dp_minus_last_action` fly the 150 `select` episodes at Ta 8, K 10, without ensembling.
+   - **Reference.** `torch_cpu_fp32`, asserted byte-equal to the selection rows. It is equal for
+     all six arms.
+   - **Perturbation.** `torch_cuda_fp32`, the same sampler.
+   - **Definition.** A flip is a change of P8 outcome class. This is the Phase 9 definition.
+   - **Results, flips of 150:**
+
+     | arm | flips |
+     |---|---|
+     | `dp` | 32 |
+     | `dp_mix` | 22 |
+     | `dp_pid` | 5 |
+     | `dp_n100` | 43 |
+     | `dp_n300` | 35 |
+     | `dp_minus_last_action` | 37 |
+
+     Source: `results/phase10/dp_sensitivity/sensitivity.csv`, flown at `fa364b1` on a clean tree.
+   - **Control.** Core `dp` reproduces Phase 9's 32 on the same episodes, and its perturbed rows are
+     byte-equal to Phase 9's.
+   - **Scope.** This is descriptive: no threshold and no verdict. It covers one seed and one
+     perturbation path. `make sensitivity-check` re-derives every record from its rows, and CI runs
+     it.
+2. **The `bc_dart` s0 obligation (P4-D4; P4-D5 item 2) was never produced in Phase 8.**
+   - **Found by:** both README reviews (results-skeptic B4, repo-publication-reviewer B1). This is a
+     Phase 8 reporting omission, recorded here; the gate for Phase 8 did not check it.
+   - **Fix, by `eval-auditor`:** the scorer writes `results/e08/bc_dart_s1_4.csv` from the
+     committed rows, using the scorer's own functions and seeds, and `results/results.md` carries
+     two additions:
+     - the ◇ footnote on every `bc_dart` row;
+     - the seeds 1–4 rows and bullets, labelled "post hoc: added after `select`, before any
+       frozen-list read". They sit beside the 5-seed results, are never substituted and carry no
+       verdict.
+   - **Seeds 1–4 numbers:**
+     - IQM 99.2 [99.0, 99.5] at `id` SS5 and 97.0 [96.0, 97.5] at SS6;
+     - H1 DART (`bc_dart` s1–s4 − `bc` s0–s4): +3.5 [+1.6, +5.7] at SS5 and +8.0 [+4.3, +11.9] at
+       SS6;
+     - the H4 best end-to-end rule on seeds 1–4 still picks `bc_dart` (99.83 % vs 99.87 % on five
+       seeds).
+   - **Reading:** `bc` keeps its five frozen seeds, which is the reading of "`bc_dart`'s … contrast
+     on seeds 1–4 alone". P8's `paired_bootstrap` resamples seeds per arm.
+   - **Unchanged:** every other `results/e08/` file is byte-identical. One existing report test was
+     narrowed: 5-seed §2 cells still print no N, and the seeds 1–4 cells print N = 800.
+3. **README** (H2, H3, H4, C5). Written in P8's style, following plan §Phase 11, and reviewed in
+   draft by `results-skeptic` (6 BLOCKING, 10 SHOULD FIX) and `repo-publication-reviewer` (2
+   BLOCKING, 16 SHOULD FIX).
+   - **All BLOCKING items were applied:**
+     - the status line;
+     - vision-student wording for `modular` and `bc_state`;
+     - the statistics provenance (three statistics are this repository's);
+     - the `bc_dart` footnote and the seeds 1–4 row;
+     - the flip floor beside every SS6 contrast;
+     - the multiplicity statement;
+     - an honest statement that P8's `ppo` checkpoint is not publicly released.
+   - **Every SHOULD FIX was applied**, except a placement script for the downloaded release assets.
+     Instead the README says where each asset goes (its manifest `source` path).
+4. **The release** (H6).
+   - **Code:** `ila.release` with `make release` / `release-check` (`53b56bd`).
+   - **Assets:** 86 in total:
+     - the 68 pinned `.pt` checkpoints, as stored;
+     - 3 R1 exports × 3 files;
+     - the 8 Phase 9 graphs and `graphs_meta.json`.
+   - **Provenance:** every SHA-256 comes from a committed record and was re-hashed before staging.
+     `results/release/{SHA256SUMS.txt,manifest.json}` are committed.
+   - **Upload:** a draft GitHub release, `phase-11-complete`, not public, targeting `main`. All 86
+     assets plus the two files were uploaded, with sizes equal to the manifest.
+   - **Phase 11** publishes the release after `phase-10` is merged, so that the tag lands on a tree
+     that contains `results/release/`.
+5. **Licences, notices and CI** (H5; `53b56bd` and the README commit).
+   - **diffusion_policy:** upstream resolved to `main` at `5ba07ac` (the head on the adaptation
+     date; the last push was 2024-12-24). It is named in `THIRD_PARTY_NOTICES.md` and in the
+     `unet1d.py` header.
+   - **`docs/LICENSES.md` §3:** the Phase 6 rows, no pretrained weights (and no ImageNet
+     statistics), and the release assets under MIT.
+   - **Markers:** the `SOURCES.md` and `REPO_SETUP.md` "(verify)" markers are resolved.
+   - **CI** now re-renders `results.md`, the latency tables, the sensitivity records and the
+     figures on every push.
+6. **The e08 `dp_mix` notes predate the measurement.** `results/results.md` §6b and two H2-secondary
+   rows of `results/e08/contrasts.csv` still say "(core dp only; not measured for dp_mix)". Those
+   committed Phase 8 outputs are left as they are. The measurement is item 1: `dp_mix` s0 flips 22
+   of 150. The README places it beside H2 (`results-skeptic` confirmation review, SHOULD FIX 2).
+7. **Confirmation review** (`results-skeptic`, at `a00d46a`): nothing blocks Gate 10. Its four
+   SHOULD FIX items were applied in the README and LIMITATIONS: the flip floor beside every SS6
+   number, the `dp_mix` note beside H2, the σ-tuning caveat in the ‡ footnote, and when the seeds 1–4
+   row was computed. Its NOTEs were applied too: stale counts, the L5 cause, the sensitivity wall
+   clock, and the L9 wording.
+
+### Gate 10 passed (2026-11-09)
+
+| Criterion (plan Phase 10 exit gate, plus the plan's Phase 10 tasks) | Measured value / evidence | Result |
+|---|---|---|
+| Every `VALIDATION_CHECKLIST.md` line has a verdict, with evidence | `docs/LIMITATIONS.md`: 47/47 lines (17 ★): 34 met, 13 met-with-caveat, 0 unmet. Each cites a test, a committed artifact with its field, a protocol entry or a commit | PASS |
+| No critical finding open | All 17 ★ lines are met (15) or met-with-caveat (2: A1, no hook log exists; C2, frozen lists were flown before P3-D1 by scripted actions and teachers only). `/full-audit`: no BLOCKING from any of the 4 reviewers. README draft reviews: every BLOCKING item applied. Confirmation review at `a00d46a`: "nothing blocks Gate 10". Every LIMITATIONS open item is closed (P10-D1, P10-D2) | PASS |
+| `/full-audit` run | `docs/audit_report.md`: leak auditor GO, no LEAK; diagnostician 71/71 usable, 0 EXCLUDE (`dp` s0–s4 re-rated CAVEAT, P10-D1 item 1); results-skeptic nothing BLOCKING; publication dry run HOLD on Phase 11 items only, then closed in P10-D2 | PASS |
+| `make report` and every `--check` mode re-run and diffed | At `a00d46a`, all byte-identical or identical: `make report`, `make bench-check`, `make sensitivity-check`, `make release-check`, `make figures` + `git diff`; `scripts/score.py` + `above_teacher.py` into scratch, 18/18 files (results-skeptic). At `8f4c9e0`, `bench-recheck-reference` decided the same; it is a write mode and was restored | PASS |
+| P8 inheritance on the final tree | `make verify-p8`: `all_match: true`, file unchanged. Reproduction gate re-run at `8f4c9e0`: 3 200/3 200 rows identical, render full (`results/reproduce_p8/rerun_phase10/`). `runner.py`, `p8_adapter.py`, `render/` and `obs/` are unchanged since | PASS |
+| CPU tests green | `make lint` clean (83 source files) at HEAD. `make test` at `a00d46a` (the final code commit): 1 308 passed, 0 failed (22 min 58 s), on an unchanging tree. Later commits change docs only; the tests that read `docs/protocol.md` were re-run after this entry | PASS |
+
+*Reviewers.* `/full-audit` (`docs/audit_report.md` §1–§4):
+- `privileged-leak-auditor` GO;
+- `training-run-diagnostician` 0 EXCLUDE;
+- `results-skeptic` nothing BLOCKING;
+- `repo-publication-reviewer` dry run, Phase 11 items only.
+
+Second round (§5):
+- `results-skeptic` README draft, 6 BLOCKING, applied;
+- `repo-publication-reviewer`, 2 BLOCKING, applied;
+- `results-skeptic` confirmation at `a00d46a`, nothing blocks Gate 10, 4 SHOULD FIX applied (P10-D2 item 7).
+
+*Deviations this phase.* None. No threshold, list, criterion, frozen config or verdict changed.
+- P10-D1 item 1 changes a run-trust label only.
+- P10-D2 item 2 implements an obligation that P4-D4/P4-D5 had already bound. It was missed in
+  Phase 8 and is recorded as such.
+- The draft release and the README were pulled forward from Phase 11 at the user's request.
+
+## Phase 11
+
+*Before you start (from Phase 10).*
+- **The README is written and reviewed** (P10-D2 item 3). Phase 11 re-checks it at the release
+  commit with `repo-publication-reviewer` (SHIP needed) and claim-trace. It must not drift from the
+  committed files.
+- **Release.** The draft `phase-11-complete` holds all 86 assets plus `SHA256SUMS.txt` and
+  `manifest.json` (P10-D2 item 4).
+  - Publish it only after `phase-10` (and any Phase 11 commits) are on `main`, so that the tag
+    lands on a tree that contains `results/release/`.
+  - Re-run `make release-check` first.
+- **P8's `ppo` checkpoint is not publicly released.** The README says so. Releasing it is a
+  decision for the P8 repository, not this one.
+- **Open NOTEs:**
+  - the GIF manifest has no `ila` commit;
+  - per-run Phase 6/7 verdict JSONs do not exist;
+  - `REPO_SETUP.md` is still starter-kit text;
+  - the e08 `dp_mix` "not measured" notes predate P10-D2 (item 6).
+- **First task:** `repo-publication-reviewer` full review of `main` after the merge, then make the
+  repository public, publish the draft release and tag `phase-11-complete`.
+
+*Addendum to P10-D2 (2026-11-09, after Gate 10, before merge).*
+8. **`scripts/select.py` is renamed `scripts/select_checkpoints.py`.**
+   - **What broke.** The first CI run of the new results steps (run 42675504029) failed in
+     `make report`. Running `python scripts/report.py` puts `scripts/` first on `sys.path`, and on
+     CI's Python `select` is an extension module, not a built-in. So `subprocess` → `import select`
+     loaded `scripts/select.py`, a circular import.
+   - **Why it passed locally.** On the workstation's Python, `select` is built in.
+   - **What could not have been affected.** No result could have been affected: the failure is an
+     import error before anything runs.
+   - **The fix.**
+     - the rename;
+     - `make select-bg` and the training-script scan list (`tests/test_render_access.py`) are
+       updated;
+     - a guard test, `tests/test_script_names.py`, fails if any script name shadows a
+       standard-library module.
+   - **Older references.** Earlier protocol entries and committed run records still name
+     `scripts/select.py`; they are history and are left unchanged.

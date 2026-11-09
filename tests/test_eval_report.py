@@ -7,6 +7,7 @@ floor; missing cells reported; above-teacher cells withheld until reviewed; simu
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 from pathlib import Path
@@ -191,7 +192,19 @@ def test_full_matrix_section6_and_section7_n(tmp_path: Path) -> None:
     assert "; N = 30 (3 seeds × 10)" in abl
     assert "; N = 50 (5 seeds × 10)" in seven.split("### 7a.")[1]
     core = _section(text, "## 2. Success per list")
-    assert "; N = " not in core
+    # 5-seed core cells print no N; the bc_dart seeds 1-4 sensitivity row (P4-D5 item 2) is
+    # 4 seeds, so its losses/1 000 are over 4 x N and it prints N.
+    sens = f"| `bc_dart` {rp.S0_MARK} seeds 1–4 only"
+    rows = [ln for ln in core.splitlines() if ln.startswith("| ")]
+    assert any(ln.startswith(sens) for ln in rows)
+    for ln in rows:
+        if ln.startswith(sens):
+            cells = ln.strip(" |").split(" | ")[1:]
+            assert cells and all(
+                c.startswith("withheld") or c.endswith("; N = 40 (4 seeds × 10)") for c in cells
+            ), ln
+        else:
+            assert "; N = " not in ln
 
 
 def test_missing_cells_are_reported(scored: Path) -> None:
@@ -399,3 +412,115 @@ def test_full_matrix_report_sections(tmp_path: Path) -> None:
     assert all("losses/1 000" in s for s in _section(text, "## 7.").split("### ")[1:])
     assert "None: every expected cell has rows." in text
     assert rp.write_report(tmp_path, tmp_path / "again.md") == text
+
+
+# --------------------------------------------------------------------------- bc_dart seeds 1-4
+
+_POST_HOC = "post hoc: added after `select`, before any frozen-list read"
+
+
+@pytest.fixture(scope="module")
+def dart_scored(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    root = tmp_path_factory.mktemp("e08_dart")
+    sc.run_score(es.dart_s0_tree(root))
+    return root
+
+
+def _tables(text: str) -> list[list[str]]:
+    """Every markdown table (its lines) with the lines that follow it up to the next table."""
+    out: list[list[str]] = []
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        if lines[i].startswith("| ") and (i == 0 or not lines[i - 1].startswith("|")):
+            j = i
+            while j < len(lines) and lines[j].startswith("|"):
+                j += 1
+            out.append(lines[i:j] + lines[j : j + 2])
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def test_every_bc_dart_row_carries_the_s0_footnote(dart_scored: Path, tmp_path: Path) -> None:
+    text = rp.write_report(dart_scored, tmp_path / "results.md")
+    assert rp.write_report(dart_scored, tmp_path / "again.md") == text
+    marked = 0
+    for table in _tables(text):
+        rows = [ln for ln in table if ln.startswith("| ")]
+        dart_rows = [ln for ln in rows if "bc_dart" in ln.split(" | ")[0]]
+        for ln in dart_rows:
+            assert rp.S0_MARK in ln.split(" | ")[0], ln
+        if dart_rows:
+            marked += 1
+            assert table[-1] == rp.S0_NOTE, table[0]
+    assert marked >= 4  # §1 provenance, §2 id, §3, §4, §6a
+    for name in ("H1-DART-SS5", "H1-DART-SS6"):
+        block = _section(text, f"### H1 DART secondary ({name[-3:]}): `bc_dart` {rp.S0_MARK}")
+        assert rp.S0_NOTE in block.split("\n### ")[0]
+    assert "P4-D5 item 2" in rp.S0_NOTE and "σ = 0.10" in rp.S0_NOTE and _POST_HOC in rp.S0_NOTE
+
+
+def test_section2_prints_seeds_1_4_beside_never_instead(dart_scored: Path, tmp_path: Path) -> None:
+    text = rp.write_report(dart_scored, tmp_path / "results.md")
+    core = _section(text, "## 2. Success per list")
+    rows = [ln for ln in core.splitlines() if ln.startswith("| `bc_dart`")]
+    assert len(rows) == 2
+    five, four = rows
+    assert "seeds 1–4" not in five and four.startswith(
+        f"| `bc_dart` {rp.S0_MARK} seeds 1–4 only — sensitivity ({_POST_HOC}); beside the "
+        "5-seed row above, never substituted for it |"
+    )
+    # Known answers (tests/eval_support.py DART_FAILS): IQM 0.80 on seeds 0-4, 0.75 on 1-4.
+    assert five.count("**80.0**") == 4 and "N = " not in five
+    assert four.count("**75.0**") == 4 and four.count("N = 40 (4 seeds × 10)") == 4
+    assert core.index(five) < core.index(four)
+    assert f"{rp.S0_MARK} seeds 1–4 row, SS6 cells: SS6 flip floor: " in core
+    assert p8_adapter.FLIP_FLOOR_SS6.sentence in core
+    assert "`results/e08/bc_dart_s1_4.csv` (`kind` iqm)" in core
+
+
+def test_section5_and_h4_print_seeds_1_4_beside(dart_scored: Path, tmp_path: Path) -> None:
+    text = rp.write_report(dart_scored, tmp_path / "results.md")
+    hyp = _section(text, "## 5. Hypotheses")
+    for ss in ("SS5", "SS6"):
+        block = hyp.split(f"### H1 DART secondary ({ss})")[1].split("\n### ")[0]
+        verdict = block.index("**Verdict:")
+        bullet = [ln for ln in block.splitlines() if ln.startswith(f"- {rp.S0_MARK} Sensitivity")]
+        assert len(bullet) == 1, ss
+        assert _POST_HOC in bullet[0] and "never substituted" in bullet[0]
+        assert "no verdict is given on it" in bullet[0]
+        assert "= -15.0 points [" in bullet[0] and "seeds `bc_dart` 4, `bc` 5" in bullet[0]
+        assert "seeds 1–4 75.0 [" in bullet[0] and "five seeds as frozen 80.0 [" in bullet[0]
+        assert (p8_adapter.FLIP_FLOOR_SS6.sentence in bullet[0]) == (ss == "SS6")
+        # The scored 5-seed result comes first and is unchanged.
+        assert "- Estimate: -12.0 points [" in block and verdict < block.index(bullet[0])
+        assert "seeds `bc_dart` 5, `bc` 5." in block
+    prov = _section(text, "## 1. Provenance")
+    row = next(ln for ln in prov.splitlines() if ln.startswith("| H4 best end-to-end student"))
+    assert row.startswith(f"| H4 best end-to-end student | `bc_dart` {rp.S0_MARK}: highest")
+    assert "all five seeds, as frozen" in row and _POST_HOC in row
+    assert "seeds 1–4 has 97.33 % mean select success" in row
+    assert "picks bc (highest mean select success (97.73 %))" in row
+
+
+def test_seeds_1_4_rows_are_withheld_with_their_cell(dart_scored: Path) -> None:
+    """An above-teacher bc_dart cell withholds its 5-seed and seeds 1-4 numbers alike."""
+    inp = rp.load_inputs(dart_scored)
+    agg = next(r for r in inp.aggregate if (r["arm"], r["ss"]) == ("bc_dart", "SS5"))
+    above = {c: agg[c] for c in sc.GROUP_COLUMNS}
+    above.update(teacher="T_ppo", seeds_above="s1:0.01", iqm_above="False", audit_file="x.json")
+    held = dataclasses.replace(inp, above=[above])
+    text = rp.render(held)
+    core = _section(text, "## 2. Success per list")
+    rows = [ln for ln in core.splitlines() if ln.startswith("| `bc_dart`")]
+    assert all(r.count("withheld (above teacher; under review)") == 1 for r in rows)
+    block = _section(text, "### H1 DART secondary (SS5)").split("\n### ")[0]
+    assert "**withheld**" in block and "Sensitivity" not in block
+
+
+def test_report_without_dart_file_renders_as_before(dart_scored: Path) -> None:
+    inp = rp.load_inputs(dart_scored)
+    text = rp.render(dataclasses.replace(inp, dart_s1_4=()))
+    assert "seeds 1–4" not in text.replace(rp.S0_NOTE, "")

@@ -1,0 +1,396 @@
+{
+  "arm": "dp_n100",
+  "checkpoint": {
+    "arm": "dp_n100",
+    "global_step": 10000,
+    "kind": "checkpoint",
+    "obs_variant": "default",
+    "path": "artifacts/runs/dp_n100/s0/checkpoints/s0_step010000.pt",
+    "seed": 0,
+    "select_n": 150,
+    "select_success": 66,
+    "selection_json": "results/phase7/runs/dp_n100/s0/selection.json",
+    "selection_json_sha256": "a39767f53042cf09560be8ec87c169ac9e53bc3a2e984e613542c6f8d0dac060",
+    "sha256": "1939cf9ab57d82d34019ebc3c166eed38b07bbc449e37756b29b12865adf1a66",
+    "teacher": "T_ppo"
+  },
+  "checkpoint_sha256": "1939cf9ab57d82d34019ebc3c166eed38b07bbc449e37756b29b12865adf1a66",
+  "committed_selection_rows_file": "results/phase7/runs/dp_n100/s0/select/s0_step010000_rows.csv.gz",
+  "control": null,
+  "env": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "cpu_count": "36",
+    "cuda": "13.0",
+    "cudnn": "92000",
+    "git_commit": "fa364b1",
+    "gpu": "NVIDIA RTX A4000",
+    "nvidia_driver": "596.71",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "onnxruntime_package": "onnxruntime-gpu",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "tensorrt": "10.16.1.11",
+    "torch": "2.13.0+cu130",
+    "torch_cuda_available": true,
+    "torch_default_threads": "1"
+  },
+  "flip_rate": 0.2866666666666667,
+  "flipped": [
+    {
+      "index": "3",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "5",
+      "provider": "bounce",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "9",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "15",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "17",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "19",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "21",
+      "provider": "bounce",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "26",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "30",
+      "provider": "crash",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "32",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "35",
+      "provider": "off_pad",
+      "reference": "bounce",
+      "ss": "SS3"
+    },
+    {
+      "index": "38",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS3"
+    },
+    {
+      "index": "44",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "46",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS3"
+    },
+    {
+      "index": "0",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS4"
+    },
+    {
+      "index": "2",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "6",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "12",
+      "provider": "bounce",
+      "reference": "hard_landing",
+      "ss": "SS4"
+    },
+    {
+      "index": "13",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "14",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "16",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "17",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "22",
+      "provider": "success",
+      "reference": "bounce",
+      "ss": "SS4"
+    },
+    {
+      "index": "36",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "38",
+      "provider": "success",
+      "reference": "crash",
+      "ss": "SS4"
+    },
+    {
+      "index": "43",
+      "provider": "success",
+      "reference": "hard_landing",
+      "ss": "SS4"
+    },
+    {
+      "index": "44",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS4"
+    },
+    {
+      "index": "48",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS4"
+    },
+    {
+      "index": "3",
+      "provider": "off_pad",
+      "reference": "bounce",
+      "ss": "SS5"
+    },
+    {
+      "index": "5",
+      "provider": "hard_landing",
+      "reference": "off_pad",
+      "ss": "SS5"
+    },
+    {
+      "index": "6",
+      "provider": "bounce",
+      "reference": "off_pad",
+      "ss": "SS5"
+    },
+    {
+      "index": "8",
+      "provider": "off_pad",
+      "reference": "crash",
+      "ss": "SS5"
+    },
+    {
+      "index": "9",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS5"
+    },
+    {
+      "index": "12",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "14",
+      "provider": "success",
+      "reference": "bounce",
+      "ss": "SS5"
+    },
+    {
+      "index": "16",
+      "provider": "success",
+      "reference": "hard_landing",
+      "ss": "SS5"
+    },
+    {
+      "index": "17",
+      "provider": "success",
+      "reference": "hard_landing",
+      "ss": "SS5"
+    },
+    {
+      "index": "18",
+      "provider": "success",
+      "reference": "off_pad",
+      "ss": "SS5"
+    },
+    {
+      "index": "23",
+      "provider": "success",
+      "reference": "hard_landing",
+      "ss": "SS5"
+    },
+    {
+      "index": "31",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "32",
+      "provider": "hard_landing",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "41",
+      "provider": "off_pad",
+      "reference": "success",
+      "ss": "SS5"
+    },
+    {
+      "index": "48",
+      "provider": "bounce",
+      "reference": "success",
+      "ss": "SS5"
+    }
+  ],
+  "flips": 43,
+  "gained": 14,
+  "git": {
+    "dirty": false,
+    "dirty_outside_results": false,
+    "dirty_paths": [],
+    "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728"
+  },
+  "inference": {
+    "K": 10,
+    "Ta": 8,
+    "temporal_ensembling": false
+  },
+  "list": "select",
+  "lost": 20,
+  "n": 150,
+  "obs_variant": "default",
+  "outcomes_perturbed": {
+    "bounce": 22,
+    "crash": 1,
+    "hard_landing": 4,
+    "off_pad": 63,
+    "success": 60,
+    "timeout": 0
+  },
+  "outcomes_ref": {
+    "bounce": 13,
+    "crash": 2,
+    "hard_landing": 7,
+    "off_pad": 62,
+    "success": 66,
+    "timeout": 0
+  },
+  "perturbed": {
+    "outcomes": {
+      "bounce": 22,
+      "crash": 1,
+      "hard_landing": 4,
+      "off_pad": 63,
+      "success": 60,
+      "timeout": 0
+    },
+    "provider": "torch_cuda_fp32",
+    "rows_file": "dp_n100_s0_torch_cuda_fp32_rows.csv",
+    "rows_sha256": "363e15ed9e052a9e101f4d2839cf7f2b699b5f5174947152f1108ff6257d6dd1",
+    "success": 60,
+    "wall_s": 71.60653799399734,
+    "workers": 6
+  },
+  "reference": {
+    "outcomes": {
+      "bounce": 13,
+      "crash": 2,
+      "hard_landing": 7,
+      "off_pad": 62,
+      "success": 66,
+      "timeout": 0
+    },
+    "provider": "torch_cpu_fp32",
+    "rows_file": "dp_n100_s0_torch_cpu_fp32_rows.csv",
+    "rows_sha256": "fc55ec96d0cbd7d5202f6736718daf91207d3836499479265cb6d3a312bccdac",
+    "success": 66,
+    "wall_s": 48.40585070801899,
+    "workers": 24
+  },
+  "reference_equals_committed_selection_rows": true,
+  "reference_equals_selection_rows": true,
+  "rows_text_differ": 150,
+  "seed": 0,
+  "selection_pin": "a39767f53042cf09560be8ec87c169ac9e53bc3a2e984e613542c6f8d0dac060",
+  "selection_pins_file": "results/e08/selection_pins.json",
+  "selection_rows_file": "artifacts/runs/dp_n100/s0/select/s0_step010000_rows.csv",
+  "selection_rows_flips": 0,
+  "selection_rows_sha256": "fc55ec96d0cbd7d5202f6736718daf91207d3836499479265cb6d3a312bccdac",
+  "status": "flown",
+  "success_perturbed": 60,
+  "success_ref": 66,
+  "tag": "ablation",
+  "teacher": "T_ppo",
+  "time_utc": "2026-11-09T15:38:54+00:00",
+  "transitions": {
+    "bounce->off_pad": 2,
+    "bounce->success": 2,
+    "crash->off_pad": 1,
+    "crash->success": 1,
+    "hard_landing->bounce": 1,
+    "hard_landing->success": 4,
+    "off_pad->bounce": 3,
+    "off_pad->crash": 1,
+    "off_pad->hard_landing": 1,
+    "off_pad->success": 7,
+    "success->bounce": 9,
+    "success->hard_landing": 1,
+    "success->off_pad": 10
+  },
+  "wall_s": 120.0238245530054,
+  "what": "outcome flips on the 150 select episodes between the arm's seed-0 pinned checkpoint flown on torch_cpu_fp32 (selection's CPU fp32 single-sample path; rows asserted byte-identical to the committed selection rows) and the identical Python sampler in torch eager on torch_cuda_fp32 (fp32, TF32 off, batch 1 per worker); Ta 8, K 10, no ensembling, EMA weights; Phase 9's definition for core dp (P9-D2 item 1). Descriptive: no threshold"
+}

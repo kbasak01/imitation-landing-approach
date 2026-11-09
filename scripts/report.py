@@ -2,9 +2,9 @@
 
 Simulation only. Reads ``results/e08/{run_info,score_info,hypotheses}.json`` and
 ``results/e08/{summary,baselines,aggregate,contrasts,above_teacher,missing}.csv`` (plus
-``above_teacher/reviewed.json`` if present); recomputes nothing. ``make report`` runs this and
-then ``git diff --exit-code results/results.md`` to prove the committed file re-renders
-byte-identically.
+``above_teacher/reviewed.json`` and ``bc_dart_s1_4.csv`` if present); recomputes nothing.
+``make report`` runs this and then ``git diff --exit-code results/results.md`` to prove the
+committed file re-renders byte-identically.
 
     python scripts/report.py
 """

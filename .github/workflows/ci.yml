@@ -65,6 +65,17 @@ jobs:
         run: make lint PY=python RUFF=ruff MYPY=mypy PYTEST=pytest
       - name: Test (CPU subset)
         run: pytest -m "not gpu and not checkpoints and not data and not slow"
+      # Results re-render from committed files only (no checkpoints, no demo store, no
+      # paths.local.yaml): results.md, the Phase 9 latency tables and the figures must come out
+      # byte-identical on a fresh clone (Phase 10, P10-D1; VALIDATION_CHECKLIST F8).
+      - name: Report re-renders byte-identically
+        run: make report PY=python
+      - name: Latency tables re-render byte-identically (bench --check)
+        run: make bench-check PY=python
+      - name: dp sensitivity records re-check from their rows (Phase 10, P10-D2)
+        run: make sensitivity-check PY=python
+      - name: Figures re-render byte-identically
+        run: make figures PY=python && git diff --exit-code results/e08/figures
       - name: Disk after tests
         if: always()
         run: df -h /

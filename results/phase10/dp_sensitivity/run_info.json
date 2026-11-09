@@ -1,0 +1,99 @@
+{
+  "arms": {
+    "dp": {
+      "dirty_outside_results": false,
+      "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728",
+      "record_sha256": "e15ef366782bb1b822329e2dde76f2727734348da4b0d782eb413f5bea143028",
+      "time_utc": "2026-11-09T15:29:23+00:00",
+      "wall_s": 116.73753173300065
+    },
+    "dp_minus_last_action": {
+      "dirty_outside_results": false,
+      "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728",
+      "record_sha256": "02808c0ca20f44d8815fc446ec3cb30f3211b92fe74d47ea675d8c07b5170a8f",
+      "time_utc": "2026-11-09T15:43:03+00:00",
+      "wall_s": 122.47943905403372
+    },
+    "dp_mix": {
+      "dirty_outside_results": false,
+      "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728",
+      "record_sha256": "04ec3641293de794063c99f0e3711715ede93d90c6589400082b717a25d6c6e8",
+      "time_utc": "2026-11-09T15:32:24+00:00",
+      "wall_s": 172.78505603899248
+    },
+    "dp_n100": {
+      "dirty_outside_results": false,
+      "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728",
+      "record_sha256": "8c27d6bf0fa515fd639741c38f93e03357d7ae20debeb266a805ddaab9fec847",
+      "time_utc": "2026-11-09T15:38:54+00:00",
+      "wall_s": 120.0238245530054
+    },
+    "dp_n300": {
+      "dirty_outside_results": false,
+      "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728",
+      "record_sha256": "e81e8cdc5a11c1cc02626b47fa533f6dcf75ed0e1fe44bd760c00cac24f1181a",
+      "time_utc": "2026-11-09T15:40:54+00:00",
+      "wall_s": 114.68607586098369
+    },
+    "dp_pid": {
+      "dirty_outside_results": false,
+      "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728",
+      "record_sha256": "5c3c54c29094bdc9fb32b4f4ecb36b2bda6f91a4866984e8f5e1d9ebd2084c41",
+      "time_utc": "2026-11-09T15:36:49+00:00",
+      "wall_s": 253.390591112955
+    }
+  },
+  "bench_yaml_sha256": "a90c042fa83634b84938b03c12a3a7015dee8a1e0c16bc200d677885f9f1d110",
+  "invocations": [
+    {
+      "allow_dirty": false,
+      "arms_flown": [
+        "dp",
+        "dp_mix",
+        "dp_pid",
+        "dp_n100",
+        "dp_n300",
+        "dp_minus_last_action"
+      ],
+      "arms_kept": [],
+      "arms_requested": [
+        "dp",
+        "dp_mix",
+        "dp_pid",
+        "dp_n100",
+        "dp_n300",
+        "dp_minus_last_action"
+      ],
+      "env": {
+        "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+        "cpu_count": "36",
+        "cuda": "13.0",
+        "cudnn": "92000",
+        "git_commit": "fa364b1",
+        "gpu": "NVIDIA RTX A4000",
+        "nvidia_driver": "596.71",
+        "onnx": "1.22.0",
+        "onnxruntime": "1.29.0",
+        "onnxruntime_package": "onnxruntime-gpu",
+        "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "python": "3.12.3",
+        "tensorrt": "10.16.1.11",
+        "torch": "2.13.0+cu130",
+        "torch_cuda_available": true,
+        "torch_default_threads": "1"
+      },
+      "force": false,
+      "git": {
+        "dirty": false,
+        "dirty_outside_results": false,
+        "dirty_paths": [],
+        "ila_commit": "fa364b1c67a183e14a49b88383ff8df86c687728"
+      },
+      "time_utc": "2026-11-09T15:43:03+00:00",
+      "wall_s": 908.4709316599765
+    }
+  ],
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "sensitivity_yaml": "configs/deploy/sensitivity.yaml",
+  "sensitivity_yaml_sha256": "12ab8cc88958d6c52a674b1196892b2d53e98a5646ea2b0354e3e45d655dae4a"
+}

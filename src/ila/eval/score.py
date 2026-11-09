@@ -39,7 +39,9 @@ Outputs (deterministic: sorted rows, fixed float format :func:`fmt`, no timestam
 ---------------------------------------------------------------------------------
 ``summary.csv`` (per cell and seed), ``baselines.csv``, ``aggregate.csv`` (per cell across
 seeds), ``contrasts.csv``, ``hypotheses.csv`` + ``hypotheses.json``, ``above_teacher.csv``,
-``missing.csv``, ``h2_touchdown_times.csv`` (the episodes behind H2, for its figure) and
+``missing.csv``, ``h2_touchdown_times.csv`` (the episodes behind H2, for its figure),
+``bc_dart_s1_4.csv`` (the ``bc_dart`` seeds 1-4 sensitivity, P4-D5 item 2:
+:func:`dart_s1_4_rows`; printed beside the 5-seed results, never substituted for them) and
 ``score_info.json`` (what was read, with SHA-256s).
 
 Statistics are P8's through :mod:`ila.eval.stats` (Wilson 95 % per cell and seed; IQM with a
@@ -60,7 +62,7 @@ import io
 import json
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Final
 
@@ -80,6 +82,10 @@ __all__ = [
     "BASELINE_METHODS",
     "CAVEATS_SEE",
     "CONTRAST_COLUMNS",
+    "DART_S1_4_COLUMNS",
+    "DART_S1_4_FILE",
+    "DART_S1_4_LABEL",
+    "DART_S1_4_SEEDS",
     "GROUP_COLUMNS",
     "HYPOTHESIS_COLUMNS",
     "KEY_COLUMNS",
@@ -101,6 +107,7 @@ __all__ = [
     "as_float",
     "baseline_rows",
     "cell_summary",
+    "dart_s1_4_rows",
     "default_inputs",
     "dump_json",
     "expected_cells",
@@ -931,31 +938,43 @@ def aggregate_rows(index: CellIndex) -> list[dict[str, Any]]:
             rec["status"] = f"incomplete: seeds {'|'.join(missing)} missing"
             out.append(rec)
             continue
-        rates = [_rate(c.rows or ()) for c in present]
-        pooled = [r for c in present for r in (c.rows or ())]
-        n_eps = {len(c.rows or ()) for c in present}
-        if len(n_eps) != 1:
-            raise ScoreInputError(f"{g.label}: seeds have different episode counts")
-        est = st.iqm_ci(np.asarray(rates, dtype=np.float64).reshape(-1, 1))
-        counts = _counts(pooled)
-        total = len(pooled)
         rec.update(
             status="complete",
-            n_episodes_per_seed=n_eps.pop(),
-            success_iqm=float(est.point),
-            success_iqm_lo=float(est.lo),
-            success_iqm_hi=float(est.hi),
-            success_mean=float(np.mean(rates)),
-            success_seed_min=min(rates),
-            success_seed_max=max(rates),
-            success_per_seed="|".join(fmt(x) for x in rates),
+            **_seed_stats(g, present),
             iqm_reps=stats_cfg.iqm_reps,
             bootstrap_seed=stats_cfg.bootstrap_seed,
-            **counts,
-            **{f"per_1000_{o}": 1000.0 * counts[f"n_{o}"] / total for o in LOSS_CLASSES},
         )
         out.append(rec)
     return out
+
+
+def _seed_stats(g: GroupKey, present: Sequence[CellData]) -> dict[str, Any]:
+    """IQM [stratified-bootstrap CI] over ``present``'s seeds, rates and outcome counts.
+
+    The one reduction behind ``aggregate.csv`` and the ``bc_dart`` seeds 1-4 sensitivity
+    (:func:`dart_s1_4_rows`): P8's IQM over seeds of each seed's success rate (dimensionless),
+    2 000 replicates, seed 20261023 (:func:`ila.eval.stats.iqm_ci`).
+    """
+    rates = [_rate(c.rows or ()) for c in present]
+    pooled = [r for c in present for r in (c.rows or ())]
+    n_eps = {len(c.rows or ()) for c in present}
+    if len(n_eps) != 1:
+        raise ScoreInputError(f"{g.label}: seeds have different episode counts")
+    est = st.iqm_ci(np.asarray(rates, dtype=np.float64).reshape(-1, 1))
+    counts = _counts(pooled)
+    total = len(pooled)
+    return {
+        "n_episodes_per_seed": n_eps.pop(),
+        "success_iqm": float(est.point),
+        "success_iqm_lo": float(est.lo),
+        "success_iqm_hi": float(est.hi),
+        "success_mean": float(np.mean(rates)),
+        "success_seed_min": min(rates),
+        "success_seed_max": max(rates),
+        "success_per_seed": "|".join(fmt(x) for x in rates),
+        **counts,
+        **{f"per_1000_{o}": 1000.0 * counts[f"n_{o}"] / total for o in LOSS_CLASSES},
+    }
 
 
 # --------------------------------------------------------------------------- matrices
@@ -979,6 +998,9 @@ class ScoreInputs:
         extra: Extra ``score_info.json`` keys.
         latency_dir: ``results/latency`` (H5(a)'s ``h5a.csv`` and ``delay.json``), or
             ``None`` (H5(a) not scored; H5(b) without the delay record beside it).
+        select_scores: The committed ``select`` scores behind ``best_end_to_end``
+            (:func:`ila.eval.hypotheses.load_select_scores`), for the ``bc_dart`` seeds 1-4
+            value printed beside H4's best end-to-end rule (P4-D5 item 2); empty: not printed.
     """
 
     matrix: ev_arms.Matrix
@@ -993,6 +1015,7 @@ class ScoreInputs:
     episodes_per_cell: int = ev_arms.EPISODES_PER_CELL
     extra: Mapping[str, Any] = field(default_factory=dict)
     latency_dir: Path | None = None
+    select_scores: Mapping[str, hy.SelectScore] = field(default_factory=dict)
 
 
 def _seeds_of(index: CellIndex, g: GroupKey) -> tuple[int, ...]:
@@ -2137,7 +2160,275 @@ def default_inputs(root: Path = OUT_ROOT) -> ScoreInputs:
         best_sources=best_sources,
         list_cells=ev_arms.frozen_list_cells(),
         latency_dir=p8_adapter.REPO_ROOT / "results" / "latency",
+        select_scores=scores,
     )
+
+
+# --------------------------------------------------------------------------- bc_dart seeds 1-4
+
+#: P4-D5 item 2's label for the ``bc_dart`` seeds 1-4 sensitivity, verbatim
+#: (``docs/protocol.md`` P4-D4 correction 2, P4-D5 item 2).
+DART_S1_4_LABEL: Final[str] = "post hoc: added after `select`, before any frozen-list read"
+
+#: The seeds of the sensitivity: ``bc_dart`` without seed 0, the sigma = 0.10 tuning trial.
+DART_S1_4_SEEDS: Final[tuple[int, ...]] = (1, 2, 3, 4)
+
+#: The sensitivity's file under the output root.
+DART_S1_4_FILE: Final[str] = "bc_dart_s1_4.csv"
+
+#: ``iqm`` rows carry :data:`AGGREGATE_COLUMNS`-named fields (same group key as the 5-seed
+#: row); ``contrast`` and ``best_end_to_end`` rows carry ``estimate``/``ci_*``. ``frozen_*``
+#: is the 5-seed result the row is printed beside (copied from the same scoring run).
+DART_S1_4_COLUMNS: Final[tuple[str, ...]] = (
+    "kind",
+    "name",
+    "label",
+    "hypothesis",
+    *GROUP_COLUMNS,
+    "status",
+    "seeds",
+    "n_seeds",
+    "n_seeds_expected",
+    "n_episodes_per_seed",
+    "success_iqm",
+    "success_iqm_lo",
+    "success_iqm_hi",
+    "success_seed_min",
+    "success_seed_max",
+    "success_per_seed",
+    *_COUNT_COLUMNS,
+    *(f"per_1000_{o}" for o in LOSS_CLASSES),
+    "b",
+    "seeds_b",
+    "n_seeds_b",
+    "statistic",
+    "estimate",
+    "ci_lo",
+    "ci_hi",
+    "units",
+    "n_episodes",
+    "reading",
+    "frozen_seeds",
+    "frozen_estimate",
+    "frozen_ci_lo",
+    "frozen_ci_hi",
+    "frozen_verdict",
+    "frozen_source",
+    "flip_floor",
+    "note",
+    "inputs",
+    "reps",
+    "bootstrap_seed",
+)
+
+_DART_NEVER: Final[str] = (
+    "Sensitivity only: printed beside the frozen 5-seed result (frozen_*), never substituted "
+    "for it; bc_dart seed 0 is the sigma = 0.10 tuning trial, kept as frozen (deviation from "
+    "P3-D1 §4, user-approved; docs/protocol.md P4-D4 correction 2, P4-D5 item 2)."
+)
+
+
+def _seeds_text(seeds: Iterable[int]) -> str:
+    return "|".join(str(s) for s in seeds)
+
+
+def _seed_subset(m: hy.ArmMatrix, seeds: Sequence[int]) -> hy.ArmMatrix:
+    """``m`` restricted to ``seeds`` (rows of every per-seed array; episodes unchanged)."""
+    idx = [m.seeds.index(s) for s in seeds]
+    return replace(
+        m,
+        seeds=tuple(seeds),
+        success=m.success[idx],
+        touchdown_s=m.touchdown_s[idx],
+        outcomes=tuple(m.outcomes[i] for i in idx),
+        ckpt_sha256=tuple(m.ckpt_sha256[i] for i in idx),
+        tunnelled=None if m.tunnelled is None else m.tunnelled[idx],
+    )
+
+
+def _dart_iqm_rows(
+    index: CellIndex, frozen: Mapping[GroupKey, Mapping[str, Any]]
+) -> list[dict[str, Any]]:
+    stats_cfg = st.matrix_statistics()
+    out = []
+    for g in index.groups:
+        if (g.tag, g.arm) != ("core", "bc_dart"):
+            continue
+        cells = [c for c in index.group_cells(g) if c.key.seed in DART_S1_4_SEEDS]
+        agg = frozen[g]
+        rec: dict[str, Any] = {
+            "kind": "iqm",
+            "name": f"bc_dart {g.list_name} {g.ss} IQM, seeds 1-4",
+            "label": DART_S1_4_LABEL,
+            **g.record(),
+            "seeds": _seeds_text(c.key.seed for c in cells),
+            "n_seeds": sum(c.present for c in cells),
+            "n_seeds_expected": len(DART_S1_4_SEEDS),
+            "statistic": "P8 IQM over seeds, stratified-bootstrap 95 % CI "
+            "(ila.eval.stats.iqm_ci; 2 000 reps, seed 20261023)",
+            "units": "success, dimensionless",
+            "frozen_seeds": agg.get("seeds"),
+            "frozen_estimate": agg.get("success_iqm"),
+            "frozen_ci_lo": agg.get("success_iqm_lo"),
+            "frozen_ci_hi": agg.get("success_iqm_hi"),
+            "frozen_source": "aggregate.csv",
+            "flip_floor": _flip(g.ss),
+            "note": _DART_NEVER,
+            "inputs": g.label,
+            "reps": stats_cfg.iqm_reps,
+            "bootstrap_seed": stats_cfg.bootstrap_seed,
+        }
+        have = {c.key.seed for c in cells if c.present}
+        missing = [str(s) for s in DART_S1_4_SEEDS if s not in have]
+        if missing:
+            rec["status"] = f"incomplete: seeds {'|'.join(missing)} missing"
+        else:
+            stats = _seed_stats(g, cells)
+            stats.pop("success_mean")
+            rec.update(status="complete", **stats)
+        out.append(rec)
+    return out
+
+
+def _dart_contrast_rows(index: CellIndex, scored: _Scored) -> list[dict[str, Any]]:
+    stats_cfg = st.matrix_statistics()
+    hyp = {str(r["hypothesis"]): r for r in scored.hypotheses}
+    out = []
+    for name, ss in (("H1-DART-SS5", "SS5"), ("H1-DART-SS6", "SS6")):
+        a, why_a = _student_side(index, _g(index, "bc_dart", ss, tag="core"))
+        b, why_b = _student_side(index, _g(index, "bc", ss, tag="core"))
+        h = hyp.get(name, {})
+        rec: dict[str, Any] = {
+            "kind": "contrast",
+            "name": f"{name} seeds 1-4",
+            "label": DART_S1_4_LABEL,
+            "hypothesis": name,
+            "tag": "core",
+            "arm": "bc_dart",
+            "list": _ID,
+            "ss": ss,
+            "seeds": _seeds_text(DART_S1_4_SEEDS),
+            "n_seeds": len(DART_S1_4_SEEDS),
+            "b": "bc",
+            "statistic": _P8_PAIRED,
+            "units": _UNITS_SUCCESS,
+            "frozen_estimate": h.get("estimate"),
+            "frozen_ci_lo": h.get("ci_lo"),
+            "frozen_ci_hi": h.get("ci_hi"),
+            "frozen_verdict": h.get("verdict") or h.get("status"),
+            "frozen_source": f"hypotheses.json {name}",
+            "flip_floor": _flip(ss),
+            "note": "bc keeps its five frozen seeds; only bc_dart seed 0 is left out. No verdict "
+            "is given on seeds 1-4: the scored verdict is frozen_verdict. " + _DART_NEVER,
+            "reps": stats_cfg.paired_reps,
+            "bootstrap_seed": stats_cfg.bootstrap_seed,
+        }
+        if a is None or b is None:
+            rec["status"] = f"missing: {'; '.join(w for w in (why_a, why_b) if w)}"
+            out.append(rec)
+            continue
+        sub = _seed_subset(a.m, DART_S1_4_SEEDS)
+        c = st.paired_contrast(sub.success, b.m.success)
+        rec.update(
+            status="computed",
+            seeds_b=_seeds_text(b.m.seeds),
+            frozen_seeds=f"bc_dart {_seeds_text(a.m.seeds)}; bc {_seeds_text(b.m.seeds)}",
+            n_seeds_b=c.n_seeds_b,
+            n_seeds=c.n_seeds_a,
+            estimate=c.diff,
+            ci_lo=c.lo,
+            ci_hi=c.hi,
+            n_episodes=c.n_episodes,
+            reading=reading(c.lo, c.hi, "bc_dart (seeds 1-4)", "bc"),
+            inputs=_inputs(a, b),
+        )
+        out.append(rec)
+    return out
+
+
+def _pct2(x: Any) -> str:
+    return f"{100.0 * float(x):.2f} %"
+
+
+def _dart_best_row(inp: ScoreInputs) -> list[dict[str, Any]]:
+    """H4's best end-to-end rule beside the same rule with ``bc_dart`` on seeds 1-4."""
+    scores = inp.select_scores
+    if "bc_dart" not in scores:
+        return []
+    full = scores["bc_dart"]
+    idx = [full.seeds.index(s) for s in DART_S1_4_SEEDS]
+    sub = hy.SelectScore(
+        "bc_dart",
+        DART_S1_4_SEEDS,
+        tuple(full.success[i] for i in idx),
+        tuple(full.n[i] for i in idx),
+        tuple(full.rows_files[i] for i in idx),
+    )
+    arm, why = hy.best_end_to_end({**scores, "bc_dart": sub})
+    others = ", ".join(
+        f"{a} {_pct2(scores[a].mean_success)}" for a in hy.END_TO_END_ARMS if a != "bc_dart"
+    )
+    k, n = sum(sub.success), sum(sub.n)
+    return [
+        {
+            "kind": "best_end_to_end",
+            "name": "H4 best end-to-end rule, bc_dart seeds 1-4",
+            "label": DART_S1_4_LABEL,
+            "hypothesis": "H4",
+            "arm": "bc_dart",
+            "status": "computed",
+            "seeds": _seeds_text(DART_S1_4_SEEDS),
+            "n_seeds": len(DART_S1_4_SEEDS),
+            "success_per_seed": "|".join(
+                fmt(s / m) for s, m in zip(sub.success, sub.n, strict=True)
+            ),
+            "statistic": "mean over seeds of the selected checkpoint's select success "
+            "(ila.eval.hypotheses.best_end_to_end, P3-D1 §6 H4)",
+            "estimate": float(sub.mean_success),
+            "units": "select success, dimensionless (select split: splits/select.parquet)",
+            "n_episodes": n // len(DART_S1_4_SEEDS),
+            "reading": f"the same rule with bc_dart on seeds 1-4 picks {arm} ({why}); other "
+            f"end-to-end arms on their five frozen seeds: {others}",
+            "frozen_seeds": _seeds_text(full.seeds),
+            "frozen_estimate": float(full.mean_success),
+            "frozen_verdict": f"best end-to-end as frozen (five seeds): "
+            f"{inp.best_end_to_end[0]} ({inp.best_end_to_end[1]})",
+            "frozen_source": "score_info.json best_end_to_end; committed selection.json files",
+            "note": f"bc_dart seeds 1-4: {k}/{n} select episodes. H4's best end-to-end rule "
+            "uses all five seeds as frozen. " + _DART_NEVER,
+            "inputs": "; ".join(sorted(inp.best_sources)),
+        }
+    ]
+
+
+def dart_s1_4_rows(
+    index: CellIndex,
+    aggregates: Sequence[Mapping[str, Any]],
+    scored: _Scored,
+    inp: ScoreInputs,
+) -> list[dict[str, Any]]:
+    """The ``bc_dart`` seeds 1-4 sensitivity (P4-D5 item 2): :data:`DART_S1_4_COLUMNS` rows.
+
+    ``bc_dart`` s0 is the sigma = 0.10 tuning trial, kept as frozen. Beside every 5-seed
+    ``bc_dart`` result the report prints, labelled :data:`DART_S1_4_LABEL`:
+
+    * ``iqm``: each core ``bc_dart`` cell's IQM [stratified-bootstrap 95 % CI] over seeds 1-4,
+      by the reduction ``aggregate.csv`` uses (success, dimensionless);
+    * ``contrast``: H1's DART secondaries (``id`` SS5, SS6), success(``bc_dart`` seeds 1-4) -
+      success(``bc`` seeds 0-4), P8 ``paired_bootstrap`` (10 000 reps, seed 20261023) as the
+      scored contrast; no verdict is given;
+    * ``best_end_to_end``: H4's best end-to-end rule with ``bc_dart`` on seeds 1-4 (other arms
+      on their five seeds), from the committed ``select`` scores (only if ``inp`` has them).
+
+    Nothing here feeds any other output: verdicts, ``aggregate.csv`` and ``contrasts.csv`` use
+    all five seeds as frozen.
+    """
+    frozen = dict(zip(index.groups, aggregates, strict=True))
+    return [
+        *_dart_iqm_rows(index, frozen),
+        *_dart_contrast_rows(index, scored),
+        *_dart_best_row(inp),
+    ]
 
 
 # --------------------------------------------------------------------------- run
@@ -2205,6 +2496,9 @@ def run_score(inp: ScoreInputs, out_dir: Path | None = None) -> dict[str, Any]:
             "flip_floor_ss6": p8_adapter.FLIP_FLOOR_SS6.sentence,
             "hypotheses": scored.records,
         },
+    )
+    write_csv(
+        out / DART_S1_4_FILE, DART_S1_4_COLUMNS, dart_s1_4_rows(index, aggregates, scored, inp)
     )
     write_csv(
         out / "above_teacher.csv", ABOVE_TEACHER_COLUMNS, above_teacher_rows(index, aggregates, inp)

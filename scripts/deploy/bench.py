@@ -1,6 +1,9 @@
 """Phase 9 bench: export, inputs, parity, closed-loop, latency, score, check, d0-check.
 
-The stages live in ila.deploy.pipeline.
+The stages live in ila.deploy.pipeline. Phase 10 adds ``sensitivity`` and
+``sensitivity-check`` (ila.deploy.sensitivity; configs/deploy/sensitivity.yaml ->
+results/phase10/dp_sensitivity/): the closed-loop outcome sensitivity of the dp students,
+torch_cpu_fp32 against torch_cuda_fp32 on the 150 select episodes. Descriptive; no threshold.
 
 Examples (see the Makefile ``bench-*`` targets; long stages run in the background):
 
@@ -13,6 +16,8 @@ Examples (see the Makefile ``bench-*`` targets; long stages run in the backgroun
     .venv/bin/python scripts/deploy/bench.py check
     .venv/bin/python scripts/deploy/bench.py recheck-reference --arms bc_dagger dp
     .venv/bin/python scripts/deploy/bench.py d0-check --arms bc_dagger dp --workers 24
+    .venv/bin/python scripts/deploy/bench.py sensitivity --arms dp dp_mix
+    .venv/bin/python scripts/deploy/bench.py sensitivity-check
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ import sys
 from pathlib import Path
 
 from ila.deploy import pipeline
+from ila.deploy import sensitivity as sens
 from ila.deploy.settings import BENCH_YAML, load_settings
 
 
@@ -54,6 +60,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--arms", nargs="*", default=["bc_dagger", "dp"])
     p.add_argument("--workers", type=int, default=None, help="default: bench.yaml workers_cpu")
     p.add_argument("--allow-dirty", action="store_true", help="smoke runs only")
+    p = sub.add_parser("sensitivity", help="Phase 10: dp-family outcome flips, CPU vs CUDA")
+    p.add_argument("--sensitivity-settings", type=Path, default=sens.SENSITIVITY_YAML)
+    p.add_argument("--arms", nargs="*", default=None, help="default: every arm in the YAML")
+    p.add_argument("--force", action="store_true", help="re-fly arms that have a record")
+    p.add_argument("--allow-dirty", action="store_true", help="smoke runs only")
+    p = sub.add_parser("sensitivity-check", help="re-decide the sensitivity records, no flight")
+    p.add_argument("--sensitivity-settings", type=Path, default=sens.SENSITIVITY_YAML)
     a = ap.parse_args(argv)
     s = load_settings(a.settings)
 
@@ -102,6 +115,17 @@ def main(argv: list[str] | None = None) -> int:
         if not all(rec["arms"][arm]["identical"] for arm in a.arms):
             log("d = 0 rows differ from the selection rows (results/latency/d0_check.json)")
             return 1
+    elif a.stage == "sensitivity":
+        ss = sens.load_sensitivity_settings(a.sensitivity_settings)
+        sens.stage_sensitivity(ss, arms=a.arms, force=a.force, allow_dirty=a.allow_dirty, log=log)
+        log((ss.results_dir / sens.CSV_FILE).read_text("utf-8"))
+    elif a.stage == "sensitivity-check":
+        ss = sens.load_sensitivity_settings(a.sensitivity_settings)
+        problems = sens.check(ss)
+        if problems:
+            log(f"differ from their files: {problems}")
+            return 1
+        log(f"{ss.results_dir.name}: records agree with their rows; {sens.CSV_FILE} re-renders")
     elif a.stage == "score":
         log(json.dumps(pipeline.stage_score(s), indent=2))
     else:
