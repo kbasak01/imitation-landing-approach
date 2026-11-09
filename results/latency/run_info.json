@@ -59,6 +59,21 @@
       "time_utc": "2026-11-07T18:43:23+00:00",
       "what": "reference_equals_selection_rows re-decided from file bytes; nothing flown"
     },
+    "d0_check": {
+      "arms_flown": {
+        "bc_dagger": true,
+        "dp": true
+      },
+      "git": {
+        "dirty": false,
+        "dirty_outside_results": false,
+        "dirty_paths": [],
+        "ila_commit": "6d6165e894f4725b844c866fbb528db15c26029c"
+      },
+      "identical": true,
+      "time_utc": "2026-11-09T06:47:26+00:00",
+      "wall_s": 106.01139315002365
+    },
     "export": {
       "git": {
         "dirty": false,

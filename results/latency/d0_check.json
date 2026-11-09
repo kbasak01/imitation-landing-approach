@@ -1,0 +1,66 @@
+{
+  "arms": {
+    "bc_dagger": {
+      "build": {
+        "delay": 0,
+        "device": "cpu",
+        "policy": "ila.deploy.latency_arm.delayed_checkpoint_policy",
+        "tags": "selection's (Ta, K, ensemble empty; latency_steps 0)",
+        "weights": "ema"
+      },
+      "checkpoint_sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+      "dirty": false,
+      "dirty_outside_results": false,
+      "identical": true,
+      "ila_commit": "6d6165e894f4725b844c866fbb528db15c26029c",
+      "n": 150,
+      "outcome_flips": 0,
+      "rows_file": "results/latency/d0_check/bc_dagger_rows.csv",
+      "rows_sha256": "b4880f57567975a78bb97c24db0f216f25d524b27909c7a4a3bc283f6a9e9281",
+      "rows_text_differ": 0,
+      "selection_n": 150,
+      "selection_rows_file": "artifacts/runs/bc_dagger/s0/select/s5_step005000_rows.csv",
+      "selection_rows_sha256": "b4880f57567975a78bb97c24db0f216f25d524b27909c7a4a3bc283f6a9e9281",
+      "time_utc": "2026-11-09T06:46:40+00:00",
+      "wall_s": 63.022120310983155,
+      "workers": 24
+    },
+    "dp": {
+      "build": {
+        "delay": 0,
+        "device": "cpu",
+        "n_action_steps": 8,
+        "num_inference_steps": 10,
+        "policy": "ila.deploy.latency_arm.delayed_checkpoint_policy",
+        "tags": "selection's (Ta, K, ensemble empty; latency_steps 0)",
+        "temporal_ensembling": false,
+        "weights": "ema"
+      },
+      "checkpoint_sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+      "dirty": false,
+      "dirty_outside_results": false,
+      "identical": true,
+      "ila_commit": "6d6165e894f4725b844c866fbb528db15c26029c",
+      "n": 150,
+      "outcome_flips": 0,
+      "rows_file": "results/latency/d0_check/dp_rows.csv",
+      "rows_sha256": "af96ae1c9fe494172ccc044a7b191a801c676ed8820df1030afe73c6b895253f",
+      "rows_text_differ": 0,
+      "selection_n": 150,
+      "selection_rows_file": "results/phase6/runs/dp/s0/select/s0_step100000_rows.csv",
+      "selection_rows_sha256": "af96ae1c9fe494172ccc044a7b191a801c676ed8820df1030afe73c6b895253f",
+      "time_utc": "2026-11-09T06:47:26+00:00",
+      "wall_s": 42.97220693901181,
+      "workers": 24
+    }
+  },
+  "claim": "P3-D1 \u00a77: d = 0: the latency arm equals the synchronous arm row for row",
+  "dirty": false,
+  "dirty_outside_results": false,
+  "identical": true,
+  "ila_commit": "6d6165e894f4725b844c866fbb528db15c26029c",
+  "list": "select",
+  "method": "bytes (Path.read_bytes equality, as cmp; closed_loop.rows_files_identical)",
+  "time_utc": "2026-11-09T06:47:26+00:00",
+  "what": "the latency arm's delayed build at d = 0 on the seed-0 pinned checkpoints, flown on the 150 select episodes through the closed-loop reference flight's runner call (CPU fp32 single-sample path, render full), compared with the committed selection rows of the same checkpoint"
+}
