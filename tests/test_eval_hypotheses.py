@@ -9,6 +9,7 @@ Times are seconds, model scale (lambda = 1/25).
 
 from __future__ import annotations
 
+import dataclasses
 import math
 import re
 from collections import Counter
@@ -507,6 +508,15 @@ def test_h3_supported_with_flip_floor() -> None:
     assert any("switch modes" in c for c in r.caveats)
     assert any("dp_minus_last_action" in c for c in r.caveats)
     assert any(c.startswith(hy.H3_DECK_MOTION) for c in r.caveats)  # P6-D5, always stated
+    assert hy.DP_FLIP_LABEL not in _beside(r)  # no Phase 9 results given
+
+
+def test_h3_carries_phase9_dp_flip_rate_beside_the_flip_floor(tmp_path: Path) -> None:
+    facts = _facts(tmp_path, parity_fails=True)
+    r = hy.score_h3(_dp(1, 180), _dp(8, 160), dp_flip=facts.dp_flip_text())
+    labels = [k for k, _ in r.beside]
+    assert labels.index(hy.DP_FLIP_LABEL) == labels.index("SS6 flip floor") + 1  # next to it
+    assert _beside(r)[hy.DP_FLIP_LABEL] == facts.dp_flip_text()
 
 
 def test_h3_deck_motion_caveat_is_computed() -> None:
@@ -701,8 +711,17 @@ def test_h5b_supported_ci_includes_zero_with_everything_beside() -> None:
     assert r.magnitude == hy.H5B_MARGIN == -0.03 and r.n_seeds == (("dp", 5),)
     assert r.n_episodes == N and not r.ceiling_limited
     b = _beside(r)
-    assert b["delay"].startswith("d = 3 control steps (100.0 ms model scale, 500 ms full scale)")
-    assert "provider ort_cuda_fp32" in b["delay"] and "p99 80.2 ms" in b["delay"]
+    assert b["delay"].startswith(
+        "d = 3 control steps = 3 × 33.3 ms = 100.0 ms of model-scale sim time (3 × 166.7 ms = "
+        "500.0 ms at full scale, as sim time)"
+    )
+    assert "provider ort_cuda_fp32" in b["delay"] and "p99 80.2 ms wall clock" in b["delay"]
+    assert b["delay"].endswith(
+        "the measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is "
+        "not scaled"
+    )
+    assert "ms model scale," not in b["delay"]  # M5: the old wall-clock-as-scaled wording
+    assert "why d" not in b and hy.DP_FLIP_LABEL not in b  # no Phase 9 facts given
     assert b["success (mean over seeds x episodes)"] == (
         "latency arm 74.5 % (745/1000); synchronous 75.0 % (750/1000)"
     )
@@ -786,10 +805,191 @@ def test_latency_context_is_unscored_two_sided() -> None:
         hy.latency_context(*_lat("dp", "SS5", 150, 3), delay_steps=3)
 
 
-def _write_h5a(root: Path, verdict: str, *, csv_verdict: str | None = None) -> Path:
+def _write_h5a(
+    root: Path, verdict: str, *, csv_verdict: str | None = None, parity_fails: bool = False
+) -> Path:
     import eval_support as es
 
-    return es.write_latency_results(root, verdict=verdict, csv_verdict=csv_verdict)
+    return es.write_latency_results(
+        root, verdict=verdict, csv_verdict=csv_verdict, parity_fails=parity_fails
+    )
+
+
+def _facts(tmp_path: Path, *, parity_fails: bool = False) -> hy.LatencyFacts:
+    verdict = "not supported" if parity_fails else "supported"
+    facts = hy.read_latency_facts(_write_h5a(tmp_path / "lat", verdict, parity_fails=parity_fails))
+    assert facts is not None
+    return facts
+
+
+#: The synthetic not-supported fixture's flip-rate text (eval_support.write_latency_results).
+_FAIL_FLIP = (
+    "4/10–5/10 episodes (40.0–50.0 %) change outcome class against the torch_cpu_fp32 "
+    "reference under numeric perturbations of order 1e-5 (open-loop chunk max-abs <= 2.8e-05), "
+    "the range over the flown scored fp32 providers (ort_cpu_fp32 4/10, ort_cuda_fp32 5/10, "
+    "torch_cuda_fp32 4/10); measured on this dp's 10 select episodes in Phase 9 (closed-loop "
+    "parity), not on a frozen list (seed 0's selected checkpoint; "
+    "results/latency/closed_loop.csv, parity.csv)"
+)
+
+
+def test_dp_flip_rate_from_closed_loop_rows(tmp_path: Path) -> None:
+    """S3: the range over flown scored fp32 providers, as flips/n; unscored ones never count."""
+    assert _facts(tmp_path / "f", parity_fails=True).dp_flip_text() == _FAIL_FLIP
+    ok = _facts(tmp_path / "ok").dp_flip_text()
+    assert ok is not None and ok.startswith("2/10 episodes (20.0 %) change outcome class")
+    assert "(ort_cuda_fp32 2/10)" in ok and "ort_trt_fp32" not in ok  # unscored: not counted
+    assert "open-loop chunk max-abs <= 2.8e-05" in ok  # 2.74e-05 rounded up, never down
+
+
+def test_h5a_not_supported_note_states_why(tmp_path: Path) -> None:
+    """S3: parity failure is this dp's outcome sensitivity; the latency bound fails anyway."""
+    rec = hy.read_h5a(_write_h5a(tmp_path / "a", "not supported", parity_fails=True))
+    assert rec["verdict"] == "not supported" and math.isnan(rec["estimate"])
+    note = rec["verdict_note"]
+    assert note.startswith(
+        "not supported (no scored provider passed both parities and was timed). dp's "
+        "closed-loop parity failure reflects outcome sensitivity of this dp, not a provider "
+        "error: torch_cuda_fp32 runs the identical Python sampler as the torch_cpu_fp32 "
+        "reference (torch eager, the DPStudent path) and still flips (4/10 > 3); open-loop "
+        "chunk gaps are <= 2.8e-05 (results/latency/parity.csv); the flips go both ways "
+        "(successes lost / gained: ort_cpu_fp32 2 / 2, ort_cuda_fp32 3 / 1, torch_cuda_fp32 "
+        "1 / 3), and the provider success counts lie near the reference (ort_cpu_fp32 6, "
+        "ort_cuda_fp32 4, torch_cuda_fp32 8 of 10 against 6, within ±2; "
+        "results/latency/closed_loop.csv)."
+    )
+    assert (
+        "The latency bound also fails independently on every timed scored provider: dp_e2e "
+        "batch-1 p99 ort_cpu_fp32 122.911 ms, ort_cuda_fp32 52.6441 ms, torch_cuda_fp32 89.3851 "
+        "ms (results/latency/h5a.csv), all > 33.3 ms, the model-scale 30 Hz control period "
+        "(166.7 ms full scale); the measured wall-clock latency itself is on this machine (RTX "
+        "A4000, WSL2) and is not scaled; not timed: ort_trt_fp16: refused (open-loop parity not "
+        "passed)."
+    ) in note
+    assert note.endswith(f"Phase 9 measured this dp's own closed-loop flip rate: {_FAIL_FLIP}.")
+    assert "ort_trt_fp32" not in note.split("Phase 9 measured")[1]  # unscored: not in the range
+    assert set(rec["sources"]) == {
+        "results/latency/h5a.csv",
+        "results/latency/delay.json",
+        "results/latency/closed_loop.csv",
+        "results/latency/parity.csv",
+        "results/latency/latency.csv",
+        "results/latency/closed_loop/dp/ort_cpu_fp32.json",
+        "results/latency/closed_loop/dp/ort_cuda_fp32.json",
+        "results/latency/closed_loop/dp/torch_cuda_fp32.json",
+    }
+    assert rec["inputs"] == sorted(rec["sources"])
+    assert "the model-scale 30 Hz control period (166.7 ms full scale)" in rec["contrast"]
+    assert any("the model-scale 30 Hz control period" in c and "not scaled" in c
+               for c in rec["caveats"])  # fmt: skip
+
+
+def test_h5a_supported_note_is_the_verdict_only(tmp_path: Path) -> None:
+    rec = hy.read_h5a(_write_h5a(tmp_path / "a", "supported"))
+    assert rec["verdict_note"] == "supported"
+
+
+def test_h5b_states_why_d_and_the_zero_action_start(tmp_path: Path) -> None:
+    """S4: d is the fallback; the fastest open-loop-passing provider's d was not flown."""
+    facts = _facts(tmp_path, parity_fails=True)
+    lat, sync = _lat("dp", "SS5", 130, 3)
+    r = hy.score_h5b(lat, sync, delay_steps=3, delay_record=facts.delays["dp"], facts=facts)
+    assert r.verdict == "not supported"  # the verdict is the rule's, unchanged by the text
+    b = _beside(r)
+    assert b["why d"] == (
+        "d = 3 is the torch_cpu_fp32 (1 thread) fallback delay from results/latency/delay.json "
+        "(dp_e2e batch-1 p99 86.7 ms wall clock; ceil(86.7 / 33.333) = 3), because no scored "
+        "provider passed open- and closed-loop parity (P3-D1 §7). Under §7's rule, the fastest "
+        "open-loop-passing scored provider, ort_cuda_fp32 (dp_e2e batch-1 p99 52.6441 ms, "
+        "results/latency/h5a.csv), would have given d = ceil(52.6441 / 33.333) = 2 (every "
+        "open-loop-passing scored provider: ort_cuda_fp32 -> d = 2, torch_cuda_fp32 -> d = 3, "
+        "ort_cpu_fp32 -> d = 4); those delays were not flown. The verdict is unchanged; the "
+        "measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is not "
+        "scaled"
+    )
+    assert b["zero-action start"] == (
+        "the contrast includes the d = 3 zero-action steps at the start of every episode (3 × "
+        "33.3 ms = 100.0 ms of model-scale sim time (3 × 166.7 ms = 500.0 ms at full scale, as "
+        "sim time); P3-D1 §7), which cannot be separated out of the estimate. The verdict is "
+        "unchanged"
+    )
+    assert b[hy.DP_FLIP_LABEL] == _FAIL_FLIP
+    labels = [k for k, _ in r.beside]
+    assert labels[:3] == ["delay", "why d", "zero-action start"]
+    # A delay.json d that ceil(p99 / period) does not give is refused, never printed.
+    bad = dataclasses.replace(facts, delays={"dp": {**facts.delays["dp"], "p99_ms": 20.0}})
+    with pytest.raises(hy.RowError, match="ceil"):
+        hy.score_h5b(lat, sync, delay_steps=3, facts=bad)
+
+
+def test_h5b_why_d_without_fallback(tmp_path: Path) -> None:
+    facts = _facts(tmp_path)
+    lat, sync = _lat("dp", "SS5", 149, 3)
+    b = _beside(hy.score_h5b(lat, sync, delay_steps=3, facts=facts))
+    assert b["why d"].startswith(
+        "d = 3 from ort_cuda_fp32 (dp_e2e batch-1 p99 86.7 ms wall clock, the fastest scored "
+        "provider passing open- and closed-loop parity"
+    )
+
+
+def test_latency_context_bc_dagger_reading_and_dp_flip(tmp_path: Path) -> None:
+    """M4 for bc_dagger contexts; the measured dp flip rate beside dp contexts."""
+    facts = _facts(tmp_path, parity_fails=True)
+    u = hy.latency_context(*_lat("bc_dagger", "SS6", 120, 2), delay_steps=2, facts=facts)
+    assert (
+        "This contrast is the cost of a two-control-step delay (ceil of a 53.33 ms p99 to two "
+        "33.3 ms model-scale steps), not of 53 ms of compute (results/latency/delay.json: "
+        "torch_cuda_fp32, bc_dagger_e2e batch-1 p99; the measured wall-clock latency itself is "
+        "on this machine (RTX A4000, WSL2) and is not scaled)."
+    ) in u.caveats
+    assert (
+        "last_action in proprio carries the applied (delayed) action, a feedback channel the "
+        "student never saw in training; no teacher-under-delay reference exists to attribute "
+        "the loss."
+    ) in u.caveats
+    assert hy.DP_FLIP_LABEL not in _beside(u)
+    assert "provider torch_cuda_fp32" in _beside(u)["delay"]
+    u6 = hy.latency_context(*_lat("dp", "SS6", 150, 3), delay_steps=3, facts=facts)
+    labels = [k for k, _ in u6.beside]
+    assert labels == ["delay", "SS6 flip floor", hy.DP_FLIP_LABEL]
+    assert _beside(u6)[hy.DP_FLIP_LABEL] == _FAIL_FLIP
+    assert not any("control-step delay" in c for c in u6.caveats)
+
+
+def test_latency_context_one_step_wording(tmp_path: Path) -> None:
+    import eval_support as es
+
+    facts = hy.read_latency_facts(
+        es.write_latency_results(
+            tmp_path / "lat", verdict="not supported", parity_fails=True,
+            delays={"bc_dagger": 1, "dp": 3},
+        )
+    )  # fmt: skip
+    assert facts is not None
+    (c, _) = facts.bc_context_caveats(1)
+    assert c.startswith(
+        "This contrast is the cost of a one-control-step delay (ceil of a 20.00 ms p99 to one "
+        "33.3 ms model-scale step), not of 20 ms of compute"
+    )
+
+
+def test_latency_facts_refuse_inconsistent_files(tmp_path: Path) -> None:
+    assert hy.read_latency_facts(tmp_path / "absent") is None
+    root = _write_h5a(tmp_path / "a", "not supported", parity_fails=True)
+    (root / "parity.csv").unlink()
+    with pytest.raises(hy.RowError, match="parity.csv"):
+        hy.read_latency_facts(root)
+    root = _write_h5a(tmp_path / "b", "not supported", parity_fails=True)
+    (root / "closed_loop" / "dp" / "ort_cpu_fp32.json").unlink()
+    with pytest.raises(hy.RowError, match="ort_cpu_fp32.json is missing"):
+        hy.read_latency_facts(root)
+    root = _write_h5a(tmp_path / "c", "not supported", parity_fails=True)
+    cl = (root / "closed_loop.csv").read_text(encoding="utf-8")
+    (root / "closed_loop.csv").write_text(
+        cl.replace("dp,ort_cpu_fp32,True,flown,10,4,3,False,6,", "dp,ort_cpu_fp32,True,flown,10,4,"
+                   "3,False,7,"), encoding="utf-8")  # fmt: skip
+    with pytest.raises(hy.RowError, match="success 7 != reference 6"):
+        hy.read_latency_facts(root)
 
 
 def test_h5a_is_read_as_written(tmp_path: Path) -> None:
@@ -809,9 +1009,13 @@ def test_h5a_is_read_as_written(tmp_path: Path) -> None:
         "ort_trt_fp16",
         "ort_trt_fp32",
     ]
-    assert set(rec["sources"]) == {"results/latency/h5a.csv", "results/latency/delay.json"}
+    assert {"results/latency/h5a.csv", "results/latency/delay.json"} <= set(rec["sources"])
     beside = {b["label"]: b["text"] for b in rec["beside"]}
-    assert beside["delay d, dp"].startswith("d = 3 control steps; provider ort_cuda_fp32")
+    assert beside["delay d, dp"].startswith(
+        "d = 3 control steps = 3 × 33.3 ms = 100.0 ms of model-scale sim time (3 × 166.7 ms = "
+        "500.0 ms at full scale, as sim time); provider ort_cuda_fp32, p99 86.666 ms wall clock "
+        "(not scaled)"
+    )
     assert "ort_trt_fp32 (unscored)" in beside  # reported, never counted
     assert any("no embedded target" in c for c in rec["caveats"])
     rec = hy.read_h5a(_write_h5a(tmp_path / "b", "not supported"))

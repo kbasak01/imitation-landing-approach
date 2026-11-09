@@ -378,7 +378,12 @@ def test_latency_arm_scores_h5a_h5b_and_context(
         "21.5",
         "33.3",
     )
-    assert a["inputs"] == "results/latency/delay.json; results/latency/h5a.csv"
+    assert a["inputs"] == (
+        "results/latency/closed_loop.csv; results/latency/closed_loop/dp/ort_cuda_fp32.json; "
+        "results/latency/delay.json; results/latency/h5a.csv; results/latency/latency.csv; "
+        "results/latency/parity.csv"
+    )
+    assert a["verdict_note"] == "supported"
     assert (b["status"], b["verdict"], b["cell"], b["magnitude"]) == (
         "scored",
         "supported",
@@ -406,7 +411,23 @@ def test_latency_arm_scores_h5a_h5b_and_context(
         assert con[name]["inputs"].startswith(f"latency_arm {arm} id {ss}")
         assert (con[name]["flip_floor"] != "") == (ss == "SS6")
         assert f"{name} relative p95 closing speed" in con
+        p95_note = con[f"{name} relative p95 closing speed"]["note"]
+        if arm == "dp":  # the measured dp flip rate beside every dp contrast
+            assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)" in con[name]["note"]
+            assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)" in p95_note
+            assert "control-step delay" not in con[name]["note"]
+        else:  # M4: the cost of whole control steps, and the last_action feedback channel
+            assert (
+                "the cost of a two-control-step delay (ceil of a 53.33 ms p99"
+                in (con[name]["note"])
+            )
+            assert (
+                "last_action in proprio carries the applied (delayed) action" in (con[name]["note"])
+            )
+            assert hy.DP_FLIP_LABEL not in con[name]["note"] + p95_note
     assert con["H5(b)"]["status"] == "scored" and "H5(b) relative p95 closing speed" in con
+    assert con["H5(b)"]["note"].startswith(f"verdict: supported; {hy.DP_FLIP_LABEL}: 2/10")
+    assert hy.DP_FLIP_LABEL in con["H5(b) relative p95 closing speed"]["note"]
     assert "H5(b) context: dp latency arm - synchronous (SS5, unscored)" not in con
     agg = [r for r in sc.read_csv(root / "aggregate.csv") if r["tag"] == "latency_arm"]
     assert {(r["arm"], r["ss"]) for r in agg} == {
@@ -416,6 +437,63 @@ def test_latency_arm_scores_h5a_h5b_and_context(
     info = json.loads((root / "score_info.json").read_text())
     assert info["latency_arm"]["flown_d"] == {"bc_dagger": 2, "dp": 3}
     assert len(info["latency_arm"]["delay_json_sha256"]) == 64
+    # M6: the latency stages' commits, from results/latency/run_info.json and the rows.
+    assert info["latency_arm"]["stage_commits"] == [
+        {
+            "ila_commit": es.SYNTHETIC_LATENCY_COMMITS["latency"],
+            "stages": ["closed_loop.csv rows", "latency", "latency.csv rows"],
+            "dirty_outside_results": False,
+            "dirty_inside_results_only": False,
+        },
+        {
+            "ila_commit": es.SYNTHETIC_LATENCY_COMMITS["export"],
+            "stages": ["export"],
+            "dirty_outside_results": False,
+            "dirty_inside_results_only": True,
+        },
+    ]
+    assert len(info["latency_arm"]["run_info_sha256"]) == 64
+
+
+def _latency_h3_job(job: object) -> bool:
+    """:func:`_latency_job` plus dp's Ta curve on id (H3 and its P6-D5 caveat cells)."""
+    return _latency_job(job) or (
+        getattr(job, "tag", "") == "dp_Ta" and getattr(job, "list_name", "") == "id"
+    )
+
+
+def test_parity_failure_texts_reach_every_output(tmp_path: Path) -> None:
+    """S3/S4: Phase 9's committed shape (no provider passes parity) in every scored text."""
+    lat_dir = es.write_latency_results(
+        tmp_path / "latency", verdict="not supported", parity_fails=True
+    )
+    root = tmp_path / "e08"
+    inp = es.synthetic_tree(
+        root, n=N, matrix=es.reduced_matrix(_latency_h3_job), outcome=_latency_outcome,
+        latency_dir=lat_dir,
+    )  # fmt: skip
+    sc.run_score(inp)
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
+    note = hyp["H5(a)"]["verdict_note"]
+    assert hyp["H5(a)"]["verdict"] == "not supported"
+    assert "reflects outcome sensitivity of this dp, not a provider error" in note
+    assert "The latency bound also fails independently on every timed scored provider" in note
+    assert "Phase 9 measured this dp's own closed-loop flip rate: 4/10–5/10 episodes" in note
+    recs = {r["hypothesis"]: r for r in json.loads((root / "hypotheses.json").read_text())[
+        "hypotheses"
+    ]}  # fmt: skip
+    assert recs["H5(a)"]["verdict_note"] == note
+    b5 = {x["label"]: x["text"] for x in recs["H5(b)"]["beside"]}
+    assert b5["why d"].startswith("d = 3 is the torch_cpu_fp32 (1 thread) fallback delay")
+    assert "would have given d = ceil(52.6441 / 33.333) = 2" in b5["why d"]
+    assert b5["zero-action start"].startswith("the contrast includes the d = 3 zero-action")
+    assert b5[hy.DP_FLIP_LABEL].startswith("4/10–5/10 episodes (40.0–50.0 %)")
+    b3 = [x["label"] for x in recs["H3"]["beside"]]
+    assert b3.index(hy.DP_FLIP_LABEL) == b3.index("SS6 flip floor") + 1
+    con = {r["name"]: r for r in sc.read_csv(root / "contrasts.csv")}
+    for name in ("H3", "H3 relative p95 closing speed", "H5(b)",
+                 "H5(b) context: dp latency arm - synchronous (SS6, unscored)"):  # fmt: skip
+        assert f"{hy.DP_FLIP_LABEL}: 4/10–5/10 episodes" in con[name]["note"], name
 
 
 def test_latency_delay_mismatch_is_refused(

@@ -43,6 +43,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from ila import p8_adapter
+from ila.eval import hypotheses as hy
 from ila.eval import score as sc
 
 __all__ = [
@@ -488,6 +489,15 @@ def _provenance(inp: ReportInputs) -> list[str]:
         )
     for block, why in sorted(ri.get("skipped_blocks", {}).items()):
         rows.append((f"not flown: `{block}`", str(why)))
+    stage_commits = si.get("latency_arm", {}).get("stage_commits", [])
+    if stage_commits:
+        rows.append(
+            (
+                "ila commit(s) of the Phase 9 latency stages (`results/latency/run_info.json`, "
+                "rows' `ila_commit`)",
+                "; ".join(_stage_commit_text(c) for c in stage_commits),
+            )
+        )
     best = si.get("best_end_to_end", {})
     rows.append(("H4 best end-to-end student", f"`{best.get('arm')}`: {best.get('reason')}"))
     lines = ["## 1. Provenance", ""]
@@ -511,8 +521,9 @@ def _provenance(inp: ReportInputs) -> list[str]:
         flown = si.get("latency_arm", {}).get("flown_d", {})
         ds = ", ".join(f"`{a}` d = {d}" for a, d in sorted(flown.items()) if d is not None)
         note = (
-            f"`latency_arm` (Phase 9) flew with {ds} control steps, from "
-            "`results/latency/delay.json` (P3-D1 §7); its cells are in §7f and H5 in §5."
+            f"`latency_arm` (Phase 9) flew with {ds} control steps of model-scale sim time "
+            f"({hy.CONTROL_STEP_MS:.1f} ms each), from `results/latency/delay.json` "
+            "(P3-D1 §7); its cells are in §7f and H5 in §5."
         )
     else:
         note = (
@@ -523,10 +534,25 @@ def _provenance(inp: ReportInputs) -> list[str]:
         "",
         note,
         "",
-        "Sources: `results/e08/run_info.json`, `results/e08/score_info.json`.",
+        "Sources: `results/e08/run_info.json`, `results/e08/score_info.json` (the latency-stage "
+        "commits are copied there by the scorer from `results/latency/run_info.json`, "
+        "`latency.csv` and `closed_loop.csv`)."
+        if si.get("latency_arm", {}).get("stage_commits")
+        else "Sources: `results/e08/run_info.json`, `results/e08/score_info.json`.",
         "",
     ]
     return lines
+
+
+def _stage_commit_text(c: Mapping[str, Any]) -> str:
+    """One latency-stage commit with its stages and tree state (``score_info.json``)."""
+    if c.get("dirty_outside_results"):
+        tree = "a dirty tree outside `results/` was recorded"
+    elif c.get("dirty_inside_results_only"):
+        tree = "dirty only under `results/`"
+    else:
+        tree = "clean tree"
+    return f"`{c.get('ila_commit')}` ({', '.join(c.get('stages', []))}; {tree})"
 
 
 def _core(inp: ReportInputs) -> list[str]:
@@ -709,9 +735,10 @@ def verdict_line(verdict: str, note: str) -> str:
     head = f"**Verdict: {verdict}**"
     if note == verdict or not note:
         return f"{head}."
+    end = "" if note.endswith(".") else "."
     if note.startswith(verdict):
-        return f"{head} {note[len(verdict) :].strip()}."
-    return f"{head} — {note}."
+        return f"{head} {note[len(verdict) :].strip()}{end}"
+    return f"{head} — {note}{end}"
 
 
 def _hypotheses(inp: ReportInputs) -> list[str]:
@@ -772,11 +799,9 @@ def _hypotheses(inp: ReportInputs) -> list[str]:
         lines += [f"- {c}" for c in rec.get("caveats", [])]
         lines.append("")
     sources = "Sources: `results/e08/hypotheses.json`, `results/e08/hypotheses.csv`"
-    if any(
-        r.get("kind") == "latency" and r.get("status") == "scored"
-        for r in inp.hypotheses.get("hypotheses", [])
-    ):
-        sources += ", `results/latency/h5a.csv`, `results/latency/delay.json`"
+    for r in inp.hypotheses.get("hypotheses", []):
+        if r.get("kind") == "latency" and r.get("status") == "scored":
+            sources += "".join(f", `{i}`" for i in r.get("inputs", []))
     lines += [f"{sources}.", ""]
     return lines
 
@@ -786,8 +811,10 @@ def _latency_hypothesis(rec: Mapping[str, Any]) -> list[str]:
     lines = [
         f"- {verdict_line(str(rec['verdict']), str(rec.get('verdict_note', '')))}",
         f"- Lowest p99 among scored providers passing open- and closed-loop parity: "
-        f"{_hyp_estimate(rec)}; bound p99 < {_x(rec.get('magnitude')):.1f} ms (P3-D1 §6); "
-        "wall clock on this machine (RTX A4000, WSL2).",
+        f"{_hyp_estimate(rec)}; bound p99 < {_x(rec.get('magnitude')):.1f} ms, the "
+        f"model-scale 30 Hz control period ({hy.FULL_SCALE_TIME * hy.CONTROL_STEP_MS:.1f} ms "
+        "full scale; P3-D1 §6); the p99 is wall clock on this machine (RTX A4000, WSL2) and is "
+        "not scaled.",
         f"- Contrast: {rec['contrast']}; statistic: {rec['statistic']}.",
         f"- Inputs: {', '.join(f'`{i}`' for i in rec.get('inputs', []))}.",
     ]
@@ -1098,8 +1125,10 @@ def _latency_section(inp: ReportInputs) -> list[str]:
         "",
         "### 7f. Latency in the loop (tag `latency_arm`; `id` SS4–SS6; P3-D1 §7)",
         "",
-        "Simulated delay of d control steps (33.3 ms model scale each), d from the batch-1 p99 "
-        "on this machine (RTX A4000, WSL2; `results/latency/delay.json`). PyBullet does not "
+        f"Simulated delay of d control steps of sim time ({hy.CONTROL_STEP_MS:.1f} ms model "
+        f"scale each, {hy.FULL_SCALE_TIME * hy.CONTROL_STEP_MS:.1f} ms at full scale), d from "
+        "the batch-1 p99 wall clock measured on this machine (RTX A4000, WSL2; not scaled; "
+        "`results/latency/delay.json`). PyBullet does not "
         "advance while a network computes: each request's result is computed when it is "
         "issued, on the CPU fp32 single-sample path, and held back d steps; one request is in "
         "flight at a time. The same checkpoints fly both rows of each pair. H5(b) (§5) scores "

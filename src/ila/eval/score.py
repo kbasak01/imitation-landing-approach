@@ -1378,7 +1378,65 @@ def _check_delays(inp: ScoreInputs) -> dict[str, Any]:
     out: dict[str, Any] = {"flown_d": flown}
     if rec is not None and inp.latency_dir is not None:
         out["delay_json_sha256"] = _sha256((inp.latency_dir / "delay.json").read_bytes())
+    if inp.latency_dir is not None:
+        out.update(latency_stage_commits(inp.latency_dir))
     return out
+
+
+#: Phase 9 tables whose rows carry the commit that produced them (``ila_commit`` column).
+_LATENCY_ROW_COMMITS: Final[tuple[str, ...]] = ("latency.csv", "closed_loop.csv")
+
+
+def latency_stage_commits(latency_dir: Path) -> dict[str, Any]:
+    """The ila commits of Phase 9's latency stages (``results/latency/run_info.json``).
+
+    ``run_info.json`` keeps the last invocation of each stage; the per-row ``ila_commit``
+    columns of ``latency.csv`` and ``closed_loop.csv`` are added, so a commit that produced
+    committed rows is listed even when a later invocation of its stage replaced the stage
+    record (batch-1 and batch-24 latency rows come from different commits).
+
+    Returns:
+        ``{"stage_commits": [{"ila_commit", "stages", "dirty_outside_results",
+        "dirty_inside_results_only"}], "run_info_sha256": ...}`` sorted by commit, or ``{}``
+        when ``run_info.json`` is absent.
+    """
+    path = latency_dir / "run_info.json"
+    if not path.is_file():
+        return {}
+    raw = path.read_bytes()
+    stages: dict[str, set[str]] = {}
+    dirty_out: dict[str, bool] = {}
+    dirty_in: dict[str, bool] = {}
+    for name, rec in sorted(json.loads(raw).get("stages", {}).items()):
+        vcs = rec.get("git", {})
+        commit = str(vcs.get("ila_commit", ""))
+        if not commit:
+            continue
+        stages.setdefault(commit, set()).add(name)
+        dirty_out[commit] = dirty_out.get(commit, False) or bool(vcs.get("dirty_outside_results"))
+        dirty_in[commit] = dirty_in.get(commit, False) or (
+            bool(vcs.get("dirty")) and not bool(vcs.get("dirty_outside_results"))
+        )
+    for fname in _LATENCY_ROW_COMMITS:
+        f = latency_dir / fname
+        if not f.is_file():
+            continue
+        for row in read_csv(f):
+            commit = row.get("ila_commit", "")
+            if commit:
+                stages.setdefault(commit, set()).add(f"{fname} rows")
+    return {
+        "stage_commits": [
+            {
+                "ila_commit": c,
+                "stages": sorted(stages[c]),
+                "dirty_outside_results": dirty_out.get(c, False),
+                "dirty_inside_results_only": dirty_in.get(c, False),
+            }
+            for c in sorted(stages)
+        ],
+        "run_info_sha256": _sha256(raw),
+    }
 
 
 def _score_h5a(inp: ScoreInputs, out: _Scored) -> None:
@@ -1405,8 +1463,15 @@ def _score_h5a(inp: ScoreInputs, out: _Scored) -> None:
     out.records.append(rec)
 
 
-def _score_h5b(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
-    """H5(b) at ``id`` SS5 and the latency arm's unscored context cells."""
+def _score_h5b(
+    index: CellIndex, inp: ScoreInputs, out: _Scored, facts: hy.LatencyFacts | None = None
+) -> None:
+    """H5(b) at ``id`` SS5 and the latency arm's unscored context cells.
+
+    ``facts`` (Phase 9's results) supply why ``d`` is what it is, the bc_dagger delay reading
+    and this ``dp``'s measured closed-loop flip rate beside every ``dp`` contrast.
+    """
+    flip_note = _dp_flip_note(facts)
     core_inf = (8, 10, False)
     d_dp = _latency_d(inp.matrix, "dp")
     delay = _delay_records(inp)
@@ -1436,12 +1501,16 @@ def _score_h5b(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
             delay_record=None if delay is None else delay.get("arms", {}).get("dp"),
             sync_ss6=ss6,
             sync_static=static,
+            facts=facts,
         )
         inputs = _inputs(lat_side, sync_side)
         out.hypotheses.append(_hyp_row(res, inputs))
         out.records.append(_hyp_record(res, inputs))
         out.contrasts.append(
-            _from_result(res, (_ID, "SS5"), f"dp latency d={d_dp}", "dp synchronous", inputs)
+            _with_note(
+                _from_result(res, (_ID, "SS5"), f"dp latency d={d_dp}", "dp synchronous", inputs),
+                flip_note,
+            )
         )
         out.contrasts.append(
             {
@@ -1450,7 +1519,8 @@ def _score_h5b(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                     "H5(b)",
                     lat_side,
                     sync_side,
-                    note="same checkpoints; P8's function resamples seeds per side (not jointly)",
+                    note="same checkpoints; P8's function resamples seeds per side (not jointly)"
+                    + (f"; {flip_note}" if flip_note else ""),
                     names=(f"dp latency d={d_dp}", "dp synchronous"),
                 ),
                 "a": f"dp latency d={d_dp}",
@@ -1482,9 +1552,10 @@ def _score_h5b(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                 _missing_contrast(name, "descriptive, unscored", "H5(b)", (_ID, ss), arm, arm, why)
             )
             continue
-        u = hy.latency_context(sl.m, sy.m, delay_steps=d)
+        u = hy.latency_context(sl.m, sy.m, delay_steps=d, facts=facts)
         out.contrasts.append(_from_unscored(u, "descriptive, unscored", "H5(b)", _inputs(sl, sy)))
         names = (f"{arm} latency d={d}", f"{arm} synchronous")
+        p95_flip = f"; {flip_note}" if flip_note and arm == "dp" else ""
         out.contrasts.append(
             {
                 **_rel_p95(
@@ -1492,7 +1563,8 @@ def _score_h5b(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                     "H5(b)",
                     sl,
                     sy,
-                    note="same checkpoints; P8's function resamples seeds per side (not jointly)",
+                    note="same checkpoints; P8's function resamples seeds per side (not jointly)"
+                    + p95_flip,
                     names=names,
                 ),
                 "a": names[0],
@@ -1574,7 +1646,19 @@ def _score_h2(index: CellIndex, inp: ScoreInputs, out: _Scored) -> hy.H2Referenc
     return ref
 
 
-def _score_h3(index: CellIndex, out: _Scored) -> None:
+def _dp_flip_note(facts: hy.LatencyFacts | None) -> str:
+    """Phase 9's measured dp flip rate as a contrast-note sentence ("" before Phase 9)."""
+    text = None if facts is None else facts.dp_flip_text()
+    return f"{hy.DP_FLIP_LABEL}: {text}." if text else ""
+
+
+def _with_note(row: dict[str, Any], extra: str) -> dict[str, Any]:
+    if extra:
+        row["note"] = f"{row['note']}; {extra}" if row.get("note") else extra
+    return row
+
+
+def _score_h3(index: CellIndex, out: _Scored, facts: hy.LatencyFacts | None = None) -> None:
     g1 = _g(index, "dp", "SS6", tag="dp_Ta", inference=(1, 10, False))
     g8 = _g(index, "dp", "SS6", tag="dp_Ta", inference=(8, 10, False))
     s1, why1 = _student_side(index, g1)
@@ -1609,17 +1693,22 @@ def _score_h3(index: CellIndex, out: _Scored) -> None:
             f"H3's P6-D5 caveat needs dp at Ta = 8 on the static list ({ws}); the SS6 contrast "
             "is present, so the caveat would be silently shortened"
         )
-    res = hy.score_h3(s1.m, s8.m, other_ss=other, static_ta8=static)
+    dp_flip = None if facts is None else facts.dp_flip_text()
+    res = hy.score_h3(s1.m, s8.m, other_ss=other, static_ta8=static, dp_flip=dp_flip)
     inputs = _inputs(s1, s8)
+    flip_note = _dp_flip_note(facts)
     out.hypotheses.append(_hyp_row(res, inputs))
     out.records.append(_hyp_record(res, inputs))
-    out.contrasts.append(_from_result(res, (_ID, "SS6"), "dp Ta=1", "dp Ta=8", inputs))
+    out.contrasts.append(
+        _with_note(_from_result(res, (_ID, "SS6"), "dp Ta=1", "dp Ta=8", inputs), flip_note)
+    )
     rel = _rel_p95(
         "H3 relative p95 closing speed",
         "H3",
         s1,
         s8,
-        note="same checkpoints; P8's function resamples seeds per side (not jointly)",
+        note="same checkpoints; P8's function resamples seeds per side (not jointly)"
+        + (f"; {flip_note}" if flip_note else ""),
         names=("dp Ta=1", "dp Ta=8"),
     )
     out.contrasts.append({**rel, "a": "dp Ta=1", "b": "dp Ta=8"})
@@ -2077,12 +2166,13 @@ def run_score(inp: ScoreInputs, out_dir: Path | None = None) -> dict[str, Any]:
     scored = _Scored()
     _score_h1(index, inp, scored)
     ref = _score_h2(index, inp, scored)
-    _score_h3(index, scored)
+    facts = None if inp.latency_dir is None else hy.read_latency_facts(inp.latency_dir)
+    _score_h3(index, scored, facts)
     _score_h4(index, inp, scored)
     _descriptives(index, inp, scored)
     latency_info = _check_delays(inp)
     _score_h5a(inp, scored)
-    _score_h5b(index, inp, scored)
+    _score_h5b(index, inp, scored, facts)
     write_csv(out / "contrasts.csv", CONTRAST_COLUMNS, scored.contrasts)
     write_csv(out / "hypotheses.csv", HYPOTHESIS_COLUMNS, scored.hypotheses)
     dump_json(

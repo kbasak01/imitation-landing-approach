@@ -39,6 +39,42 @@ type OutcomeFn = Callable[[str, int, str, str, int, str | None, int | None], str
 #: The latency arm's d per arm in every synthetic tree (control steps; not delay.json's).
 SYNTHETIC_DELAYS: Mapping[str, int] = {"bc_dagger": 2, "dp": 3}
 
+#: Synthetic commits recorded by the synthetic latency stages (``run_info.json``, rows).
+SYNTHETIC_LATENCY_COMMITS: Mapping[str, str] = {"export": "c0ffee1", "latency": "beef002"}
+
+#: Synthetic closed-loop flights: arm -> provider -> (scored, status, flips as
+#: (reference outcome, provider outcome) per flipped episode). n = 10, reference 6 successes.
+_CL_N: int = 10
+_CL_REF_SUCCESS: int = 6
+_LOST = ("success", "off_pad")
+_GAINED = ("off_pad", "success")
+_OTHER = ("bounce", "off_pad")
+_FLIGHTS_OK: Mapping[str, tuple[str, str, tuple[tuple[str, str], ...]]] = {
+    "ort_cuda_fp32": ("True", "flown", (_LOST, _GAINED)),
+    "ort_trt_fp16": ("True", "refused (open-loop parity not passed)", ()),
+    "ort_trt_fp32": ("False", "flown", (_OTHER,)),
+}
+_FLIGHTS_FAIL: Mapping[str, tuple[str, str, tuple[tuple[str, str], ...]]] = {
+    "ort_cpu_fp32": ("True", "flown", (_LOST, _LOST, _GAINED, _GAINED)),
+    "ort_cuda_fp32": ("True", "flown", (_LOST, _LOST, _LOST, _GAINED, _OTHER)),
+    "torch_cuda_fp32": ("True", "flown", (_LOST, _GAINED, _GAINED, _GAINED)),
+    "ort_trt_fp16": ("True", "refused (open-loop parity not passed)", ()),
+    "ort_trt_fp32": ("False", "flown", (_LOST,) * 6),
+}
+#: provider -> (precision, chunk max-abs unrolled, loop) for dp in parity.csv.
+_PARITY: Mapping[str, tuple[str, str, str]] = {
+    "ort_cpu_fp32": ("fp32", "2.2e-05", "2.3e-05"),
+    "ort_cuda_fp32": ("fp32", "2.1e-05", "2.74e-05"),
+    "torch_cuda_fp32": ("fp32", "1.9e-05", "2.0e-05"),
+    "ort_trt_fp16": ("fp16", "0.03", "0.035"),
+    "ort_trt_fp32": ("fp32", "2.2e-05", "2.6e-05"),
+}
+
+
+def synthetic_p99(d: int) -> float:
+    """A batch-1 p99 (ms wall clock) whose ceil over 33.333 ms is ``d`` (P3-D1 §7's rule)."""
+    return round((d - 0.4) * 33.333, 3)
+
 
 def write_latency_results(
     root: Path,
@@ -46,32 +82,111 @@ def write_latency_results(
     verdict: str = "supported",
     delays: Mapping[str, int] = SYNTHETIC_DELAYS,
     csv_verdict: str | None = None,
+    parity_fails: bool = False,
 ) -> Path:
-    """Synthetic ``h5a.csv`` and ``delay.json`` under ``root`` (the deploy scorer's shapes).
+    """Synthetic Phase 9 results under ``root`` (the deploy scorer's shapes).
 
-    Two scored providers (one passes both parities at p99 21.5 ms, one fails open loop) and
-    one unscored. ``csv_verdict`` overrides the CSV's verdict on scored rows (inconsistency).
+    Writes ``h5a.csv``, ``delay.json``, ``closed_loop.csv``, ``closed_loop/dp/<provider>.json``,
+    ``parity.csv``, ``latency.csv`` and ``run_info.json``. Each arm's ``delay.json`` p99 is
+    :func:`synthetic_p99` of its ``d``.
+
+    Default: two scored providers (``ort_cuda_fp32`` passes both parities at p99 21.5 ms with 2
+    closed-loop flips, ``ort_trt_fp16`` fails open loop) and one unscored. ``parity_fails``: the
+    shape of Phase 9's committed result -- three scored fp32 providers pass open loop (p99
+    122.9 / 52.6 / 89.4 ms) and fail closed loop (4 / 5 / 4 flips of 10, both directions), so
+    the delays fall back to ``torch_cpu_fp32`` (verdict "not supported"). ``csv_verdict``
+    overrides the CSV's verdict on scored rows (inconsistency).
     """
     from ila.deploy import latency as lat
 
     root.mkdir(parents=True, exist_ok=True)
     v = verdict if csv_verdict is None else csv_verdict
-    rows = [
-        ["H5a", "dp_e2e", "ort_cuda_fp32", "True", "1", "timed", "20.1", "21.5", "30.2",
-         "True", "True", "True", "33.3", "True", v],
-        ["H5a", "dp_e2e", "ort_trt_fp16", "True", "1", "refused", "", "", "",
-         "False", "", "False", "33.3", "", v],
-        ["H5a", "dp_e2e", "ort_trt_fp32", "False", "1", "timed", "9.0", "9.9", "12.0",
-         "True", "", "False", "33.3", "True", "context (not scored)"],
-    ]  # fmt: skip
+    if parity_fails:
+        rows = [
+            ["H5a", "dp_e2e", "ort_cpu_fp32", "True", "1", "timed", "111.6", "122.911", "128.6",
+             "True", "False", "False", "33.3", "False", v],
+            ["H5a", "dp_e2e", "ort_cuda_fp32", "True", "1", "timed", "48.3", "52.6441", "54.2",
+             "True", "False", "False", "33.3", "False", v],
+            ["H5a", "dp_e2e", "torch_cuda_fp32", "True", "1", "timed", "80.7", "89.3851", "93.5",
+             "True", "False", "False", "33.3", "False", v],
+            ["H5a", "dp_e2e", "ort_trt_fp16", "True", "1", "refused (open-loop parity not passed)",
+             "", "", "", "False", "", "False", "33.3", "", v],
+            ["H5a", "dp_e2e", "ort_trt_fp32", "False", "1", "timed", "19.8", "25.7", "31.3",
+             "True", "False", "False", "33.3", "True", "context (not scored)"],
+        ]  # fmt: skip
+        flights = _FLIGHTS_FAIL
+        provider = {"bc_dagger": "torch_cuda_fp32", "dp": "torch_cpu_fp32"}
+        fallback = {"bc_dagger": False, "dp": True}
+    else:
+        rows = [
+            ["H5a", "dp_e2e", "ort_cuda_fp32", "True", "1", "timed", "20.1", "21.5", "30.2",
+             "True", "True", "True", "33.3", "True", v],
+            ["H5a", "dp_e2e", "ort_trt_fp16", "True", "1", "refused", "", "", "",
+             "False", "", "False", "33.3", "", v],
+            ["H5a", "dp_e2e", "ort_trt_fp32", "False", "1", "timed", "9.0", "9.9", "12.0",
+             "True", "", "False", "33.3", "True", "context (not scored)"],
+        ]  # fmt: skip
+        flights = _FLIGHTS_OK
+        provider = {"bc_dagger": "ort_cuda_fp32", "dp": "ort_cuda_fp32"}
+        fallback = {"bc_dagger": False, "dp": False}
     (root / "h5a.csv").write_text(lat.h5a_csv(rows), encoding="utf-8")
     arms = {
-        arm: {"d": d, "provider": "ort_cuda_fp32", "row": f"{arm}_e2e", "p99_ms": 21.5,
-              "fallback": False}
+        arm: {"d": d, "provider": provider[arm], "row": f"{arm}_e2e",
+              "p99_ms": synthetic_p99(d), "fallback": fallback[arm]}
         for arm, d in delays.items()
     }  # fmt: skip
+    record = {"arms": arms, "control_period_ms": 33.333, "h5a_verdict": verdict}
     (root / "delay.json").write_text(
-        json.dumps({"arms": arms, "h5a_verdict": verdict}, indent=2, sort_keys=True) + "\n",
+        json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    commit = SYNTHETIC_LATENCY_COMMITS["latency"]
+    cl = [
+        "arm,provider,scored,status,n,flips,max_flips,closed_loop_pass,success,"
+        "reference_equals_selection_rows,ila_commit",
+        f"bc_dagger,torch_cpu_fp32,False,reference,{_CL_N},0,3,reference,9,True,{commit}",
+        f"bc_dagger,ort_cuda_fp32,True,flown,{_CL_N},0,3,True,9,,{commit}",
+        f"dp,torch_cpu_fp32,False,reference,{_CL_N},0,3,reference,{_CL_REF_SUCCESS},True,{commit}",
+    ]
+    (root / "closed_loop" / "dp").mkdir(parents=True, exist_ok=True)
+    for prov, (scored, status, flipped) in flights.items():
+        if status != "flown":
+            cl.append(f"dp,{prov},{scored},{status},0,,3,False,,,")
+            continue
+        lost = sum(r == "success" and p != "success" for r, p in flipped)
+        gained = sum(p == "success" and r != "success" for r, p in flipped)
+        succ = _CL_REF_SUCCESS - lost + gained
+        cl.append(
+            f"dp,{prov},{scored},{status},{_CL_N},{len(flipped)},3,{len(flipped) <= 3},{succ},,"
+            f"{commit}"
+        )
+        flips = [
+            {"index": str(i), "provider": p, "reference": r, "ss": "SS3"}
+            for i, (r, p) in enumerate(flipped)
+        ]
+        (root / "closed_loop" / "dp" / f"{prov}.json").write_text(
+            json.dumps({"arm": "dp", "flipped": flips}, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    (root / "closed_loop.csv").write_text("\n".join(cl) + "\n", encoding="utf-8")
+    par = ["arm,provider,precision,open_loop_pass,chunk_unrolled_max_abs,chunk_loop_max_abs"]
+    for prov in flights:
+        prec, unrolled, loop = _PARITY[prov]
+        par.append(f"bc_dagger,{prov},{prec},{prec == 'fp32'},,")
+        par.append(f"dp,{prov},{prec},{prec == 'fp32'},{unrolled},{loop}")
+    (root / "parity.csv").write_text("\n".join(par) + "\n", encoding="utf-8")
+    latency = ["row,provider,batch_size,threads,p99_ms,ila_commit"]
+    for r in rows:
+        latency.append(f"dp_e2e,{r[2]},1,1,{r[7]},{commit}")
+    latency.append(f"dp_e2e,torch_cpu_fp32,1,1,{synthetic_p99(delays.get('dp', 1))},{commit}")
+    latency.append(f"dp_e2e,torch_cpu_fp32,24,4,999.0,{commit}")  # batch 24: never read for d
+    (root / "latency.csv").write_text("\n".join(latency) + "\n", encoding="utf-8")
+    stage = {
+        "export": {"ila_commit": SYNTHETIC_LATENCY_COMMITS["export"], "dirty": True,
+                   "dirty_outside_results": False},
+        "latency": {"ila_commit": commit, "dirty": False, "dirty_outside_results": False},
+    }  # fmt: skip
+    (root / "run_info.json").write_text(
+        json.dumps({"stages": {k: {"git": g} for k, g in stage.items()}}, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     return root

@@ -15,6 +15,7 @@ import pytest
 
 import eval_support as es
 from ila import p8_adapter
+from ila.eval import hypotheses as hy
 from ila.eval import report as rp
 from ila.eval import score as sc
 
@@ -136,6 +137,10 @@ def test_verdict_line_suppresses_redundant_notes() -> None:
         "**Verdict: not supported** (CI includes 0)."
     )
     assert rp.verdict_line("not supported", "odd note") == "**Verdict: not supported** — odd note."
+    # A note that already ends a sentence is not given a second period.
+    assert rp.verdict_line("not supported", "not supported (x). More.") == (
+        "**Verdict: not supported** (x). More."
+    )
 
 
 def test_hypotheses_print_no_redundant_verdict(scored: Path) -> None:
@@ -266,16 +271,36 @@ def test_latency_arm_renders_h5_and_section_7f(tmp_path: Path) -> None:
     assert rp.write_report(root, tmp_path / "again.md") == text  # byte-identical re-render
     prov = _section(text, "## 1. Provenance")
     assert "`latency_arm` (Phase 9) flew with `bc_dagger` d = 2, `dp` d = 3 control steps" in prov
+    # M6: the latency stages' commits beside the commits that flew rows.
+    assert (
+        "| ila commit(s) of the Phase 9 latency stages (`results/latency/run_info.json`, rows' "
+        "`ila_commit`) | `beef002` (closed_loop.csv rows, latency, latency.csv rows; clean "
+        "tree); `c0ffee1` (export; dirty only under `results/`) |"
+    ) in prov
+    assert "copied there by the scorer from `results/latency/run_info.json`" in prov
     hyp = _section(text, "## 5. Hypotheses")
     h5a = hyp.split("### H5(a)")[1].split("### H5(b)")[0]
     assert "**Verdict: supported**." in h5a
     assert "21.50 ms (no CI: a p99 of timed calls); bound p99 < 33.3 ms" in h5a
+    assert (
+        "bound p99 < 33.3 ms, the model-scale 30 Hz control period (166.7 ms full scale; P3-D1 "
+        "§6); the p99 is wall clock on this machine (RTX A4000, WSL2) and is not scaled."
+    ) in h5a
     assert "ort_trt_fp32 (unscored)" in h5a and "no embedded target" in h5a
     h5b = hyp.split("### H5(b)")[1]
     assert "**Verdict: supported** (non-inferior: CI lower bound >= -3 points)." in h5b
     assert "non-inferiority margin: CI lower bound ≥ -3 points" in h5b
     assert "`latency_arm dp id SS5 Ta8 K10 ens0`, `core dp id SS5 Ta8 K10 ens0`" in h5b
     assert "`results/latency/h5a.csv`" in hyp
+    assert "`results/latency/closed_loop.csv`" in hyp.split("Sources:")[-1]
+    # The dp context rows in 6b carry the measured dp flip rate next to P8's flip floor.
+    six_b = _section(text, "## 6. Unscored contrasts").split("### 6b.")[1]
+    dp6 = next(
+        ln for ln in six_b.splitlines()
+        if ln.startswith("| H5(b) context: dp latency arm - synchronous (SS6, unscored) |")
+    )  # fmt: skip
+    assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes" in dp6
+    assert dp6.index(hy.DP_FLIP_LABEL) < dp6.index("SS6 flip floor")
     six = _section(text, "## 6. Unscored contrasts")
     a, b = six.split("### 6b.")
     assert "H5(b) context" not in a  # tagged inputs never in 6a
@@ -294,7 +319,54 @@ def test_latency_arm_renders_h5_and_section_7f(tmp_path: Path) -> None:
     assert "| `dp` latency d = 3 | SS6 † | withheld |" in f
     assert "latency_arm dp id SS6 Ta8 K10 ens0" in rp.load_inputs(root).withheld
     assert "PyBullet does not advance" in f and "RTX A4000, WSL2" in f
+    assert (
+        "Simulated delay of d control steps of sim time (33.3 ms model scale each, 166.7 ms at "
+        "full scale), d from the batch-1 p99 wall clock measured on this machine (RTX A4000, "
+        "WSL2; not scaled;"
+    ) in f
     _tagged_tables_print_baselines(text)
+    low = text.lower()
+    for word in FORBIDDEN:
+        assert word not in low, word
+
+
+def test_parity_failure_renders_in_section5(tmp_path: Path) -> None:
+    """S3, S4, M4, M5 in results.md from the not-supported synthetic latency results."""
+    lat_dir = es.write_latency_results(
+        tmp_path / "latency", verdict="not supported", parity_fails=True
+    )
+    root = tmp_path / "e08"
+    inp = es.synthetic_tree(root, n=N, matrix=es.reduced_matrix(_latency_keep), latency_dir=lat_dir)
+    sc.run_score(inp)
+    text = rp.write_report(root, tmp_path / "results.md")
+    assert rp.write_report(root, tmp_path / "again.md") == text
+    hyp = _section(text, "## 5. Hypotheses")
+    h5a = hyp.split("### H5(a)")[1].split("### H5(b)")[0]
+    verdict = next(ln for ln in h5a.splitlines() if ln.startswith("- **Verdict"))
+    assert verdict.startswith(
+        "- **Verdict: not supported** (no scored provider passed both parities and was timed). "
+        "dp's closed-loop parity failure reflects outcome sensitivity of this dp, not a provider "
+        "error: torch_cuda_fp32 runs the identical Python sampler"
+    )
+    assert "all > 33.3 ms, the model-scale 30 Hz control period (166.7 ms full scale)" in verdict
+    assert verdict.endswith("results/latency/closed_loop.csv, parity.csv).")  # one period
+    assert not verdict.endswith("..")
+    h5b = hyp.split("### H5(b)")[1]
+    assert "- why d: d = 3 is the torch_cpu_fp32 (1 thread) fallback delay" in h5b
+    assert "would have given d = ceil(52.6441 / 33.333) = 2" in h5b
+    assert "those delays were not flown. The verdict is unchanged" in h5b
+    assert "- zero-action start: the contrast includes the d = 3 zero-action steps" in h5b
+    assert f"- {hy.DP_FLIP_LABEL}: 4/10–5/10 episodes (40.0–50.0 %)" in h5b
+    assert "- delay: d = 3 control steps = 3 × 33.3 ms = 100.0 ms of model-scale sim time" in h5b
+    six_b = _section(text, "## 6. Unscored contrasts").split("### 6b.")[1]
+    bc = [ln for ln in six_b.splitlines() if ln.startswith("| H5(b) context: bc_dagger")]
+    success_rows = [ln for ln in bc if "relative p95" not in ln]
+    assert len(success_rows) == 3
+    for ln in success_rows:
+        assert "the cost of a two-control-step delay (ceil of a 53.33 ms p99 to two 33.3 ms" in ln
+        assert "not of 53 ms of compute" in ln
+        assert "a feedback channel the student never saw in training" in ln
+        assert "no teacher-under-delay reference exists to attribute the loss" in ln
     low = text.lower()
     for word in FORBIDDEN:
         assert word not in low, word
