@@ -3956,3 +3956,44 @@ config changed.
 *Consequence.* H5 is scored, and the latency-arm block is flown. Phase 10 inherits these results:
 - `dp`'s measured closed-loop sensitivity, which bears on every `dp` contrast's resolution;
 - the fallback reading of d.
+
+### Gate 9 passed (2026-11-09)
+
+| Criterion | Measured value / evidence | Result |
+|---|---|---|
+| Exports: `bc_dagger` (one graph), `dp_encoder`, `dp_denoise_step`, `dp_K10` with noise as input; opset 17, fp32 and fp16 | `results/latency/graphs.json`: graph SHA-256s, opset 17, no RNG op. A second export is byte-identical, and unrolled K = 10 equals `ddim_sample` exactly (P9-D1 item 2). The graphs are in `artifacts/deploy/` (gitignored) | PASS |
+| Open-loop parity: 1 000 `select` inputs, TF32 off; `dp` per-step ε̂ ≤ 1e-4 (final chunk reported); `bc_dagger` action ≤ 1e-4; fp16 reported | `parity.csv`, `parity_steps.csv`. The three scored fp32 providers pass both arms: ε̂ ≤ 2.96e-5, action ≤ 3.04e-6. `ort_trt_fp16` fails both (P9-D1 item 4) | PASS |
+| Closed-loop parity: 150 `select` episodes, ≤ 3 flips against the CPU single-sample path (P3-D1 §6, replacing plan item 2) | `closed_loop.csv`. `bc_dagger` gets 0–2 flips (pass); `dp` gets 32–44 on the scored providers (fail). The reference re-flights equal the selection rows byte for byte. Read as outcome sensitivity (P9-D2 item 1) | PASS (test run as frozen) |
+| Latency with P8's method: ≥ 200 warm-up, ≥ 2 000 timed, synchronised; batch 1 and 24; encoder, step, K ∈ {1, 5, 10, 25}, end to end; four providers | `latency.csv` (117 rows: 81 timed, 36 refused for failed parity) and `jobs/*.json`. Batch 1 is from `3b2ae85` and batch 24 from `362e31c` | PASS |
+| H5(a) scored | **Not supported.** No scored provider passes both parities for `dp`, and every scored `dp_e2e` batch-1 p99 is above 33.3 ms: 52.6, 89.4 and 122.9 ms (`h5a.csv`, `hypotheses.json`) | PASS |
+| d derived; latency arm flown (`id` SS4–SS6, `dp` Ta = 8, K = 10, both arms, 5 seeds) | `delay.json`: `bc_dagger` d = 1 (`torch_cuda_fp32`, 4.32 ms); `dp` d = 6 (torch CPU fp32 fallback at 1 thread, 181.3 ms). Flown at `ae71f03` on a clean tree: 10 jobs, 6 000 episodes, d pinned in `results/e08/latency_pins.json`. The d = 0 identity holds on the real path (`d0_check.json`) | PASS |
+| H5(b) scored | **Not supported:** −15.9 points [−21.5, −10.5] at `id` SS5, joint-seed contrast, 5 × 200 (`hypotheses.csv`); margin −3. Caveats are stated (P9-D2 items 4–5) | PASS |
+| `results/latency/` has the parity, latency and latency-arm CSVs and `run_info.json` committed | Committed: `parity.csv`, `closed_loop.csv`, `latency.csv`, `h5a.csv`, `delay.json`, `d0_check.json` and `run_info.json`. The latency-arm rows and contrasts are in `results/e08/` (P8-D1's single matrix tree). `make bench-check` and `make report` re-render byte-identically | PASS |
+| CPU tests green | `make lint` clean (81 files). `make test` at `ff62393`: 1 244 passed, 0 failed (22 min 54 s), on an unchanging tree | PASS |
+| `results-skeptic` reports nothing BLOCKING (parity criteria, latency claims) | Pre-gate at `362e31c`: no BLOCKING; S1–S4 and M1–M6 fixed. Re-review at `b50a42d`: no BLOCKING or SERIOUS; 4 MINOR. Confirmation at `ff62393`: all closed, nothing blocks Gate 9 (reports not committed; P9-D2 *Reviews*) | PASS |
+
+*Reviewers.*
+- **`results-skeptic`:** nothing BLOCKING; every finding is closed.
+- **`privileged-leak-auditor`:** pre-flight GO, then a re-review GO with no LEAK and no RISK.
+
+*Deviations this phase.* None. No threshold, list, criterion or frozen config changed.
+`matrix.yaml` is unedited. The implementation choices are recorded in P9-D1 and the readings in
+P9-D2; both are decisions, not deviations.
+
+## Phase 10
+
+*Before you start (from Phase 9).*
+- **`dp`'s closed-loop sensitivity.** On `select`, seed 0's `dp` flips outcome on 32–44 of 150
+  episodes under numeric perturbations of order 1e-5 (P9-D2 item 1). That is more than 10× P8's
+  single-draw floor. `VALIDATION_CHECKLIST.md` lines on determinism and resolution should cite it
+  for every `dp` contrast.
+- **H5 wording for the README.**
+  - Both H5 parts are "not supported".
+  - H5(b)'s d = 6 is the CPU fallback's delay, not a GPU's; d = 2 under ORT CUDA was not flown.
+  - Latencies are wall clock on this machine and are not Froude-scaled.
+  - The `bc_dagger` delay cost is the cost of one control step.
+  - Quote `hypotheses.json`'s caveats with any H5 number.
+- **ONNX graphs** are in `artifacts/deploy/graphs/` (gitignored). Phase 11 ships them as release
+  assets with SHA-256s matching `results/latency/graphs.json`.
+- **First task:** walk `VALIDATION_CHECKLIST.md` line by line into `docs/LIMITATIONS.md`, then run
+  `/full-audit`.
