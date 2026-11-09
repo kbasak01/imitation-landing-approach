@@ -343,7 +343,7 @@ def fly_panels(panels: Sequence[Panel], *, workers: int = 4) -> list[PanelResult
 
 def student_job(arm: str) -> ev_arms.Job:
     """The core matrix job whose rows hold a student panel (``id``, seed 0)."""
-    m = ev_arms.load_matrix()
+    m = ev_arms.load_matrix(latency_arm=False)  # core arm jobs only (no delay.json needed)
     for j in m.jobs:
         if (j.tag, j.arm, j.seed, j.list_name) == ("core", arm, STUDENT_SEED, LIST_NAME):
             return j
@@ -469,7 +469,7 @@ def committed_panel_rows(root: Path) -> tuple[dict[str, list[dict[str, str]]], d
 
 def student_panel(arm: str, episode: p8_adapter.ListedEpisode) -> Panel:
     """A student panel: the arm's selected seed-0 checkpoint (bytes verified), core inference."""
-    spec = ev_arms.load_matrix().arm(arm)
+    spec = ev_arms.load_matrix(latency_arm=False).arm(arm)
     ckpt = ev_arms.resolve_checkpoint(spec, STUDENT_SEED)
     ev_arms.verify_checkpoint_bytes(ckpt)
     inf = None if spec.inference is None else spec.inference.as_tuple()

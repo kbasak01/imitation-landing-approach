@@ -1,4 +1,4 @@
-"""Phase 8 scoring: committed episode rows -> per-cell summaries, aggregates, contrasts, H1-H4.
+"""Scoring: committed episode rows -> per-cell summaries, aggregates, contrasts, H1-H5.
 
 Everything here is simulation only (PyBullet physics, PyBullet TinyRenderer frames). Success is
 dimensionless in ``[0, 1]`` ("points" are hundredths); speeds m/s, lengths m and times s, all
@@ -26,6 +26,14 @@ Inputs (:class:`ScoreInputs`, :func:`default_inputs`)
   ``results/phase5/dagger_iterations.csv`` ``aggregate_train_frames`` at iteration 5.
 * H4's best end-to-end student (:func:`ila.eval.hypotheses.best_end_to_end`) from the
   committed ``select`` selection records only.
+* Phase 9 (``latency_dir``, default ``results/latency``): H5(a) as ``ila.deploy.latency.score``
+  wrote it (``h5a.csv``, ``delay.json``; :func:`ila.eval.hypotheses.read_h5a`, never
+  re-derived), and ``delay.json``'s ``d`` per arm, cross-checked against the ``d`` the
+  ``latency_arm`` rows were flown with. H5(b) is scored from the ``latency_arm`` rows and the
+  core ``dp`` rows (:func:`ila.eval.hypotheses.score_h5b`); the latency arm's other cells
+  (``bc_dagger`` SS4-SS6, ``dp`` SS4 and SS6) are unscored context
+  (:func:`ila.eval.hypotheses.latency_context`). ``latency_arm`` cells are their own groups
+  (tag ``latency_arm``) in every table: never mixed into a core section.
 
 Outputs (deterministic: sorted rows, fixed float format :func:`fmt`, no timestamps)
 ---------------------------------------------------------------------------------
@@ -509,11 +517,14 @@ class CellIndex:
         cells: ``CellKey -> CellData``, in report order.
         groups: ``GroupKey -> expected seeds`` (ascending), in report order.
         files: Rows files read: relative path -> ``{"rows_gz_sha256", "n_rows"}``.
+        latency: ``latency_arm`` groups -> their ``d`` (control steps); every other group's
+            rows carry ``latency_steps`` 0.
     """
 
     cells: Mapping[CellKey, CellData]
     groups: Mapping[GroupKey, tuple[int, ...]]
     files: Mapping[str, Mapping[str, Any]]
+    latency: Mapping[GroupKey, int] = field(default_factory=dict)
 
     def group_cells(self, g: GroupKey) -> list[CellData]:
         """The group's cells, one per expected seed, ascending seed."""
@@ -548,7 +559,7 @@ class CellIndex:
             and (inference is None or (g.Ta, g.K, g.ensemble) == inference)
         ]
         if inference is None and tag is None:
-            hits = [g for g in hits if g.tag != "dp_Ta" and g.tag != "dp_K"]
+            hits = [g for g in hits if g.tag not in ("dp_Ta", "dp_K", ev_arms.LATENCY_TAG)]
         if len(hits) > 1:
             raise ScoreInputError(f"{arm} {list_name} {ss}: {len(hits)} groups match")
         return hits[0] if hits else None
@@ -645,7 +656,7 @@ def _check_cell(
         "Ta": "" if ta is None else str(ta),
         "K": "" if k is None else str(k),
         "ensemble": "" if ens is None else str(ens),
-        "latency_steps": "0",
+        "latency_steps": str(job.latency_steps or 0),
     }
     for col, value in want.items():
         bad = {str(r[col]) for r in rows} - {value}
@@ -683,8 +694,12 @@ def load_cells(
             files[rel] = _read_file(root, rel)
     order = _group_sort(matrix)
     groups: dict[GroupKey, list[int]] = {}
-    for key in expected:
+    latency: dict[GroupKey, int] = {}
+    for key, (job, _) in expected.items():
         groups.setdefault(key.group, []).append(key.seed)
+        d = job.latency_steps
+        if d is not None and latency.setdefault(key.group, d) != d:
+            raise ScoreInputError(f"{key.group.label}: two delays in one group")
     sorted_groups = {g: tuple(sorted(groups[g])) for g in sorted(groups, key=order)}
     cells: dict[CellKey, CellData] = {}
     for g, seeds in sorted_groups.items():
@@ -705,7 +720,7 @@ def load_cells(
             _check_cell(key, job, rows, episodes_per_cell)
             cells[key] = CellData(key, rel, shared, rows)
     done = {rel: v[1] for rel, v in sorted(files.items()) if v is not None}
-    return CellIndex(cells=cells, groups=sorted_groups, files=done)
+    return CellIndex(cells=cells, groups=sorted_groups, files=done, latency=latency)
 
 
 # --------------------------------------------------------------------------- baselines
@@ -961,6 +976,9 @@ class ScoreInputs:
         best_sources: What the best end-to-end choice was read from.
         episodes_per_cell: Rows per present cell (200 on a frozen list).
         list_cells: List -> its cells in list order (for ``baselines.csv``).
+        extra: Extra ``score_info.json`` keys.
+        latency_dir: ``results/latency`` (H5(a)'s ``h5a.csv`` and ``delay.json``), or
+            ``None`` (H5(a) not scored; H5(b) without the delay record beside it).
     """
 
     matrix: ev_arms.Matrix
@@ -974,6 +992,7 @@ class ScoreInputs:
     list_cells: Mapping[str, Sequence[str]]
     episodes_per_cell: int = ev_arms.EPISODES_PER_CELL
     extra: Mapping[str, Any] = field(default_factory=dict)
+    latency_dir: Path | None = None
 
 
 def _seeds_of(index: CellIndex, g: GroupKey) -> tuple[int, ...]:
@@ -997,6 +1016,7 @@ def _student(index: CellIndex, g: GroupKey | None) -> tuple[hy.ArmMatrix | None,
             ta=g.Ta,
             k=g.K,
             ensemble=g.ensemble,
+            latency_steps=index.latency.get(g, 0),
         ),
         "",
     )
@@ -1312,20 +1332,258 @@ def _hyp_record(res: hy.HypothesisResult, inputs: str) -> dict[str, Any]:
     return rec
 
 
-_H5: Final[tuple[tuple[str, str, str], ...]] = (
-    (
-        "H5(a)",
-        "exported dp (K = 10), batch 1",
-        "not scored in Phase 8 (Phase 9): p99 latency on this machine needs Phase 9's "
-        "export, parity and latency study (P3-D1 §6 H5(a))",
-    ),
-    (
-        "H5(b)",
-        "id SS5",
-        "not scored in Phase 8 (Phase 9): the latency arm's delay d comes from H5(a) "
-        "(P3-D1 §6 H5(b), §7, §8); matrix.yaml's latency_arm block is not flown here",
-    ),
+#: The latency arm's unscored context cells (P3-D1 §7: H5(b) is scored at ``id`` SS5 only).
+_LATENCY_CONTEXT: Final[tuple[tuple[str, str], ...]] = (
+    ("bc_dagger", "SS4"),
+    ("bc_dagger", "SS5"),
+    ("bc_dagger", "SS6"),
+    ("dp", "SS4"),
+    ("dp", "SS6"),
 )
+
+
+def _latency_d(matrix: ev_arms.Matrix, arm: str) -> int | None:
+    """The ``d`` the matrix's ``latency_arm`` jobs of ``arm`` fly with (``None``: none)."""
+    ds = {
+        j.latency_steps
+        for j in matrix.jobs
+        if j.tag == ev_arms.LATENCY_TAG and j.arm == arm and j.latency_steps is not None
+    }
+    if len(ds) > 1:
+        raise ScoreInputError(f"latency_arm {arm}: more than one d {sorted(ds)}")
+    return next(iter(ds)) if ds else None
+
+
+def _delay_records(inp: ScoreInputs) -> dict[str, Any] | None:
+    """``delay.json`` under ``inp.latency_dir`` (``None`` when absent)."""
+    if inp.latency_dir is None or not (inp.latency_dir / "delay.json").is_file():
+        return None
+    rec: dict[str, Any] = json.loads((inp.latency_dir / "delay.json").read_text(encoding="utf-8"))
+    return rec
+
+
+def _check_delays(inp: ScoreInputs) -> dict[str, Any]:
+    """The flown ``d`` per arm against ``delay.json`` (``score_info.json``'s ``latency``).
+
+    Raises:
+        ScoreInputError: If ``delay.json`` exists and names another ``d`` than the rows'.
+    """
+    rec = _delay_records(inp)
+    flown = {a: _latency_d(inp.matrix, a) for a in ("bc_dagger", "dp")}
+    if rec is not None:
+        for arm, d in flown.items():
+            want = rec.get("arms", {}).get(arm, {}).get("d")
+            if d is not None and want != d:
+                raise ScoreInputError(f"latency_arm {arm}: flown d {d} != delay.json d {want}")
+    out: dict[str, Any] = {"flown_d": flown}
+    if rec is not None and inp.latency_dir is not None:
+        out["delay_json_sha256"] = _sha256((inp.latency_dir / "delay.json").read_bytes())
+    if inp.latency_dir is not None:
+        out.update(latency_stage_commits(inp.latency_dir))
+    return out
+
+
+#: Phase 9 tables whose rows carry the commit that produced them (``ila_commit`` column).
+_LATENCY_ROW_COMMITS: Final[tuple[str, ...]] = ("latency.csv", "closed_loop.csv")
+
+
+def latency_stage_commits(latency_dir: Path) -> dict[str, Any]:
+    """The ila commits of Phase 9's latency stages (``results/latency/run_info.json``).
+
+    ``run_info.json`` keeps the last invocation of each stage; the per-row ``ila_commit``
+    columns of ``latency.csv`` and ``closed_loop.csv`` are added, so a commit that produced
+    committed rows is listed even when a later invocation of its stage replaced the stage
+    record (batch-1 and batch-24 latency rows come from different commits).
+
+    Returns:
+        ``{"stage_commits": [{"ila_commit", "stages", "dirty_outside_results",
+        "dirty_inside_results_only"}], "run_info_sha256": ...}`` sorted by commit, or ``{}``
+        when ``run_info.json`` is absent.
+    """
+    path = latency_dir / "run_info.json"
+    if not path.is_file():
+        return {}
+    raw = path.read_bytes()
+    stages: dict[str, set[str]] = {}
+    dirty_out: dict[str, bool] = {}
+    dirty_in: dict[str, bool] = {}
+    for name, rec in sorted(json.loads(raw).get("stages", {}).items()):
+        vcs = rec.get("git", {})
+        commit = str(vcs.get("ila_commit", ""))
+        if not commit:
+            continue
+        stages.setdefault(commit, set()).add(name)
+        dirty_out[commit] = dirty_out.get(commit, False) or bool(vcs.get("dirty_outside_results"))
+        dirty_in[commit] = dirty_in.get(commit, False) or (
+            bool(vcs.get("dirty")) and not bool(vcs.get("dirty_outside_results"))
+        )
+    for fname in _LATENCY_ROW_COMMITS:
+        f = latency_dir / fname
+        if not f.is_file():
+            continue
+        for row in read_csv(f):
+            commit = row.get("ila_commit", "")
+            if commit:
+                stages.setdefault(commit, set()).add(f"{fname} rows")
+    # Per-job and per-flight records keep their own tree state, which survives a later
+    # invocation replacing the stage record (results-skeptic re-review MINOR 1).
+    for rec_path in sorted(
+        [*latency_dir.glob("jobs/*.json"), *latency_dir.glob("closed_loop/*/*.json")]
+    ):
+        vcs = json.loads(rec_path.read_text(encoding="utf-8")).get("git", {})
+        commit = str(vcs.get("ila_commit", ""))
+        if commit not in stages:
+            continue
+        dirty_out[commit] = dirty_out.get(commit, False) or bool(vcs.get("dirty_outside_results"))
+        dirty_in[commit] = dirty_in.get(commit, False) or (
+            bool(vcs.get("dirty")) and not bool(vcs.get("dirty_outside_results"))
+        )
+    return {
+        "stage_commits": [
+            {
+                "ila_commit": c,
+                "stages": sorted(stages[c]),
+                "dirty_outside_results": dirty_out.get(c, False),
+                "dirty_inside_results_only": dirty_in.get(c, False),
+            }
+            for c in sorted(stages)
+        ],
+        "run_info_sha256": _sha256(raw),
+    }
+
+
+def _score_h5a(inp: ScoreInputs, out: _Scored) -> None:
+    """H5(a), read from the deploy scorer's committed output (never re-derived)."""
+    if inp.latency_dir is None:
+        rec: dict[str, Any] = {
+            "hypothesis": "H5(a)",
+            "cell": "exported dp (K = 10), dp_e2e, batch 1",
+            "kind": "latency",
+            "status": "not scored: no latency results directory given",
+        }
+    else:
+        rec = hy.read_h5a(inp.latency_dir)
+    row = {c: rec.get(c) for c in HYPOTHESIS_COLUMNS if c in rec}
+    if rec["status"] == "scored":
+        row.update(
+            n_seeds="dp 1 (seed 0's selected checkpoint; applies to all five seeds)",
+            inputs="; ".join(rec["inputs"]),
+            ceiling_limited=False,
+            notes="",
+            caveats_see=CAVEATS_SEE,
+        )
+    out.hypotheses.append(row)
+    out.records.append(rec)
+
+
+def _score_h5b(
+    index: CellIndex, inp: ScoreInputs, out: _Scored, facts: hy.LatencyFacts | None = None
+) -> None:
+    """H5(b) at ``id`` SS5 and the latency arm's unscored context cells.
+
+    ``facts`` (Phase 9's results) supply why ``d`` is what it is, the bc_dagger delay reading
+    and this ``dp``'s measured closed-loop flip rate beside every ``dp`` contrast.
+    """
+    flip_note = _dp_flip_note(facts)
+    core_inf = (8, 10, False)
+    d_dp = _latency_d(inp.matrix, "dp")
+    delay = _delay_records(inp)
+    lat_side, why_l = (None, "latency_arm dp is not in the matrix")
+    if d_dp is not None:
+        lat_side, why_l = _student_side(
+            index, _g(index, "dp", "SS5", tag=ev_arms.LATENCY_TAG, inference=core_inf)
+        )
+    sync_side, why_s = _student_side(index, _g(index, "dp", "SS5", tag="core", inference=core_inf))
+    if lat_side is None or sync_side is None or d_dp is None:
+        why = "; ".join(w for w in (why_l, why_s) if w)
+        out.hypotheses.append(_hyp_missing("H5(b)", "id SS5", why))
+        out.records.append(_hyp_missing("H5(b)", "id SS5", why))
+        out.contrasts.append(
+            _missing_contrast(
+                "H5(b)", "scored", "H5(b)", (_ID, "SS5"), "dp latency arm", "dp", why
+            )  # fmt: skip
+        )
+    else:
+        ss6, _ = _student(index, _g(index, "dp", "SS6", tag="core", inference=core_inf))
+        static, _ = _student(index, index.find("dp", "static", "static", tag="core",
+                                               inference=core_inf))  # fmt: skip
+        res = hy.score_h5b(
+            lat_side.m,
+            sync_side.m,
+            delay_steps=d_dp,
+            delay_record=None if delay is None else delay.get("arms", {}).get("dp"),
+            sync_ss6=ss6,
+            sync_static=static,
+            facts=facts,
+        )
+        inputs = _inputs(lat_side, sync_side)
+        out.hypotheses.append(_hyp_row(res, inputs))
+        out.records.append(_hyp_record(res, inputs))
+        out.contrasts.append(
+            _with_note(
+                _from_result(res, (_ID, "SS5"), f"dp latency d={d_dp}", "dp synchronous", inputs),
+                flip_note,
+            )
+        )
+        out.contrasts.append(
+            {
+                **_rel_p95(
+                    "H5(b) relative p95 closing speed",
+                    "H5(b)",
+                    lat_side,
+                    sync_side,
+                    note="same checkpoints; P8's function resamples seeds per side (not jointly)"
+                    + (f"; {flip_note}" if flip_note else ""),
+                    names=(f"dp latency d={d_dp}", "dp synchronous"),
+                ),
+                "a": f"dp latency d={d_dp}",
+                "b": "dp synchronous",
+            }
+        )
+    for arm, ss in _LATENCY_CONTEXT:
+        d = _latency_d(inp.matrix, arm)
+        name = f"H5(b) context: {arm} latency arm - synchronous ({ss}, unscored)"
+        inf = core_inf if ev_arms.is_diffusion(arm) else None
+        if d is None:
+            out.contrasts.append(
+                _missing_contrast(
+                    name,
+                    "descriptive, unscored",
+                    "H5(b)",
+                    (_ID, ss),
+                    arm,
+                    arm,
+                    "latency_arm is not in the matrix",
+                )  # fmt: skip
+            )
+            continue
+        sl, w1 = _student_side(index, _g(index, arm, ss, tag=ev_arms.LATENCY_TAG, inference=inf))
+        sy, w2 = _student_side(index, _g(index, arm, ss, tag="core", inference=inf))
+        if sl is None or sy is None:
+            why = "; ".join(w for w in (w1, w2) if w)
+            out.contrasts.append(
+                _missing_contrast(name, "descriptive, unscored", "H5(b)", (_ID, ss), arm, arm, why)
+            )
+            continue
+        u = hy.latency_context(sl.m, sy.m, delay_steps=d, facts=facts)
+        out.contrasts.append(_from_unscored(u, "descriptive, unscored", "H5(b)", _inputs(sl, sy)))
+        names = (f"{arm} latency d={d}", f"{arm} synchronous")
+        p95_flip = f"; {flip_note}" if flip_note and arm == "dp" else ""
+        out.contrasts.append(
+            {
+                **_rel_p95(
+                    f"{name} relative p95 closing speed",
+                    "H5(b)",
+                    sl,
+                    sy,
+                    note="same checkpoints; P8's function resamples seeds per side (not jointly)"
+                    + p95_flip,
+                    names=names,
+                ),
+                "a": names[0],
+                "b": names[1],
+            }
+        )
 
 
 def _score_h1(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
@@ -1401,7 +1659,19 @@ def _score_h2(index: CellIndex, inp: ScoreInputs, out: _Scored) -> hy.H2Referenc
     return ref
 
 
-def _score_h3(index: CellIndex, out: _Scored) -> None:
+def _dp_flip_note(facts: hy.LatencyFacts | None) -> str:
+    """Phase 9's measured dp flip rate as a contrast-note sentence ("" before Phase 9)."""
+    text = None if facts is None else facts.dp_flip_text()
+    return f"{hy.DP_FLIP_LABEL}: {text}." if text else ""
+
+
+def _with_note(row: dict[str, Any], extra: str) -> dict[str, Any]:
+    if extra:
+        row["note"] = f"{row['note']}; {extra}" if row.get("note") else extra
+    return row
+
+
+def _score_h3(index: CellIndex, out: _Scored, facts: hy.LatencyFacts | None = None) -> None:
     g1 = _g(index, "dp", "SS6", tag="dp_Ta", inference=(1, 10, False))
     g8 = _g(index, "dp", "SS6", tag="dp_Ta", inference=(8, 10, False))
     s1, why1 = _student_side(index, g1)
@@ -1436,17 +1706,22 @@ def _score_h3(index: CellIndex, out: _Scored) -> None:
             f"H3's P6-D5 caveat needs dp at Ta = 8 on the static list ({ws}); the SS6 contrast "
             "is present, so the caveat would be silently shortened"
         )
-    res = hy.score_h3(s1.m, s8.m, other_ss=other, static_ta8=static)
+    dp_flip = None if facts is None else facts.dp_flip_text()
+    res = hy.score_h3(s1.m, s8.m, other_ss=other, static_ta8=static, dp_flip=dp_flip)
     inputs = _inputs(s1, s8)
+    flip_note = _dp_flip_note(facts)
     out.hypotheses.append(_hyp_row(res, inputs))
     out.records.append(_hyp_record(res, inputs))
-    out.contrasts.append(_from_result(res, (_ID, "SS6"), "dp Ta=1", "dp Ta=8", inputs))
+    out.contrasts.append(
+        _with_note(_from_result(res, (_ID, "SS6"), "dp Ta=1", "dp Ta=8", inputs), flip_note)
+    )
     rel = _rel_p95(
         "H3 relative p95 closing speed",
         "H3",
         s1,
         s8,
-        note="same checkpoints; P8's function resamples seeds per side (not jointly)",
+        note="same checkpoints; P8's function resamples seeds per side (not jointly)"
+        + (f"; {flip_note}" if flip_note else ""),
         names=("dp Ta=1", "dp Ta=8"),
     )
     out.contrasts.append({**rel, "a": "dp Ta=1", "b": "dp Ta=8"})
@@ -1544,7 +1819,16 @@ def _score_h4(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
         )
 
 
-def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
+#: Which dp the Phase 9 flip rate was measured on, where a contrast also has dp_mix.
+_CORE_DP_ONLY: Final[str] = " (core dp only; not measured for dp_mix)"
+
+
+def _descriptives(
+    index: CellIndex, inp: ScoreInputs, out: _Scored, facts: hy.LatencyFacts | None = None
+) -> None:
+    """Unscored descriptives; ``facts`` add the measured dp flip rate beside dp's H2 rows."""
+    flip_note = _dp_flip_note(facts)
+    dp_flip = f"; {flip_note[:-1]}{_CORE_DP_ONLY}." if flip_note else ""
     # bc_dart - bc_matched at id SS5 and SS6 (1 000 vs 2 000 labelled episodes).
     for ss in ("SS5", "SS6"):
         sd, why1 = _student_side(index, _g(index, "bc_dart", ss, tag="core"))
@@ -1581,7 +1865,8 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
             "H2",
             sb,
             sx,
-            note="different training data as well as teacher; 5 vs 3 seeds (P3-D1 §8)",
+            note="different training data as well as teacher; 5 vs 3 seeds (P3-D1 §8)"
+            + (dp_flip if base == "dp" else ""),
         )
         drops[base] = float(rec["estimate"])
         drop_inputs.append(str(rec["inputs"]))
@@ -1601,7 +1886,7 @@ def _descriptives(index: CellIndex, inp: ScoreInputs, out: _Scored) -> None:
                 units=_UNITS_SUCCESS,
                 reading=f"{UNPAIRED}: point estimate only, no CI (unscored, P3-D1 §8)",
                 status="computed",
-                note="plan §1.8's directional secondary, unscored by P3-D1 §8",
+                note="plan §1.8's directional secondary, unscored by P3-D1 §8" + dp_flip,
                 inputs="; ".join(drop_inputs),
             )
         )
@@ -1851,6 +2136,7 @@ def default_inputs(root: Path = OUT_ROOT) -> ScoreInputs:
         best_end_to_end=best,
         best_sources=best_sources,
         list_cells=ev_arms.frozen_list_cells(),
+        latency_dir=p8_adapter.REPO_ROOT / "results" / "latency",
     )
 
 
@@ -1903,12 +2189,13 @@ def run_score(inp: ScoreInputs, out_dir: Path | None = None) -> dict[str, Any]:
     scored = _Scored()
     _score_h1(index, inp, scored)
     ref = _score_h2(index, inp, scored)
-    _score_h3(index, scored)
+    facts = None if inp.latency_dir is None else hy.read_latency_facts(inp.latency_dir)
+    _score_h3(index, scored, facts)
     _score_h4(index, inp, scored)
-    _descriptives(index, inp, scored)
-    for name, cell, text in _H5:
-        scored.hypotheses.append({"hypothesis": name, "cell": cell, "status": text})
-        scored.records.append({"hypothesis": name, "cell": cell, "status": text})
+    _descriptives(index, inp, scored, facts)
+    latency_info = _check_delays(inp)
+    _score_h5a(inp, scored)
+    _score_h5b(index, inp, scored, facts)
     write_csv(out / "contrasts.csv", CONTRAST_COLUMNS, scored.contrasts)
     write_csv(out / "hypotheses.csv", HYPOTHESIS_COLUMNS, scored.hypotheses)
     dump_json(
@@ -1949,6 +2236,7 @@ def run_score(inp: ScoreInputs, out_dir: Path | None = None) -> dict[str, Any]:
             "no_multiplicity": hy.NO_MULTIPLICITY,
         },
         "flip_floor_ss6": p8_adapter.FLIP_FLOOR_SS6.sentence,
+        "latency_arm": latency_info,
         **dict(inp.extra),
     }
     dump_json(out / "score_info.json", info)

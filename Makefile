@@ -30,7 +30,9 @@ DIAG    ?= --arm dp --seeds 0 1 2 3 4
 EVAL    ?=
 
 .PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
-        select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all
+        select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all \
+        bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check \
+        bench-recheck-reference bench-d0-check
 
 # --- implemented ------------------------------------------------------------------
 
@@ -147,11 +149,36 @@ figures: ; $(PY) scripts/make_figures.py
 # Background job: mkdir -p artifacts/runs/gifs && nohup make gifs > artifacts/runs/gifs/run.log 2>&1 &
 gifs: ; $(PY) scripts/make_gifs.py
 
-# --- not yet implemented ----------------------------------------------------------
-# One stub per target in REPO_SETUP.md §5; each exits 0 so `make all` lists every stage.
-# Replace the stub in its own phase.
-
-bench:        ; @echo "not implemented: phase 9"
+# Phase 9 (P9-D1; configs/deploy/bench.yaml): ONNX export, open-loop parity on 1 000 select
+# inputs, closed-loop parity on the 150 select episodes, latency, H5(a) and the delay d ->
+# results/latency/ (+ run_info.json). Graphs, inputs, the reference and TensorRT caches go to
+# artifacts/deploy/ (gitignored). Every stage but bench-check refuses a dirty tree outside
+# results/latency/ and records ila_commit. BENCH passes flags (e.g. BENCH="--providers
+# ort_cpu_fp32", BENCH="--batches 1"). Foreground (minutes): bench-export, bench-inputs,
+# bench-parity, bench-score, bench-check. Background (hours; prepare with /train-job):
+#   mkdir -p artifacts/runs/bench && nohup make bench-closed-loop > artifacts/runs/bench/closed_loop.log 2>&1 &
+#   mkdir -p artifacts/runs/bench && nohup make bench-latency > artifacts/runs/bench/latency.log 2>&1 &
+# The latency arm itself is flown by the Phase 8 driver once eval-auditor enables its block.
+BENCH ?=
+bench-export:      ; $(PY) scripts/deploy/bench.py export $(BENCH)
+bench-inputs:      ; $(PY) scripts/deploy/bench.py inputs $(BENCH)
+bench-parity:      ; $(PY) scripts/deploy/bench.py parity $(BENCH)
+bench-closed-loop: ; $(PY) scripts/deploy/bench.py closed-loop $(BENCH)
+bench-latency:     ; $(PY) scripts/deploy/bench.py latency $(BENCH)
+bench-score:       ; $(PY) scripts/deploy/bench.py score
+# --check mode: every results/latency table re-rendered from its committed records, byte for byte;
+# results/latency/d0_check.json (once flown) re-decided from its rows files' bytes, no flight.
+bench-check:       ; $(PY) scripts/deploy/bench.py check
+# Re-decides reference_equals_selection_rows of the reference records from file bytes (no flight).
+bench-recheck-reference: ; $(PY) scripts/deploy/bench.py recheck-reference $(BENCH)
+# P3-D1 §7 "d = 0 equals the synchronous arm", on the real arms: the latency arm's delayed build
+# at d = 0 on the seed-0 pinned bc_dagger and dp (Ta 8, K 10, no ensembling), 150 select
+# episodes, CPU fp32 single-sample path (24 workers, ~1-2 min per arm); each rows file compared
+# byte for byte with the committed selection rows -> results/latency/d0_check.json and
+# d0_check/<arm>_rows.csv. Refuses a dirty tree outside results/latency/. Background:
+#   mkdir -p artifacts/runs/bench && nohup make bench-d0-check > artifacts/runs/bench/d0_check.log 2>&1 &
+bench-d0-check:    ; $(PY) scripts/deploy/bench.py d0-check $(BENCH)
+bench: bench-export bench-inputs bench-parity bench-closed-loop bench-d0-check bench-latency bench-score
 
 # The project in methodology order. Long jobs (collect, train-bg, dagger-bg) are launched by
 # hand from /train-job and are not in `all`.

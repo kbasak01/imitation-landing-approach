@@ -1,0 +1,41 @@
+# Phase 9 bench: ONNX export, open-loop and closed-loop parity, latency, the latency-arm delay.
+# Read by ila.deploy.settings.load_settings into a frozen BenchSettings (P3-D1 §6 H5, §7; P9-D1).
+# Simulation only. Times are model scale (lambda = 1/25): one 30 Hz control step is 33.333 ms
+# model scale (166.7 ms full scale). Nothing here is a threshold that P3-D1 does not state.
+arms:
+  bc_dagger: {seed: 0}                       # seed 0's pinned selection (results/e08/selection_pins.json)
+  dp: {seed: 0, Ta: 8, K: 10}                # the exported unrolled graph is K = 10, DDIM trailing
+selection_pins: results/e08/selection_pins.json
+export:
+  opset: 17
+  precisions: [fp32, fp16]                   # fp16 = onnxruntime.transformers.float16, I/O kept fp32
+  out_dir: artifacts/deploy                  # gitignored; meta.json records every SHA-256
+inputs:                                      # the 1 000 fixed open-loop inputs (P3-D1 §6 H5(a))
+  list: select                               # splits/select.parquet only; never a frozen list
+  policy: ppo                                # flown by P8's ppo s0 teacher, CPU path, render full
+  n: 1000
+  draw_seed: 20261023                        # numpy default_rng, without replacement
+  noise_episode_key: -100                    # noise key (run_seed, -100, i) of input i (never a P8 seed)
+parity:
+  eps_max_abs: 1.0e-4                        # judged: dp per-step eps-hat (P3-D1 §6 H5(a))
+  action_max_abs: 1.0e-4                     # judged: bc_dagger action (P3-D1 §7)
+  chunk_reported: 1.0e-3                     # reported, not judged (x2 029 first-step gain, P3-D1 §8)
+  closed_loop_max_flips: 3                   # of the 150 select episodes; binding (P3-D1 §3, §6)
+providers:
+  reference: torch_cpu_fp32                  # torch fp32 CPU, B = 1, one thread
+  scored: [ort_cpu_fp32, ort_cuda_fp32, torch_cuda_fp32, ort_trt_fp16]
+  unscored: [ort_trt_fp32, ort_cuda_fp16]    # reported beside, never scored (P3-D1 §6 H5(a))
+closed_loop:
+  workers_cpu: 24                            # CPU rows do not depend on it (P2-D3 item 1)
+  workers_gpu: 6                             # one CUDA context per worker
+  chunk: 10
+latency:
+  warmup_iters: 200
+  timed_iters: 2000
+  batch_sizes: [1, 24]                       # 24 = the evaluation batch (24 workers, BATCH_CAPS max)
+  threads: 1
+  k_loop: [1, 5, 10, 25]
+  reference_batch_sizes: [1]                 # torch CPU fp32 is the fallback of P3-D1 §6, batch 1 only
+control_period_ms: 33.333                    # P3-D1 §7: d = ceil(p99 / 33.333 ms)
+h5a_threshold_ms: 33.3                       # P3-D1 §6 H5(a) as written: p99 < 33.3 ms
+results_dir: results/latency

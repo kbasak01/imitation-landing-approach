@@ -1,0 +1,81 @@
+{
+  "env": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "cpu_count": "36",
+    "cuda": "13.0",
+    "cudnn": "92000",
+    "git_commit": "3b2ae85-dirty",
+    "gpu": "NVIDIA RTX A4000",
+    "nvidia_driver": "596.71",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "onnxruntime_package": "onnxruntime-gpu",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "tensorrt": "10.16.1.11",
+    "torch": "2.13.0+cu130",
+    "torch_default_threads": "1"
+  },
+  "git": {
+    "dirty": true,
+    "dirty_outside_results": false,
+    "dirty_paths": [
+      " M results/latency/run_info.json",
+      "?? results/latency/closed_loop.csv",
+      "?? results/latency/closed_loop/bc_dagger/ort_cpu_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp16.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/ort_trt_fp16.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_trt_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_trt_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/torch_cpu_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/torch_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/torch_cuda_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/torch_cuda_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/ort_cpu_fp32.json",
+      "?? results/latency/closed_loop/dp/ort_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/ort_cuda_fp16.json",
+      "?? results/latency/closed_loop/dp/ort_cuda_fp32.json",
+      "?? results/latency/closed_loop/dp/ort_cuda_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/ort_trt_fp16.json",
+      "?? results/latency/closed_loop/dp/ort_trt_fp32.json",
+      "?? results/latency/closed_loop/dp/ort_trt_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/torch_cpu_fp32.json",
+      "?? results/latency/closed_loop/dp/torch_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/torch_cuda_fp32.json",
+      "?? results/latency/closed_loop/dp/torch_cuda_fp32_rows.csv"
+    ],
+    "ila_commit": "3b2ae853487678c16d40b9e813f4edb43435983b"
+  },
+  "job": {
+    "batch": 1,
+    "provider": "ort_cuda_fp32",
+    "row": "dp_loop_K25",
+    "threads": 1,
+    "timed": 2000,
+    "warmup": 200
+  },
+  "label": "dp_loop_K25-ort_cuda_fp32-b1-t1",
+  "max_ms": 183.45010300981812,
+  "mean_ms": 142.6488258386089,
+  "n_distinct_batches": 1000,
+  "nvidia_tf32_override": "0",
+  "p50_ms": 138.1110064976383,
+  "p90_ms": 161.57350539288018,
+  "p99_ms": 167.4558652585256,
+  "peak_device_mem_mib": 198.0,
+  "peak_host_mem_mib": 1658.265625,
+  "providers_realized": {
+    "dp_denoise_step.onnx": [
+      "CUDAExecutionProvider",
+      "CPUExecutionProvider"
+    ]
+  },
+  "status": "timed",
+  "std_ms": 10.993026740598685,
+  "tf32": false,
+  "throughput_per_s": 7.010222440466404,
+  "wall_s": 313.39506161402096
+}

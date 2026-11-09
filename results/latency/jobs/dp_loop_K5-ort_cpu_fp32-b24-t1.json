@@ -1,0 +1,53 @@
+{
+  "env": {
+    "cpu": "Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz",
+    "cpu_count": "36",
+    "cuda": "13.0",
+    "cudnn": "92000",
+    "git_commit": "362e31c-dirty",
+    "gpu": "NVIDIA RTX A4000",
+    "nvidia_driver": "596.71",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "onnxruntime_package": "onnxruntime-gpu",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "tensorrt": "10.16.1.11",
+    "torch": "2.13.0+cu130",
+    "torch_default_threads": "1"
+  },
+  "git": {
+    "dirty": false,
+    "dirty_outside_results": false,
+    "dirty_paths": [],
+    "ila_commit": "362e31ca3a85a9e61e1773b9276967ab917509e8"
+  },
+  "job": {
+    "batch": 24,
+    "provider": "ort_cpu_fp32",
+    "row": "dp_loop_K5",
+    "threads": 1,
+    "timed": 2000,
+    "warmup": 200
+  },
+  "label": "dp_loop_K5-ort_cpu_fp32-b24-t1",
+  "max_ms": 759.3108889996074,
+  "mean_ms": 682.0947291693301,
+  "n_distinct_batches": 41,
+  "nvidia_tf32_override": "0",
+  "p50_ms": 680.7078145066043,
+  "p90_ms": 694.53951921314,
+  "p99_ms": 726.8443423139979,
+  "peak_device_mem_mib": 0.0,
+  "peak_host_mem_mib": 1246.39453125,
+  "providers_realized": {
+    "dp_denoise_step.onnx": [
+      "CPUExecutionProvider"
+    ]
+  },
+  "status": "timed",
+  "std_ms": 11.522547200770765,
+  "tf32": false,
+  "throughput_per_s": 35.18572857061617,
+  "wall_s": 1499.6478627150063
+}

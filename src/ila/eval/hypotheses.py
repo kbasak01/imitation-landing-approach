@@ -1,4 +1,4 @@
-"""Scoring of H1-H4 exactly as frozen in P3-D1 §6 (Phase 8); H5 is Phase 9's.
+"""Scoring of H1-H5 exactly as frozen in P3-D1 §6 (H1-H4 Phase 8; H5(a), H5(b) Phase 9).
 
 Everything here is simulation only (PyBullet physics, PyBullet TinyRenderer frames). Success is
 dimensionless in ``[0, 1]``; "points" are hundredths of it. Times are seconds, model scale
@@ -10,9 +10,11 @@ Episode rows (CSV-read mappings, string or typed cells) become :class:`ArmMatrix
 :func:`student_matrix` (this project's rows: ``arm``, ``student_seed``, ``Ta``, ``K``,
 ``ensemble``, ``latency_steps``, ``render_cfg_sha256``, ``ckpt_sha256``) or :func:`p8_matrix`
 (P8's committed rows: ``method``, ``run_seed``). Both select one cell (``regime``, ``ss``),
-refuse a missing or extra seed (no seed is dropped, P3-D1 §4), refuse rows of the latency arm
-or of a non-committed render (appearance shift, ``camera``), and require every seed to cover
-the same episodes exactly once. Contrasts then require identical episodes on both sides.
+refuse a missing or extra seed (no seed is dropped, P3-D1 §4), refuse rows of a non-committed
+render (appearance shift, ``camera``), and require every seed to cover the same episodes exactly
+once. :func:`student_matrix` keeps only rows of one ``latency_steps`` (0, the synchronous arm,
+unless the latency arm's ``d`` is asked for), so latency-arm rows never enter a synchronous
+matrix. Contrasts then require identical episodes on both sides.
 
 Scorers and their rules (P3-D1 §6, verbatim in substance)
 ----------------------------------------------------------
@@ -39,9 +41,23 @@ Scorers and their rules (P3-D1 §6, verbatim in substance)
 * :func:`score_h4`: ``id`` SS6; D = P - I (:func:`ila.eval.stats.h4_three_arm_bootstrap`);
   supported: D > 0 and the CI excludes 0; not supported otherwise, a CI wholly below 0 printed
   as "imitation gap larger".
+* :func:`score_h5b`: ``id`` SS5, latency-arm ``dp`` minus synchronous ``dp`` (``Ta = 8``,
+  ``K = 10``, no ensembling) on the same checkpoints (:func:`ila.eval.stats.joint_seed_contrast`).
+  Supported (non-inferior): the CI lower bound >= -3 points (within :data:`MAGNITUDE_TOL`).
+  Not supported: otherwise. No two-sided reversal (P3-D1 §6): a CI wholly above 0 is reported
+  as non-inferior, never as an effect in the other direction (:func:`noninferiority_rule`).
+* :func:`read_h5a`: H5(a) is scored by ``ila.deploy.latency.score`` (``make bench-score``);
+  its verdict is read from ``results/latency/delay.json`` and ``h5a.csv`` as written, checked
+  for consistency, never re-derived here.
+* :func:`read_latency_facts`: every Phase 9 number quoted in a sentence (why H5(a) failed,
+  why ``d`` is what it is, the bc_dagger delay reading, this ``dp``'s measured closed-loop flip
+  rate printed beside every ``dp`` contrast) is read from ``results/latency`` when the scorer
+  runs; nothing is retyped. Delays are d control steps of simulated time (d x 33.3 ms model
+  scale, d x 166.7 ms full scale); measured wall-clock latency is never scaled.
 * Unscored, two-sided (:class:`UnscoredContrast`): :func:`h4_p_prime`, :func:`modular_vs_best`
-  (the best end-to-end student from committed ``select`` scores, :func:`best_end_to_end`) and
-  :func:`dart_vs_matched`.
+  (the best end-to-end student from committed ``select`` scores, :func:`best_end_to_end`),
+  :func:`dart_vs_matched` and :func:`latency_context` (latency arm vs synchronous, same
+  checkpoints, at the cells H5(b) does not score).
 
 "Separates" means the 95 % CI excludes 0; magnitudes are judged on the point estimate; there is
 no multiplicity correction (P3-D1 §1). Every SS6 contrast carries :data:`FLIP_FLOOR` beside it.
@@ -50,6 +66,7 @@ no multiplicity correction (P3-D1 §1). Every SS6 contrast carries :data:`FLIP_F
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import json
 import math
@@ -69,6 +86,9 @@ from ila.eval.determinism import P8_FLOOR
 
 __all__ = [
     "CEILING",
+    "CONTROL_STEP_MS",
+    "H5A_THRESHOLD_MS",
+    "H5B_MARGIN",
     "CORE_SEEDS",
     "ABLATION_SEEDS",
     "END_TO_END_ARMS",
@@ -80,8 +100,12 @@ __all__ = [
     "NO_MULTIPLICITY",
     "SUCCESS_MAGNITUDE",
     "ArmMatrix",
+    "DP_FLIP_LABEL",
     "H2Reference",
     "HypothesisResult",
+    "LAST_ACTION_CONFOUND",
+    "LatencyFacts",
+    "ProviderFlips",
     "RowError",
     "SelectScore",
     "UnscoredContrast",
@@ -90,9 +114,14 @@ __all__ = [
     "build_h2_reference",
     "dart_vs_matched",
     "h4_p_prime",
+    "latency_context",
     "load_select_scores",
     "magnitude_rule",
     "modular_vs_best",
+    "noninferiority_rule",
+    "outcome_counts",
+    "read_h5a",
+    "read_latency_facts",
     "p8_committed_rows",
     "p8_matrix",
     "pooled_select_p95",
@@ -100,6 +129,7 @@ __all__ = [
     "score_h2",
     "score_h3",
     "score_h4",
+    "score_h5b",
     "student_matrix",
 ]
 
@@ -116,6 +146,19 @@ H2_MAGNITUDE_S: Final[float] = 0.033
 
 #: Ceiling: a reference arm whose point estimate exceeds 100 % - magnitude (P3-D1 §6).
 CEILING: Final[float] = 1.0 - SUCCESS_MAGNITUDE
+
+#: H5(b)'s non-inferiority margin: the 95 % CI lower bound must be >= -3 points (P3-D1 §6).
+H5B_MARGIN: Final[float] = -0.03
+
+#: H5(a)'s p99 bound as P3-D1 §6 writes it, ms (model-scale control step; P9-D1 item 9).
+H5A_THRESHOLD_MS: Final[float] = 33.3
+
+#: One 30 Hz control step, ms model scale (P3-D1 §7's 33.333 ms; 166.7 ms full scale).
+CONTROL_STEP_MS: Final[float] = 33.333
+
+#: Model-to-full-scale factor for simulated times (Froude, lambda = 1/25: sqrt(25) = 5). It
+#: applies to sim time only; measured wall-clock compute latency is never scaled.
+FULL_SCALE_TIME: Final[float] = 5.0
 
 #: Tolerance on "estimate >= magnitude" for float rounding of a difference of means (far
 #: below one episode's 1/1 000 resolution); a recorded implementation choice.
@@ -278,6 +321,8 @@ class ArmMatrix:
         ensemble: Temporal ensembling (``None`` when not applicable).
         tunnelled: ``(n_seeds, n_episodes)`` 1.0 where P8's ``tunnelled`` flag is set, else
             0.0; ``None`` when the rows carry no ``tunnelled`` column.
+        latency_steps: The rows' ``latency_steps`` (the latency arm's ``d``, control steps;
+            0 for every synchronous arm and for P8 rows).
     """
 
     arm: str
@@ -292,6 +337,7 @@ class ArmMatrix:
     K: int | None = None
     ensemble: bool | None = None
     tunnelled: FloatArray | None = None
+    latency_steps: int = 0
 
     @property
     def rate(self) -> float:
@@ -349,6 +395,7 @@ def _assemble(
     *,
     ckpt_column: str | None,
     tags: tuple[int | None, int | None, bool | None] = (None, None, None),
+    latency_steps: int = 0,
 ) -> ArmMatrix:
     if sorted(by_seed) != sorted(expected_seeds):
         raise RowError(
@@ -399,6 +446,7 @@ def _assemble(
         K=tags[1],
         ensemble=tags[2],
         tunnelled=None if tun is None else np.asarray(tun, dtype=np.float64),
+        latency_steps=latency_steps,
     )
 
 
@@ -416,13 +464,15 @@ def student_matrix(
     ta: int | None = None,
     k: int | None = None,
     ensemble: bool | None = None,
+    latency_steps: int = 0,
 ) -> ArmMatrix:
     """Select one student arm's rows in one cell and stack them as seeds x episodes.
 
     Rows are selected on ``arm``, ``regime``/``ss``, ``Ta``, ``K`` and ``ensemble`` (``None``
-    means the cell must be empty) and ``latency_steps == 0``. Selected rows must carry the
-    committed render (``render_cfg_sha256`` of ``full`` or ``off``): an appearance-shift or
-    ``camera`` row is refused, never mixed into a core section.
+    means the cell must be empty) and ``latency_steps`` (0: the synchronous arm; the latency
+    arm's ``d`` otherwise). Selected rows must carry the committed render
+    (``render_cfg_sha256`` of ``full`` or ``off``): an appearance-shift or ``camera`` row is
+    refused, never mixed into a core section.
 
     Args:
         rows: This project's episode rows (P8 columns, then plan §1.7's columns).
@@ -432,6 +482,7 @@ def student_matrix(
         ta: ``Ta``, executed actions per chunk, or ``None``.
         k: ``K``, DDIM steps, or ``None``.
         ensemble: Temporal ensembling flag, or ``None``.
+        latency_steps: The rows' delay ``d`` in control steps (0: synchronous).
 
     Returns:
         The :class:`ArmMatrix`.
@@ -447,7 +498,7 @@ def student_matrix(
             continue
         if (_opt_int(r["Ta"]), _opt_int(r["K"]), _opt_bool(r["ensemble"])) != (ta, k, ensemble):
             continue
-        if (_opt_int(r["latency_steps"]) or 0) != 0:
+        if (_opt_int(r["latency_steps"]) or 0) != latency_steps:
             continue
         if str(r["render_cfg_sha256"]) not in allowed:
             raise RowError(f"{arm} {cell}: non-core render {r['render_cfg_sha256']!r}")
@@ -455,7 +506,15 @@ def student_matrix(
         if seed is None:
             raise RowError(f"{arm} {cell}: a student row without student_seed")
         by_seed.setdefault(seed, []).append(r)
-    return _assemble(arm, cell, by_seed, seeds, ckpt_column="ckpt_sha256", tags=(ta, k, ensemble))
+    return _assemble(
+        arm,
+        cell,
+        by_seed,
+        seeds,
+        ckpt_column="ckpt_sha256",
+        tags=(ta, k, ensemble),
+        latency_steps=latency_steps,
+    )
 
 
 def p8_matrix(rows: Iterable[Row], *, method: str, cell: Cell, run_seed: int = 0) -> ArmMatrix:
@@ -567,6 +626,14 @@ def _is_ss6(m: ArmMatrix) -> bool:
 
 def _flip(m: ArmMatrix) -> tuple[tuple[str, str], ...]:
     return (("SS6 flip floor", FLIP_FLOOR),) if _is_ss6(m) else ()
+
+
+#: The label of Phase 9's measured ``dp`` flip rate wherever it is printed beside a contrast.
+DP_FLIP_LABEL: Final[str] = "dp closed-loop flip rate (Phase 9)"
+
+
+def _dp_flip_beside(text: str | None) -> tuple[tuple[str, str], ...]:
+    return ((DP_FLIP_LABEL, text),) if text else ()
 
 
 def _require_seeds(m: ArmMatrix, seeds: Sequence[int]) -> None:
@@ -1010,6 +1077,7 @@ def score_h3(
     *,
     other_ss: Sequence[tuple[ArmMatrix, ArmMatrix]] = (),
     static_ta8: ArmMatrix | None = None,
+    dp_flip: str | None = None,
 ) -> HypothesisResult:
     """Score H3 (P3-D1 §6 H3): ``dp`` success at ``Ta = 1`` minus ``Ta = 8``, ``id`` SS6.
 
@@ -1024,6 +1092,9 @@ def score_h3(
         other_ss: ``(Ta = 1, Ta = 8)`` pairs of the same checkpoints at other ``id`` sea states
             (descriptive gains beside the SS6 one).
         static_ta8: ``dp`` at ``Ta = 8`` on the ``static`` list, same checkpoints.
+        dp_flip: Phase 9's measured closed-loop flip rate of this ``dp``
+            (:meth:`LatencyFacts.dp_flip_text`), printed beside the P8 flip floor; ``None``
+            when Phase 9's results are absent.
 
     Returns:
         The H3 :class:`HypothesisResult`.
@@ -1076,6 +1147,7 @@ def score_h3(
         beside=(
             ("dp at Ta = 8 (mean over seeds x episodes)", f"{100.0 * ta8.rate:.1f} %"),
             *_flip(ta1),
+            *_dp_flip_beside(dp_flip),
         ),
         ceiling_limited=ceiling,
     )
@@ -1249,6 +1321,883 @@ def modular_vs_best(modular: ArmMatrix, best: ArmMatrix, reason: str) -> Unscore
         caveats=("modular's frozen teacher receives the true time_fraction (P3-D1 §3).",),
     )
     return replace(out, beside=(("best end-to-end", f"{best.arm}: {reason}"), *out.beside))
+
+
+# --------------------------------------------------------------------------- H5
+
+
+def noninferiority_rule(
+    estimate: float, lo: float, hi: float, margin: float = H5B_MARGIN
+) -> tuple[Verdict, str]:
+    """H5(b)'s rule (P3-D1 §6): supported (non-inferior) iff the CI lower bound >= ``margin``.
+
+    ``lo >= margin`` is compared within :data:`MAGNITUDE_TOL` (the P8-D1 item 3 precedent).
+    There is no two-sided reversal: a CI wholly above 0 is non-inferior and printed as such; a
+    CI wholly below 0 whose lower bound clears the margin is still non-inferior by the rule,
+    and the note says the delay's cost is below the margin.
+
+    Args:
+        estimate: Point estimate (latency minus synchronous success, dimensionless).
+        lo: Lower 95 % bound.
+        hi: Upper 95 % bound.
+        margin: The non-inferiority margin (-0.03, i.e. -3 points).
+
+    Returns:
+        ``(verdict, verdict_note)``.
+    """
+    pts = f"{100.0 * margin:+.0f} points"
+    if not all(math.isfinite(x) for x in (estimate, lo, hi)):
+        return "not supported", "not supported (statistic or CI undefined)"
+    if lo < margin - MAGNITUDE_TOL:
+        return "not supported", f"not supported (CI lower bound below {pts})"
+    if lo > 0.0:
+        return "supported", (
+            f"supported (non-inferior: CI lower bound >= {pts}; the CI lies wholly above 0, "
+            "which P3-D1 §6 reports as non-inferior, not as a gain)"
+        )
+    if hi < 0.0:
+        return "supported", (
+            f"supported (non-inferior: CI lower bound >= {pts}; the CI lies wholly below 0, so "
+            f"the delay costs success, by less than the {pts} margin)"
+        )
+    return "supported", f"supported (non-inferior: CI lower bound >= {pts})"
+
+
+def outcome_counts(m: ArmMatrix) -> dict[str, int]:
+    """Outcome class -> count over seeds x episodes, in P8's matching order."""
+    flat = [o for row in m.outcomes for o in row]
+    order = ("crash", "off_pad", "hard_landing", "bounce", "success", "timeout")
+    return {o: flat.count(o) for o in order}
+
+
+def _outcomes_text(m: ArmMatrix) -> str:
+    counts = outcome_counts(m)
+    return ", ".join(f"{o} {n}" for o, n in counts.items()) + f" (of {m.success.size})"
+
+
+def _side_label(m: ArmMatrix) -> str:
+    return f"{m.arm} d={m.latency_steps}" if m.latency_steps else f"{m.arm} synchronous"
+
+
+def _check_latency_pair(latency: ArmMatrix, sync: ArmMatrix, delay_steps: int) -> None:
+    """Same arm, cell, inference and checkpoints; the left side delayed by ``delay_steps``."""
+    if latency.arm != sync.arm or latency.cell != sync.cell:
+        raise RowError(
+            f"a latency contrast needs one arm and cell, got {latency.arm} {latency.cell_label} "
+            f"and {sync.arm} {sync.cell_label}"
+        )
+    if (latency.Ta, latency.K, latency.ensemble) != (sync.Ta, sync.K, sync.ensemble):
+        raise RowError(f"{latency.arm} {latency.cell_label}: the sides differ in inference")
+    if latency.latency_steps != delay_steps or sync.latency_steps != 0:
+        raise RowError(
+            f"{latency.arm} {latency.cell_label}: latency_steps {latency.latency_steps} / "
+            f"{sync.latency_steps}, expected {delay_steps} / 0"
+        )
+    _require_seeds(latency, CORE_SEEDS)
+    _require_seeds(sync, CORE_SEEDS)
+    if latency.ckpt_sha256 != sync.ckpt_sha256:
+        raise RowError(
+            f"{latency.arm} {latency.cell_label}: the sides are not the same checkpoints"
+        )
+    _same_episodes(latency, sync)
+
+
+def _sim_time_text(d: int) -> str:
+    """``d`` control steps as simulated time, model and full scale (never wall clock)."""
+    ms = d * CONTROL_STEP_MS
+    full_step = FULL_SCALE_TIME * CONTROL_STEP_MS
+    return (
+        f"{d} × {CONTROL_STEP_MS:.1f} ms = {ms:.1f} ms of model-scale sim time ({d} × "
+        f"{full_step:.1f} ms = {FULL_SCALE_TIME * ms:.1f} ms at full scale, as sim time)"
+    )
+
+
+#: Wall-clock latency is measured, not simulated: it does not Froude-scale (P9 review M5).
+WALL_CLOCK_NOT_SCALED: Final[str] = (
+    "the measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is not scaled"
+)
+
+
+def _period_text() -> str:
+    """H5(a)'s bound described as what it is (P3-D1 §6; P9 review M5)."""
+    return (
+        f"{H5A_THRESHOLD_MS:.1f} ms, the model-scale 30 Hz control period "
+        f"({FULL_SCALE_TIME * CONTROL_STEP_MS:.1f} ms full scale)"
+    )
+
+
+def _delay_text(delay_steps: int, record: Mapping[str, Any] | None) -> str:
+    text = f"d = {delay_steps} control steps = {_sim_time_text(delay_steps)}"
+    if record:
+        text += (
+            f"; from results/latency/delay.json: provider {record.get('provider')}, row "
+            f"{record.get('row')}, batch-1 p99 {record.get('p99_ms')} ms wall clock, fallback "
+            f"{record.get('fallback')}"
+        )
+    return f"{text}; {WALL_CLOCK_NOT_SCALED}"
+
+
+_COUNT_WORDS: Final[Mapping[int, str]] = {
+    1: "one",
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+}
+
+
+def _ms_short(x: float) -> str:
+    return f"{x:.0f}" if x >= 1.0 else f"{x:.2f}"
+
+
+def _upper_2sig(x: float) -> tuple[str, int]:
+    """``x`` rounded up to two significant figures, and its decimal exponent.
+
+    Rounding up keeps a printed "<= x" bound true.
+    """
+    e = math.floor(math.log10(x))
+    unit = 10.0 ** (e - 1)
+    up = math.ceil(round(x / unit, 9)) * unit
+    return f"{up:.1e}", e
+
+
+@dataclass(frozen=True)
+class ProviderFlips:
+    """One flown provider's closed-loop parity flight against the reference (Phase 9).
+
+    Attributes:
+        provider: Provider id (``ila.deploy.settings``).
+        n: Episodes flown (P8's ``tune`` pool's ``select`` episodes).
+        flips: Episodes whose outcome class differs from the reference's.
+        max_flips: The parity threshold (``flips <= max_flips`` passes).
+        success: Successes of the provider's flight.
+        lost: Flips from reference success to a provider non-success.
+        gained: Flips from a reference non-success to provider success.
+        chunk_gap: Largest open-loop chunk max-abs against the reference (normalised action
+            units, dimensionless; ``parity.csv`` ``chunk_unrolled_max_abs`` /
+            ``chunk_loop_max_abs``), or NaN for ``bc_dagger``.
+    """
+
+    provider: str
+    n: int
+    flips: int
+    max_flips: int
+    success: int
+    lost: int
+    gained: int
+    chunk_gap: float
+
+
+@dataclass(frozen=True)
+class LatencyFacts:
+    """Phase 9's committed latency results, read once for every sentence that quotes them.
+
+    Every number in the H5 texts, the dp flip rate and the bc_dagger delay reading comes from
+    these files (``results/latency``), read when the scorer runs; nothing is retyped.
+
+    Attributes:
+        control_period_ms: ``delay.json``'s ``control_period_ms`` (33.333 ms model scale).
+        delays: ``delay.json``'s ``arms`` (``d``, provider, row, ``p99_ms``, fallback).
+        h5a_rows: ``h5a.csv`` rows (dp_e2e, batch 1).
+        threads: ``(row, provider) -> threads`` of the batch-1 rows in ``latency.csv``.
+        dp_reference_provider: The reference flight's provider (``torch_cpu_fp32``).
+        dp_reference_success: Successes of the reference flight.
+        dp_flips: The flown, scored, fp32 ``dp`` providers, in ``closed_loop.csv`` order.
+        sources: ``results/latency/<file>`` -> SHA-256 of every file read.
+    """
+
+    control_period_ms: float
+    delays: Mapping[str, Mapping[str, Any]]
+    h5a_rows: tuple[Mapping[str, str], ...]
+    threads: Mapping[tuple[str, str], str]
+    dp_reference_provider: str
+    dp_reference_success: int
+    dp_flips: tuple[ProviderFlips, ...]
+    sources: Mapping[str, str]
+
+    # ------------------------------------------------------------------ helpers
+
+    def _scored(self) -> list[Mapping[str, str]]:
+        return [r for r in self.h5a_rows if r["scored"] == "True"]
+
+    def _timed(self, rows: Iterable[Mapping[str, str]]) -> list[Mapping[str, str]]:
+        return [r for r in rows if r["latency_status"] == "timed" and r["p99_ms"]]
+
+    def _d_of(self, p99_ms: float) -> int:
+        """P3-D1 §7's ``d = ceil(p99 / control period)``."""
+        return math.ceil(p99_ms / self.control_period_ms)
+
+    def _delay(self, arm: str, d: int) -> Mapping[str, Any] | None:
+        rec = self.delays.get(arm)
+        if rec is None:
+            return None
+        if rec.get("d") != d:
+            raise RowError(f"{arm}: delay.json d {rec.get('d')} != flown d {d}")
+        p99 = float(rec["p99_ms"])
+        if self._d_of(p99) != d:
+            raise RowError(
+                f"{arm}: delay.json d {d} != ceil({p99} / {self.control_period_ms}) = "
+                f"{self._d_of(p99)}"
+            )
+        return rec
+
+    # ------------------------------------------------------------------ texts
+
+    def dp_flip_text(self) -> str | None:
+        """Phase 9's measured closed-loop flip rate of this ``dp`` (``None``: none flown).
+
+        The range of ``flips / n`` over the flown, scored, fp32 providers (``closed_loop.csv``),
+        with the open-loop chunk gap that perturbation amounts to (``parity.csv``).
+        """
+        fl = self.dp_flips
+        if not fl:
+            return None
+        n = fl[0].n
+        lo, hi = min(f.flips for f in fl), max(f.flips for f in fl)
+        rng = f"{lo}/{n}" if lo == hi else f"{lo}/{n}–{hi}/{n}"
+        pct = (
+            f"{100.0 * lo / n:.1f} %"
+            if lo == hi
+            else f"{100.0 * lo / n:.1f}–{100.0 * hi / n:.1f} %"
+        )
+        gap, e = _upper_2sig(max(f.chunk_gap for f in fl))
+        per = ", ".join(f"{f.provider} {f.flips}/{n}" for f in fl)
+        return (
+            f"{rng} episodes ({pct}) change outcome class against the "
+            f"{self.dp_reference_provider} reference under numeric perturbations of order "
+            f"1e{e} (open-loop chunk max-abs <= {gap}), the range over the flown scored fp32 "
+            f"providers ({per}); measured on this dp's {n} select episodes in Phase 9 "
+            "(closed-loop parity), not on a frozen list (seed 0's selected checkpoint; "
+            "results/latency/closed_loop.csv, parity.csv)"
+        )
+
+    def h5a_note(self, verdict: str) -> str:
+        """Sentences appended to H5(a)'s verdict note when it is not supported (S3)."""
+        if verdict != "not supported":
+            return ""
+        parts: list[str] = []
+        scored = self._scored()
+        fl = self.dp_flips
+        cl_failed = [
+            r for r in scored if r["open_loop_pass"] == "True" and r["closed_loop_pass"] == "False"
+        ]
+        if cl_failed and fl:
+            n, ref = fl[0].n, self.dp_reference_success
+            gap, _ = _upper_2sig(max(f.chunk_gap for f in fl))
+            tc = next((f for f in fl if f.provider == "torch_cuda_fp32"), None)
+            both = all(f.lost > 0 and f.gained > 0 for f in fl)
+            lost_gained = "lost / gained: " + ", ".join(
+                f"{f.provider} {f.lost} / {f.gained}" for f in fl
+            )
+            counts = ", ".join(f"{f.provider} {f.success}" for f in fl)
+            spread = max(abs(f.success - ref) for f in fl)
+            evidence = (
+                f"torch_cuda_fp32 runs the identical Python sampler as the "
+                f"{self.dp_reference_provider} reference (torch eager, the DPStudent path) and "
+                f"still flips ({tc.flips}/{n} > {tc.max_flips}); "
+                if tc is not None and tc.flips > tc.max_flips
+                else ""
+            )
+            lead = (
+                "dp's closed-loop parity failure reflects outcome sensitivity of this dp, not a "
+                "provider error: "
+                if evidence and both
+                else "dp's closed-loop parity failed on every flown scored fp32 provider: "
+            )
+            parts.append(
+                f"{lead}{evidence}open-loop chunk gaps are <= {gap} "
+                "(results/latency/parity.csv); "
+                + ("the flips go both ways " if both else "")
+                + "(successes "
+                + f"{lost_gained}), and the provider success counts lie near the reference "
+                f"({counts} of {n} against {ref}, within ±{spread}; "
+                "results/latency/closed_loop.csv)."
+            )
+        timed = self._timed(scored)
+        untimed = [r for r in scored if r not in timed]
+        if timed:
+            thr = H5A_THRESHOLD_MS
+            p99s = ", ".join(f"{r['provider']} {r['p99_ms']} ms" for r in timed)
+            failing = [r for r in timed if float(r["p99_ms"]) >= thr]
+            if len(failing) == len(timed):
+                rel = ">" if all(float(r["p99_ms"]) > thr for r in timed) else ">="
+                text = (
+                    "The latency bound also fails independently on every timed scored provider: "
+                    f"dp_e2e batch-1 p99 {p99s} (results/latency/h5a.csv), all {rel} "
+                    f"{_period_text()}; {WALL_CLOCK_NOT_SCALED}"
+                )
+            else:
+                below = ", ".join(r["provider"] for r in timed if r not in failing)
+                text = (
+                    f"The latency bound alone (p99 < {_period_text()}) is met by {below}: "
+                    f"dp_e2e batch-1 p99 {p99s} (results/latency/h5a.csv); "
+                    f"{WALL_CLOCK_NOT_SCALED}"
+                )
+            if untimed:
+                text += "; not timed: " + ", ".join(
+                    f"{r['provider']}: {r['latency_status']}" for r in untimed
+                )
+            parts.append(text + ".")
+        flip = self.dp_flip_text()
+        if flip:
+            parts.append(f"Phase 9 measured this dp's own closed-loop flip rate: {flip}.")
+        return " ".join(parts)
+
+    def h5b_beside(self, d: int) -> tuple[tuple[str, str], ...]:
+        """Why ``d`` is what it is, and the zero-action start it includes (S4)."""
+        rec = self._delay("dp", d)
+        out: list[tuple[str, str]] = []
+        if rec is not None:
+            p99 = float(rec["p99_ms"])
+            prov, row = str(rec.get("provider")), str(rec.get("row"))
+            if rec.get("fallback"):
+                th = self.threads.get((row, prov))
+                th_txt = f" ({th} thread{'' if th == '1' else 's'})" if th else ""
+                passed = [r for r in self._scored() if r["parity_pass"] == "True"]
+                why = (
+                    "because no scored provider passed open- and closed-loop parity"
+                    if not passed
+                    else "as delay.json records a fallback"
+                )
+                text = (
+                    f"d = {d} is the {prov}{th_txt} fallback delay from "
+                    f"results/latency/delay.json ({row} batch-1 p99 {p99:.1f} ms wall clock; "
+                    f"ceil({p99:.1f} / {self.control_period_ms}) = {d}), {why} (P3-D1 §7)"
+                )
+                cand = sorted(
+                    (r for r in self._timed(self._scored()) if r["open_loop_pass"] == "True"),
+                    key=lambda r: float(r["p99_ms"]),
+                )
+                if cand:
+                    f0 = cand[0]
+                    p0 = float(f0["p99_ms"])
+                    text += (
+                        ". Under §7's rule, the fastest open-loop-passing scored provider, "
+                        f"{f0['provider']} (dp_e2e batch-1 p99 {f0['p99_ms']} ms, "
+                        f"results/latency/h5a.csv), would have given d = ceil({f0['p99_ms']} / "
+                        f"{self.control_period_ms}) = {self._d_of(p0)}"
+                    )
+                    if len(cand) > 1:
+                        text += (
+                            " (every open-loop-passing scored provider: "
+                            + ", ".join(
+                                f"{r['provider']} -> d = {self._d_of(float(r['p99_ms']))}"
+                                for r in cand
+                            )
+                            + ")"
+                        )
+                    text += "; those delays were not flown"
+                text += f". The verdict is unchanged; {WALL_CLOCK_NOT_SCALED}"
+            else:
+                text = (
+                    f"d = {d} from {prov} ({row} batch-1 p99 {p99:.1f} ms wall clock, the "
+                    "fastest scored provider passing open- and closed-loop parity; "
+                    f"results/latency/delay.json); {WALL_CLOCK_NOT_SCALED}"
+                )
+            out.append(("why d", text))
+        out.append(
+            (
+                "zero-action start",
+                f"the contrast includes the d = {d} zero-action steps at the start of every "
+                f"episode ({_sim_time_text(d)}; P3-D1 §7), which cannot be separated out of "
+                "the estimate. The verdict is unchanged",
+            )
+        )
+        return tuple(out)
+
+    def bc_context_caveats(self, d: int) -> tuple[str, ...]:
+        """The bc_dagger latency-context reading (M4): a whole control step, not the compute.
+
+        :data:`LAST_ACTION_CONFOUND` is stated by :func:`latency_context` for every arm.
+        """
+        rec = self._delay("bc_dagger", d)
+        if rec is None:
+            return ()
+        p99 = float(rec["p99_ms"])
+        word = _COUNT_WORDS.get(d, str(d))
+        steps = "step" if d == 1 else "steps"
+        return (
+            f"This contrast is the cost of a {word}-control-step delay (ceil of a {p99:.2f} ms "
+            f"p99 to {word} {CONTROL_STEP_MS:.1f} ms model-scale {steps}), not of "
+            f"{_ms_short(p99)} ms of compute (results/latency/delay.json: {rec.get('provider')}, "
+            f"{rec.get('row')} batch-1 p99; {WALL_CLOCK_NOT_SCALED}).",
+        )
+
+
+#: ``closed_loop.csv`` / ``parity.csv`` columns the facts read (checked on read).
+_CLOSED_LOOP_NEEDED: Final[tuple[str, ...]] = (
+    "arm",
+    "provider",
+    "scored",
+    "status",
+    "n",
+    "flips",
+    "max_flips",
+    "success",
+    "reference_equals_selection_rows",
+)
+_PARITY_NEEDED: Final[tuple[str, ...]] = (
+    "arm",
+    "provider",
+    "precision",
+    "chunk_unrolled_max_abs",
+    "chunk_loop_max_abs",
+)
+_LATENCY_NEEDED: Final[tuple[str, ...]] = ("row", "provider", "batch_size", "threads")
+
+
+def _read_rows(path: Path, needed: Sequence[str]) -> tuple[list[dict[str, str]], str]:
+    text = path.read_text(encoding="utf-8")
+    rows = list(csv.DictReader(io.StringIO(text)))
+    missing = [c for c in needed if rows and c not in rows[0]]
+    if missing:
+        raise RowError(f"{path}: missing columns {missing}")
+    return rows, hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def read_latency_facts(latency_dir: Path) -> LatencyFacts | None:
+    """Read Phase 9's committed latency results (``None`` before ``make bench-score``).
+
+    Reads ``h5a.csv``, ``delay.json``, ``closed_loop.csv``, ``parity.csv``, ``latency.csv``
+    and ``closed_loop/dp/<provider>.json`` (the flipped episodes) under ``latency_dir``.
+
+    Raises:
+        RowError: If ``h5a.csv`` and ``delay.json`` exist but another file is missing, lacks a
+            column, or disagrees with itself (flip lists against flip counts, success counts
+            against the reference and the flips, the reference against the selection rows).
+    """
+    h5a_path, delay_path = latency_dir / "h5a.csv", latency_dir / "delay.json"
+    if not (h5a_path.is_file() and delay_path.is_file()):
+        return None
+    need = ("closed_loop.csv", "parity.csv", "latency.csv")
+    absent = [f for f in need if not (latency_dir / f).is_file()]
+    if absent:
+        raise RowError(f"{latency_dir}: h5a.csv is written but {absent} are not")
+    h5a, h5a_sha = _read_rows(h5a_path, _H5A_NEEDED)
+    cl, cl_sha = _read_rows(latency_dir / "closed_loop.csv", _CLOSED_LOOP_NEEDED)
+    par, par_sha = _read_rows(latency_dir / "parity.csv", _PARITY_NEEDED)
+    lat, lat_sha = _read_rows(latency_dir / "latency.csv", _LATENCY_NEEDED)
+    delay = json.loads(delay_path.read_text(encoding="utf-8"))
+    sources = {
+        "results/latency/h5a.csv": h5a_sha,
+        "results/latency/delay.json": hashlib.sha256(delay_path.read_bytes()).hexdigest(),
+        "results/latency/closed_loop.csv": cl_sha,
+        "results/latency/parity.csv": par_sha,
+        "results/latency/latency.csv": lat_sha,
+    }
+    threads = {(r["row"], r["provider"]): r["threads"] for r in lat if r["batch_size"] == "1"}
+    precision = {(r["arm"], r["provider"]): r["precision"] for r in par}
+    gaps = {
+        r["provider"]: max(float(r["chunk_unrolled_max_abs"]), float(r["chunk_loop_max_abs"]))
+        for r in par
+        if r["arm"] == "dp" and r["chunk_unrolled_max_abs"] and r["chunk_loop_max_abs"]
+    }
+    refs = [r for r in cl if r["arm"] == "dp" and r["status"] == "reference"]
+    flips: list[ProviderFlips] = []
+    ref_provider, ref_success = "", 0
+    if refs:
+        if len(refs) != 1 or refs[0]["reference_equals_selection_rows"] != "True":
+            raise RowError(
+                "closed_loop.csv: dp needs one reference flight equal to its selection rows"
+            )
+        ref_provider, ref_success = refs[0]["provider"], int(refs[0]["success"])
+        ref_n = int(refs[0]["n"])
+        for r in cl:
+            prov = r["provider"]
+            if not (
+                r["arm"] == "dp"
+                and r["scored"] == "True"
+                and r["status"] == "flown"
+                and precision.get(("dp", prov)) == "fp32"
+            ):
+                continue
+            rel = f"closed_loop/dp/{prov}.json"
+            path = latency_dir / rel
+            if not path.is_file():
+                raise RowError(f"{latency_dir}: {rel} is missing (dp {prov} was flown)")
+            raw = path.read_bytes()
+            flipped = json.loads(raw).get("flipped", [])
+            n, k, succ = int(r["n"]), int(r["flips"]), int(r["success"])
+            if len(flipped) != k or n != ref_n:
+                raise RowError(f"{rel}: {len(flipped)} flipped episodes / n {n}; closed_loop.csv "
+                               f"says {k} flips / reference n {ref_n}")  # fmt: skip
+            lost = sum(f["reference"] == "success" and f["provider"] != "success" for f in flipped)
+            gained = sum(
+                f["provider"] == "success" and f["reference"] != "success" for f in flipped
+            )
+            if succ != ref_success - lost + gained:
+                raise RowError(
+                    f"{rel}: success {succ} != reference {ref_success} - {lost} + {gained}"
+                )
+            if prov not in gaps:
+                raise RowError(f"parity.csv: no dp chunk gap for {prov}")
+            sources[f"results/latency/{rel}"] = hashlib.sha256(raw).hexdigest()
+            flips.append(
+                ProviderFlips(
+                    provider=prov,
+                    n=n,
+                    flips=k,
+                    max_flips=int(r["max_flips"]),
+                    success=succ,
+                    lost=lost,
+                    gained=gained,
+                    chunk_gap=gaps[prov],
+                )
+            )
+    return LatencyFacts(
+        control_period_ms=float(delay.get("control_period_ms", CONTROL_STEP_MS)),
+        delays=delay.get("arms", {}),
+        h5a_rows=tuple(h5a),
+        threads=threads,
+        dp_reference_provider=ref_provider,
+        dp_reference_success=ref_success,
+        dp_flips=tuple(flips),
+        sources=sources,
+    )
+
+
+#: The latency arm feeds the student its own delayed action (``last_action[t]`` is the
+#: action executed at ``t - 1``, ``ila.obs.split``), which no training data contained.
+LAST_ACTION_CONFOUND: Final[str] = (
+    "last_action in proprio carries the applied (delayed) action, a feedback channel the "
+    "student never saw in training; no teacher-under-delay reference exists to attribute the "
+    "loss."
+)
+
+_H5B_CAVEATS: Final[tuple[str, ...]] = (
+    "No two-sided reading for H5(b): a CI wholly above 0 is non-inferior and reported as such "
+    "(P3-D1 §6).",
+    "Same checkpoints on both sides (the core dp selections); each replicate resamples seed "
+    "indices jointly for both sides (P3-D1 §1). The parity verdicts behind d were measured on "
+    "seed 0's selected checkpoint and apply to all five seeds (P3-D1 §3).",
+    "The delay is simulated: PyBullet does not advance while the network computes; each "
+    "request's result is computed when it is issued, on the CPU fp32 single-sample path, and "
+    "held back d control steps (P3-D1 §7; P9-D1 item 10). Both sides fly that same path "
+    "(P3-D1 §3).",
+    "One request in flight at a time; the returned chunk executes from index (To - 1) + d, and "
+    "past Tp - 1 its last action is held (from d > 7 at To = 2, Tp = 16, Ta = 8); the first "
+    "action of an episode is zero until the first result lands (P3-D1 §7).",
+    "d comes from a p99 measured on this machine (RTX A4000, i9-10980XE, WSL2); no embedded "
+    "target is measured (P3-D1 §6 H5).",
+    LAST_ACTION_CONFOUND,
+)
+
+
+def _dp_baseline_caveat(
+    sync: ArmMatrix, sync_ss6: ArmMatrix | None, sync_static: ArmMatrix | None
+) -> str:
+    """Phase 9 before-you-start: the low synchronous dp baseline, from the rows."""
+
+    def at(m: ArmMatrix) -> str:
+        where = "static" if m.cell[0] == "static" else m.cell_label
+        return f"{100.0 * m.rate:.1f} % ({int(m.success.sum())}/{m.success.size}) at {where}"
+
+    parts = [at(m) for m in (sync, sync_ss6, sync_static) if m is not None]
+    return (
+        "Synchronous core dp at Ta = 8 succeeds on " + "; ".join(parts) + " (mean over seeds x "
+        "episodes). H5(b) compares this dp, distilled from P8 ppo s0, with itself, so a low "
+        "baseline does not invalidate the contrast; non-inferiority is relative to that baseline "
+        "(Phase 9 before-you-start)."
+    )
+
+
+def score_h5b(
+    latency: ArmMatrix,
+    sync: ArmMatrix,
+    *,
+    delay_steps: int,
+    delay_record: Mapping[str, Any] | None = None,
+    sync_ss6: ArmMatrix | None = None,
+    sync_static: ArmMatrix | None = None,
+    facts: LatencyFacts | None = None,
+) -> HypothesisResult:
+    """Score H5(b) (P3-D1 §6): latency-arm ``dp`` minus synchronous ``dp`` at ``id`` SS5.
+
+    Same-checkpoint contrast (:func:`ila.eval.stats.joint_seed_contrast`) and
+    :func:`noninferiority_rule` (CI lower bound >= -3 points). ``sync_ss6`` and
+    ``sync_static`` only supply the low-baseline caveat's numbers.
+
+    Args:
+        latency: ``dp`` at ``id`` SS5, ``Ta = 8``, ``K = 10``, no ensembling, rows with
+            ``latency_steps == delay_steps``, seeds 0-4.
+        sync: The synchronous core ``dp`` rows of the same checkpoints and cell.
+        delay_steps: ``d`` (control steps) the matrix flew.
+        delay_record: ``delay.json``'s ``arms.dp`` record (provider, p99), printed beside.
+        sync_ss6: Synchronous core ``dp`` at ``id`` SS6 (caveat numbers only).
+        sync_static: Synchronous core ``dp`` on ``static`` (caveat numbers only).
+        facts: Phase 9's latency results (:func:`read_latency_facts`): why ``d`` is what it
+            is, the zero-action start and this ``dp``'s measured flip rate, printed beside.
+
+    Returns:
+        The H5(b) :class:`HypothesisResult`.
+
+    Raises:
+        RowError: If the sides are not the same ``dp`` checkpoints at id SS5, Ta 8, K 10, no
+            ensembling, with the stated delays.
+    """
+    want = ("dp", ("id", "SS5"), 8, 10, False)
+    for m in (latency, sync):
+        if (m.arm, m.cell, m.Ta, m.K, m.ensemble) != want:
+            raise RowError(
+                f"H5(b) needs dp at id SS5, Ta=8, K=10, no ensembling; got {m.arm} "
+                f"{m.cell_label} Ta={m.Ta} K={m.K} ensemble={m.ensemble}"
+            )
+    _check_latency_pair(latency, sync, delay_steps)
+    if delay_steps < 0:
+        raise RowError(f"H5(b): d = {delay_steps} is negative")
+    if delay_record is not None and delay_record.get("d") != delay_steps:
+        raise RowError(f"H5(b): delay.json d {delay_record.get('d')} != flown d {delay_steps}")
+    c = st.joint_seed_contrast(latency.success, sync.success)
+    verdict, note = noninferiority_rule(c.diff, c.lo, c.hi)
+    beside = (
+        ("delay", _delay_text(delay_steps, delay_record)),
+        *(facts.h5b_beside(delay_steps) if facts is not None else ()),
+        (
+            "success (mean over seeds x episodes)",
+            f"latency arm {100.0 * latency.rate:.1f} % ({int(latency.success.sum())}/"
+            f"{latency.success.size}); synchronous {100.0 * sync.rate:.1f} % "
+            f"({int(sync.success.sum())}/{sync.success.size})",
+        ),
+        (
+            "outcome classes, seed-episodes",
+            f"latency arm: {_outcomes_text(latency)}; synchronous: {_outcomes_text(sync)}",
+        ),
+        *_dp_flip_beside(facts.dp_flip_text() if facts is not None else None),
+    )
+    return HypothesisResult(
+        hypothesis="H5(b)",
+        cell="id SS5",
+        statistic="joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, "
+        "seed 20261023)",
+        contrast=f"success(dp, latency arm, d = {delay_steps}) - success(dp, synchronous), same "
+        "checkpoints, Ta = 8, K = 10, no ensembling",
+        estimate=c.diff,
+        ci_lo=c.lo,
+        ci_hi=c.hi,
+        units=_UNITS_SUCCESS,
+        n_seeds=(("dp", c.n_seeds_a),),
+        n_episodes=c.n_episodes,
+        magnitude=H5B_MARGIN,
+        verdict=verdict,
+        verdict_note=note,
+        caveats=(
+            *_H5B_CAVEATS,
+            _dp_baseline_caveat(sync, sync_ss6, sync_static),
+            NO_MULTIPLICITY,
+        ),
+        beside=beside,
+    )
+
+
+def latency_context(
+    latency: ArmMatrix,
+    sync: ArmMatrix,
+    *,
+    delay_steps: int,
+    facts: LatencyFacts | None = None,
+) -> UnscoredContrast:
+    """Latency arm minus synchronous arm in one cell, same checkpoints, two-sided, unscored.
+
+    P3-D1 §7 flies the latency arm on ``id`` SS4-SS6 and scores H5(b) at SS5 only; this is the
+    rest (``bc_dagger`` at SS4-SS6, ``dp`` at SS4 and SS6) as context. Statistic:
+    :func:`ila.eval.stats.joint_seed_contrast` (the same checkpoints on both sides). With
+    ``facts`` (Phase 9's results), ``bc_dagger`` cells state that the contrast is the cost of
+    whole control steps, and ``dp`` cells carry this ``dp``'s measured closed-loop flip rate
+    beside the P8 flip floor. Every cell states :data:`LAST_ACTION_CONFOUND`.
+
+    Raises:
+        RowError: If the sides are not one arm's same checkpoints in one cell.
+    """
+    if latency.arm not in ("bc_dagger", "dp") or latency.cell[0] != "id":
+        raise RowError(f"latency context is bc_dagger / dp on id, got {latency.arm}")
+    if latency.arm == "dp" and latency.cell[1] == "SS5":
+        raise RowError("dp at id SS5 is H5(b), scored, not context")
+    _check_latency_pair(latency, sync, delay_steps)
+    c = st.joint_seed_contrast(latency.success, sync.success)
+    a, b = _side_label(latency), _side_label(sync)
+    record = None if facts is None else facts.delays.get(latency.arm)
+    bc_reading: tuple[str, ...] = ()
+    dp_flip: str | None = None
+    if facts is not None and latency.arm == "bc_dagger":
+        bc_reading = facts.bc_context_caveats(delay_steps)
+    elif facts is not None:
+        dp_flip = facts.dp_flip_text()
+    return UnscoredContrast(
+        name=f"H5(b) context: {latency.arm} latency arm - synchronous ({latency.cell[1]}, "
+        "unscored)",
+        cell=latency.cell_label,
+        statistic="joint-seed contrast (ila.eval.stats.joint_seed_contrast; 10 000 reps, "
+        "seed 20261023)",
+        contrast=f"success({a}) - success({b}), same checkpoints",
+        estimate=c.diff,
+        ci_lo=c.lo,
+        ci_hi=c.hi,
+        units=_UNITS_SUCCESS,
+        n_seeds=((a, c.n_seeds_a), (b, c.n_seeds_b)),
+        n_episodes=c.n_episodes,
+        reading=_two_sided(c.lo, c.hi, a, b),
+        caveats=(
+            "Unscored context: P3-D1 §7 scores H5(b) at id SS5 only (dp).",
+            *bc_reading,
+            LAST_ACTION_CONFOUND,
+            f"Outcome classes, seed-episodes: {a}: {_outcomes_text(latency)}; {b}: "
+            f"{_outcomes_text(sync)}.",
+            NO_MULTIPLICITY,
+        ),
+        beside=(
+            ("delay", _delay_text(delay_steps, record)),
+            *_flip(latency),
+            *_dp_flip_beside(dp_flip),
+        ),
+    )
+
+
+#: ``h5a.csv``'s columns (``ila.deploy.latency.H5A_COLUMNS``; checked on read).
+_H5A_NEEDED: Final[tuple[str, ...]] = (
+    "hypothesis",
+    "row",
+    "provider",
+    "scored",
+    "batch_size",
+    "latency_status",
+    "p50_ms",
+    "p99_ms",
+    "max_ms",
+    "open_loop_pass",
+    "closed_loop_pass",
+    "parity_pass",
+    "threshold_ms",
+    "p99_below_threshold",
+    "verdict",
+)
+
+_H5A_CAVEATS: Final[tuple[str, ...]] = (
+    "Wall-clock latency of one full replanning call at batch 1 on this machine (RTX A4000, "
+    "i9-10980XE, WSL2); no embedded target is measured, and nothing here transfers to one "
+    "(P3-D1 §6 H5).",
+    "Parity verdicts are measured on seed 0's selected checkpoint and apply to all five seeds "
+    "(P3-D1 §3).",
+    f"The bound is {_period_text()}, as P3-D1 §6 writes it; d uses {CONTROL_STEP_MS} ms "
+    f"(P3-D1 §7; P9-D1 item 9); {WALL_CLOCK_NOT_SCALED}.",
+    "Scored by ila.deploy.latency.score (make bench-score) and read here as written; not "
+    "re-derived (results/latency/h5a.csv, delay.json).",
+)
+
+
+def read_h5a(latency_dir: Path) -> dict[str, Any]:
+    """H5(a)'s record from the deploy scorer's committed output (never re-derived).
+
+    Reads ``h5a.csv`` and ``delay.json`` under ``latency_dir`` (and, through
+    :func:`read_latency_facts`, the closed-loop, parity and latency tables the verdict note
+    quotes). The verdict is ``delay.json``'s ``h5a_verdict``; every scored ``h5a.csv`` row must
+    carry the same verdict. The printed estimate is the lowest ``p99_ms`` among scored rows with
+    ``parity_pass`` True and a timed latency (the rows H5(a) counts), ms wall clock on this
+    machine. A "not supported" note adds :meth:`LatencyFacts.h5a_note` (why the parity failure
+    is this dp's outcome sensitivity, the latency bound on its own, this dp's flip rate).
+
+    Args:
+        latency_dir: ``results/latency``.
+
+    Returns:
+        The record (``hypotheses.json`` shape plus ``providers`` and ``delays``), with
+        ``status`` ``scored`` for supported / not supported, else the scorer's ``not scored``
+        text, or ``not scored: ...`` when the files are absent.
+
+    Raises:
+        RowError: If the files disagree, or ``h5a.csv`` lacks a column.
+    """
+    csv_path, delay_path = latency_dir / "h5a.csv", latency_dir / "delay.json"
+    base: dict[str, Any] = {
+        "hypothesis": "H5(a)",
+        "cell": "exported dp (K = 10), dp_e2e, batch 1",
+        "kind": "latency",
+    }
+    if not (csv_path.is_file() and delay_path.is_file()):
+        return {
+            **base,
+            "status": "not scored: results/latency/h5a.csv and delay.json are not written yet "
+            "(make bench-score after the closed-loop parity and latency stages)",
+        }
+    facts = read_latency_facts(latency_dir)
+    assert facts is not None  # both files exist
+    text = csv_path.read_text(encoding="utf-8")
+    rows = list(csv.DictReader(io.StringIO(text)))
+    if rows and tuple(rows[0]) != _H5A_NEEDED:
+        raise RowError(f"{csv_path}: columns {tuple(rows[0])} != {_H5A_NEEDED}")
+    delay = json.loads(delay_path.read_text(encoding="utf-8"))
+    verdict = str(delay.get("h5a_verdict", ""))
+    scored = [r for r in rows if r["scored"] == "True"]
+    if {r["verdict"] for r in scored} - {verdict}:
+        raise RowError(
+            f"{csv_path}: scored rows' verdicts {sorted({r['verdict'] for r in scored})} != "
+            f"delay.json h5a_verdict {verdict!r}"
+        )
+    counted = [
+        float(r["p99_ms"])
+        for r in scored
+        if r["parity_pass"] == "True" and r["latency_status"] == "timed" and r["p99_ms"]
+    ]
+    providers = [dict(r) for r in rows]
+    beside = [
+        (
+            f"{r['provider']} ({'scored' if r['scored'] == 'True' else 'unscored'})",
+            f"latency {r['latency_status']}; p50 {r['p50_ms'] or 'n/a'} ms, p99 "
+            f"{r['p99_ms'] or 'n/a'} ms, max {r['max_ms'] or 'n/a'} ms; open-loop parity "
+            f"{r['open_loop_pass']}, closed-loop {r['closed_loop_pass'] or 'not flown'}",
+        )
+        for r in rows
+    ]
+    for arm, rec in sorted(delay.get("arms", {}).items()):
+        beside.append(
+            (
+                f"delay d, {arm}",
+                f"d = {rec.get('d')} control steps = {_sim_time_text(int(rec['d']))}; provider "
+                f"{rec.get('provider')}, p99 {rec.get('p99_ms')} ms wall clock (not scaled), "
+                f"fallback {rec.get('fallback')}"
+                if rec.get("d") is not None
+                else str(rec.get("status")),
+            )
+        )
+    sources = dict(facts.sources)
+    if verdict in ("supported", "not supported"):
+        status, note = "scored", verdict
+        if verdict == "not supported" and not counted:
+            note = "not supported (no scored provider passed both parities and was timed)"
+        extra = facts.h5a_note(verdict)
+        if extra:
+            note = f"{note}. {extra}"
+    else:
+        status, note = verdict or "not scored: delay.json has no h5a_verdict", ""
+    return {
+        **base,
+        "status": status,
+        "verdict": verdict if status == "scored" else None,
+        "verdict_note": note,
+        "estimate": min(counted) if counted else math.nan,
+        "ci_lo": None,
+        "ci_hi": None,
+        "units": "ms wall clock per call, batch 1, on this machine (RTX A4000, i9-10980XE, "
+        "WSL2); lowest p99 among scored providers passing open- and closed-loop parity",
+        "magnitude": H5A_THRESHOLD_MS,
+        "statistic": "p99 of >= 2 000 timed batch-1 calls after >= 200 warm-up calls (P8's "
+        "latency harness through ila.p8_adapter; P9-D1 item 8)",
+        "contrast": f"p99(dp_e2e, batch 1) < {_period_text()}, on at least one scored "
+        "provider that passes open- and closed-loop parity (P3-D1 §6 H5(a)); the p99 is wall "
+        "clock on this machine and is not scaled",
+        "n_seeds": [{"arm": "dp", "seeds": 1}],
+        "inputs": sorted(sources),
+        "sources": sources,
+        "providers": providers,
+        "delays": delay.get("arms", {}),
+        "beside": [{"label": k, "text": v} for k, v in beside],
+        "caveats": list(_H5A_CAVEATS),
+        "ceiling_limited": False,
+        "notes": [],
+    }
 
 
 # --------------------------------------------------------------------------- best end-to-end

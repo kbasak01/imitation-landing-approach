@@ -8,6 +8,7 @@ P3-D1 §4 / §8). Speeds m/s, times s, model scale.
 from __future__ import annotations
 
 import dataclasses
+import json
 import math
 from pathlib import Path
 
@@ -120,7 +121,8 @@ def test_missing_cells_are_listed_never_skipped(small: tuple[sc.ScoreInputs, Pat
     assert con and all(r["status"].startswith("missing") for r in con)
     hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
     assert hyp["H1"]["status"].startswith("not scored: missing")
-    assert hyp["H5(a)"]["status"].startswith("not scored in Phase 8 (Phase 9)")
+    assert hyp["H5(a)"]["status"] == "not scored: no latency results directory given"
+    assert hyp["H5(b)"]["status"].startswith("not scored: missing (latency_arm dp is not in")
 
 
 def test_aggregate_iqm_and_losses(small: tuple[sc.ScoreInputs, Path]) -> None:
@@ -332,18 +334,221 @@ def test_corrupt_rows_file_is_refused(tmp_path: Path) -> None:
         sc.load_cells(tmp_path, inp.matrix, episodes_per_cell=N)
 
 
+def _latency_job(job: object) -> bool:
+    """Core bc_dagger / dp on id and static, and the latency arm (Phase 9)."""
+    tag = getattr(job, "tag", "")
+    return tag == "latency_arm" or (
+        tag == "core"
+        and getattr(job, "arm", "") in ("bc_dagger", "dp")
+        and getattr(job, "list_name", "") in ("id", "static")
+    )
+
+
+def _latency_outcome(
+    arm: str, seed: int, list_name: str, ss: str, i: int, shift: str | None, ta: int | None
+) -> str:
+    return "success" if (i + seed) % 5 else "off_pad"
+
+
+@pytest.fixture(scope="module")
+def latency_tree(tmp_path_factory: pytest.TempPathFactory) -> tuple[sc.ScoreInputs, Path]:
+    root = tmp_path_factory.mktemp("e08_latency")
+    lat_dir = es.write_latency_results(root.parent / f"{root.name}_latency")
+    inp = es.synthetic_tree(
+        root,
+        n=N,
+        matrix=es.reduced_matrix(_latency_job),
+        outcome=_latency_outcome,
+        latency_dir=lat_dir,
+    )
+    sc.run_score(inp)
+    return inp, root
+
+
+def test_latency_arm_scores_h5a_h5b_and_context(
+    latency_tree: tuple[sc.ScoreInputs, Path],
+) -> None:
+    inp, root = latency_tree
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
+    assert list(hyp)[-2:] == ["H5(a)", "H5(b)"]
+    a, b = hyp["H5(a)"], hyp["H5(b)"]
+    assert (a["status"], a["verdict"], a["estimate"], a["magnitude"]) == (
+        "scored",
+        "supported",
+        "21.5",
+        "33.3",
+    )
+    assert a["inputs"] == (
+        "results/latency/closed_loop.csv; results/latency/closed_loop/dp/ort_cuda_fp32.json; "
+        "results/latency/delay.json; results/latency/h5a.csv; results/latency/latency.csv; "
+        "results/latency/parity.csv"
+    )
+    assert a["verdict_note"] == "supported"
+    assert (b["status"], b["verdict"], b["cell"], b["magnitude"]) == (
+        "scored",
+        "supported",
+        "id SS5",
+        "-0.03",
+    )
+    assert b["inputs"] == (
+        "latency_arm dp id SS5 Ta8 K10 ens0; core dp id SS5 Ta8 K10 ens0"
+    )  # never a mixed cell: each side is its own tagged group
+    assert float(b["estimate"]) == 0.0  # identical synthetic outcomes on both sides
+    recs = {r["hypothesis"]: r for r in json.loads((root / "hypotheses.json").read_text())[
+        "hypotheses"
+    ]}  # fmt: skip
+    assert recs["H5(a)"]["kind"] == "latency" and recs["H5(a)"]["providers"]
+    beside = {x["label"]: x["text"] for x in recs["H5(b)"]["beside"]}
+    assert beside["delay"].startswith("d = 3 control steps") and "ort_cuda_fp32" in beside["delay"]
+    assert "off_pad" in beside["outcome classes, seed-episodes"]
+    assert any("Synchronous core dp at Ta = 8 succeeds on" in c and "at static" in c
+               for c in recs["H5(b)"]["caveats"])  # fmt: skip
+    con = {r["name"]: r for r in sc.read_csv(root / "contrasts.csv")}
+    for arm, ss in (("bc_dagger", "SS4"), ("bc_dagger", "SS5"), ("bc_dagger", "SS6"),
+                    ("dp", "SS4"), ("dp", "SS6")):  # fmt: skip
+        name = f"H5(b) context: {arm} latency arm - synchronous ({ss}, unscored)"
+        assert con[name]["status"] == "computed" and con[name]["kind"] == "descriptive, unscored"
+        assert con[name]["inputs"].startswith(f"latency_arm {arm} id {ss}")
+        assert (con[name]["flip_floor"] != "") == (ss == "SS6")
+        assert f"{name} relative p95 closing speed" in con
+        p95_note = con[f"{name} relative p95 closing speed"]["note"]
+        if arm == "dp":  # the measured dp flip rate beside every dp contrast
+            assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)" in con[name]["note"]
+            assert f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)" in p95_note
+            assert "control-step delay" not in con[name]["note"]
+            assert hy.LAST_ACTION_CONFOUND in con[name]["note"]  # dp contexts at SS4 and SS6
+        else:  # M4: the cost of whole control steps, and the last_action feedback channel
+            assert (
+                "the cost of a two-control-step delay (ceil of a 53.33 ms p99"
+                in (con[name]["note"])
+            )
+            assert (
+                "last_action in proprio carries the applied (delayed) action" in (con[name]["note"])
+            )
+            assert hy.DP_FLIP_LABEL not in con[name]["note"] + p95_note
+    assert con["H5(b)"]["status"] == "scored" and "H5(b) relative p95 closing speed" in con
+    assert con["H5(b)"]["note"].startswith(f"verdict: supported; {hy.DP_FLIP_LABEL}: 2/10")
+    assert hy.DP_FLIP_LABEL in con["H5(b) relative p95 closing speed"]["note"]
+    assert "H5(b) context: dp latency arm - synchronous (SS5, unscored)" not in con
+    agg = [r for r in sc.read_csv(root / "aggregate.csv") if r["tag"] == "latency_arm"]
+    assert {(r["arm"], r["ss"]) for r in agg} == {
+        (a, s) for a in ("bc_dagger", "dp") for s in ("SS4", "SS5", "SS6")
+    }
+    assert all(r["status"] == "complete" and r["n_seeds"] == "5" for r in agg)
+    info = json.loads((root / "score_info.json").read_text())
+    assert info["latency_arm"]["flown_d"] == {"bc_dagger": 2, "dp": 3}
+    assert len(info["latency_arm"]["delay_json_sha256"]) == 64
+    # M6: the latency stages' commits, from results/latency/run_info.json and the rows.
+    assert info["latency_arm"]["stage_commits"] == [
+        {
+            "ila_commit": es.SYNTHETIC_LATENCY_COMMITS["latency"],
+            "stages": ["closed_loop.csv rows", "latency", "latency.csv rows"],
+            "dirty_outside_results": False,
+            "dirty_inside_results_only": False,
+        },
+        {
+            "ila_commit": es.SYNTHETIC_LATENCY_COMMITS["export"],
+            "stages": ["export"],
+            "dirty_outside_results": False,
+            "dirty_inside_results_only": True,
+        },
+    ]
+    assert len(info["latency_arm"]["run_info_sha256"]) == 64
+
+
+def _latency_h3_job(job: object) -> bool:
+    """:func:`_latency_job` plus dp's Ta curve on id (H3 and its P6-D5 caveat cells)."""
+    return _latency_job(job) or (
+        getattr(job, "tag", "") == "dp_Ta" and getattr(job, "list_name", "") == "id"
+    )
+
+
+def test_parity_failure_texts_reach_every_output(tmp_path: Path) -> None:
+    """S3/S4: Phase 9's committed shape (no provider passes parity) in every scored text."""
+    lat_dir = es.write_latency_results(
+        tmp_path / "latency", verdict="not supported", parity_fails=True
+    )
+    root = tmp_path / "e08"
+    inp = es.synthetic_tree(
+        root, n=N, matrix=es.reduced_matrix(_latency_h3_job), outcome=_latency_outcome,
+        latency_dir=lat_dir,
+    )  # fmt: skip
+    sc.run_score(inp)
+    hyp = {r["hypothesis"]: r for r in sc.read_csv(root / "hypotheses.csv")}
+    note = hyp["H5(a)"]["verdict_note"]
+    assert hyp["H5(a)"]["verdict"] == "not supported"
+    assert "reflects outcome sensitivity of this dp, not a provider error" in note
+    assert "The latency bound also fails independently on every timed scored provider" in note
+    assert "Phase 9 measured this dp's own closed-loop flip rate: 4/10–5/10 episodes" in note
+    recs = {r["hypothesis"]: r for r in json.loads((root / "hypotheses.json").read_text())[
+        "hypotheses"
+    ]}  # fmt: skip
+    assert recs["H5(a)"]["verdict_note"] == note
+    b5 = {x["label"]: x["text"] for x in recs["H5(b)"]["beside"]}
+    assert b5["why d"].startswith("d = 3 is the torch_cpu_fp32 (1 thread) fallback delay")
+    assert "would have given d = ceil(52.6441 / 33.333) = 2" in b5["why d"]
+    assert b5["zero-action start"].startswith("the contrast includes the d = 3 zero-action")
+    assert b5[hy.DP_FLIP_LABEL].startswith("4/10–5/10 episodes (40.0–50.0 %)")
+    b3 = [x["label"] for x in recs["H3"]["beside"]]
+    assert b3.index(hy.DP_FLIP_LABEL) == b3.index("SS6 flip floor") + 1
+    con = {r["name"]: r for r in sc.read_csv(root / "contrasts.csv")}
+    for name in ("H3", "H3 relative p95 closing speed", "H5(b)",
+                 "H5(b) context: dp latency arm - synchronous (SS6, unscored)"):  # fmt: skip
+        assert f"{hy.DP_FLIP_LABEL}: 4/10–5/10 episodes" in con[name]["note"], name
+    assert hy.LAST_ACTION_CONFOUND in recs["H5(b)"]["caveats"]
+
+
+def test_latency_delay_mismatch_is_refused(
+    latency_tree: tuple[sc.ScoreInputs, Path], tmp_path: Path
+) -> None:
+    inp, _ = latency_tree
+    other = es.write_latency_results(tmp_path / "lat", delays={"bc_dagger": 2, "dp": 4})
+    with pytest.raises(sc.ScoreInputError, match="flown d 3 != delay.json d 4"):
+        sc.run_score(dataclasses.replace(inp, latency_dir=other), tmp_path / "out")
+
+
+def test_latency_rows_must_carry_their_d(
+    latency_tree: tuple[sc.ScoreInputs, Path], tmp_path: Path
+) -> None:
+    inp, root = latency_tree
+    job = next(j for j in inp.matrix.jobs if j.tag == "latency_arm" and j.arm == "dp")
+    wrong = dataclasses.replace(job, latency_steps=0)  # same file name would differ; rewrite
+    rows = [
+        es.student_row(e, wrong, "success", ckpt=f"ckpt-dp-{job.seed}")
+        for ss in job.sea_states
+        for e in es.listed_cell(job.list_name, ss, N)
+    ]
+    es.write_job(tmp_path, job, rows)  # job's own path, rows saying latency_steps 0
+    with pytest.raises(sc.ScoreInputError, match="latency_steps"):
+        sc.load_cells(
+            tmp_path,
+            dataclasses.replace(inp.matrix, jobs=(job,), shared=()),
+            episodes_per_cell=N,
+        )
+
+
 @pytest.mark.slow
 def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
-    """The frozen matrix, every job present (synthetic): H1-H4 scored, H5 deferred."""
-    inp = es.synthetic_tree(tmp_path, n=N)
+    """The frozen matrix, every job present (synthetic): H1-H5 scored."""
+    lat_dir = es.write_latency_results(tmp_path / "latency")
+    inp = es.synthetic_tree(tmp_path / "e08", n=N, latency_dir=lat_dir)
+    tmp_path = tmp_path / "e08"
     info = sc.run_score(inp)
     assert info["complete"] and info["cells_missing"] == 0
     hyp = {r["hypothesis"]: r for r in sc.read_csv(tmp_path / "hypotheses.csv")}
-    for h in ("H1", "H1-SS6", "H1-DART-SS5", "H1-DART-SS6", "H2", "H3", "H4"):
+    for h in ("H1", "H1-SS6", "H1-DART-SS5", "H1-DART-SS6", "H2", "H3", "H4", "H5(a)", "H5(b)"):
         assert hyp[h]["status"] == "scored", h
         assert hyp[h]["verdict"] in ("supported", "not supported", "inconclusive")
         assert hyp[h]["inputs"], h
-    names = {r["name"] for r in sc.read_csv(tmp_path / "contrasts.csv")}
+    con = {r["name"]: r for r in sc.read_csv(tmp_path / "contrasts.csv")}
+    names = set(con)
+    # The measured dp flip rate beside the H2 secondaries that include dp (core dp only).
+    flip = f"{hy.DP_FLIP_LABEL}: 2/10 episodes (20.0 %)"
+    for want in ("H2 secondary: success drop dp - dp_mix (unscored)",
+                 "H2 secondary: drop(bc) - drop(dp) (unscored)"):  # fmt: skip
+        assert flip in con[want]["note"], want
+        assert con[want]["note"].endswith("(core dp only; not measured for dp_mix)."), want
+    assert hy.DP_FLIP_LABEL not in con["H2 secondary: success drop bc - bc_mix (unscored)"]["note"]
     for want in (
         "H1 post hoc IQM",
         "H4 P",
@@ -355,6 +560,8 @@ def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
         "teacher check: dp_pid - pid_feedforward (id SS5)",
         "teacher check: dp_minus_last_action - ppo (id SS6)",
         "teacher check: modular - ppo (unseen_heading SS6)",
+        "H5(b) context: bc_dagger latency arm - synchronous (SS6, unscored)",
+        "H5(b) relative p95 closing speed",
     ):
         assert want in names, want
     shared = [
@@ -363,3 +570,20 @@ def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
         if r["tag"] == "dp_Ta" and r["Ta"] == "8" and r["ensemble"] == "False"
     ]
     assert shared and all(r["status"] == "shared" and r["rows_from"] for r in shared)
+
+
+def test_latency_stage_commits_read_tree_state_from_job_records(tmp_path: Path) -> None:
+    """A stage record replaced by a later invocation does not hide its commit's tree state."""
+    lat = tmp_path / "latency"
+    (lat / "jobs").mkdir(parents=True)
+    git_new = {"ila_commit": "bbb", "dirty": False, "dirty_outside_results": False}
+    (lat / "run_info.json").write_text(json.dumps({"stages": {"latency": {"git": git_new}}}))
+    (lat / "latency.csv").write_text("label,ila_commit\nx-b1,aaa\ny-b24,bbb\n")
+    git_old = {"ila_commit": "aaa", "dirty": True, "dirty_outside_results": False}
+    (lat / "jobs" / "x-b1.json").write_text(json.dumps({"git": git_old}))
+    stray = {"ila_commit": "zzz", "dirty": True, "dirty_outside_results": True}
+    (lat / "jobs" / "stray.json").write_text(json.dumps({"git": stray}))
+    by = {c["ila_commit"]: c for c in sc.latency_stage_commits(lat)["stage_commits"]}
+    assert set(by) == {"aaa", "bbb"}
+    assert by["aaa"]["dirty_inside_results_only"] and not by["aaa"]["dirty_outside_results"]
+    assert not by["bbb"]["dirty_inside_results_only"]

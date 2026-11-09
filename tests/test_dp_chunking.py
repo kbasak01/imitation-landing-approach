@@ -286,3 +286,63 @@ def test_ensemble_weights_sum_to_one_oldest_heaviest(n: int) -> None:
     # w_i / w_0 = exp(-m i), m = 0.01 (the config's m).
     np.testing.assert_allclose(w / w[0], np.exp(-0.01 * np.arange(n)), rtol=1e-15)
     assert ch.ENSEMBLE_DECAY == 0.01
+
+
+# Latency arm (P3-D1 §7): (start, Ta, d, t) -> request due. Hand-written, Ta = 8.
+REQUEST_DUE_TABLE = [
+    (None, 8, 0, 0, True),  # no chunk yet: always due
+    (None, 8, 5, 3, True),
+    (0, 8, 0, 0, False),  # d = 0: due only once the chunk has run out (t = start + Ta)
+    (0, 8, 0, 7, False),
+    (0, 8, 0, 8, True),
+    (2, 8, 2, 7, False),  # 3 steps left > d = 2
+    (2, 8, 2, 8, True),  # 2 steps left = d
+    (2, 8, 2, 9, True),  # 1 left
+    (9, 8, 9, 9, True),  # d > Ta: due on landing
+    (9, 8, 9, 20, True),  # run out
+    (0, 1, 0, 0, False),
+    (0, 1, 0, 1, True),
+]
+
+
+@pytest.mark.parametrize(("start", "ta", "d", "t", "due"), REQUEST_DUE_TABLE)
+def test_delayed_request_due_table(start: int | None, ta: int, d: int, t: int, due: bool) -> None:
+    assert ch.delayed_request_due(start, ta, d, t) is due
+
+
+# (start, Ta, t) -> offset into the executing chunk, None when none executes.
+CHUNK_OFFSET_TABLE = [
+    (None, 8, 0, None),
+    (None, 8, 11, None),
+    (0, 8, 0, 0),
+    (0, 8, 7, 7),
+    (0, 8, 8, None),  # ran out
+    (9, 8, 9, 0),
+    (9, 8, 16, 7),
+    (9, 8, 17, None),
+    (3, 1, 3, 0),
+    (3, 1, 4, None),
+]
+
+
+@pytest.mark.parametrize(("start", "ta", "t", "offset"), CHUNK_OFFSET_TABLE)
+def test_delayed_chunk_offset_table(start: int | None, ta: int, t: int, offset: int | None) -> None:
+    assert ch.delayed_chunk_offset(start, ta, t) == offset
+
+
+@pytest.mark.parametrize(
+    ("start", "ta", "d", "t"),
+    [
+        (0, 8, -1, 0),  # d < 0
+        (0, 0, 0, 0),  # Ta < 1
+        (5, 8, 0, 4),  # landed after t
+        (-1, 8, 0, 0),  # landed before step 0
+        (None, 8, 0, -1),  # t < 0
+    ],
+)
+def test_delayed_schedule_refuses_bad_arguments(start: int | None, ta: int, d: int, t: int) -> None:
+    with pytest.raises(ValueError):
+        ch.delayed_request_due(start, ta, d, t)
+    if d >= 0:
+        with pytest.raises(ValueError):
+            ch.delayed_chunk_offset(start, ta, t)

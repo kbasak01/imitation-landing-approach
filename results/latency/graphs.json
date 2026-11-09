@@ -1,0 +1,391 @@
+{
+  "dp": {
+    "K": 10,
+    "action_dim": 3,
+    "beta_schedule": "squaredcos_cap_v2",
+    "clip_sample": true,
+    "cond_dim": 256,
+    "eta": 0.0,
+    "horizon": 16,
+    "n_action_steps": 8,
+    "n_obs_steps": 2,
+    "num_train_timesteps": 100,
+    "timestep_spacing": "trailing",
+    "timesteps": [
+      99,
+      89,
+      79,
+      69,
+      59,
+      49,
+      39,
+      29,
+      19,
+      9
+    ],
+    "unrolled_vs_ddim_sample_torch_cpu": {
+      "bit_identical": true,
+      "max_abs": 0.0,
+      "ok": true
+    }
+  },
+  "graphs": {
+    "bc_dagger.onnx": {
+      "inputs": [
+        {
+          "elem_type": "UINT8",
+          "name": "images",
+          "shape": [
+            "batch",
+            2,
+            96,
+            96,
+            3
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "proprio",
+          "shape": [
+            "batch",
+            2,
+            13
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "action",
+          "shape": [
+            "batch",
+            3
+          ]
+        }
+      ],
+      "precision": "fp32",
+      "rng_ops": [],
+      "sha256": "23ce916d05d09865b6a6acb52e24624259bb2cdce96c50619b81c810dddb3294"
+    },
+    "bc_dagger_fp16.onnx": {
+      "inputs": [
+        {
+          "elem_type": "UINT8",
+          "name": "images",
+          "shape": [
+            "batch",
+            2,
+            96,
+            96,
+            3
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "proprio",
+          "shape": [
+            "batch",
+            2,
+            13
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "action",
+          "shape": [
+            "batch",
+            3
+          ]
+        }
+      ],
+      "precision": "fp16",
+      "rng_ops": [],
+      "sha256": "8368aa786ed28a380ac3525ab639fde4bd2c51308734a1a37c188b6f92ae9c2c"
+    },
+    "dp_K10.onnx": {
+      "inputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "global_cond",
+          "shape": [
+            "batch",
+            256
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "noise",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "chunk",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      ],
+      "precision": "fp32",
+      "rng_ops": [],
+      "sha256": "a0bf2c88ee7da03ca0737082dbf61cc76d8f3a6fa0465934882b75619ad55759"
+    },
+    "dp_K10_fp16.onnx": {
+      "inputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "global_cond",
+          "shape": [
+            "batch",
+            256
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "noise",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "chunk",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      ],
+      "precision": "fp16",
+      "rng_ops": [],
+      "sha256": "6610c876c7bee63bf0ff94f4fc782c4c244d5beb0647d5ad659f8b4f472f7339"
+    },
+    "dp_denoise_step.onnx": {
+      "inputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "sample",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        },
+        {
+          "elem_type": "INT64",
+          "name": "timestep",
+          "shape": [
+            "batch"
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "global_cond",
+          "shape": [
+            "batch",
+            256
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "eps",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      ],
+      "precision": "fp32",
+      "rng_ops": [],
+      "sha256": "a553183d5ea3f4aedfcd84ec86c88d57c65b859386eac25965326c70bac90f8a"
+    },
+    "dp_denoise_step_fp16.onnx": {
+      "inputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "sample",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        },
+        {
+          "elem_type": "INT64",
+          "name": "timestep",
+          "shape": [
+            "batch"
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "global_cond",
+          "shape": [
+            "batch",
+            256
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "eps",
+          "shape": [
+            "batch",
+            16,
+            3
+          ]
+        }
+      ],
+      "precision": "fp16",
+      "rng_ops": [],
+      "sha256": "a4b3f1b2d6dac15634f0e7c1353152aefae35c0287054a43fc1f67811d0479e7"
+    },
+    "dp_encoder.onnx": {
+      "inputs": [
+        {
+          "elem_type": "UINT8",
+          "name": "images",
+          "shape": [
+            "batch",
+            2,
+            96,
+            96,
+            3
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "proprio",
+          "shape": [
+            "batch",
+            2,
+            13
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "global_cond",
+          "shape": [
+            "batch",
+            256
+          ]
+        }
+      ],
+      "precision": "fp32",
+      "rng_ops": [],
+      "sha256": "2d0001f5fd4cdcae259a9a70c11064265151c51b09ccf9311db24d3bcce1a2ca"
+    },
+    "dp_encoder_fp16.onnx": {
+      "inputs": [
+        {
+          "elem_type": "UINT8",
+          "name": "images",
+          "shape": [
+            "batch",
+            2,
+            96,
+            96,
+            3
+          ]
+        },
+        {
+          "elem_type": "FLOAT",
+          "name": "proprio",
+          "shape": [
+            "batch",
+            2,
+            13
+          ]
+        }
+      ],
+      "opsets": {
+        "ai.onnx": 17
+      },
+      "outputs": [
+        {
+          "elem_type": "FLOAT",
+          "name": "global_cond",
+          "shape": [
+            "batch",
+            256
+          ]
+        }
+      ],
+      "precision": "fp16",
+      "rng_ops": [],
+      "sha256": "b1c0911d8c074b73fa1ad4783f9dac02818ecf233d5ea5ed9a250f000b5541ef"
+    }
+  },
+  "meta_sha256": "6e6a5cfd97de70c7afc537529ac671303d1e064d77f48764830f564870ce2e5f",
+  "sources": {
+    "bc_dagger": {
+      "arm": "bc_dagger",
+      "checkpoint": "artifacts/runs/bc_dagger/s0/checkpoints/s5_step005000.pt",
+      "checkpoint_sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+      "global_step": 45000,
+      "obs_variant": "default",
+      "seed": 0,
+      "selection_json": "results/phase5/runs/bc_dagger/s0/selection.json",
+      "selection_json_sha256": "98e2451fd9a01f0d38a8d68bd787fa0485cb73cae7a6931e606e227a68f47e30",
+      "weights": "ema"
+    },
+    "dp": {
+      "arm": "dp",
+      "checkpoint": "artifacts/runs/dp/s0/checkpoints/s0_step100000.pt",
+      "checkpoint_sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+      "global_step": 100000,
+      "obs_variant": "default",
+      "seed": 0,
+      "selection_json": "results/phase6/runs/dp/s0/selection.json",
+      "selection_json_sha256": "6163f0d0f2fe4dfb211aec4b7b468f021fe295ebf577a63acb0b22802038a09b",
+      "weights": "ema"
+    }
+  },
+  "versions": {
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "created_utc": "2026-11-07T18:46:17+00:00",
+  "delay_json": "results/latency/delay.json",
+  "delay_json_sha256": "846fbf6873b808ef5f8dedad74f33e19c5277f207ff2170acf247908c867dd8f",
+  "delays": {
+    "bc_dagger": 1,
+    "dp": 6
+  }
+}

@@ -14,6 +14,18 @@ never wired for trained checkpoints (``batched.shared_net_factory`` builds dummy
 ``SharedDPPolicy`` has no ensembling) and it refuses ``modular``. This module does not import it
 (``tests/test_eval_matrix.py``). Rows do not depend on ``workers`` or ``chunk`` (P2-D3 item 1).
 
+Latency arm (tag ``latency_arm``, Phase 9, P3-D1 §7): :func:`latency_flight` builds
+``deploy-benchmarker``'s interface -- ``functools.partial(delayed_checkpoint_policy, path, d,
+n_action_steps=8, num_inference_steps=10)`` (``bc_dagger``: no ``Ta``/``K``) wrapped in
+``p8_adapter.callable_spec`` -- and rows tagged ``RowTags(..., latency_steps=d)``, then flies them
+through the same runner call as :func:`ila.train.select.fly_checkpoint` (same episodes, render,
+contract variant read from the checkpoint, diagnostics, shadow teacher), on the same CPU fp32
+single-sample path as the synchronous core rows it is contrasted with (P3-D1 §3; P9-D1 item 10).
+At ``d = 0`` the call equals the synchronous core job's except for the build function
+(``tests/test_eval_matrix.py``); the delayed student equals the synchronous one row for row at
+``d = 0`` (``tests/test_deploy_latency_arm.py``). Checkpoints, selection pins and the bytes check
+are the core arm's: the latency arm adds no arm, so ``selection_pins.json`` is unchanged.
+
 Shadow teacher (``teacher_agreement``)
 -------------------------------------
 :func:`shadow_groups`: ``T_ppo`` arms -> P8 ``ppo`` seed 0; ``T_pid`` arms -> ``pid_feedforward``;
@@ -43,6 +55,13 @@ Outputs (under ``out``, default ``results/e08``)
 * ``run_info.json``: commits, list hashes, config hashes, committed-row provenance, host, the
   shared cells, the skipped blocks, every invocation, and per-job wall clocks
   (:func:`write_run_info`).
+* ``latency_pins.json``: the latency arm's ``delay.json`` (repository path, SHA-256) and its
+  ``d`` per arm, pinned by the first non-smoke invocation that expands the latency arm from
+  ``delay.json``; every later invocation must expand the same bytes and the same ``d``, and
+  every latency job re-hashes ``delay.json`` before it flies (:func:`check_or_pin_delays`;
+  privileged-leak review, Phase 9 R1: a regenerated ``delay.json`` would otherwise fly under a
+  new ``__latency-d<d>`` stem and orphan the old rows). ``run_info.json`` records the pin and
+  ``delay.json``'s SHA-256 and ``d``; each latency sidecar records them too.
 * ``selection_pins.json``: ``{"<arm>/s<seed>": selection.json SHA-256}`` for every (arm, seed)
   of the whole matrix, written by the first non-smoke invocation; every later invocation
   re-resolves them and refuses to fly if any differs (:func:`check_or_pin_selections`;
@@ -73,12 +92,16 @@ single-sample path, Ta = 8 / K = 10 for diffusion arms). Assumptions, stated in 
 4. Appearance shift costs as the committed look; the shadow teacher's MLP per step and the pool
    start-up per job are not added (both are included in the measured selection rate only to the
    extent selection had them: start-up yes, shadow no).
+5. Latency arm (:func:`latency_cost_ratio`): episodes as long as the synchronous arm's; one
+   inference call per ``max(d, 1)`` steps for BC and per ``max(d, Ta)`` steps for ``dp``
+   (requests never overlap, P3-D1 §7), with :data:`P2D2_MS` costs; BC's head is free.
 """
 
 from __future__ import annotations
 
 import csv
 import dataclasses
+import functools
 import gzip
 import hashlib
 import io
@@ -92,9 +115,11 @@ from pathlib import Path
 from typing import Any, Final
 
 from ila import p8_adapter
+from ila.deploy import latency_arm as deploy_latency_arm
 from ila.eval import arms as ev_arms
 from ila.eval import h2_select, runner
 from ila.eval.jobs import JobStatus, host_info, now_utc, rel, write_json
+from ila.policies.registry import read_checkpoint
 from ila.provenance import EXPECTED_MANIFEST_SHA256
 from ila.render.config import RENDER_CONFIG_PATH
 from ila.train import manifest as mf
@@ -103,7 +128,9 @@ from ila.train import select as train_select
 __all__ = [
     "CAMERA_SHA256_PREFIX",
     "CAMERA_SHA256_SUFFIX",
+    "DelayPinError",
     "EXTRA_COLUMNS",
+    "LATENCY_PINS_FILE",
     "OUT_ROOT",
     "P2D2_MS",
     "PROJECTION_ASSUMPTIONS",
@@ -114,6 +141,7 @@ __all__ = [
     "JobProjection",
     "RowCheckError",
     "SelectionPinError",
+    "check_or_pin_delays",
     "check_or_pin_selections",
     "check_rows",
     "diffusion_cost_ratio",
@@ -123,6 +151,8 @@ __all__ = [
     "fly_job",
     "gzip_bytes",
     "job_done",
+    "latency_cost_ratio",
+    "latency_flight",
     "order_jobs",
     "ppo_cell_lengths",
     "project",
@@ -143,6 +173,9 @@ OUT_ROOT: Final[Path] = p8_adapter.REPO_ROOT / "results" / "e08"
 
 #: Selection pins, under the output root (module docstring).
 PINS_FILE: Final[str] = "selection_pins.json"
+
+#: The latency arm's ``delay.json`` pin, under the output root (module docstring).
+LATENCY_PINS_FILE: Final[str] = "latency_pins.json"
 
 #: ``status.json`` and the log of the background job.
 STATUS_DIR: Final[Path] = p8_adapter.REPO_ROOT / "artifacts" / "runs" / "eval"
@@ -173,6 +206,8 @@ PROJECTION_ASSUMPTIONS: Final[tuple[str, ...]] = (
     "diffusion: cost(L) = L*11 ms + calls*(31 ms + K*14 ms) (P2-D2 single-thread dummy dp), "
     "calls = L with ensembling else ceil(L/Ta); scaled by its ratio to Ta = 8, K = 10",
     "appearance shift costs as the committed look; shadow-teacher MLP cost not added",
+    "latency arm: episodes as long as the synchronous arm's; one call per max(d, 1) steps (BC) "
+    "or max(d, Ta) steps (dp), P2-D2 costs, BC head free; ratio to the measured select rate",
 )
 
 #: Diffusion inference at which selection measured the rate (P3-D1 §4).
@@ -189,6 +224,10 @@ class RowCheckError(AssertionError):
 
 class SelectionPinError(RuntimeError):
     """A selection record differs from the one pinned by the first invocation."""
+
+
+class DelayPinError(RuntimeError):
+    """The latency arm's ``delay.json`` or ``d`` differs from the first invocation's pin."""
 
 
 # --------------------------------------------------------------------------- rows out
@@ -270,6 +309,87 @@ def shadow_groups(
     return [(p, idx) for p, idx in groups if idx]
 
 
+def latency_flight(
+    job: ev_arms.Job, ckpt: ev_arms.Checkpoint
+) -> tuple[p8_adapter.PolicySpec, runner.RowTags]:
+    """The latency arm's policy spec and row tags (module docstring; P3-D1 §7).
+
+    Args:
+        job: A ``latency_arm`` job (``latency_steps`` = d control steps, 33.333 ms model scale
+            each).
+        ckpt: Its resolved checkpoint (the core arm's).
+
+    Returns:
+        ``(callable_spec(arm, partial(delayed_checkpoint_policy, path, d, ...)), RowTags)``.
+
+    Raises:
+        ValueError: If the job is not a latency job, its checkpoint is an ONNX export, or a
+            diffusion job asks for ensembling or a non-``Ta = 8``, ``K = 10`` setting.
+    """
+    d = job.latency_steps
+    if job.tag != ev_arms.LATENCY_TAG or d is None:
+        raise ValueError(f"{job.rel_path}: not a latency_arm job")
+    if ckpt.kind == train_select.ONNX_EXPORTS:
+        raise ValueError(f"{job.rel_path}: the latency arm flies .pt checkpoints only")
+    if job.inference is None:
+        build = functools.partial(deploy_latency_arm.delayed_checkpoint_policy, str(ckpt.path), d)
+        tags = runner.RowTags(
+            arm=job.arm,
+            teacher=ckpt.teacher,
+            student_seed=job.seed,
+            ckpt_sha256=ckpt.sha256,
+            latency_steps=d,
+        )
+    else:
+        ta, k, ensemble = job.inference.as_tuple()
+        if ensemble or (ta, k) != (8, 10):
+            raise ValueError(f"{job.rel_path}: the latency arm flies dp at Ta = 8, K = 10, off")
+        build = functools.partial(
+            deploy_latency_arm.delayed_checkpoint_policy,
+            str(ckpt.path),
+            d,
+            n_action_steps=ta,
+            num_inference_steps=k,
+        )
+        tags = runner.RowTags(
+            arm=job.arm,
+            teacher=ckpt.teacher,
+            student_seed=job.seed,
+            Ta=ta,
+            K=k,
+            ensemble=False,
+            ckpt_sha256=ckpt.sha256,
+            latency_steps=d,
+        )
+    return p8_adapter.callable_spec(job.arm, build, run_seed=job.seed), tags
+
+
+def _fly_latency(
+    job: ev_arms.Job,
+    ckpt: ev_arms.Checkpoint,
+    episodes: Sequence[p8_adapter.ListedEpisode],
+    *,
+    workers: int,
+    chunk: int,
+    shadow_teacher: p8_adapter.PolicySpec,
+) -> list[dict[str, Any]]:
+    """Fly a latency job: :func:`ila.train.select.fly_checkpoint`'s runner call, delayed build."""
+    spec, tags = latency_flight(job, ckpt)
+    return runner.run_list_vision(
+        episodes,
+        spec,
+        p8_adapter.load_eval_configs(),
+        tags,
+        render="full",
+        workers=workers,
+        chunk=chunk,
+        appearance_shift=job.appearance_shift,
+        contract_variant=str(read_checkpoint(ckpt.path)["obs_variant"]),
+        diagnostics=True,
+        shadow_teacher=shadow_teacher,
+    )
+
+
 def fly_job(
     job: ev_arms.Job,
     ckpt: ev_arms.Checkpoint,
@@ -293,20 +413,27 @@ def fly_job(
     rows: list[dict[str, Any] | None] = [None] * len(episodes)
     plan = []
     for teacher_name, idx in shadow_groups(ckpt.teacher, episodes):
-        out = train_select.fly_checkpoint(
-            ckpt.path,
-            [episodes[i] for i in idx],
-            arm=job.arm,
-            run_seed=job.seed,
-            sha256=ckpt.sha256,
-            workers=workers,
-            chunk=chunk,
-            inference=None if job.inference is None else job.inference.as_tuple(),
-            teacher=ckpt.teacher,
-            appearance_shift=job.appearance_shift,
-            diagnostics=True,
-            shadow_teacher=p8_adapter.teacher_spec(teacher_name),
-        )
+        shadow = p8_adapter.teacher_spec(teacher_name)
+        group = [episodes[i] for i in idx]
+        if job.latency_steps is not None:
+            out = _fly_latency(
+                job, ckpt, group, workers=workers, chunk=chunk, shadow_teacher=shadow
+            )
+        else:
+            out = train_select.fly_checkpoint(
+                ckpt.path,
+                group,
+                arm=job.arm,
+                run_seed=job.seed,
+                sha256=ckpt.sha256,
+                workers=workers,
+                chunk=chunk,
+                inference=None if job.inference is None else job.inference.as_tuple(),
+                teacher=ckpt.teacher,
+                appearance_shift=job.appearance_shift,
+                diagnostics=True,
+                shadow_teacher=shadow,
+            )
         if len(out) != len(idx):
             raise RowCheckError(f"{job.rel_path}: {len(out)} rows for {len(idx)} episodes")
         for i, r in zip(idx, out, strict=True):
@@ -369,6 +496,7 @@ def check_rows(
         "Ta": "" if inf is None else str(inf.Ta),
         "K": "" if inf is None else str(inf.K),
         "ensemble": "" if inf is None else str(inf.ensemble),
+        "latency_steps": str(job.latency_steps or 0),
         "render_cfg_sha256": runner.render_cfg_sha256("full", job.appearance_shift),
     }
     for col, value in want_tags.items():
@@ -558,6 +686,30 @@ def diffusion_cost_ratio(inf: ev_arms.Inference, steps: float) -> float:
     return cost(inf) / cost(_SELECT_INF)
 
 
+def latency_cost_ratio(job: ev_arms.Job, steps: float) -> float:
+    """Cost of a latency-arm episode of ``steps`` control steps over its synchronous cost.
+
+    Assumption 5 (module docstring): one call per ``max(d, 1)`` steps (BC) or ``max(d, Ta)``
+    steps (``dp``), :data:`P2D2_MS` costs; the synchronous reference is one call per step
+    (BC) or the measured ``Ta = 8``, ``K = 10`` setting (``dp``). ``d = 0`` gives 1.
+
+    Raises:
+        ValueError: If ``job`` is not a latency job.
+    """
+    d = job.latency_steps
+    if d is None:
+        raise ValueError(f"{job.rel_path}: not a latency_arm job")
+    ms = P2D2_MS
+    if job.inference is None:
+        sync = steps * (ms["step"] + ms["encoder"])
+        return (steps * ms["step"] + math.ceil(steps / max(d, 1)) * ms["encoder"]) / sync
+    inf = job.inference
+    per_call = ms["encoder"] + inf.K * ms["denoise"]
+    delayed = steps * ms["step"] + math.ceil(steps / max(d, inf.Ta)) * per_call
+    sync_inf = steps * ms["step"] + math.ceil(steps / inf.Ta) * per_call
+    return (delayed / sync_inf) * diffusion_cost_ratio(inf, steps)
+
+
 def project(
     jobs: Sequence[ev_arms.Job],
     checkpoints: Mapping[tuple[str, int], ev_arms.Checkpoint],
@@ -580,7 +732,12 @@ def project(
         steps = cpu = 0.0
         for cell in j.sea_states:
             ep_steps = ck.select_mean_steps * lengths[(j.list_name, cell)] / proxy
-            ratio = 1.0 if j.inference is None else diffusion_cost_ratio(j.inference, ep_steps)
+            if j.latency_steps is not None:
+                ratio = latency_cost_ratio(j, ep_steps)
+            elif j.inference is None:
+                ratio = 1.0
+            else:
+                ratio = diffusion_cost_ratio(j.inference, ep_steps)
             n = ev_arms.EPISODES_PER_CELL
             steps += n * ep_steps
             cpu += n * ep_steps * ck.cpu_s_per_step * ratio
@@ -753,6 +910,100 @@ def check_or_pin_selections(
     return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pins": current, "created": True}
 
 
+def _latency_d(matrix: ev_arms.Matrix) -> dict[str, int]:
+    """Arm -> the ``d`` its ``latency_arm`` jobs fly with (empty without latency jobs)."""
+    out: dict[str, int] = {}
+    for j in matrix.jobs:
+        d = j.latency_steps
+        if j.tag == ev_arms.LATENCY_TAG and d is not None and out.setdefault(j.arm, d) != d:
+            raise DelayPinError(f"latency_arm {j.arm}: two delays in one matrix")
+    return out
+
+
+def _delay_path(file: str) -> Path:
+    p = Path(file)
+    return p if p.is_absolute() else p8_adapter.REPO_ROOT / p
+
+
+def check_or_pin_delays(
+    out_root: Path, matrix: ev_arms.Matrix, jobs: Sequence[ev_arms.Job], *, write: bool
+) -> dict[str, Any]:
+    """Compare the latency arm's ``delay.json`` and ``d`` with ``latency_pins.json``, or pin them.
+
+    Args:
+        out_root: Output root.
+        matrix: The expanded matrix (its :attr:`ila.eval.arms.Matrix.delay_source`).
+        jobs: The jobs this invocation flies.
+        write: Write the pin when the file does not exist (a non-smoke invocation).
+
+    Returns:
+        ``{"file", "sha256", "pin", "created"}``: the pin file (``None`` when nothing is
+        pinned) and the record every latency job is checked against (``None`` without one).
+
+    Raises:
+        DelayPinError: If a pin exists and the matrix's ``delay.json`` SHA-256 or any arm's
+            ``d`` differs from it; or a non-smoke invocation would fly a latency job with
+            ``d`` not read from ``delay.json``. Nothing is flown in either case.
+    """
+    path = out_root / LATENCY_PINS_FILE
+    flown = _latency_d(matrix)
+    src = matrix.delay_source
+    current = None
+    if flown and src is not None:
+        current = {"delay_json": src.get("file"), "delay_json_sha256": src.get("sha256"),
+                   "delays": dict(sorted(flown.items()))}  # fmt: skip
+    if path.is_file():
+        pinned = mf.read_json(path)
+        if current is not None:
+            same = (pinned.get("delay_json_sha256"), pinned.get("delays")) == (
+                current["delay_json_sha256"],
+                current["delays"],
+            )
+            if not same:
+                raise DelayPinError(
+                    f"{path}: delay.json {current['delay_json_sha256']} with d "
+                    f"{current['delays']} differs from the pin {pinned.get('delay_json_sha256')} "
+                    f"with d {pinned.get('delays')}; nothing flown (a resumed latency arm must "
+                    "fly the d it started with)"
+                )
+        return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pin": pinned,
+                "created": False}  # fmt: skip
+    wants_latency = any(j.latency_steps is not None for j in jobs)
+    if current is None or current["delay_json_sha256"] is None:
+        if write and wants_latency:
+            raise DelayPinError(
+                "latency_arm jobs fly only with d read from results/latency/delay.json "
+                "(load_matrix without delays=); nothing flown"
+            )
+        return {"file": None, "sha256": None, "pin": current, "created": False}
+    if not write:
+        return {"file": None, "sha256": None, "pin": current, "created": False}
+    write_json(path, {"created_utc": now_utc(), **current})
+    return {"file": rel(path), "sha256": _sha(path.read_bytes()), "pin": current, "created": True}
+
+
+def _check_delay_now(job: ev_arms.Job, pin: Mapping[str, Any] | None) -> None:
+    """Before a latency job flies: its ``d`` is the pinned one and ``delay.json`` is unchanged.
+
+    Raises:
+        DelayPinError: On any difference (the job is not flown).
+    """
+    if job.latency_steps is None:
+        return
+    if pin is None:
+        raise DelayPinError(f"{job.rel_path}: no delay record for a latency job")
+    want = pin.get("delays", {}).get(job.arm)
+    if want != job.latency_steps:
+        raise DelayPinError(f"{job.rel_path}: d {job.latency_steps} != pinned d {want}")
+    file, sha = pin.get("delay_json"), pin.get("delay_json_sha256")
+    if file is None or sha is None:
+        return  # smoke / explicit delays: nothing on disk to re-check
+    path = _delay_path(str(file))
+    now = p8_adapter.sha256_file(path) if path.is_file() else None
+    if now != sha:
+        raise DelayPinError(f"{path}: SHA-256 {now} != pinned {sha}: delay.json changed mid-run")
+
+
 def run_jobs(
     jobs: Sequence[ev_arms.Job],
     matrix: ev_arms.Matrix,
@@ -786,17 +1037,29 @@ def run_jobs(
     Raises:
         DirtyTreeError: On a dirty tree without ``allow_dirty``.
         SelectionPinError: If a selection differs from its pin (before anything is flown).
+        DelayPinError: If ``delay.json`` or a ``d`` differs from its pin (before anything is
+            flown, or before the latency job that would fly under it).
     """
     dirty = dirty_paths(exclude=out_root)
     if dirty and not allow_dirty:
         raise DirtyTreeError(f"uncommitted changes (use --allow-dirty for a smoke run): {dirty}")
     pins = check_or_pin_selections(out_root, matrix, write=frozen)
+    delay_pins = check_or_pin_delays(out_root, matrix, jobs, write=frozen)
+    delay_pin = delay_pins["pin"]
     episodes_of = expected_episodes if episodes_of is None else episodes_of
     status = JobStatus(status_dir, "eval")
     ila_commit = _git("rev-parse", "HEAD").strip()
     static = {
         **static_provenance(out_root),
         "selection_pins": {"file": pins["file"], "sha256": pins["sha256"]},
+        "latency_pins": {"file": delay_pins["file"], "sha256": delay_pins["sha256"]},
+        "delay_json": None
+        if delay_pin is None
+        else {
+            "file": delay_pin.get("delay_json"),
+            "sha256": delay_pin.get("delay_json_sha256"),
+            "delays": delay_pin.get("delays"),
+        },
     }
     invocation = {
         "id": status.record["started_utc"],
@@ -809,6 +1072,7 @@ def run_jobs(
         "chunk": chunk,
         "jobs_requested": len(jobs),
         "selection_pins_created": pins["created"],
+        "latency_pins_created": delay_pins["created"],
     }
     provenance = {
         "ila_commit": ila_commit,
@@ -833,6 +1097,7 @@ def run_jobs(
                 if pins["pins"][f"{job.arm}/s{job.seed}"] != ckpt.selection_json_sha256:
                     raise SelectionPinError(f"{job.arm} s{job.seed}: selection changed mid-run")
                 ev_arms.verify_checkpoint_bytes(ckpt)  # bytes, arm, seed, obs_variant; every job
+                _check_delay_now(job, delay_pin)  # latency jobs: pinned d, delay.json unchanged
                 status.update(current_job=job.rel_path.as_posix())
                 t0 = time.perf_counter()
                 rows, plan = fly_job(job, ckpt, episodes, workers=workers, chunk=chunk)
@@ -846,7 +1111,15 @@ def run_jobs(
                     plan=plan,
                     wall_clock_s=wall,
                     workers=workers,
-                    provenance=provenance,
+                    provenance=provenance
+                    if job.latency_steps is None
+                    else {
+                        **provenance,
+                        "latency_steps": job.latency_steps,
+                        "delay_json_sha256": None
+                        if delay_pin is None
+                        else delay_pin.get("delay_json_sha256"),
+                    },
                 )
                 flown_eps += len(episodes)
                 flown_s += wall

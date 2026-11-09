@@ -1,0 +1,45 @@
+{
+  "git": {
+    "dirty": true,
+    "dirty_outside_results": false,
+    "dirty_paths": [
+      " M results/latency/run_info.json",
+      "?? results/latency/closed_loop.csv",
+      "?? results/latency/closed_loop/bc_dagger/ort_cpu_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp16.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/ort_trt_fp16.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_trt_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/ort_trt_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/torch_cpu_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/torch_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/bc_dagger/torch_cuda_fp32.json",
+      "?? results/latency/closed_loop/bc_dagger/torch_cuda_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/ort_cpu_fp32.json",
+      "?? results/latency/closed_loop/dp/ort_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/ort_cuda_fp16.json",
+      "?? results/latency/closed_loop/dp/ort_cuda_fp32.json",
+      "?? results/latency/closed_loop/dp/ort_cuda_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/ort_trt_fp16.json",
+      "?? results/latency/closed_loop/dp/ort_trt_fp32.json",
+      "?? results/latency/closed_loop/dp/ort_trt_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/torch_cpu_fp32.json",
+      "?? results/latency/closed_loop/dp/torch_cpu_fp32_rows.csv",
+      "?? results/latency/closed_loop/dp/torch_cuda_fp32.json",
+      "?? results/latency/closed_loop/dp/torch_cuda_fp32_rows.csv"
+    ],
+    "ila_commit": "3b2ae853487678c16d40b9e813f4edb43435983b"
+  },
+  "job": {
+    "batch": 1,
+    "provider": "ort_cuda_fp16",
+    "row": "bc_e2e",
+    "threads": 1,
+    "timed": 2000,
+    "warmup": 200
+  },
+  "label": "bc_e2e-ort_cuda_fp16-b1-t1",
+  "status": "refused (open-loop parity not passed)"
+}

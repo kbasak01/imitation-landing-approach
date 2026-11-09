@@ -1,0 +1,28 @@
+{
+  "draw": "numpy.random.default_rng(draw_seed).choice(N, n, replace=False), sorted",
+  "draw_seed": 20261023,
+  "episodes": 150,
+  "file": "artifacts/deploy/inputs/select_inputs.npz",
+  "images_shape": [
+    1000,
+    2,
+    96,
+    96,
+    3
+  ],
+  "list": "select",
+  "list_sha256": "07ecf049cbf91e646036582b4967607e26cf68773bd486c8d7375d043f29422b",
+  "n": 1000,
+  "policy": "ppo s0 (P8), CPU path, render full",
+  "proprio_shape": [
+    1000,
+    2,
+    13
+  ],
+  "sha256": "d217ea891782a41c11e36730c2ca3c84c81709628ba21f06cf8fd2f80768b75c",
+  "teacher_outcomes": {
+    "hard_landing": 1,
+    "success": 149
+  },
+  "windows_total": 9218
+}
