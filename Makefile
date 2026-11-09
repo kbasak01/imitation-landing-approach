@@ -32,7 +32,7 @@ EVAL    ?=
 .PHONY: r1-export r1-dataset r1-train lint test format smoke verify-p8 reproduce-p8 label-parity throughput determinism collect train-smoke train-bg \
         select-bg budget dagger-bg dagger-report dp-sweeps dp-diagnostics eval eval-bg score bench report figures gifs all \
         bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score bench-check \
-        bench-recheck-reference
+        bench-recheck-reference bench-d0-check
 
 # --- implemented ------------------------------------------------------------------
 
@@ -166,11 +166,19 @@ bench-parity:      ; $(PY) scripts/deploy/bench.py parity $(BENCH)
 bench-closed-loop: ; $(PY) scripts/deploy/bench.py closed-loop $(BENCH)
 bench-latency:     ; $(PY) scripts/deploy/bench.py latency $(BENCH)
 bench-score:       ; $(PY) scripts/deploy/bench.py score
-# --check mode: every results/latency table re-rendered from its committed records, byte for byte.
+# --check mode: every results/latency table re-rendered from its committed records, byte for byte;
+# results/latency/d0_check.json (once flown) re-decided from its rows files' bytes, no flight.
 bench-check:       ; $(PY) scripts/deploy/bench.py check
 # Re-decides reference_equals_selection_rows of the reference records from file bytes (no flight).
 bench-recheck-reference: ; $(PY) scripts/deploy/bench.py recheck-reference $(BENCH)
-bench: bench-export bench-inputs bench-parity bench-closed-loop bench-latency bench-score
+# P3-D1 §7 "d = 0 equals the synchronous arm", on the real arms: the latency arm's delayed build
+# at d = 0 on the seed-0 pinned bc_dagger and dp (Ta 8, K 10, no ensembling), 150 select
+# episodes, CPU fp32 single-sample path (24 workers, ~1-2 min per arm); each rows file compared
+# byte for byte with the committed selection rows -> results/latency/d0_check.json and
+# d0_check/<arm>_rows.csv. Refuses a dirty tree outside results/latency/. Background:
+#   mkdir -p artifacts/runs/bench && nohup make bench-d0-check > artifacts/runs/bench/d0_check.log 2>&1 &
+bench-d0-check:    ; $(PY) scripts/deploy/bench.py d0-check $(BENCH)
+bench: bench-export bench-inputs bench-parity bench-closed-loop bench-d0-check bench-latency bench-score
 
 # The project in methodology order. Long jobs (collect, train-bg, dagger-bg) are launched by
 # hand from /train-job and are not in `all`.

@@ -16,7 +16,13 @@ commit, the dirty flag, the environment stamp, the graph hashes, its wall clock)
 6. ``score``: H5(a) and d -> ``h5a.csv``, ``delay.json``.
 
 ``check``: every CSV and ``delay.json`` re-rendered from the committed records and compared byte
-for byte (no flight, no timing).
+for byte (no flight, no timing); :func:`check_d0` re-decides ``d0_check.json`` from its files.
+
+``d0-check``: :func:`ila.deploy.d0_check.run_d0_check` flies the latency arm's delayed build at
+``d = 0`` on the seed-0 pinned ``bc_dagger`` and ``dp`` checkpoints (150 ``select`` episodes,
+CPU fp32 single-sample path) and compares each rows file byte for byte with the committed
+selection rows (P3-D1 §7, "d = 0: the arm equals the synchronous arm row for row") ->
+``d0_check/<arm>_rows.csv``, ``d0_check.json`` and ``run_info.json`` (``d0_check``).
 
 ``recheck-reference``: :func:`ila.deploy.closed_loop.recheck_reference_rows` re-decides the
 reference records' ``reference_equals_selection_rows`` from the files' bytes (no flight),
@@ -40,6 +46,7 @@ import numpy as np
 
 from ila import p8_adapter
 from ila.deploy import closed_loop as cl
+from ila.deploy import d0_check as d0
 from ila.deploy import export as ex
 from ila.deploy import inputs as inp
 from ila.deploy import latency as lat
@@ -49,7 +56,9 @@ from ila.deploy.settings import BenchSettings
 __all__ = [
     "DirtyTreeError",
     "check",
+    "check_d0",
     "stage_closed_loop",
+    "stage_d0_check",
     "stage_export",
     "stage_inputs",
     "stage_latency",
@@ -339,6 +348,33 @@ def stage_recheck_reference(
     return res
 
 
+def stage_d0_check(
+    settings: BenchSettings,
+    *,
+    arms: Sequence[str] = ("bc_dagger", "dp"),
+    workers: int | None = None,
+    allow_dirty: bool = False,
+    log: Callable[[str], None] = print,
+) -> dict[str, Any]:
+    """The latency arm at ``d = 0`` against selection's rows (module docstring)."""
+    git = _git_checked(settings, allow_dirty)
+    p8_adapter.latency_harness().disable_tf32()
+    t0 = time.perf_counter()
+    rec = d0.run_d0_check(settings, git=git, arms=arms, workers=workers, log=log)
+    _run_info(
+        settings,
+        "d0_check",
+        {
+            "time_utc": _now(),
+            "git": git,
+            "wall_s": time.perf_counter() - t0,
+            "arms_flown": {a: bool(rec["arms"][a]["identical"]) for a in arms},
+            "identical": rec["identical"],
+        },
+    )
+    return rec
+
+
 def stage_latency(
     settings: BenchSettings,
     *,
@@ -444,3 +480,11 @@ def check(settings: BenchSettings) -> list[str]:
         if not path.is_file() or path.read_text("utf-8") != text:
             bad.append(name)
     return bad
+
+
+def check_d0(settings: BenchSettings) -> list[str]:
+    """``d0_check.json`` re-decided from its files (:func:`ila.deploy.d0_check.verify_record`).
+
+    Empty when the record does not exist yet, or when it agrees with the files on disk.
+    """
+    return d0.verify_record(settings)
