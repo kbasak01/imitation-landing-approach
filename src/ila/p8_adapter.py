@@ -48,11 +48,13 @@ import hashlib
 import io
 import re
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+import numpy as np
+import numpy.typing as npt
 import pybullet as pyb
 import yaml
 from dmf.data.splits import realization_key
@@ -101,6 +103,11 @@ from rld.eval.runner import (
 from rld.eval.truth import td_in_quiescent_window, touchdown_rule
 from rld.rl.train import build_policy
 
+# P8's fixed world-frame GIF camera (``rld.viz.gifs.Camera``: TinyRenderer ``getCameraImage``
+# on a DIRECT client, reads state only), held by reference for the README hero GIFs
+# (``ila.viz.hero``). Renamed so it is not confused with the student's body-fixed camera.
+from rld.viz.gifs import Camera as OutsideCamera
+
 __all__ = [
     "ACTION_DIM",
     "CELL_METRIC_COLUMNS",
@@ -131,6 +138,8 @@ __all__ = [
     "ListedEpisode",
     "MotionKind",
     "ObsField",
+    "OutsideCamera",
+    "OutsideViewTimingError",
     "P8Stats",
     "PolicySpec",
     "PrivilegedContext",
@@ -144,6 +153,7 @@ __all__ = [
     "committed_rows",
     "compare_to_reference",
     "content_sha256",
+    "controller_facts",
     "controller_spec",
     "cpu_session",
     "dev_pool",
@@ -151,6 +161,7 @@ __all__ = [
     "feed_skip_reason",
     "label_entropy",
     "latency_harness",
+    "grab_outside_view",
     "list_names",
     "list_path",
     "list_paths",
@@ -164,8 +175,10 @@ __all__ = [
     "open_session",
     "p8_commit",
     "p8_submodule_commits",
+    "p8_relpath",
     "pad_offset_for",
     "physics_step_count",
+    "ppo_teacher_facts",
     "read_list",
     "read_text",
     "realization_key",
@@ -927,3 +940,139 @@ def latency_harness() -> LatencyHarness:
         CONTROL_PERIOD_MS=float(p8_latency.CONTROL_PERIOD_MS),
         CHILD_TIMEOUT_S=float(CHILD_TIMEOUT_S),
     )
+
+
+# --------------------------------------------------------------------------- model specs (Phase 11)
+
+
+def p8_relpath(path: Path) -> str:
+    """Return a path inside P8's checkout relative to P8's root (POSIX), for citing P8 files.
+
+    Raises:
+        ValueError: If ``path`` is not inside P8's checkout.
+    """
+    return Path(path).resolve().relative_to(Path(P8_ROOT).resolve()).as_posix()
+
+
+def ppo_teacher_facts() -> dict[str, Any]:
+    """Return P8's own description of the PPO teacher's construction (read-only; Phase 11).
+
+    Everything comes from P8's code and committed config, nothing from a run directory, so it
+    is derivable on a fresh clone: ``config`` is ``rld.rl.config.config_to_dict`` of
+    ``rld.rl.config.load_train_config("configs/rl/ppo.yaml")`` (P8's loader and validator on
+    the source config of its seed-0 ``ppo`` run; steps are env control steps of 1/30 s model
+    scale, lambda = 1/25), ``net_arch`` is P8's ``PolicyConfig.net_arch`` (used for both
+    ``pi`` and ``vf`` by ``rld.rl.train``'s SB3 ``PPO("MlpPolicy", ...)``), and the files are
+    the modules that build, wrap and fly it.
+
+    Returns:
+        ``config`` (dict), ``config_file``, ``net_arch`` (hidden widths), ``build_file``
+        (``rld.rl.train``), ``policy_file`` (``rld.rl.policy.LearnedPolicy``), ``env_file``
+        (``rld.envs.landing_env``) and ``tracker`` (the qualified name of the velocity tracker
+        class that module flies, ``DSLPIDControl``); paths relative to P8's root.
+    """
+    import inspect
+    import sys
+
+    from rld.rl.config import config_to_dict, load_train_config
+    from rld.rl.policy import LearnedPolicy
+
+    path = Path(P8_ROOT) / "configs" / "rl" / "ppo.yaml"
+    cfg = load_train_config(path)
+    env_module = sys.modules[DeckLandingAviary.__module__]
+    tracker = env_module.DSLPIDControl
+    return {
+        "config": config_to_dict(cfg),
+        "config_file": p8_relpath(path),
+        "net_arch": [int(w) for w in cfg.policy.net_arch],
+        "build_file": p8_relpath(Path(str(inspect.getsourcefile(build_policy)))),
+        "policy_file": p8_relpath(Path(str(inspect.getsourcefile(LearnedPolicy)))),
+        "env_file": p8_relpath(Path(str(inspect.getsourcefile(DeckLandingAviary)))),
+        "tracker": f"{tracker.__module__}.{tracker.__qualname__}",
+    }
+
+
+def controller_facts(name: str) -> dict[str, Any]:
+    """Return P8's own description of one registered controller (read-only; Phase 11).
+
+    ``rld.control.registry.entry(name)`` (P8's one-line description, committed config path,
+    privileged and motion-feed flags, factory) and ``rld.eval.controller_config``'s canonical
+    resolved document (controller class; gains with every ``gains_from`` followed; for the
+    gated controllers, dmf's Froude-converted quiescence rule) and its SHA-256, exactly as P8
+    hashes them into ``summary.csv``. Gains carry their units in their key names (P8's,
+    model scale, lambda = 1/25).
+
+    Args:
+        name: A P8 registry name, e.g. ``"pid_feedforward"``.
+
+    Returns:
+        ``registry_name``, ``class``, ``source_file`` and ``config_file`` (relative to P8's
+        root), ``privileged``, ``needs_motion_feed``, ``description``, ``resolved`` (the
+        canonical document minus ``registry_name``/``class``) and ``resolved_config_sha256``.
+    """
+    import inspect
+    import json
+
+    from rld.control.registry import entry
+    from rld.eval.controller_config import resolved_config_json, resolved_config_sha256
+
+    item = entry(name)
+    doc: dict[str, Any] = json.loads(resolved_config_json(name))
+    return {
+        "registry_name": str(doc.pop("registry_name")),
+        "class": str(doc.pop("class")),
+        "source_file": p8_relpath(Path(str(inspect.getsourcefile(item.factory)))),
+        "config_file": p8_relpath(item.config_path),
+        "privileged": bool(item.privileged),
+        "needs_motion_feed": bool(item.needs_motion_feed),
+        "description": str(item.description),
+        "resolved": doc,
+        "resolved_config_sha256": resolved_config_sha256(name),
+    }
+
+
+class OutsideViewTimingError(RuntimeError):
+    """An outside-view grab was attempted off the control-step boundary, or moved physics."""
+
+
+def grab_outside_view(
+    env: DeckLandingAviary, camera: OutsideCamera, step: int, drone_rgba: Sequence[float]
+) -> npt.NDArray[np.uint8]:
+    """Render one third-person frame at control step ``step`` (README hero GIFs, Phase 11).
+
+    Visual-only and read-only for physics: asserts the env sits exactly on the boundary after
+    control step ``step`` (``min(PYB_STEPS_PER_CTRL * step, max_substeps)`` substeps, i.e. after
+    ``env.step()`` returned, never inside a substep), sets the drone's visual colour to
+    ``drone_rgba`` for the grab and restores it, and asserts the physics counter did not move.
+    Nothing is created, removed or re-posed; ``getCameraImage`` never steps the simulation.
+
+    Args:
+        env: The episode's environment.
+        camera: P8's fixed world-frame camera (metres model scale, degrees).
+        step: Control step index (one step = 33.3 ms model scale, 166.7 ms full scale).
+        drone_rgba: RGBA in [0, 1] used for the drone during the grab.
+
+    Returns:
+        ``(camera.height_px, camera.width_px, 3)`` uint8 RGB.
+
+    Raises:
+        OutsideViewTimingError: Off the control-step boundary, or the grab moved physics.
+    """
+    h = scene_handles(env)
+    before = physics_step_count(env)
+    expected = min(int(env.PYB_STEPS_PER_CTRL) * step, int(env.cfg.max_substeps))
+    if before != expected or int(env.record.steps) != step:
+        raise OutsideViewTimingError(
+            f"outside view at control step {step}: env at substep {before} "
+            f"(record {env.record.steps}), expected {expected}"
+        )
+    client, drone = h.client, h.drone
+    own = list(pyb.getVisualShapeData(drone, physicsClientId=client)[0][7])
+    pyb.changeVisualShape(drone, -1, rgbaColor=list(drone_rgba), physicsClientId=client)
+    try:
+        img = np.asarray(camera.grab(client), dtype=np.uint8)
+    finally:
+        pyb.changeVisualShape(drone, -1, rgbaColor=own, physicsClientId=client)
+    if physics_step_count(env) != before:
+        raise OutsideViewTimingError(f"outside grab moved the physics counter at step {step}")
+    return np.ascontiguousarray(img)

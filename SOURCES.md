@@ -1,5 +1,8 @@
 # SOURCES.md — what this project depends on, checked 2026-10-23
 
+*Written before Phase 0 from the author's point of view ("your own projects" are the author's
+earlier repositories); kept as history. Licences are resolved in `docs/LICENSES.md`.*
+
 Each entry: what it is, what this project uses it for, licence, and how it was checked. The Phase 0
 `(verify)` items are resolved in [`docs/LICENSES.md`](docs/LICENSES.md) §2 and protocol P0-D1.
 

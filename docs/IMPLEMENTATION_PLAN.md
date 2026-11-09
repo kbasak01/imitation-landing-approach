@@ -623,6 +623,9 @@ sample may ship as a release asset). `repo-publication-reviewer`: SHIP. Tag `pha
 
 ## 5. How this feeds the ship-deck work
 
+*Forward-looking motivation written before the work; nothing in this section was done or measured
+here.*
+
 - The teacher → student pipeline is the practical route for your real system: your classical
   pose-based controller is a privileged teacher in simulation, and the camera policy is what flies.
 - The gap decomposition says where to spend effort: if the perception gap dominates, better state

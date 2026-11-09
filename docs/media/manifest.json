@@ -1,0 +1,316 @@
+{
+  "arm_labels": {
+    "bc": "bc s0",
+    "bc_dagger": "bc_dagger s0",
+    "dp": "dp s0 · Ta 8, K 10",
+    "teacher": "teacher (ppo s0)"
+  },
+  "camera": {
+    "class": "rld.viz.gifs.Camera (via ila.p8_adapter.OutsideCamera)",
+    "distance_m": 1.45,
+    "drone_tint_rgba_outside_view_only": [
+      0.95,
+      0.42,
+      0.05,
+      1.0
+    ],
+    "fov_deg": 50.0,
+    "height_px": 330,
+    "pitch_deg": -20.0,
+    "renderer": "ER_TINY_RENDERER, shadow 1, light direction [1.0, -0.6, 2.0] (fixed in P8's Camera.grab)",
+    "supersample": 2,
+    "target_m": [
+      0.0,
+      0.0,
+      1.4
+    ],
+    "units": "metres model scale, world frame; degrees",
+    "width_px": 300,
+    "yaw_deg": 35.0
+  },
+  "committed_row_sources": {
+    "results/e07/matrix/episodes.csv.gz": "1ab1fc844e1fd7dcb65f7aa8eefa35fadd77b40dfed89ab7b534d41f407fa280",
+    "results/e08/rows/bc/s0/id.csv.gz": "70e5a2915973b3142e246a7d5ef7ed68602cf0b77520256cf189a5909fb8085b",
+    "results/e08/rows/bc_dagger/s0/id.csv.gz": "58525a140e24c6ef8c36e99439a0dd3f9047f09cd3a342725e6e713f50b83c03",
+    "results/e08/rows/dp/s0/id__Ta8_K10_ens0.csv.gz": "4ce8586ab5b24673cdb8e24a79ca1995728c6f1ef55afac8ec833148dfe7a017"
+  },
+  "dirty": false,
+  "frames": {
+    "control_step_ms_model_scale": 33.333,
+    "durations": "frame end times rounded to 10 ms GIF ticks (real time at model scale; x5 slower at full scale)",
+    "hold_final_ms": 1500,
+    "palette_colours": 128,
+    "requested_stride_steps": 1,
+    "terminal_state": "not drawn: frames are the states each policy acted on (steps 0 ... n-1); the state after the last env.step is <= 33.3 ms later"
+  },
+  "gifs": [
+    {
+      "bytes": 1250559,
+      "category": "a_all_four_succeed",
+      "file": "hero_a_all_four_succeed__id_SS5_ep2.gif",
+      "frame_ms_model_scale": 33.333,
+      "frame_stride_steps": 1,
+      "frames": 69,
+      "header": "(a) all four panels succeed · id SS5 episode 2 · hand-picked by stated rule · simulation (PyBullet, TinyRenderer)",
+      "reflight": [
+        {
+          "check": "P8 compare_to_reference on P8's columns: identical",
+          "ckpt_sha256": "",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "teacher",
+          "steps": 58
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "1c907c35678615859395e63cb9cc3ace5d0f63d5071781b842f688edbd548a3f",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc",
+          "steps": 55
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc_dagger",
+          "steps": 56
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "dp",
+          "steps": 68
+        }
+      ],
+      "sha256": "e5a13cbddc87f322e1ddfcb7f6d33ff7c585d9ee812bb633acdac12e6029b14e"
+    },
+    {
+      "bytes": 1330632,
+      "category": "b_students_split",
+      "file": "hero_b_students_split__id_SS5_ep0.gif",
+      "frame_ms_model_scale": 33.333,
+      "frame_stride_steps": 1,
+      "frames": 82,
+      "header": "(b) the students split · id SS5 episode 0 · hand-picked by stated rule · simulation (PyBullet, TinyRenderer)",
+      "reflight": [
+        {
+          "check": "P8 compare_to_reference on P8's columns: identical",
+          "ckpt_sha256": "",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "teacher",
+          "steps": 62
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "1c907c35678615859395e63cb9cc3ace5d0f63d5071781b842f688edbd548a3f",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc",
+          "steps": 63
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc_dagger",
+          "steps": 51
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+          "committed_outcome": "off_pad",
+          "equal": true,
+          "outcome": "off_pad",
+          "panel": "dp",
+          "steps": 81
+        }
+      ],
+      "sha256": "b2abb9f12fd41c3645a4961a62a9074eaf14d81de5d273199a377c98ccd8b032"
+    },
+    {
+      "bytes": 1131330,
+      "category": "c_dp_off_pad",
+      "file": "hero_c_dp_off_pad__id_SS5_ep1.gif",
+      "frame_ms_model_scale": 33.333,
+      "frame_stride_steps": 1,
+      "frames": 68,
+      "header": "(c) dp lands off the pad · id SS5 episode 1 · hand-picked by stated rule · simulation (PyBullet, TinyRenderer)",
+      "reflight": [
+        {
+          "check": "P8 compare_to_reference on P8's columns: identical",
+          "ckpt_sha256": "",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "teacher",
+          "steps": 60
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "1c907c35678615859395e63cb9cc3ace5d0f63d5071781b842f688edbd548a3f",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc",
+          "steps": 55
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc_dagger",
+          "steps": 56
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+          "committed_outcome": "off_pad",
+          "equal": true,
+          "outcome": "off_pad",
+          "panel": "dp",
+          "steps": 67
+        }
+      ],
+      "sha256": "8c2be4592d2512385f47783d668f1c949d515b3a3fc048bbaaeadc58f7e9fc52"
+    },
+    {
+      "bytes": 1037692,
+      "category": "d_teacher_ss6_failure",
+      "file": "hero_d_teacher_ss6_failure__id_SS6_ep10.gif",
+      "frame_ms_model_scale": 33.333,
+      "frame_stride_steps": 1,
+      "frames": 52,
+      "header": "(d) the teacher fails in SS6 · id SS6 episode 10 · hand-picked by stated rule · simulation (PyBullet, TinyRenderer)",
+      "reflight": [
+        {
+          "check": "P8 compare_to_reference on P8's columns: identical",
+          "ckpt_sha256": "",
+          "committed_outcome": "hard_landing",
+          "equal": true,
+          "outcome": "hard_landing",
+          "panel": "teacher",
+          "steps": 51
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "1c907c35678615859395e63cb9cc3ace5d0f63d5071781b842f688edbd548a3f",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc",
+          "steps": 49
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+          "committed_outcome": "success",
+          "equal": true,
+          "outcome": "success",
+          "panel": "bc_dagger",
+          "steps": 51
+        },
+        {
+          "check": "whole committed CSV line: identical",
+          "ckpt_sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+          "committed_outcome": "off_pad",
+          "equal": true,
+          "outcome": "off_pad",
+          "panel": "dp",
+          "steps": 46
+        }
+      ],
+      "sha256": "476f568a2a80e7f0a6c8030fe0f35f3b0a81a4a87f468a1f0a589b0c85adf03f"
+    }
+  ],
+  "ila_commit": "0d36da1f37acd69fae80d1f8d0c78dbdc89532fe",
+  "illustrative": "hand-picked by the stated rule (results/e08/gifs/RULE.md); not evidence",
+  "limits_bytes": {
+    "per_gif": 2500000,
+    "total": 10000000
+  },
+  "onboard": {
+    "source": "the frame each policy was given",
+    "zoom": 2
+  },
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "panels": [
+    "teacher",
+    "bc",
+    "bc_dagger",
+    "dp"
+  ],
+  "picks": {
+    "a_all_four_succeed": {
+      "episode_seed": 953709142,
+      "index": 2,
+      "list_position": 402,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "success",
+        "teacher": "success"
+      },
+      "ss": "SS5"
+    },
+    "b_students_split": {
+      "episode_seed": 578769763,
+      "index": 0,
+      "list_position": 400,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "off_pad",
+        "teacher": "success"
+      },
+      "ss": "SS5"
+    },
+    "c_dp_off_pad": {
+      "episode_seed": 1081822447,
+      "index": 1,
+      "list_position": 401,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "off_pad",
+        "teacher": "success"
+      },
+      "ss": "SS5"
+    },
+    "d_teacher_ss6_failure": {
+      "episode_seed": 1323121477,
+      "index": 10,
+      "list_position": 610,
+      "outcomes": {
+        "bc": "success",
+        "bc_dagger": "success",
+        "dp": "off_pad",
+        "teacher": "hard_landing"
+      },
+      "ss": "SS6"
+    }
+  },
+  "reflight": "every panel re-flown on the CPU fp32 single-sample path with the outside view; every row asserted equal to its committed row before any GIF was written",
+  "rule_sha256": "2e4e64c0a5f716bd774424b13596c522d7daa6c637567fd3e87dd68a1b973991",
+  "simulation_only": "PyBullet physics; every image rendered by PyBullet TinyRenderer; model scale lambda = 1/25 (1 model s = 5 full-scale s)",
+  "smoke": false,
+  "source_manifest": {
+    "path": "results/e08/gifs/manifest.json",
+    "sha256": "d53de4762a3a7220d247e368f18b0f80ae6154c97091dc81805846f6dc032c6f"
+  },
+  "total_bytes": 4750213
+}

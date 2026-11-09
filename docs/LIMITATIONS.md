@@ -188,3 +188,27 @@ Every number below traces to the committed file named beside it.
   stands.
 - **L10 Run paths.** Committed run records carry workstation-absolute paths (`/home/kbasak/...`).
   They are provenance, not instructions.
+
+## Phase 11 addendum (2026-11-09)
+
+This section re-checks lines H1–H6 on the Phase 11 README (P11-D1). The Phase 10 verdicts above are
+left as written.
+
+- **H1 Wording.** The forbidden-list grep is clean on the Phase 11 README, both by `results-skeptic`
+  at `273bc3e` and by `repo-publication-reviewer` at `3cbc039`.
+- **H2 Traceability.**
+  - The new figures plot only `docs/figures/*.csv`, which trace row by row to `results/e08/` and
+    `results/latency/`; 812 values were checked, with 0 mismatches.
+  - The specs table traces to `results/readme/model_specs.json`.
+- **H3 Angelis et al.** The wording now follows `SOURCES.md` §3: "PPO with an attention encoder on
+  25 sparse keypoints … trained in simulation (Aerial Gym)".
+- **H4 GIFs.** The new outside-view GIFs in `docs/media/` re-use the Phase 8 picks; there is no new
+  selection. Their manifest records `ila_commit` and `dirty: false`, and all 16 re-flown rows are
+  equal to the committed rows. The Phase 8 gallery manifest still has no `ila` commit.
+- **H5 Images.** Images now also include 14 PNGs in `docs/figures/` (7 figures, light and dark) and
+  4 GIFs in `docs/media/`. All of them are rendered views or plots; none is a demo-store image.
+  `THIRD_PARTY_NOTICES.md` adds the R1 export and font notes.
+- **H6 Release.** `make release-check` at `3cbc039`: 86 assets, every SHA-256 verified. The draft
+  release is published with the tag after the merge.
+- **P8 inheritance.** The reproduction gate was re-run at `3cbc039`, after the `p8_adapter.py`
+  additions: 3 200/3 200 rows identical (`results/reproduce_p8/rerun_phase11/`).

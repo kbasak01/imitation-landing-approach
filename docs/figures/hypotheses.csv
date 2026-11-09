@@ -1,0 +1,26 @@
+panel,series,x,value,lo,hi,n,unit,scale,text,note,source_file,source_row,value_col,lo_col,hi_col,n_col,text_col
+points,H1,id SS5,2.6,0.6,4.8,,points,100,inconclusive,95 % CI,results/e08/hypotheses.csv,hypothesis=H1,estimate,ci_lo,ci_hi,,verdict
+points,H1 margin,id SS5,5,,,,points,100,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H1,magnitude,,,,
+points,H1-SS6,id SS6,5.9,2.3,9.7,,points,100,supported,95 % CI,results/e08/hypotheses.csv,hypothesis=H1-SS6,estimate,ci_lo,ci_hi,,verdict
+points,H1-SS6 margin,id SS6,5,,,,points,100,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H1-SS6,magnitude,,,,
+points,H1-SS6 flip floor,id SS6,,,,,,1,"6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students",P8 one-ulp flip rate (SS6 contrast),results/e08/hypotheses.csv,hypothesis=H1-SS6,,,,,flip_floor
+points,H1-DART-SS5,id SS5,3.6,1.7,5.8,,points,100,inconclusive,95 % CI,results/e08/hypotheses.csv,hypothesis=H1-DART-SS5,estimate,ci_lo,ci_hi,,verdict
+points,H1-DART-SS5 margin,id SS5,5,,,,points,100,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H1-DART-SS5,magnitude,,,,
+points,H1-DART-SS6,id SS6,8.1,4.6,11.9,,points,100,supported,95 % CI,results/e08/hypotheses.csv,hypothesis=H1-DART-SS6,estimate,ci_lo,ci_hi,,verdict
+points,H1-DART-SS6 margin,id SS6,5,,,,points,100,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H1-DART-SS6,magnitude,,,,
+points,H1-DART-SS6 flip floor,id SS6,,,,,,1,"6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students",P8 one-ulp flip rate (SS6 contrast),results/e08/hypotheses.csv,hypothesis=H1-DART-SS6,,,,,flip_floor
+points,H3,id SS6,47.4,41,53.8,,points,100,supported,95 % CI,results/e08/hypotheses.csv,hypothesis=H3,estimate,ci_lo,ci_hi,,verdict
+points,H3 margin,id SS6,5,,,,points,100,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H3,magnitude,,,,
+points,H3 flip floor,id SS6,,,,,,1,"6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students",P8 one-ulp flip rate (SS6 contrast),results/e08/hypotheses.csv,hypothesis=H3,,,,,flip_floor
+points,H4,id SS6,9.4,5.6,13.5,,points,100,supported,95 % CI,results/e08/hypotheses.csv,hypothesis=H4,estimate,ci_lo,ci_hi,,verdict
+points,H4 flip floor,id SS6,,,,,,1,"6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students",P8 one-ulp flip rate (SS6 contrast),results/e08/hypotheses.csv,hypothesis=H4,,,,,flip_floor
+points,H5(b),id SS5,-15.9,-21.5,-10.5,,points,100,not supported,95 % CI,results/e08/hypotheses.csv,hypothesis=H5(b),estimate,ci_lo,ci_hi,,verdict
+points,H5(b) margin,id SS5,-3,,,,points,100,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H5(b),magnitude,,,,
+seconds,H2,id SS4,0.0877735690236,-0.100140630261,0.263002196905,,s (model scale),1,not supported,95 % CI,results/e08/hypotheses.csv,hypothesis=H2,estimate,ci_lo,ci_hi,,verdict
+seconds,H2 margin,id SS4,0.033,,,,s (model scale),1,,pre-registered margin,results/e08/hypotheses.csv,hypothesis=H2,magnitude,,,,
+text,H5(a),"exported dp (K = 10), dp_e2e, batch 1",,,,,,1,not supported,no CI; verdict only,results/e08/hypotheses.csv,hypothesis=H5(a),,,,,verdict
+text,H5(a) margin,"exported dp (K = 10), dp_e2e, batch 1",33.3,,,,ms,1,,"threshold, ms",results/e08/hypotheses.csv,hypothesis=H5(a),magnitude,,,,
+text,H5(a) scored p99,ort_cpu_fp32,122.911,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=ort_cpu_fp32;batch_size=1,p99_ms,,,,parity_pass
+text,H5(a) scored p99,ort_cuda_fp32,52.6441,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=ort_cuda_fp32;batch_size=1,p99_ms,,,,parity_pass
+text,H5(a) scored p99,torch_cuda_fp32,89.3851,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=torch_cuda_fp32;batch_size=1,p99_ms,,,,parity_pass
+text,H5(a) scored p99,ort_trt_fp16,,,,,ms,1,False,scored; text = parity_pass,results/latency/h5a.csv,hypothesis=H5a;row=dp_e2e;provider=ort_trt_fp16;batch_size=1,p99_ms,,,,parity_pass

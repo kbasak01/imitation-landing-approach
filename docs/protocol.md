@@ -4240,3 +4240,125 @@ Second round (§5):
        standard-library module.
    - **Older references.** Earlier protocol entries and committed run records still name
      `scripts/select.py`; they are history and are left unchanged.
+
+### P11-D1 — README as a project page; figures, specs and GIFs added (2026-11-09)
+
+Nothing here changes a number, list, threshold, criterion, frozen config, checkpoint or verdict.
+Every addition is derived from committed files, or it re-flies committed rows and asserts
+equality.
+
+1. **README figures** (`ila.viz.readme_figures`, `make readme-figures`; `eval-auditor`).
+   - **Output:** seven figures in `docs/figures/`, each in light and dark versions, with the CSV it
+     plots. Every CSV row names its source file, row and column.
+   - **Inputs:** only committed `results/e08/` and `results/latency/` files.
+   - **Tests:** `tests/test_readme_figures.py` checks each plotted value against its source cell and
+     checks byte determinism. CI re-renders the figures and diffs them.
+   - **The Phase 8 figures** in `results/e08/figures/` are unchanged.
+   - **Two plotting choices:**
+     - The `success_id` panels have different y-ranges, and the subtitle says so.
+     - The `gaps` ladder plots means over seeds × episodes, not IQMs, because H4's three-arm
+       statistic is defined on means.
+2. **Model specs** (`ila.policies.specs`, `make model-specs` / `model-specs-check`;
+   `policy-trainer`).
+   - **Output:** `results/readme/model_specs.json`: inputs, architecture, horizons, training
+     settings and parameter counts per sub-module.
+   - **How the counts are made:** each network is built from its config with the training builder.
+   - **Cross-check:** the counts were checked tensor by tensor against all 18 pinned seed-0 student
+     checkpoints and P8's `ppo` `final/`. All 19 match, and every checkpoint's `config_sha256` equals
+     the current config.
+   - **CI** re-derives everything derivable without checkpoints. It carries a committed cross-check
+     forward only for the same parameter total and config SHA-256.
+3. **Hero GIFs** (`ila.viz.hero`, `make hero-gifs`; `sim-render-engineer`).
+   - **Episodes:** the four Phase 8 gallery picks (`results/e08/gifs/manifest.json`, `RULE.md`
+     unchanged). There is no new selection.
+   - **Layout:** each pick is shown from a P8-style third-person camera (`rld.viz.gifs.Camera` via
+     `p8_adapter.OutsideCamera`), with each policy's own onboard frame below it.
+   - **Run:** 16 panels re-flown on a clean tree, CPU fp32 single-sample path. The first run was at
+     `a66b053`. The committed GIFs are the re-run at `0d36da1`, after the badge-layout fix from the
+     review.
+   - **Check:** every row was asserted equal to its committed row before any GIF was written: the
+     students on the whole CSV line, the teacher with P8's `compare_to_reference`.
+   - **Output:** `docs/media/` holds the 4 GIFs (4 750 213 bytes) and `manifest.json`, which records
+     the picks, SHA-256s, camera parameters, the `ila` commit and `dirty: false`. This closes the
+     Phase 10 NOTE "the GIF manifest has no `ila` commit" for these GIFs.
+   - **How the grab works:** `p8_adapter.grab_outside_view` is the only new PyBullet access. It
+     asserts that the env is on the control-step boundary (`min(8k, cap)` substeps) and that the
+     physics counter has not moved after the grab. For the grab only, it tints the drone's
+     collision-cylinder visual, then restores it.
+   - **How the env is reached:** inside each worker's re-flight, a scoped wrapper around
+     `p8_adapter.make_env` keeps a reference to the env and restores the original on exit.
+   - **What is unchanged:** `runner.py`, `render/`, `obs/` and every physics path.
+   - **Slow test:** a scripted descent with and without grabs gives byte-identical observations and
+     onboard pixels.
+4. **Adapter additions** (read-only):
+   - `p8_relpath`, `ppo_teacher_facts` and `controller_facts` (P8 config and registry facts for the
+     spec record);
+   - the `OutsideCamera` re-export;
+   - `grab_outside_view` and `OutsideViewTimingError`.
+
+   `tests/test_render_access.py` still holds: `ila/viz` names no PyBullet or render-meta function.
+5. **README.** Rewritten as the project page:
+   - a hero GIF and a gate-history table;
+   - the short version with a hypothesis forest plot;
+   - a pipeline diagram;
+   - controller and network specs;
+   - the results figures, gallery, H4 and H3 figures, and deployment;
+   - the camera box, limitations before reproduction, citations and the licence.
+
+   The numbers carried over from the Phase 10 README are unchanged. New numbers are traced to
+   `docs/figures/*.csv`, `results/readme/model_specs.json` or `results/e08/` and `results/latency/`.
+6. **`results-skeptic` README review** at `273bc3e`: 2 BLOCKING, 7 SHOULD FIX, several NOTEs, all
+   applied in `0d36da1`.
+   - **What it verified:** 812 plotted values against their source cells, with 0 mismatches. The
+     figures re-render byte-identically. Every README table cell, every parameter count and the
+     GIF SHA-256s all check out.
+   - **B1, applied:** the SS6 flip floor and the †/‡/¶ footnotes were hidden in a collapsed block.
+     They are now visible under the hypothesis table and beside every SS6 number.
+   - **B2, applied:** the `dp` range "29.5–40.8 %" held only for the plotted cells. The README now
+     scopes it to those cells and gives 29.5–46.8 % over all 14 core cells.
+   - **SHOULD FIX, applied:**
+     - `off_pad` is defined: the centre more than 0.10 m from the pad centre; the 0.15 m ring is
+       context only;
+     - the chunking figure is retitled, because with ensembling `dp` replans every step and Ta is
+       the averaging window;
+     - H4 is worded as D = P − I;
+     - unpaired-reading qualifiers are added;
+     - `T_mix` is named;
+     - the verdict count is nine: eight contrasts plus H5(a);
+     - the full flip-floor wording appears in the figures.
+   - **NOTEs, applied:**
+     - the latency full-scale period;
+     - the conditions scale and title;
+     - the teacher line drawn above `bc_state`;
+     - the hero badge no longer overlaps its label.
+
+
+### Gate 11 failed, attempt 1: HOLD (2026-11-09)
+
+`repo-publication-reviewer` at `3cbc039` returned **HOLD**. There were no content defects. It found
+four procedural BLOCKING items:
+1. CI had never run on a Phase 11 commit.
+2. The README status line said Phase 11 was in progress.
+3. The draft release text called itself a draft.
+4. The reproduction gate had not been re-run after the Phase 11 `p8_adapter.py` additions.
+
+It also raised 7 SHOULD FIX items. All were applied in `6f84c66`, apart from the status line, which
+was applied in the commit that records this gate.
+
+### Gate 11 passed (2026-11-09)
+
+| Criterion (plan Phase 11) | Measured value / evidence | Result |
+|---|---|---|
+| README in P8's style: status line with every gate's history; the short version with every verdict; headline figure with teacher and baselines; gap decomposition; chunking curve; latency table; camera box; limitations before reproduction; citations | `README.md`, P11-D1. Figures are in `docs/figures/` (CI re-renders them byte-identically) and GIFs in `docs/media/` (16/16 re-flown rows equal) | PASS |
+| Every number traced to a committed file | `results-skeptic` at `273bc3e` checked 812 plotted values (0 mismatches) and every table cell; its 2 BLOCKING and 7 SHOULD FIX items were applied in `0d36da1`. `repo-publication-reviewer` spot-checked the numbers at `3cbc039` and confirmed them at `6f84c66` | PASS |
+| Release assets: student checkpoints, ONNX graphs, `SHA256SUMS.txt` | The draft `phase-11-complete` has 86 assets plus `SHA256SUMS.txt` and `manifest.json`. Names and sizes equal `results/release/manifest.json`, and the two files are byte-identical to the committed ones. `make release-check` at `3cbc039`: all 86 SHA-256s verified. Title and body were finalised; it is published with the tag after the merge | PASS |
+| No demo images in git | `repo-publication-reviewer`: no `data/`, `artifacts/`, `.pt`, `.onnx` or `.h5` files tracked. The only images are the rendered figures and GIFs. No blob in history is over 2 MB | PASS |
+| `repo-publication-reviewer`: SHIP | HOLD at `3cbc039` (above), then **SHIP** at `6f84c66` | PASS |
+| P8 inheritance on the final tree | Reproduction gate re-run at `3cbc039`, after the adapter additions: `pid_feedforward` 2 800/2 800 and `ppo` 400/400 identical, render full, `comparison.json` byte-identical (`results/reproduce_p8/rerun_phase11/`). `runner.py`, `render/` and `obs/` are unchanged | PASS |
+| CPU tests green | `make lint` is clean (86 source files). `make test` at `6f84c66`, the final code commit: 1 415 passed, 0 failed (23 min 55 s) on an unchanging tree. At `3cbc039` it was 1 414 passed and 1 failed: the obs-slice scanner flagged a literal subscript in `src/ila/policies/specs.py`, fixed in `6f84c66`. CI is green on `phase-11` (runs 42716228581, 42716259292), including the two new Phase 11 steps | PASS |
+
+*Deviations this phase.* None. No number, list, threshold, criterion, frozen config, checkpoint or
+verdict changed (P11-D1).
+
+*After the merge.* Three steps remain: make the repository public, tag `phase-11-complete` on the
+merge commit, and publish the draft release on that tag.

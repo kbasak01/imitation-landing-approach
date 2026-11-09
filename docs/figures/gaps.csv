@@ -1,0 +1,13 @@
+panel,series,x,value,lo,hi,n,unit,scale,text,note,source_file,source_row,value_col,lo_col,hi_col,n_col,text_col
+levels,ppo,SS6,98.5,95.6834271207,99.4885762207,200,%,100,,"teacher P8 ppo s0 success rate (H4's S(teacher)), Wilson 95 %",results/e08/baselines.csv,method=ppo;list=id;ss=SS6,success_rate,success_wilson_lo,success_wilson_hi,n_episodes,
+levels,bc_state,SS6,98.4,,,1000,%,100,,mean success over seeds x episodes (H4's S),results/e08/aggregate.csv,tag=core;arm=bc_state;list=id;ss=SS6,success_mean,,,n_seeds*n_episodes_per_seed,
+levels,bc,SS6,88.9,,,1000,%,100,,mean success over seeds x episodes (H4's S),results/e08/aggregate.csv,tag=core;arm=bc;list=id;ss=SS6,success_mean,,,n_seeds*n_episodes_per_seed,
+gaps,H4 I,id SS6,0.1,-1.1,1.4,,points,1,I = S(teacher) - S(bc_state),three-arm bootstrap 95 % CI,results/e08/figures/h4_gaps.csv,x=H4 I,point,lo,hi,,series
+gaps,H4 P,id SS6,9.5,6.1,13.3,,points,1,P = S(bc_state) - S(bc),three-arm bootstrap 95 % CI,results/e08/figures/h4_gaps.csv,x=H4 P,point,lo,hi,,series
+gaps,H4,id SS6,9.4,5.6,13.5,,points,1,D = P - I,three-arm bootstrap 95 % CI,results/e08/figures/h4_gaps.csv,x=H4,point,lo,hi,,series
+gaps,H4 verdict,id SS6,,,,,,1,supported,,results/e08/hypotheses.csv,hypothesis=H4,,,,,verdict
+gaps,H4 flip floor,id SS6,,,,,,1,"6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students",P8 one-ulp flip rate (SS6 contrast),results/e08/hypotheses.csv,hypothesis=H4,,,,,flip_floor
+gaps,H4 notes,id SS6,,,,,,1,"I is ceiling-limited (teacher at 98.5 % at id SS6, so I >= -1.5 points). That is not P3-D1 §6's reference-arm ceiling, which needs a magnitude H4 does not have, so ceiling_limited is False; the verdict is unchanged.",,results/e08/hypotheses.csv,hypothesis=H4,,,,,notes
+meta,n_seeds,,5,,,,,1,,uniform over the 2 plotted rows,results/e08/aggregate.csv,tag=core;arm=bc_state;list=id;ss=SS6,n_seeds,,,,
+meta,n_episodes_per_seed,,200,,,,,1,,uniform over the 2 plotted rows,results/e08/aggregate.csv,tag=core;arm=bc_state;list=id;ss=SS6,n_episodes_per_seed,,,,
+meta,n_episodes_p8,,200,,,,,1,,uniform over the 4 plotted rows,results/e08/baselines.csv,method=ppo;list=id;ss=SS6,n_episodes,,,,

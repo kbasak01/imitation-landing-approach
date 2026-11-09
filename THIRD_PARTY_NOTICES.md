@@ -91,4 +91,9 @@ PyBullet 3.2.7 (zlib) and PyTorch 2.13.0 (BSD-3-Clause style) come through P8's 
 [`docs/LICENSES.md`](docs/LICENSES.md) and P8's notices.
 
 The reference arm R1 uses **LeRobot** 0.6.1 (Apache-2.0). It is installed only in the separate
-`.venv-lerobot`, never imported from `src/ila`, and not redistributed.
+`.venv-lerobot`, never imported from `src/ila`, and not redistributed. The release's three R1 ONNX
+exports were traced from LeRobot's DiffusionPolicy architecture with this project's trained
+weights; no LeRobot source is redistributed.
+
+Figure and GIF text is set in DejaVu Sans from Matplotlib's bundled copy; no font file is
+redistributed.

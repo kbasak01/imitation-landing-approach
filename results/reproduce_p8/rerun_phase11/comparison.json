@@ -1,0 +1,72 @@
+{
+  "gate": "Phase 2 reproduction (plan Phase 2 item 2)",
+  "smoke": false,
+  "smoke_per_cell": null,
+  "passed": true,
+  "methods": {
+    "pid_feedforward": {
+      "expected": 2800,
+      "checks": {
+        "all_identical": true,
+        "header_identical": true,
+        "n_compared_is_expected": true,
+        "n_differ_is_zero": true,
+        "n_missing_is_zero": true,
+        "render_is_full": true,
+        "render_cfg_sha256_single_nonempty": true,
+        "frames_equal_steps_plus_episodes": true
+      },
+      "passed": true,
+      "compare_to_reference": {
+        "reference": "external/rl-land-on-moving-deck/results/e01/episodes.csv",
+        "reference_sha256": "c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b",
+        "pad": "aft",
+        "applicable": true,
+        "header_identical": true,
+        "all_identical": true,
+        "methods": {
+          "pid_feedforward": {
+            "n_compared": 2800,
+            "n_identical": 2800,
+            "n_differ": 0,
+            "n_missing_in_reference": 0,
+            "n_reference_rows": 2800,
+            "first_mismatch": null
+          }
+        }
+      }
+    },
+    "ppo": {
+      "expected": 400,
+      "checks": {
+        "all_identical": true,
+        "header_identical": true,
+        "n_compared_is_expected": true,
+        "n_differ_is_zero": true,
+        "n_missing_is_zero": true,
+        "render_is_full": true,
+        "render_cfg_sha256_single_nonempty": true,
+        "frames_equal_steps_plus_episodes": true
+      },
+      "passed": true,
+      "compare_to_reference": {
+        "reference": "external/rl-land-on-moving-deck/results/e07/matrix/episodes.csv",
+        "reference_sha256": "6d14b05af2dc195ed281fc3d5f454d923c6227b17d6cbfcf93697cab6ff11152",
+        "pad": "aft",
+        "applicable": true,
+        "header_identical": true,
+        "all_identical": true,
+        "methods": {
+          "ppo": {
+            "n_compared": 400,
+            "n_identical": 400,
+            "n_differ": 0,
+            "n_missing_in_reference": 0,
+            "n_reference_rows": 14000,
+            "first_mismatch": null
+          }
+        }
+      }
+    }
+  }
+}

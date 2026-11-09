@@ -1,0 +1,3969 @@
+{
+  "crosscheck_seed": 0,
+  "generated_by": "scripts/model_specs.py (ila.policies.specs)",
+  "p8": {
+    "commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+    "paths": "every p8_files path is relative to the P8 root at this commit",
+    "root": "external/rl-land-on-moving-deck"
+  },
+  "p8_controllers": {
+    "gated": {
+      "action": "the same normalised world-frame velocity setpoint as the PPO teacher",
+      "class": "rld.control.gated.Gated",
+      "learned_parameters": 0,
+      "needs_motion_feed": false,
+      "observation": "P8's 25-d observation (it reads the fields it needs by name)",
+      "p8_config_sha256": "da8eb57897cc9259ec1d9967d1528919cc4bf1325d7ed1fda0b7785ee97fecee",
+      "p8_description": "hover 0.3 m above the pad, commit on current-state dmf quiescence",
+      "p8_files": {
+        "config": "configs/control/gated.yaml",
+        "source": "src/rld/control/gated.py"
+      },
+      "p8_resolved_config_sha256": "7c2133f9e141fe5cdc5a59b86eeda6ba292ba909061c1ae9511977b445bb7b74",
+      "privileged": false,
+      "resolved": {
+        "config": {
+          "fallback_commit_s": null,
+          "gains": {
+            "k_ff": 1.081741817947477,
+            "pid": {
+              "commit_radius_m": 0.0344609023630619,
+              "descent_rate_m_s": 0.20716235280036926,
+              "integral_limit_m_s": 0.1,
+              "ki_xy_per_s2": 0.9541415357962251,
+              "kp_xy_per_s": 1.9560189517214894,
+              "lateral_speed_max_m_s": 0.5,
+              "release_factor": 2.0
+            }
+          },
+          "gains_from": "pid_feedforward.yaml",
+          "hover_height_m": 0.3,
+          "hover_kp_per_s": 2.0,
+          "hover_speed_max_m_s": 0.4,
+          "hover_tolerance_m": 0.05,
+          "thresholds": "permissive"
+        },
+        "quiescence_rule": {
+          "limits": {
+            "lam": 0.04,
+            "name": "permissive",
+            "pad_vz_m_s": 0.16000000000000003,
+            "pitch_deg": 2.0,
+            "roll_deg": 3.0,
+            "source": {
+              "heave_rate_mps": 0.8,
+              "name": "permissive",
+              "pitch_deg": 2.0,
+              "roll_deg": 3.0,
+              "sustain_s": 2.0
+            },
+            "sustain_s": 0.4
+          },
+          "n_samples": 12,
+          "rate_hz": 30.0
+        }
+      },
+      "role": "teacher in T_mix (mix_1000 demos with T_ppo; *_mix ablations); baseline row",
+      "structure": "Hover hover_height_m above the pad (P on the height error, capped), commit to pid_feedforward's descent when dmf's quiescence rule holds on the CURRENT deck state over the trailing sustain window. Gains loaded from pid_feedforward.yaml. Stateful."
+    },
+    "oracle_gated": {
+      "action": "the same normalised world-frame velocity setpoint as the PPO teacher",
+      "class": "rld.control.oracle.OracleGated",
+      "learned_parameters": 0,
+      "needs_motion_feed": false,
+      "observation": "P8's 25-d observation (it reads the fields it needs by name)",
+      "p8_config_sha256": "5daca06e217fc765611af98af2fc70f312ca4cbdafffe408d5827eae8138bce3",
+      "p8_description": "commit-timing oracle (privileged): commit on the true future quiescent window",
+      "p8_files": {
+        "config": "configs/control/oracle_gated.yaml",
+        "source": "src/rld/control/oracle.py"
+      },
+      "p8_resolved_config_sha256": "dec9793dee4adbccbd2d7ab225cc7509ca9a1b1e51c3f582ec8f0cc5f04e6755",
+      "privileged": true,
+      "resolved": {
+        "config": {
+          "fallback_commit_s": null,
+          "gains": {
+            "k_ff": 1.081741817947477,
+            "pid": {
+              "commit_radius_m": 0.0344609023630619,
+              "descent_rate_m_s": 0.20716235280036926,
+              "integral_limit_m_s": 0.1,
+              "ki_xy_per_s2": 0.9541415357962251,
+              "kp_xy_per_s": 1.9560189517214894,
+              "lateral_speed_max_m_s": 0.5,
+              "release_factor": 2.0
+            }
+          },
+          "gains_from": "pid_feedforward.yaml",
+          "hover_height_m": 0.3,
+          "hover_kp_per_s": 2.0,
+          "hover_speed_max_m_s": 0.4,
+          "hover_tolerance_m": 0.05,
+          "thresholds": "permissive"
+        },
+        "quiescence_rule": {
+          "limits": {
+            "lam": 0.04,
+            "name": "permissive",
+            "pad_vz_m_s": 0.16000000000000003,
+            "pitch_deg": 2.0,
+            "roll_deg": 3.0,
+            "source": {
+              "heave_rate_mps": 0.8,
+              "name": "permissive",
+              "pitch_deg": 2.0,
+              "roll_deg": 3.0,
+              "sustain_s": 2.0
+            },
+            "sustain_s": 0.4
+          },
+          "n_samples": 12,
+          "rate_hz": 30.0
+        }
+      },
+      "role": "baseline row (privileged commit-timing oracle; never deployable)",
+      "structure": "gated's hover and commit, but the quiescence predicate is applied to the TRUE FUTURE deck states at the predicted touchdown time (privileged context). A commit-timing oracle, never a deployable result."
+    },
+    "pid_feedforward": {
+      "action": "the same normalised world-frame velocity setpoint as the PPO teacher",
+      "class": "rld.control.feedforward.PidFeedforward",
+      "learned_parameters": 0,
+      "needs_motion_feed": false,
+      "observation": "P8's 25-d observation (it reads the fields it needs by name)",
+      "p8_config_sha256": "beb988add28122b37d4668c92a0e7402512c3fd7bf99106c121a8e94249fe54e",
+      "p8_description": "pid_track_descend + k_ff * pad velocity (ideal noise-free, zero-latency ship motion reference unit plus state estimate); residual base",
+      "p8_files": {
+        "config": "configs/control/pid_feedforward.yaml",
+        "source": "src/rld/control/feedforward.py"
+      },
+      "p8_resolved_config_sha256": "efe56dfc1f5945cb8deb5c7b4b44a92f0918694c9dbb540a1b22d12a1af374fb",
+      "privileged": false,
+      "resolved": {
+        "config": {
+          "k_ff": 1.081741817947477,
+          "pid": {
+            "commit_radius_m": 0.0344609023630619,
+            "descent_rate_m_s": 0.20716235280036926,
+            "integral_limit_m_s": 0.1,
+            "ki_xy_per_s2": 0.9541415357962251,
+            "kp_xy_per_s": 1.9560189517214894,
+            "lateral_speed_max_m_s": 0.5,
+            "release_factor": 2.0
+          }
+        }
+      },
+      "role": "teacher T_pid (pid_1000 demos; *_pid ablations); baseline row",
+      "structure": "pid_track_descend's law plus k_ff x pad deck-point velocity (velocity + rel_velocity from the observation) on all three axes. Stateful (integrator, commit latch)."
+    },
+    "pid_track_descend": {
+      "action": "the same normalised world-frame velocity setpoint as the PPO teacher",
+      "class": "rld.control.pid.PidTrackDescend",
+      "learned_parameters": 0,
+      "needs_motion_feed": false,
+      "observation": "P8's 25-d observation (it reads the fields it needs by name)",
+      "p8_config_sha256": "5d6aef5553054cbb1e7e50628474e64fc986303bacd34fb51030870cda4282e5",
+      "p8_description": "lateral PI, descend at a constant rate once laterally inside a radius",
+      "p8_files": {
+        "config": "configs/control/pid_track_descend.yaml",
+        "source": "src/rld/control/pid.py"
+      },
+      "p8_resolved_config_sha256": "29b5899e05be406153db3500a9938a0f23318ea39036416ba45f78de56102469",
+      "privileged": false,
+      "resolved": {
+        "config": {
+          "commit_radius_m": 0.02867745161056519,
+          "descent_rate_m_s": 0.2506808291748166,
+          "integral_limit_m_s": 0.1,
+          "ki_xy_per_s2": 0.1146828904747963,
+          "kp_xy_per_s": 1.1820537569001317,
+          "lateral_speed_max_m_s": 0.5,
+          "release_factor": 2.0
+        }
+      },
+      "role": "baseline row (naive)",
+      "structure": "Lateral PI on the pad-relative xy error (speed-capped, anti-windup clamp); descend at a constant rate once the lateral error is inside commit_radius_m (released beyond release_factor x radius), hold height otherwise. No deck feedforward. Stateful (integrator, commit latch)."
+    },
+    "ppo": {
+      "action": {
+        "ctrl_freq_hz": 30,
+        "dim": 3,
+        "evaluation": "deterministic mean action, clipped to [-1, 1]",
+        "physics_freq_hz": 240,
+        "space": "Box(-1, 1, (3,)): normalised world-frame velocity setpoint, yaw held at 0",
+        "tracker": "gym_pybullet_drones.control.DSLPIDControl.DSLPIDControl",
+        "v_max_is_norm_cap": true,
+        "v_max_m_s": 1.5
+      },
+      "algorithm": "stable-baselines3 PPO, MlpPolicy (ActorCriticPolicy), trained on CPU",
+      "checkpoint": "final/",
+      "checkpoint_crosscheck": {
+        "checkpoint": "p8_ppo_seed0_run/final (configs/paths.local.yaml)",
+        "checkpoint_steps": 10010624,
+        "match": true,
+        "model_zip_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+        "p8_provenance": "results/p8_provenance.json",
+        "parameters_total": 553991,
+        "policy_kwargs": {
+          "activation_fn": "Tanh",
+          "log_std_init": -2.7972111202776433,
+          "net_arch": {
+            "pi": [
+              512,
+              512
+            ],
+            "vf": [
+              512,
+              512
+            ]
+          }
+        },
+        "sha256_match_p8_provenance": true,
+        "tensors_checked": 13,
+        "vecnormalize": {
+          "clip_obs": 10.0,
+          "obs_rms_dim": 25,
+          "training": false
+        },
+        "vecnormalize_sha256": "9ddb2a992d4263426bc28033f8cd9f7f54daf7011ca67eb81f3099ecf289db6f"
+      },
+      "observation": {
+        "dim": 25,
+        "fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "rel_position",
+            "size": 3
+          },
+          {
+            "name": "rel_velocity",
+            "size": 3
+          },
+          {
+            "name": "deck_normal",
+            "size": 3
+          },
+          {
+            "name": "rel_tilt",
+            "size": 1
+          },
+          {
+            "name": "height",
+            "size": 1
+          },
+          {
+            "name": "time_fraction",
+            "size": 1
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ],
+        "normalisation": {
+          "clip_obs": 10.0,
+          "kind": "SB3 VecNormalize, statistics frozen at evaluation (training=False)",
+          "norm_obs": true,
+          "norm_reward_in_training": true
+        },
+        "privileged": true
+      },
+      "p8_config_sha256": "26b6c49f8552f5fa626c19bab5222205eb83d294854734a23c3b0b1b3d70e14a",
+      "p8_files": {
+        "build": "src/rld/rl/train.py",
+        "config": "configs/rl/ppo.yaml",
+        "env": "src/rld/envs/landing_env.py",
+        "policy_wrapper": "src/rld/rl/policy.py"
+      },
+      "parameters": {
+        "actor": 277510,
+        "by_module": {
+          "action_net": 1539,
+          "log_std": 3,
+          "mlp_extractor.policy_net": 275968,
+          "mlp_extractor.value_net": 275968,
+          "value_net": 513
+        },
+        "critic": 276481,
+        "derivation": "from P8's config: net_arch for pi and vf, obs dim 25, action dim 3",
+        "total": 553991
+      },
+      "policy": {
+        "activation": "tanh",
+        "features_extractor": "FlattenExtractor (no parameters)",
+        "log_std_init": -2.7972111202776433,
+        "net_arch_pi": [
+          512,
+          512
+        ],
+        "net_arch_vf": [
+          512,
+          512
+        ],
+        "shared_layers": false
+      },
+      "role": "teacher T_ppo (every T_ppo demo, DAgger/DART labels, modular's frozen policy)",
+      "seed": 0,
+      "training": {
+        "curriculum_stages": [
+          "SS3",
+          "SS4",
+          "SS5"
+        ],
+        "n_envs": 16,
+        "ppo": {
+          "batch_size": 1024,
+          "clip_range": 0.2,
+          "ent_coef": 0.009895217847079038,
+          "gae_lambda": 0.95,
+          "gamma": 0.99,
+          "learning_rate": 0.0005941708698045433,
+          "log_std_init": -2.7972111202776433,
+          "lr_schedule": "linear",
+          "max_grad_norm": 0.5,
+          "n_epochs": 5,
+          "n_steps": 1024,
+          "target_kl": null,
+          "vf_coef": 0.5
+        },
+        "steps_unit": "env control steps of 1/30 s model scale",
+        "total_steps": 10000000
+      }
+    }
+  },
+  "schema": "ila-model-specs/1",
+  "students": {
+    "R1_lerobot_dp": {
+      "architecture": {
+        "diffusion_step_embed_dim": 128,
+        "down_dims": [
+          128,
+          256,
+          512
+        ],
+        "kernel_size": 5,
+        "pretrained_backbone_weights": null,
+        "spatial_softmax_num_keypoints": 32,
+        "unet_n_groups": 8,
+        "use_film_scale_modulation": true,
+        "use_group_norm": true,
+        "vision_backbone": "resnet18"
+      },
+      "built_here": false,
+      "checkpoint_crosscheck": null,
+      "config": {
+        "path": "configs/train/r1_lerobot_dp.yaml",
+        "sha256": "a55e2fa07763669b4d081df03bfa7a179eeb1c6d969b7ee16ddc23faadfc6720"
+      },
+      "diffusion": {
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (ila's, from the ONNX export)",
+        "timestep_spacing": "trailing"
+      },
+      "framework": {
+        "entry": "lerobot.scripts.lerobot_train building blocks",
+        "name": "lerobot",
+        "venv": ".venv-lerobot",
+        "version": "0.6.1"
+      },
+      "horizons": {
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16
+      },
+      "inputs": {
+        "crop_is_random_train": true,
+        "crop_px": [
+          88,
+          88
+        ],
+        "frames_To": 2,
+        "input_features": [
+          "observation.image",
+          "observation.state"
+        ]
+      },
+      "kind": "onnx_dp",
+      "note": "not built here: LeRobot 0.6.1 DiffusionPolicy, trained in .venv-lerobot and flown from its ONNX export; see the config. Parameter counts are not derived by ila.",
+      "obs_variant": "default",
+      "parameters": null,
+      "tag": "reference_external",
+      "training": {
+        "batch_size": 128,
+        "ema": "none",
+        "evaluated_weights": "raw (LeRobot 0.6.1 has no EMA for diffusion)",
+        "lr": 0.0001,
+        "optimizer": "adam (LeRobot preset, grad clip 10.0)",
+        "precision": "fp32",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "bc": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc/s0/checkpoints/s0_step010000.pt",
+        "config_sha256_at_crosscheck": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299",
+        "global_step": 10000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase4/runs/bc/s0/selection.json",
+        "selection_json_sha256": "c4f0fe532d2f183f19e5e68a6d6c27389864b606fa0198b706f3ffa764f954fb",
+        "sha256": "1c907c35678615859395e63cb9cc3ace5d0f63d5071781b842f688edbd548a3f",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [],
+        "path": "configs/train/bc.yaml",
+        "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_dagger": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_dagger/s0/checkpoints/s5_step005000.pt",
+        "config_sha256_at_crosscheck": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7",
+        "global_step": 45000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase5/runs/bc_dagger/s0/selection.json",
+        "selection_json_sha256": "98e2451fd9a01f0d38a8d68bd787fa0485cb73cae7a6931e606e227a68f47e30",
+        "sha256": "d7f9f281bb4a7c53c7aba7614d41737c07d3004813f92780918bcf896dc3258c",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          },
+          {
+            "path": "configs/data/demos.yaml",
+            "sha256": "1fd413e2823a1cefd4b38e6ddd00c7097ee182e45f2564e0f398ce19f5f63f11"
+          }
+        ],
+        "path": "configs/train/bc_dagger.yaml",
+        "sha256": "dbc7c0d22438abe96e5e80de95f8f46d64b81216147496dc15bef55adc989da7"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "dagger": {
+          "beta": [
+            0.5,
+            0.25,
+            0.125,
+            0.0,
+            0.0
+          ],
+          "rollout_weights": "ema_last_step_of_previous_iteration",
+          "rollouts_success_filter": false
+        },
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "iterations": {
+          "episodes_added_per_iteration": 200,
+          "iteration_0": "the same-seed bc run (its steps above), last-step EMA",
+          "labelled_episodes_total": 2000,
+          "n": 5,
+          "steps_per_iteration": 10000,
+          "warmup_steps_per_iteration": 500
+        },
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 30000,
+        "total_steps": 80000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_dart": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "5dff64bf8b951dfcd3d5c740fe68a1e85a219bfc3c286a3f2424d418b5a60c02",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_dart/s0/checkpoints/s0_step030000.pt",
+        "config_sha256_at_crosscheck": "5dff64bf8b951dfcd3d5c740fe68a1e85a219bfc3c286a3f2424d418b5a60c02",
+        "global_step": 30000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase4/runs/bc_dart/s0/selection.json",
+        "selection_json_sha256": "8bd61170340899b83b636e84d3170f7ff76228edce8e2b9ce064c930629dcfb8",
+        "sha256": "f6f63d660eff25c78a5379428c839e6f8ab1f4ae1ccc3c90471c3e0dedbfe188",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [],
+        "path": "configs/train/bc_dart.yaml",
+        "sha256": "5dff64bf8b951dfcd3d5c740fe68a1e85a219bfc3c286a3f2424d418b5a60c02"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "dart",
+          "dart_sigma_rule": "selected_on_select",
+          "first_n_episodes": 1000,
+          "success_filter": false
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_matched": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "f956e182d1d9e72f1c75010dce743428ee629639de13abdca75374c08ced8de5",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_matched/s0/checkpoints/s5_step010000.pt",
+        "config_sha256_at_crosscheck": "f956e182d1d9e72f1c75010dce743428ee629639de13abdca75374c08ced8de5",
+        "global_step": 50000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase4/runs/bc_matched/s0/selection.json",
+        "selection_json_sha256": "94cf88cccae688c8127d5404403d13bc46a3327bd9b10ed96073be81fc4cf7bc",
+        "sha256": "d901fb00e4bbf46fd1ded56825a05fc28aed9c9593ce8d2fd1463a7ce574f420",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [],
+        "path": "configs/train/bc_matched.yaml",
+        "sha256": "f956e182d1d9e72f1c75010dce743428ee629639de13abdca75374c08ced8de5"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "iterations": {
+          "episodes_added_per_iteration": 200,
+          "iteration_0": "the same-seed bc run (its steps above), last-step EMA",
+          "labelled_episodes_total": 2000,
+          "n": 5,
+          "steps_per_iteration": 10000,
+          "warmup_steps_per_iteration": 500
+        },
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 30000,
+        "total_steps": 80000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_minus_last_action": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            10,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "a59757dd428d3bd7e7d018bed68add0f6280979ec1e659dacee77b8c6c4fc414",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_minus_last_action/s0/checkpoints/s0_step030000.pt",
+        "config_sha256_at_crosscheck": "a59757dd428d3bd7e7d018bed68add0f6280979ec1e659dacee77b8c6c4fc414",
+        "global_step": 30000,
+        "match": true,
+        "parameters_total": 11330147,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/bc_minus_last_action/s0/selection.json",
+        "selection_json_sha256": "444843dc3100f1df681d5225624c9c74c695b0cb99ec62bf1467389c0c2fe968",
+        "sha256": "161bbee3fdeca358511a71ba40093f226c2cccbddc23eb1c6dcc1667f29f82f0",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          }
+        ],
+        "path": "configs/train/ablations/bc_minus_last_action.yaml",
+        "sha256": "a59757dd428d3bd7e7d018bed68add0f6280979ec1e659dacee77b8c6c4fc414"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "minus_last_action",
+        "proprio_dim": 10,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "minus_last_action",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 20,
+        "by_module": {
+          "encoder": 11197792,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 4864,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330147,
+        "trainable": 11330147
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_mix": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "14f9efabd4374fc6e7401186ddb55d2cf854ce22ceecc2ca922159a6082af42c",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_mix/s0/checkpoints/s0_step005000.pt",
+        "config_sha256_at_crosscheck": "14f9efabd4374fc6e7401186ddb55d2cf854ce22ceecc2ca922159a6082af42c",
+        "global_step": 5000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/bc_mix/s0/selection.json",
+        "selection_json_sha256": "af2584e70d0bcd374b9911564da919e40068f7590ffe3e74264de5f29bc0c909",
+        "sha256": "920e4d7040d7ba3b6b099b2c60e09a0094c104ba76b65f294894e541d0e56666",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          }
+        ],
+        "path": "configs/train/ablations/bc_mix.yaml",
+        "sha256": "14f9efabd4374fc6e7401186ddb55d2cf854ce22ceecc2ca922159a6082af42c"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "mix_1000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_n100": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "b600329130d155fcd28e1ce2be10798d33fb52dbb28c9c7ce369ee618dc337c4",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_n100/s0/checkpoints/s0_step005000.pt",
+        "config_sha256_at_crosscheck": "b600329130d155fcd28e1ce2be10798d33fb52dbb28c9c7ce369ee618dc337c4",
+        "global_step": 5000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/bc_n100/s0/selection.json",
+        "selection_json_sha256": "958511ac5e1b2268932d4812e3b9b15145a3db7cddd7ff9e22baaeb1e63e0527",
+        "sha256": "4e3a4928bc147186154c01350a41f2a231ed4ac4e2f014e32bd244ae783e957b",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          }
+        ],
+        "path": "configs/train/ablations/bc_n100.yaml",
+        "sha256": "b600329130d155fcd28e1ce2be10798d33fb52dbb28c9c7ce369ee618dc337c4"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 100,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_n300": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "ed345e7f6b94afbc6af9e060b98c2a6b648788d35183f0cdc4d7a74ed9bea84b",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_n300/s0/checkpoints/s0_step020000.pt",
+        "config_sha256_at_crosscheck": "ed345e7f6b94afbc6af9e060b98c2a6b648788d35183f0cdc4d7a74ed9bea84b",
+        "global_step": 20000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/bc_n300/s0/selection.json",
+        "selection_json_sha256": "dd4ad8f30d26991079783f4edd9635d572efa6e404db2364d4595f015ded6cf5",
+        "sha256": "b2c2ae6ffb6c3030709c82f8a38a7f04409ee97215a6c4f3718f463b4a9295be",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          }
+        ],
+        "path": "configs/train/ablations/bc_n300.yaml",
+        "sha256": "ed345e7f6b94afbc6af9e060b98c2a6b648788d35183f0cdc4d7a74ed9bea84b"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 300,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_pid": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "7a0f91046ff857695478e8e2caf03d172672dad6620ed426d19cbb8dd1083804",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_pid/s0/checkpoints/s0_step005000.pt",
+        "config_sha256_at_crosscheck": "7a0f91046ff857695478e8e2caf03d172672dad6620ed426d19cbb8dd1083804",
+        "global_step": 5000,
+        "match": true,
+        "parameters_total": 11330339,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/bc_pid/s0/selection.json",
+        "selection_json_sha256": "62504fe1e4f47c042e7247d588243bd5031c6752604f19a3f76dc9da4cebffc3",
+        "sha256": "fe8726f561136a09a2ac03b38552dc3ecd4a487c3ed99ffa4d1faea184bc2e75",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          }
+        ],
+        "path": "configs/train/ablations/bc_pid.yaml",
+        "sha256": "7a0f91046ff857695478e8e2caf03d172672dad6620ed426d19cbb8dd1083804"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330339,
+        "trainable": 11330339
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "pid_1000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_plus_clock": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            14,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            3
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "505f3bef192125bf3882b84ac8a5387f96d58afdf67cbacde2998e91f11c9caa",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_plus_clock/s0/checkpoints/s0_step020000.pt",
+        "config_sha256_at_crosscheck": "505f3bef192125bf3882b84ac8a5387f96d58afdf67cbacde2998e91f11c9caa",
+        "global_step": 20000,
+        "match": true,
+        "parameters_total": 11330403,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/bc_plus_clock/s0/selection.json",
+        "selection_json_sha256": "8613ad9e7942e81fc02ed35aad93c1c8755991957ffad781c2bd23d0457fbb6e",
+        "sha256": "ce4313b2ee7cf7070b9d2da5f6137f627263f1c167c0c4464a0a9dfe9cf1aeb1",
+        "tensors_checked": 74,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/bc.yaml",
+            "sha256": "3d3386bb38718f5f79b9a61b62f5044052bdb603cb8b33ffd3b7664de6a01299"
+          }
+        ],
+        "path": "configs/train/ablations/bc_plus_clock.yaml",
+        "sha256": "505f3bef192125bf3882b84ac8a5387f96d58afdf67cbacde2998e91f11c9caa"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "plus_clock",
+        "proprio_dim": 14,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          },
+          {
+            "name": "time_fraction",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "bc",
+      "obs_variant": "plus_clock",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 28,
+        "by_module": {
+          "encoder": 11198048,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5120,
+          "encoder.trunk": 11176512,
+          "head": 132355
+        },
+        "total": 11330403,
+        "trainable": 11330403
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "bc_state": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "head": {
+          "activation": "relu",
+          "output": "tanh",
+          "type": "mlp",
+          "widths": [
+            25,
+            256,
+            256,
+            3
+          ]
+        },
+        "trunk": null
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/bc_state/s0/checkpoints/s0_step015000.pt",
+        "config_sha256_at_crosscheck": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f",
+        "global_step": 15000,
+        "match": true,
+        "parameters_total": 73219,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase4/runs/bc_state/s0/selection.json",
+        "selection_json_sha256": "cc279d33665789dd8b697888fbe40c63c49750965c3aec816a0e6fba3caa24c8",
+        "sha256": "cb56367963199faae0cdee123b41c008a33e25e5d8383a101fd0e4965b4e7de5",
+        "tensors_checked": 8,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [],
+        "path": "configs/train/bc_state.yaml",
+        "sha256": "36b65a7d6732288cad57fd7b6469e8b13bfe3b02fb6936a599821315ea86eb0f"
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 1,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "frames_To": 1,
+        "images": null,
+        "normalisation": "fixed buffers obs_mean/obs_std (train-set mean/std)",
+        "privileged_by_design": true,
+        "teacher_obs_dim": 25,
+        "teacher_obs_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "rel_position",
+            "size": 3
+          },
+          {
+            "name": "rel_velocity",
+            "size": 3
+          },
+          {
+            "name": "deck_normal",
+            "size": 3
+          },
+          {
+            "name": "rel_tilt",
+            "size": 1
+          },
+          {
+            "name": "height",
+            "size": 1
+          },
+          {
+            "name": "time_fraction",
+            "size": 1
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "state",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "obs_mean",
+          "obs_std"
+        ],
+        "buffers_elements": 50,
+        "by_module": {
+          "mlp": 73219
+        },
+        "total": 73219,
+        "trainable": 73219
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse",
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "fp32",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    },
+    "dp": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "mish",
+          "cond": "film",
+          "diffusion_step_embed_dim": 128,
+          "diffusion_step_encoder": "sinusoidal(128) -> Linear(512) -> Mish -> Linear(128)",
+          "down_dims": [
+            128,
+            256,
+            512
+          ],
+          "film": "per-channel scale and bias from [step embedding || obs feature]",
+          "film_cond_dim": 384,
+          "global_cond_dim": 256,
+          "kernel_size": 5,
+          "mid_blocks": 2,
+          "n_groups": 8,
+          "n_groups_source": "UNetConfig default (diffusion_policy's value; not a config key)",
+          "residual_blocks_per_level": 2,
+          "sample_shape_Tp_A": [
+            16,
+            3
+          ],
+          "type": "conditional_unet1d (Chi et al. 2023, adapted; MIT notice in unet1d.py)"
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/dp/s0/checkpoints/s0_step100000.pt",
+        "config_sha256_at_crosscheck": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913",
+        "global_step": 100000,
+        "match": true,
+        "parameters_total": 29353123,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase6/runs/dp/s0/selection.json",
+        "selection_json_sha256": "6163f0d0f2fe4dfb211aec4b7b468f021fe295ebf577a63acb0b22802038a09b",
+        "sha256": "b459f2764c5f32de1b93f4e84abd798fc5bf16a27dab9b623df0a1115b24d581",
+        "tensors_checked": 216,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [],
+        "path": "configs/train/dp.yaml",
+        "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+      },
+      "diffusion": {
+        "action_normalisation": "identity (actions already in [-1, 1])",
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "final_clip": [
+          -1.0,
+          1.0
+        ],
+        "noise": "explicit input; per-request torch.Generator seeded by (run_seed, episode_seed, step)",
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (diffusers DDIMScheduler), eta 0",
+        "timestep_spacing": "trailing",
+        "train_scheduler": "ddpm (diffusers DDPMScheduler)"
+      },
+      "horizons": {
+        "Ta_K_at_selection": {
+          "K": 10,
+          "Ta": 8
+        },
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16,
+        "executed_chunk_indices": [
+          1,
+          8
+        ]
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inference_sweeps": {
+        "K": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          100
+        ],
+        "Ta_steps": [
+          1,
+          2,
+          4,
+          8,
+          12
+        ],
+        "temporal_ensembling_m": 0.01
+      },
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "dp",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "unet": 18155139,
+          "unet.diffusion_step_encoder": 131712,
+          "unet.down_modules": 7783936,
+          "unet.final_conv": 82691,
+          "unet.mid_modules": 6037504,
+          "unet.up_modules": 4119296
+        },
+        "total": 29353123,
+        "trainable": 29353123
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 128,
+        "checkpoint_every_steps": 10000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "inv_gamma": 1.0,
+          "kind": "power",
+          "max_value": 0.9999,
+          "power": 0.75
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse_epsilon (ila.policies.dp.policy.ddpm_loss)",
+        "lr": 0.0001,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 100000,
+        "total_steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "dp_minus_last_action": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            10,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "mish",
+          "cond": "film",
+          "diffusion_step_embed_dim": 128,
+          "diffusion_step_encoder": "sinusoidal(128) -> Linear(512) -> Mish -> Linear(128)",
+          "down_dims": [
+            128,
+            256,
+            512
+          ],
+          "film": "per-channel scale and bias from [step embedding || obs feature]",
+          "film_cond_dim": 384,
+          "global_cond_dim": 256,
+          "kernel_size": 5,
+          "mid_blocks": 2,
+          "n_groups": 8,
+          "n_groups_source": "UNetConfig default (diffusion_policy's value; not a config key)",
+          "residual_blocks_per_level": 2,
+          "sample_shape_Tp_A": [
+            16,
+            3
+          ],
+          "type": "conditional_unet1d (Chi et al. 2023, adapted; MIT notice in unet1d.py)"
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "3f5609cda9999ba99b70f890014a74cdffd0c32e766a099613dc8edebb519e40",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/dp_minus_last_action/s0/checkpoints/s0_step070000.pt",
+        "config_sha256_at_crosscheck": "3f5609cda9999ba99b70f890014a74cdffd0c32e766a099613dc8edebb519e40",
+        "global_step": 70000,
+        "match": true,
+        "parameters_total": 29352931,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/dp_minus_last_action/s0/selection.json",
+        "selection_json_sha256": "27aef5d0d11f487c27ff3beb9e94e30f75fe3b1c4b93828f4433dfbd5c3cada0",
+        "sha256": "ecf3d31c66f6538b47bab9a634e7e4f14949759e8a8c2275be19aaf4fe9e79e8",
+        "tensors_checked": 216,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/dp.yaml",
+            "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+          }
+        ],
+        "path": "configs/train/ablations/dp_minus_last_action.yaml",
+        "sha256": "3f5609cda9999ba99b70f890014a74cdffd0c32e766a099613dc8edebb519e40"
+      },
+      "diffusion": {
+        "action_normalisation": "identity (actions already in [-1, 1])",
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "final_clip": [
+          -1.0,
+          1.0
+        ],
+        "noise": "explicit input; per-request torch.Generator seeded by (run_seed, episode_seed, step)",
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (diffusers DDIMScheduler), eta 0",
+        "timestep_spacing": "trailing",
+        "train_scheduler": "ddpm (diffusers DDPMScheduler)"
+      },
+      "horizons": {
+        "Ta_K_at_selection": {
+          "K": 10,
+          "Ta": 8
+        },
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16,
+        "executed_chunk_indices": [
+          1,
+          8
+        ]
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inference_sweeps": {
+        "K": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          100
+        ],
+        "Ta_steps": [
+          1,
+          2,
+          4,
+          8,
+          12
+        ],
+        "temporal_ensembling_m": 0.01
+      },
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "minus_last_action",
+        "proprio_dim": 10,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "dp",
+      "obs_variant": "minus_last_action",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 20,
+        "by_module": {
+          "encoder": 11197792,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 4864,
+          "encoder.trunk": 11176512,
+          "unet": 18155139,
+          "unet.diffusion_step_encoder": 131712,
+          "unet.down_modules": 7783936,
+          "unet.final_conv": 82691,
+          "unet.mid_modules": 6037504,
+          "unet.up_modules": 4119296
+        },
+        "total": 29352931,
+        "trainable": 29352931
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 128,
+        "checkpoint_every_steps": 10000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "inv_gamma": 1.0,
+          "kind": "power",
+          "max_value": 0.9999,
+          "power": 0.75
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse_epsilon (ila.policies.dp.policy.ddpm_loss)",
+        "lr": 0.0001,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 100000,
+        "total_steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "dp_mix": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "mish",
+          "cond": "film",
+          "diffusion_step_embed_dim": 128,
+          "diffusion_step_encoder": "sinusoidal(128) -> Linear(512) -> Mish -> Linear(128)",
+          "down_dims": [
+            128,
+            256,
+            512
+          ],
+          "film": "per-channel scale and bias from [step embedding || obs feature]",
+          "film_cond_dim": 384,
+          "global_cond_dim": 256,
+          "kernel_size": 5,
+          "mid_blocks": 2,
+          "n_groups": 8,
+          "n_groups_source": "UNetConfig default (diffusion_policy's value; not a config key)",
+          "residual_blocks_per_level": 2,
+          "sample_shape_Tp_A": [
+            16,
+            3
+          ],
+          "type": "conditional_unet1d (Chi et al. 2023, adapted; MIT notice in unet1d.py)"
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "9a94d0ae88af728d0e0b6c96b6849adaf5294806d038234a8925682f0fe529f9",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/dp_mix/s0/checkpoints/s0_step060000.pt",
+        "config_sha256_at_crosscheck": "9a94d0ae88af728d0e0b6c96b6849adaf5294806d038234a8925682f0fe529f9",
+        "global_step": 60000,
+        "match": true,
+        "parameters_total": 29353123,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/dp_mix/s0/selection.json",
+        "selection_json_sha256": "54afcea9d9e93d27d1c3c57e3766374c61312e945f9250cc64223360ead5fae8",
+        "sha256": "28eca6aa6331c4f2a8dc04b04f520167a2a8244b162a9c33cf69e4a152c13e5a",
+        "tensors_checked": 216,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/dp.yaml",
+            "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+          }
+        ],
+        "path": "configs/train/ablations/dp_mix.yaml",
+        "sha256": "9a94d0ae88af728d0e0b6c96b6849adaf5294806d038234a8925682f0fe529f9"
+      },
+      "diffusion": {
+        "action_normalisation": "identity (actions already in [-1, 1])",
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "final_clip": [
+          -1.0,
+          1.0
+        ],
+        "noise": "explicit input; per-request torch.Generator seeded by (run_seed, episode_seed, step)",
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (diffusers DDIMScheduler), eta 0",
+        "timestep_spacing": "trailing",
+        "train_scheduler": "ddpm (diffusers DDPMScheduler)"
+      },
+      "horizons": {
+        "Ta_K_at_selection": {
+          "K": 10,
+          "Ta": 8
+        },
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16,
+        "executed_chunk_indices": [
+          1,
+          8
+        ]
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inference_sweeps": {
+        "K": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          100
+        ],
+        "Ta_steps": [
+          1,
+          2,
+          4,
+          8,
+          12
+        ],
+        "temporal_ensembling_m": 0.01
+      },
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "dp",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "unet": 18155139,
+          "unet.diffusion_step_encoder": 131712,
+          "unet.down_modules": 7783936,
+          "unet.final_conv": 82691,
+          "unet.mid_modules": 6037504,
+          "unet.up_modules": 4119296
+        },
+        "total": 29353123,
+        "trainable": 29353123
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 128,
+        "checkpoint_every_steps": 10000,
+        "data": {
+          "collection": "mix_1000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "inv_gamma": 1.0,
+          "kind": "power",
+          "max_value": 0.9999,
+          "power": 0.75
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse_epsilon (ila.policies.dp.policy.ddpm_loss)",
+        "lr": 0.0001,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 100000,
+        "total_steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "dp_n100": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "mish",
+          "cond": "film",
+          "diffusion_step_embed_dim": 128,
+          "diffusion_step_encoder": "sinusoidal(128) -> Linear(512) -> Mish -> Linear(128)",
+          "down_dims": [
+            128,
+            256,
+            512
+          ],
+          "film": "per-channel scale and bias from [step embedding || obs feature]",
+          "film_cond_dim": 384,
+          "global_cond_dim": 256,
+          "kernel_size": 5,
+          "mid_blocks": 2,
+          "n_groups": 8,
+          "n_groups_source": "UNetConfig default (diffusion_policy's value; not a config key)",
+          "residual_blocks_per_level": 2,
+          "sample_shape_Tp_A": [
+            16,
+            3
+          ],
+          "type": "conditional_unet1d (Chi et al. 2023, adapted; MIT notice in unet1d.py)"
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "b620251aec57de4a85723fe0a1beb72d96b4dcfca6b3054cdba25edba222ccc4",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/dp_n100/s0/checkpoints/s0_step010000.pt",
+        "config_sha256_at_crosscheck": "b620251aec57de4a85723fe0a1beb72d96b4dcfca6b3054cdba25edba222ccc4",
+        "global_step": 10000,
+        "match": true,
+        "parameters_total": 29353123,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/dp_n100/s0/selection.json",
+        "selection_json_sha256": "a39767f53042cf09560be8ec87c169ac9e53bc3a2e984e613542c6f8d0dac060",
+        "sha256": "1939cf9ab57d82d34019ebc3c166eed38b07bbc449e37756b29b12865adf1a66",
+        "tensors_checked": 216,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/dp.yaml",
+            "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+          }
+        ],
+        "path": "configs/train/ablations/dp_n100.yaml",
+        "sha256": "b620251aec57de4a85723fe0a1beb72d96b4dcfca6b3054cdba25edba222ccc4"
+      },
+      "diffusion": {
+        "action_normalisation": "identity (actions already in [-1, 1])",
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "final_clip": [
+          -1.0,
+          1.0
+        ],
+        "noise": "explicit input; per-request torch.Generator seeded by (run_seed, episode_seed, step)",
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (diffusers DDIMScheduler), eta 0",
+        "timestep_spacing": "trailing",
+        "train_scheduler": "ddpm (diffusers DDPMScheduler)"
+      },
+      "horizons": {
+        "Ta_K_at_selection": {
+          "K": 10,
+          "Ta": 8
+        },
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16,
+        "executed_chunk_indices": [
+          1,
+          8
+        ]
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inference_sweeps": {
+        "K": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          100
+        ],
+        "Ta_steps": [
+          1,
+          2,
+          4,
+          8,
+          12
+        ],
+        "temporal_ensembling_m": 0.01
+      },
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "dp",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "unet": 18155139,
+          "unet.diffusion_step_encoder": 131712,
+          "unet.down_modules": 7783936,
+          "unet.final_conv": 82691,
+          "unet.mid_modules": 6037504,
+          "unet.up_modules": 4119296
+        },
+        "total": 29353123,
+        "trainable": 29353123
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 128,
+        "checkpoint_every_steps": 10000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 100,
+          "success_filter": true
+        },
+        "ema": {
+          "inv_gamma": 1.0,
+          "kind": "power",
+          "max_value": 0.9999,
+          "power": 0.75
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse_epsilon (ila.policies.dp.policy.ddpm_loss)",
+        "lr": 0.0001,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 100000,
+        "total_steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "dp_n300": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "mish",
+          "cond": "film",
+          "diffusion_step_embed_dim": 128,
+          "diffusion_step_encoder": "sinusoidal(128) -> Linear(512) -> Mish -> Linear(128)",
+          "down_dims": [
+            128,
+            256,
+            512
+          ],
+          "film": "per-channel scale and bias from [step embedding || obs feature]",
+          "film_cond_dim": 384,
+          "global_cond_dim": 256,
+          "kernel_size": 5,
+          "mid_blocks": 2,
+          "n_groups": 8,
+          "n_groups_source": "UNetConfig default (diffusion_policy's value; not a config key)",
+          "residual_blocks_per_level": 2,
+          "sample_shape_Tp_A": [
+            16,
+            3
+          ],
+          "type": "conditional_unet1d (Chi et al. 2023, adapted; MIT notice in unet1d.py)"
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "bab824113fa1433872bfe3483b5e1846ac54422b0bdd41b87b3364e9f3fdac26",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/dp_n300/s0/checkpoints/s0_step040000.pt",
+        "config_sha256_at_crosscheck": "bab824113fa1433872bfe3483b5e1846ac54422b0bdd41b87b3364e9f3fdac26",
+        "global_step": 40000,
+        "match": true,
+        "parameters_total": 29353123,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/dp_n300/s0/selection.json",
+        "selection_json_sha256": "16d9d530d3044d3cd75effeab2984520a3810927fa65b2a38a9612a0abe34fa7",
+        "sha256": "93779e50474d814f32e56bd8bdbf68eebb4619db4d3cc14ff468bd4fa1c00af7",
+        "tensors_checked": 216,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/dp.yaml",
+            "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+          }
+        ],
+        "path": "configs/train/ablations/dp_n300.yaml",
+        "sha256": "bab824113fa1433872bfe3483b5e1846ac54422b0bdd41b87b3364e9f3fdac26"
+      },
+      "diffusion": {
+        "action_normalisation": "identity (actions already in [-1, 1])",
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "final_clip": [
+          -1.0,
+          1.0
+        ],
+        "noise": "explicit input; per-request torch.Generator seeded by (run_seed, episode_seed, step)",
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (diffusers DDIMScheduler), eta 0",
+        "timestep_spacing": "trailing",
+        "train_scheduler": "ddpm (diffusers DDPMScheduler)"
+      },
+      "horizons": {
+        "Ta_K_at_selection": {
+          "K": 10,
+          "Ta": 8
+        },
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16,
+        "executed_chunk_indices": [
+          1,
+          8
+        ]
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inference_sweeps": {
+        "K": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          100
+        ],
+        "Ta_steps": [
+          1,
+          2,
+          4,
+          8,
+          12
+        ],
+        "temporal_ensembling_m": 0.01
+      },
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "dp",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "unet": 18155139,
+          "unet.diffusion_step_encoder": 131712,
+          "unet.down_modules": 7783936,
+          "unet.final_conv": 82691,
+          "unet.mid_modules": 6037504,
+          "unet.up_modules": 4119296
+        },
+        "total": 29353123,
+        "trainable": 29353123
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 128,
+        "checkpoint_every_steps": 10000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 300,
+          "success_filter": true
+        },
+        "ema": {
+          "inv_gamma": 1.0,
+          "kind": "power",
+          "max_value": 0.9999,
+          "power": 0.75
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse_epsilon (ila.policies.dp.policy.ddpm_loss)",
+        "lr": 0.0001,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 100000,
+        "total_steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "dp_pid": {
+      "action": "normalised world-frame velocity setpoint in [-1, 1]^3 (env: x 1.5 m/s, norm cap)",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "mish",
+          "cond": "film",
+          "diffusion_step_embed_dim": 128,
+          "diffusion_step_encoder": "sinusoidal(128) -> Linear(512) -> Mish -> Linear(128)",
+          "down_dims": [
+            128,
+            256,
+            512
+          ],
+          "film": "per-channel scale and bias from [step embedding || obs feature]",
+          "film_cond_dim": 384,
+          "global_cond_dim": 256,
+          "kernel_size": 5,
+          "mid_blocks": 2,
+          "n_groups": 8,
+          "n_groups_source": "UNetConfig default (diffusion_policy's value; not a config key)",
+          "residual_blocks_per_level": 2,
+          "sample_shape_Tp_A": [
+            16,
+            3
+          ],
+          "type": "conditional_unet1d (Chi et al. 2023, adapted; MIT notice in unet1d.py)"
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "3638e62c4060338ebfab36ca4e3a87424cb648008ec4deb6960afa8c5ca9feb8",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/dp_pid/s0/checkpoints/s0_step070000.pt",
+        "config_sha256_at_crosscheck": "3638e62c4060338ebfab36ca4e3a87424cb648008ec4deb6960afa8c5ca9feb8",
+        "global_step": 70000,
+        "match": true,
+        "parameters_total": 29353123,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/dp_pid/s0/selection.json",
+        "selection_json_sha256": "211047a7dced059b628bf83e643389e4415b37fe7156df80f41517296355cdff",
+        "sha256": "fa218a87881b7435a3d8bdd50d543f0d1c2562d9f502d53ff0f72cdf741fcdc3",
+        "tensors_checked": 216,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [
+          {
+            "path": "configs/train/dp.yaml",
+            "sha256": "c8f90c3565d86b54f712dc5b0f624127c537c4b496ba9e414c7b8b6a952b6913"
+          }
+        ],
+        "path": "configs/train/ablations/dp_pid.yaml",
+        "sha256": "3638e62c4060338ebfab36ca4e3a87424cb648008ec4deb6960afa8c5ca9feb8"
+      },
+      "diffusion": {
+        "action_normalisation": "identity (actions already in [-1, 1])",
+        "beta_schedule": "squaredcos_cap_v2",
+        "clip_sample": true,
+        "final_clip": [
+          -1.0,
+          1.0
+        ],
+        "noise": "explicit input; per-request torch.Generator seeded by (run_seed, episode_seed, step)",
+        "num_inference_steps_K": 10,
+        "num_train_timesteps": 100,
+        "prediction_type": "epsilon",
+        "sampler": "ddim (diffusers DDIMScheduler), eta 0",
+        "timestep_spacing": "trailing",
+        "train_scheduler": "ddpm (diffusers DDPMScheduler)"
+      },
+      "horizons": {
+        "Ta_K_at_selection": {
+          "K": 10,
+          "Ta": 8
+        },
+        "Ta_steps": 8,
+        "To_steps": 2,
+        "Tp_steps": 16,
+        "executed_chunk_indices": [
+          1,
+          8
+        ]
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inference_sweeps": {
+        "K": [
+          1,
+          2,
+          5,
+          10,
+          25,
+          100
+        ],
+        "Ta_steps": [
+          1,
+          2,
+          4,
+          8,
+          12
+        ],
+        "temporal_ensembling_m": 0.01
+      },
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "dp",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std"
+        ],
+        "buffers_elements": 26,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "unet": 18155139,
+          "unet.diffusion_step_encoder": 131712,
+          "unet.down_modules": 7783936,
+          "unet.final_conv": 82691,
+          "unet.mid_modules": 6037504,
+          "unet.up_modules": 4119296
+        },
+        "total": 29353123,
+        "trainable": 29353123
+      },
+      "tag": "ablation",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 128,
+        "checkpoint_every_steps": 10000,
+        "data": {
+          "collection": "pid_1000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "inv_gamma": 1.0,
+          "kind": "power",
+          "max_value": 0.9999,
+          "power": 0.75
+        },
+        "evaluated_weights": "ema",
+        "loss": "mse_epsilon (ila.policies.dp.policy.ddpm_loss)",
+        "lr": 0.0001,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "steps": 100000,
+        "total_steps": 100000,
+        "warmup_steps": 500,
+        "weight_decay": 1e-06
+      }
+    },
+    "modular": {
+      "action": "from the frozen P8 teacher fed the de-normalised estimate",
+      "action_dim": 3,
+      "architecture": {
+        "encoder": {
+          "feature_dim": 256,
+          "feature_layout": "[keypoints(t-To+1..t) || proprio_mlp(t-To+1..t)], oldest first",
+          "frame_feature_dim": 64,
+          "keypoint_projection": "Conv2d 1x1 512->32",
+          "norm": "groupnorm(16 groups) replacing every BatchNorm",
+          "norm_groups": 16,
+          "pretrained": false,
+          "proprio_feature_dim": 64,
+          "proprio_mlp_activation": "relu between layers, none after the last",
+          "proprio_mlp_shared_over_To": true,
+          "proprio_mlp_widths": [
+            13,
+            64,
+            64
+          ],
+          "proprio_normalisation": "fixed buffers proprio_mean/proprio_std (train-set mean/std)",
+          "spatial_softmax_keypoints": 32,
+          "trunk": "resnet18",
+          "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
+          "trunk_output_shape_chw": [
+            512,
+            3,
+            3
+          ]
+        },
+        "head": {
+          "activation": "relu",
+          "out_fields": [
+            {
+              "name": "rel_position",
+              "size": 3
+            },
+            {
+              "name": "rel_velocity",
+              "size": 3
+            },
+            {
+              "name": "deck_normal",
+              "size": 3
+            },
+            {
+              "name": "rel_tilt",
+              "size": 1
+            },
+            {
+              "name": "height",
+              "size": 1
+            }
+          ],
+          "output": "linear: normalised privileged-block estimate (train-set mean/std buffers)",
+          "type": "mlp",
+          "widths": [
+            256,
+            256,
+            256,
+            11
+          ]
+        }
+      },
+      "builder": "ila.policies.registry.build_net_from_config (the training loop's builder)",
+      "built_here": true,
+      "checkpoint_crosscheck": {
+        "checkpoint_config_sha256": "84153e6dc96288d1512f7387b08ace6632aed195dcfeb2d4358c1c977500eadc",
+        "checkpoint_config_sha256_matches": true,
+        "checkpoint_file": "artifacts/runs/modular/s0/checkpoints/s0_step020000.pt",
+        "config_sha256_at_crosscheck": "84153e6dc96288d1512f7387b08ace6632aed195dcfeb2d4358c1c977500eadc",
+        "global_step": 20000,
+        "match": true,
+        "parameters_total": 11332395,
+        "pinned_in": "results/e08/selection_pins.json",
+        "seed": 0,
+        "selection_json": "results/phase7/runs/modular/s0/selection.json",
+        "selection_json_sha256": "22deb54d4b3899fb8fc46912c9d8da55392d97b003a1aeef068092bd19be8613",
+        "sha256": "ad2abdcf65ddd87d9bd1db512fa0c895b4b14553cbadecf1b0d058031a237d7d",
+        "tensors_checked": 76,
+        "weights_checked": [
+          "ema",
+          "model"
+        ]
+      },
+      "config": {
+        "also_read": [],
+        "path": "configs/train/modular.yaml",
+        "sha256": "84153e6dc96288d1512f7387b08ace6632aed195dcfeb2d4358c1c977500eadc"
+      },
+      "frozen_teacher": {
+        "clock": "time_fraction passes to the teacher only (declared clock exception 2)",
+        "counted_in_parameters": false,
+        "see": "p8_controllers.ppo",
+        "source": "P8 ppo seed 0 final/ (VecNormalize frozen, training=False)",
+        "trainable": false
+      },
+      "horizons": {
+        "Ta_steps": 1,
+        "To_steps": 2,
+        "Tp_steps": 1
+      },
+      "inference_path": "cpu fp32 single-sample (selection and evaluation)",
+      "inputs": {
+        "camera_config": {
+          "path": "configs/render/camera.yaml",
+          "sha256": "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+        },
+        "camera_fov_vertical_deg": 90.0,
+        "contract": {
+          "path": "configs/obs/student.yaml",
+          "sha256": "2bdfb259319b8fe3e0fc34e41cd6a80a75c7e94893502a7e02e63cf531bd3fc4"
+        },
+        "crop_eval": "center",
+        "crop_px": 88,
+        "crop_train": "random",
+        "frames_To": 2,
+        "image_channels": 3,
+        "image_dtype": "uint8 RGB, scaled to [0, 1]; no ImageNet statistics",
+        "image_px": 96,
+        "obs_variant": "default",
+        "proprio_dim": 13,
+        "proprio_fields": [
+          {
+            "name": "attitude",
+            "size": 3
+          },
+          {
+            "name": "body_rates",
+            "size": 3
+          },
+          {
+            "name": "velocity",
+            "size": 3
+          },
+          {
+            "name": "last_action",
+            "size": 3
+          },
+          {
+            "name": "in_contact",
+            "size": 1
+          }
+        ]
+      },
+      "kind": "modular",
+      "obs_variant": "default",
+      "parameters": {
+        "buffers": [
+          "encoder.proprio_mean",
+          "encoder.proprio_std",
+          "target_mean",
+          "target_std"
+        ],
+        "buffers_elements": 48,
+        "by_module": {
+          "encoder": 11197984,
+          "encoder.keypoints": 16416,
+          "encoder.proprio_mlp": 5056,
+          "encoder.trunk": 11176512,
+          "head": 134411
+        },
+        "total": 11332395,
+        "trainable": 11332395
+      },
+      "tag": "core",
+      "training": {
+        "adamw_betas": [
+          0.9,
+          0.999
+        ],
+        "adamw_eps": 1e-08,
+        "batch_size": 256,
+        "checkpoint_every_steps": 5000,
+        "data": {
+          "collection": "ppo_2000",
+          "first_n_episodes": 1000,
+          "success_filter": true
+        },
+        "ema": {
+          "decay": 0.999,
+          "kind": "constant"
+        },
+        "evaluated_weights": "ema",
+        "loss": {
+          "delta": 1.0,
+          "name": "huber"
+        },
+        "lr": 0.0003,
+        "optimizer": "adamw",
+        "precision": "bf16",
+        "schedule": "cosine",
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps": 30000,
+        "total_steps": 30000,
+        "warmup_steps": 500,
+        "weight_decay": 0.0001
+      }
+    }
+  },
+  "units": {
+    "horizons": "control steps of 1/30 s model scale (lambda = 1/25; 1/6 s full scale)",
+    "image": "px",
+    "lr": "per optimiser step",
+    "p8_gains": "units in the key names; lengths m, speeds m/s, times s, model scale",
+    "parameters": "elements of nn.Parameter tensors; buffers counted apart",
+    "training_steps": "optimiser steps"
+  }
+}
