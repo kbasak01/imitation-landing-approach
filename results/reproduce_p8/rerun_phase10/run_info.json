@@ -1,0 +1,83 @@
+{
+  "started_utc": "2026-11-09T14:30:58+00:00",
+  "finished_utc": "2026-11-09T14:35:31+00:00",
+  "wall_s": 253.3,
+  "episodes_flown": 3200,
+  "p8_commit": "7237b7065c8af8172b3848ac6e9d3ceb2cf82075",
+  "ila_commit": "8f4c9e05e84b7a57341d32be52a016f5e6c9891f",
+  "ila_dirty_paths": [],
+  "host": "DATTA-BASAK",
+  "cpu_count": 36,
+  "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "torch_num_threads": 1
+  },
+  "workers": 24,
+  "chunk": 25,
+  "start_method": "spawn",
+  "render": {
+    "pid_feedforward": "full",
+    "ppo": "full"
+  },
+  "render_cfg_sha256": {
+    "pid_feedforward": [
+      "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+    ],
+    "ppo": [
+      "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+    ]
+  },
+  "render_evidence": {
+    "pid_feedforward": {
+      "render": "full",
+      "render_cfg_sha256": [
+        "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+      ],
+      "episodes": 2800,
+      "steps": 425981,
+      "frames_rendered": 428781,
+      "timed_checks": 18343,
+      "timed_checks_min_per_episode": 5,
+      "checks": {
+        "render_is_full": true,
+        "render_cfg_sha256_single_nonempty": true,
+        "frames_equal_steps_plus_episodes": true
+      }
+    },
+    "ppo": {
+      "render": "full",
+      "render_cfg_sha256": [
+        "53f802656f6343f31a5ea98069024978d03cecf636807f4adcabb399e67a0380"
+      ],
+      "episodes": 400,
+      "steps": 24797,
+      "frames_rendered": 25197,
+      "timed_checks": 1469,
+      "timed_checks_min_per_episode": 3,
+      "checks": {
+        "render_is_full": true,
+        "render_cfg_sha256_single_nonempty": true,
+        "frames_equal_steps_plus_episodes": true
+      }
+    }
+  },
+  "manifest_sha256": "e6f30e55e478d39061b94e38de33959ca99b16e8cac38a3bd99b34f6543ad4a2",
+  "success_yaml_sha256": "c7fbdcc4df48bd4a2cfe21811613e5e50e3e4868822fe6dddd13745d96692118",
+  "ppo_model_sha256": "1a012394335c44d1e08d20f2199debaf3809d7bef96e04749817ae35b584fd49",
+  "rows": {
+    "pid_feedforward": {
+      "episodes_csv_sha256": "f41a46603933a6c46308df19c1056bf4dbe82b599e5f53bad65b9ca13ac3c17e",
+      "p8_columns_csv_sha256": "d5ddc55dfd6423d81a27d37612956e9dae437694c55a4d5e149b33413472ec31",
+      "n_rows": 2800
+    },
+    "ppo": {
+      "episodes_csv_sha256": "6ef3d88bd3d102bccc031314010e009b5b936db5a71f4b513d28bbf325fa1e76",
+      "p8_columns_csv_sha256": "a836275f4e1ade18f62d52f244f72561c4f86990bcbafb064a0e5b478978bf50",
+      "n_rows": 400
+    }
+  },
+  "rows_dir": "/tmp/claude-1000/-home-kbasak-projects-02-imitation-landing-approach/fe2dff58-9220-478b-beac-f5cb53785fd4/scratchpad/repro/run"
+}

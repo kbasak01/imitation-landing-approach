@@ -3997,3 +3997,76 @@ P9-D2; both are decisions, not deviations.
   assets with SHA-256s matching `results/latency/graphs.json`.
 - **First task:** walk `VALIDATION_CHECKLIST.md` line by line into `docs/LIMITATIONS.md`, then run
   `/full-audit`.
+
+### P10-D1: Validation sweep, verdict correction, evidence committed, README rules (2026-11-09)
+
+Phase 10 walked `VALIDATION_CHECKLIST.md` into `docs/LIMITATIONS.md` and ran `/full-audit`
+(`docs/audit_report.md`) at `8f4c9e0`. No threshold, list, criterion, frozen config or result
+changed. The items below are a verdict correction, committed evidence and wording rules.
+
+1. **Core `dp` s0–s4: TRUSTWORTHY → CAVEAT.**
+   - The `training-run-diagnostician` re-review found that P6-D5's TRUSTWORTHY ×5 predates
+     evidence about the same checkpoints that meets the CAVEAT bar:
+     - the `last_action` copycat channel: lateral RMSE +29–38 % when `dp` is fed its own executed
+       action (P7-D3 item 7);
+     - 32–44 of 150 outcome flips under perturbations of order 1e-5 (P9-D2 item 1);
+     - closed-loop chunk-boundary jerk ratio 1.35–1.47, against the teacher's 1.09;
+     - under-dispersed samples;
+     - 3 of 5 seeds picked at 100 k, past the 41–45 k held-out minimum.
+   - The `dp_n100` and `dp_n300` CAVEATs rest on the same selection grounds.
+   - No defect is implied: a ±1 label shift gives 506× worse MSE, and R1 parity confirms the
+     execution indices. So this is not EXCLUDE.
+   - Nothing is re-run and no number changes. The disclosures were already binding (the H3
+     confound, P9-D2 *Consequence*).
+   - The tally is now 34 TRUSTWORTHY / 37 CAVEAT / 0 EXCLUDE over 71 runs.
+2. **DAgger audits committed; path corrected.**
+   - P5-D2 cites `runs/bc_dagger/s<n>/rollouts/iter<i>.audit.json`, which does not exist. The
+     audits are at `${data_root}/dagger/bc_dagger/s<n>/iter<i>.audit.json`, as P5-D1 states.
+   - A 25-row digest is now committed at `results/phase5/dagger_audits.csv`: seed, iteration, β,
+     counts, relabel, replay, summed attribute violations, `clean` and each audit's SHA-256.
+     - All 25 are clean.
+     - Relabel 1000/1000, max-abs 0.0.
+     - Replay 20/20.
+     - 0 attribute violations.
+   - It was produced by a one-off read of the audit JSONs. The SHA-256 column ties each row to its
+     source file.
+3. **Reproduction gate re-run on the final tree.** `runner.py` and `p8_adapter.py` changed in 5
+   commits after the Phase 2 record (`5d09486`). The gate was re-run at `8f4c9e0`:
+   - render full, 24 workers;
+   - `pid_feedforward` 2 800/2 800 and `ppo` 400/400 rows identical;
+   - `comparison.json` byte-identical.
+
+   Record: `results/reproduce_p8/rerun_phase10/`. The Phase 2 files are kept as they were. The rows
+   went to a session scratch directory (`run_info.json` `rows_dir`) and were not kept;
+   `comparison.json` holds the row-by-row result.
+4. **README rules for `dp`** (results-skeptic SHOULD FIX 1–3).
+   - "Closed-loop export parity" for `dp` is written as **failed** (32/33/44 of 150 flips against a
+     bound of 3). Gate 9's "PASS (test run as frozen)" means the test ran as frozen.
+   - Any byte-identical or reproducible claim for `dp`, `dp_*` or R1 rows is scoped to the CPU fp32
+     single-sample path on this stack.
+   - Beside H2 (`dp_mix`) and the `dp_pid` / `dp_minus_last_action` rows, write: "closed-loop
+     sensitivity of the `dp_*` ablations not measured; core `dp` seed 0 flips 21–29 % on `select`".
+5. **README rules for pooling and quoting** (results-skeptic SHOULD FIX 4–5).
+   - P8-D1 item 11's "1 767 of 2 479 `dp` failures" is quoted per sea state or labelled "pooled,
+     descriptive".
+   - SS6 contrasts are quoted from `results/e08/contrasts.csv` / `hypotheses.json`, which carry the
+     flip floor, never from protocol prose.
+6. **H1-DART caveat** (results-skeptic SHOULD FIX 6). Beside any H1-DART number, write: "σ* = 0.10
+   chosen on `select` over 3 seed-0 trials; `bc` untuned".
+7. **Background-only frames at contact** (repo-publication-reviewer SHOULD FIX 4).
+   - Once the vehicle rests on the deck, the camera (`offset_body_m` −0.02 m) sits below the deck
+     surface and the frame is uniform background until the episode ends.
+   - Physics and outcomes are unaffected; the demo stores contain the same frames.
+   - This is documented as `docs/LIMITATIONS.md` L3 and goes in the README's "what a rendered camera
+     can and cannot show" box and the GIF captions. Nothing is re-rendered, because the GIF RULE is
+     fixed.
+8. **`bc_mix` averaging caveat is arm-level** (diagnostician NOTE 2). P7-D3 records it on s0 only,
+   but 0.36–0.54 of touchdowns fall in the mode gap in every seed
+   (`results/phase7/h2/h2_touchdown_select.json`). It is H2's subject, not a trust defect; the
+   verdicts stand.
+
+*Reviews.* The verdicts are in `docs/audit_report.md`:
+- `privileged-leak-auditor`: GO, no LEAK;
+- `training-run-diagnostician`: 0 EXCLUDE, with item 1;
+- `results-skeptic`: nothing BLOCKING;
+- `repo-publication-reviewer` dry run: HOLD for publication, nothing blocking Gate 10.
