@@ -3622,9 +3622,11 @@ re-tuned. Everything is simulation (PyBullet physics, PyBullet TinyRenderer fram
 - **First task:** `deploy-benchmarker` exports `dp` (seed 0's selected checkpoint; encoder, one denoise step, unrolled K = 10 with noise as input) and `bc_dagger`, and runs open-loop parity on the 1 000 `select` inputs.
 
 ### P9-D1 — Export, parity, latency and latency-arm choices P3-D1 leaves open (2026-11-07)
-*Status: draft by `deploy-benchmarker`, for review before the closed-loop flights, the latency
-sweep or any latency-arm flight. Written after the open-loop parity numbers below were measured
-and before any closed-loop, latency or latency-arm number existed.*
+*Status: written by `deploy-benchmarker` at `9a34b8c` (2026-11-07), after the open-loop parity
+numbers below were measured and before any closed-loop, latency or latency-arm number existed.
+Reviewed unchanged by `privileged-leak-auditor` (pre-flight, 2026-11-07: GO, no LEAK) and
+`results-skeptic` (pre-gate, 2026-11-07: "no drift"). Final. The results and the open-choice
+readings added after it are in P9-D2; its "Consequence" below is as of `9a34b8c`.*
 
 *Decision.* The choices below are not fixed by P3-D1 §6 H5, §7 or §8. They are implementation
 choices inside the frozen protocol, not deviations; no threshold, list or criterion changes.
@@ -3830,3 +3832,112 @@ the literal it states.
 - Files outside `ila/deploy`: `ila/p8_adapter.py` (`latency_harness`, a re-export) and
   `ila/policies/dp/chunking.py` (`delayed_chunk_index`, a new pure function; nothing existing
   changed).
+
+### P9-D2 — Phase 9 results, readings of open choices, review response (2026-11-09)
+*Decision / record.* Everything here is simulation: PyBullet physics, rendered (PyBullet
+TinyRenderer) frames. Times are model scale (λ = 1/25). One control step is 33.333 ms of
+model-scale sim time, which is 166.7 ms at full scale. Latencies are wall clock **on this machine (RTX A4000, i9-10980XE, WSL2)**.
+Wall-clock compute is not Froude-scaled, and no embedded target is measured. The students are
+`bc_dagger` and `dp`, both distilled from P8 `ppo` seed 0. No threshold, list, criterion or frozen
+config changed.
+
+1. **Closed-loop parity** (binding, ≤ 3 flips of the 150 `select` episodes against the CPU fp32
+   single-sample path; `results/latency/closed_loop.csv`, flown at `3b2ae85` on a clean tree).
+   - `bc_dagger` passes on every flown fp32 provider: `ort_cpu_fp32` 2, `ort_cuda_fp32` 2,
+     `torch_cuda_fp32` 0, and the unscored `ort_trt_fp32` 2.
+   - `dp` fails on every flown provider: `ort_cpu_fp32` 33, `ort_cuda_fp32` 44, `torch_cuda_fp32`
+     32, and the unscored `ort_trt_fp32` 46. The reference succeeds on 63 of 150, against 58–67
+     for the providers.
+   - The fp16 providers were refused at open loop (P9-D1 item 4).
+   - **Reading (results-skeptic S3, which checked and found no artefact):** this is outcome sensitivity
+     of this `dp`, not a provider error.
+     - Both reference re-flights equal the committed selection rows byte for byte (SHA-256
+       `b4880f57…` for `bc_dagger`, `af96ae1c…` for `dp`).
+     - `torch_cuda_fp32` runs the same Python sampler as the reference and still flips 32.
+     - Open-loop chunk gaps are ≤ 2.8e-5.
+     - Flips go both ways: for ORT CPU, 12 successes are lost and 16 gained.
+     - 71 of the 150 reference episodes are `off_pad`, and lateral offsets move by about 1 cm
+       against the 0.10 m pad boundary.
+     - So this `dp` (seed 0's selected checkpoint) flips on 32–44 of 150 `select` episodes
+       (21.3–29.3 %) on the scored fp32 providers, and on 46 on the unscored TRT fp32, under
+       numeric perturbations of order 1e-5. P8's single-draw median is 1.9 %.
+     - No non-bit-identical path could pass the ≤ 3 test for this `dp`.
+2. **H5(a): not supported** (`results/latency/h5a.csv`, `delay.json`, `hypotheses.json`).
+   - No scored provider passes both parities for `dp`.
+   - The latency bound also fails on its own on every scored provider. Their `dp_e2e` batch-1
+     p99 values are `ort_cuda_fp32` 52.6 ms, `torch_cuda_fp32` 89.4 ms and `ort_cpu_fp32`
+     122.9 ms; the bound is 33.3 ms, the model-scale 30 Hz control period.
+   - Only the unscored `ort_trt_fp32` is below it, at 25.7 ms, and it also fails closed loop.
+   - Batch-24 rows (`latency.csv`, unscored context, flown at `362e31c`): the `dp_e2e` p99 is
+     71.3 ms on `ort_cuda_fp32` and 29.3 ms on the unscored `ort_trt_fp32`.
+3. **d** (`delay.json`, P3-D1 §7). The fallback is the torch CPU fp32 single-sample path at
+   **1 thread**, as in P2-D2's "170 ms per call" and the flight's `OMP_NUM_THREADS = 1`.
+   - **`bc_dagger`: d = 1.** The fastest provider passing both parities is `torch_cuda_fp32`, with
+     a batch-1 p99 of 4.32 ms.
+   - **`dp`: d = 6.** This is the fallback, with a p99 of 181.3 ms (`jobs/dp_e2e-torch_cpu_fp32-b1-t1.json`).
+     ⌈181.3 / 33.333⌉ = 6, and (To − 1) + d + Ta = 15 ≤ Tp = 16, so no hold past the chunk is needed.
+4. **H5(b): not supported.** At `id` SS5, the latency-arm `dp` (d = 6) minus synchronous `dp` is
+   −15.9 points, 95 % CI [−21.5, −10.5]. That is a joint-seed contrast with the same checkpoints,
+   5 seeds × 200 episodes; the margin is −3 points.
+   - Synchronous core `dp` is the low baseline from P8-D1 item 8, 36.1 % at `id` SS5. H5(b)
+     compares `dp` with itself, so the contrast stands.
+   - **Reading (results-skeptic S4):** d = 6 is the fallback's delay. The fastest provider
+     passing open-loop parity would have given d = 2 (`ort_cuda_fp32`), and the unscored TRT fp32
+     would have given d = 1. Neither was flown.
+   - The contrast includes §7's six zero-action steps at episode start, which cannot be
+     separated out.
+5. **Unscored context** (`results/e08/contrasts.csv`, the `H5(b) context` rows).
+   - **`bc_dagger` at d = 1** vs synchronous:
+     - SS4 −12.9 [−16.1, −9.8] points (870/1000 vs 999/1000);
+     - SS5 −21.9 [−27.1, −16.9];
+     - SS6 −24.2 [−29.3, −19.2].
+   - **`dp` at d = 6:** SS4 −19.4 [−25.0, −13.9], SS6 −15.0 [−21.2, −9.3].
+   - For `bc_dagger`, this is the cost of a one-control-step delay, the ceiling of a 4.32 ms p99
+     to one 33.3 ms step. It is not the cost of 4 ms of compute.
+   - `last_action` in the student's proprio carries the applied, delayed action, a feedback
+     channel the students never saw in training. There is no teacher-under-delay reference, so
+     the loss is not attributed between vision and that channel (results-skeptic M4).
+6. **d = 0 identity on the real path** (results-skeptic M2; `results/latency/d0_check.json`, at
+   `6d6165e`, clean). The latency-arm build at d = 0 flew the pinned s0 checkpoints of both arms on
+   the 150 `select` episodes. Each rows file equals its selection rows byte for byte, with 0 flips.
+7. **Readings of choices P3-D1 leaves open** (`eval-auditor`). None is a deviation.
+   - `matrix.yaml` is not edited. Its frozen SHA stays, and seeds, Ta/K and tag come from §7
+     and the core arm.
+   - The −3-point bound is compared with a 1e-9 float tolerance, as in P8-D1 item 3.
+   - A CI wholly below 0 whose lower bound clears the margin would be "supported", and its note
+     would say the delay costs success by less than the margin. That case did not arise.
+   - Context cells use the same joint-seed contrast, two-sided and unscored. Relative p95 uses
+     P8's `paired_relative_p95`, with seeds resampled per side.
+   - The H5(a) estimate is read from `h5a.csv`, not re-derived.
+8. **Provenance and incidents.**
+   - **Bug fixed in `3b2ae85`:** the first closed-loop launch at `9a34b8c` crashed before flying,
+     because Phase 5's selection rows live only under the run directory.
+   - **Field corrected in `ae71f03`:** `reference_equals_selection_rows` was recorded `false` at
+     `3b2ae85` because of a CRLF vs `read_text` comparison. A no-flight byte re-check rewrote that
+     field only, keeping `previous: false` in the record.
+     - The re-check recorded commit `efec628`. That is the pre-rebase twin of `eda1989`, patch-identical
+       (`git range-diff`), and is kept by tag `p9-recheck-efec628` (results-skeptic M1).
+   - **Latency-arm flight:** one invocation at `ae71f03`, clean, 10 jobs, 6 000 episodes.
+     `delay.json` (`846fbf68…`) is pinned in `results/e08/latency_pins.json` and checked per job
+     (leak review R1). `selection_pins.json` is unchanged. All 351 Phase 8 jobs are still done,
+     and the matrix is now 361 of 361 jobs and 961 of 961 cells.
+   - **`bc_dagger` comparator:** its selection rows (`artifacts/runs/bc_dagger/s0/select/s5_step005000_rows.csv`,
+     SHA-256 `b4880f57…`) are not committed. The committed reference rows in
+     `results/latency/closed_loop/bc_dagger/` equal them, and match `selection.json`'s summary
+     (results-skeptic M3).
+
+*Reviews.*
+- **`privileged-leak-auditor`, pre-flight, 2026-11-07:**
+  - GO, no LEAK.
+  - R1 (pin `delay.json`), R2 (wrapper scope), N1 (schedule in `chunking.py`) and N2 (CRLF) were
+    fixed in `674a201`, `2c78b78`, `eda1989` and `ae71f03`.
+  - The re-review gave GO, with no LEAK and no RISK.
+- **`results-skeptic`, pre-gate, 2026-11-07, at `362e31c`:** nothing BLOCKING.
+  - S1: this entry.
+  - S2: the batch-24 rows, `a67aff3`.
+  - S3–S4 and M4–M6: items 1–5 above, and the hypothesis and report text.
+  - M1–M3: items 6 and 8.
+
+*Consequence.* H5 is scored, and the latency-arm block is flown. Phase 10 inherits these results:
+- `dp`'s measured closed-loop sensitivity, which bears on every `dp` contrast's resolution;
+- the fallback reading of d.
