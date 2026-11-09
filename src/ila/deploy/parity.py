@@ -49,7 +49,7 @@ from numpy.typing import NDArray
 
 from ila.deploy.backends import Backend
 from ila.deploy.export import BCGraph, EncoderGraph, LoadedArm
-from ila.deploy.inputs import SelectInputs
+from ila.deploy.inputs import SelectInputs, batch_row
 from ila.deploy.settings import BenchSettings
 from ila.policies.bc import BCNet
 from ila.policies.dp.policy import DiffusionPolicyNet, ddim_sample, initial_noise
@@ -167,8 +167,8 @@ def reference(
     t0 = time.perf_counter()
     with torch.inference_mode():
         for i in range(n):
-            img = torch.from_numpy(inputs.images[i : i + 1].copy())
-            prop = torch.from_numpy(inputs.proprio[i : i + 1].copy())
+            img = torch.from_numpy(batch_row(inputs.images, i).copy())
+            prop = torch.from_numpy(batch_row(inputs.proprio, i).copy())
             action[i] = bc_g(img, prop)[0].numpy()
             c = enc_g(img, prop)
             cond[i] = c[0].numpy()
@@ -223,7 +223,10 @@ def provider_parity(
     out: dict[str, Any] = {"provider": backend.provider}
     if "bc_dagger" in arms:
         act = np.stack(
-            [backend.bc(inputs.images[i : i + 1], inputs.proprio[i : i + 1])[0] for i in range(n)]
+            [
+                backend.bc(batch_row(inputs.images, i), batch_row(inputs.proprio, i))[0]
+                for i in range(n)
+            ]
         )
         gap = _maxabs(act, ref.action)
         out["bc_dagger"] = {
@@ -244,7 +247,7 @@ def provider_parity(
         chunk_u = np.zeros_like(ref.chunk)
         chunk_l = np.zeros_like(ref.chunk)
         for i in range(n):
-            c = backend.encode(inputs.images[i : i + 1], inputs.proprio[i : i + 1])
+            c = backend.encode(batch_row(inputs.images, i), batch_row(inputs.proprio, i))
             cond[i] = c[0]
             for s in range(k):
                 tt = np.full((1,), int(ref.timesteps[s]), np.int64)

@@ -314,7 +314,7 @@ def fly_provider(
 
 def _prebuild_trt(provider: str, arm: str, settings: BenchSettings, graph_dir: Path) -> None:
     """Build (or load) the batch-1 TensorRT engines once, before any worker starts."""
-    from ila.deploy.inputs import load_inputs
+    from ila.deploy.inputs import batch_row, load_inputs
 
     dp = load_arm("dp", 0, settings.selection_pins).net
     backend = bk.OrtBackend(
@@ -325,7 +325,7 @@ def _prebuild_trt(provider: str, arm: str, settings: BenchSettings, graph_dir: P
         trt_cache=settings.out_dir / "trt_cache" / provider,
     )
     inp = load_inputs(settings.out_dir / "inputs" / "select_inputs.npz")
-    img, prop = inp.images[:1], inp.proprio[:1]
+    img, prop = batch_row(inp.images, 0), batch_row(inp.proprio, 0)
     if arm == "bc_dagger":
         backend.bc(img, prop)
     else:

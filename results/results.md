@@ -36,7 +36,7 @@ Losses per 1 000 seed-episodes (learned) or per N (baselines): C crash, O off_pa
 | P8 committed rows `pid_track_descend` | `results/e01/episodes.csv` SHA-256 `c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b` (2800 rows) |
 | P8 committed rows `oracle_gated` | `results/e01/episodes.csv` SHA-256 `c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b` (2800 rows) |
 | P8 committed rows `gated` | `results/e01/episodes.csv` SHA-256 `c5852090822822fa822dd55d0cafb42c43f6c072b0e4365d223baa1f91e5ad7b` (2800 rows) |
-| ila commit(s) of the Phase 9 latency stages (`results/latency/run_info.json`, rows' `ila_commit`) | `362e31ca3a85a9e61e1773b9276967ab917509e8` (latency, latency.csv rows; clean tree); `3b2ae853487678c16d40b9e813f4edb43435983b` (closed_loop, closed_loop.csv rows, latency.csv rows; clean tree); `6d6165e894f4725b844c866fbb528db15c26029c` (d0_check; clean tree); `cdee30aa14db8fd498b76f8c12624d7e55ab52bd` (export, inputs, parity; dirty only under `results/`); `efec6283fee07ab357fec3bca94fdf801a892426` (closed_loop_recheck; clean tree) |
+| ila commit(s) of the Phase 9 latency stages (`results/latency/run_info.json`, rows' `ila_commit`) | `362e31ca3a85a9e61e1773b9276967ab917509e8` (latency, latency.csv rows; clean tree); `3b2ae853487678c16d40b9e813f4edb43435983b` (closed_loop, closed_loop.csv rows, latency.csv rows; dirty only under `results/`); `6d6165e894f4725b844c866fbb528db15c26029c` (d0_check; clean tree); `cdee30aa14db8fd498b76f8c12624d7e55ab52bd` (export, inputs, parity; dirty only under `results/`); `efec6283fee07ab357fec3bca94fdf801a892426` (closed_loop_recheck; clean tree) |
 | H4 best end-to-end student | `bc_dart`: highest mean select success (99.87 %) |
 
 Matrix invocations (from `run_info.json`):

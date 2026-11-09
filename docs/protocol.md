@@ -3911,7 +3911,18 @@ config changed.
    - The H5(a) estimate is read from `h5a.csv`, not re-derived.
 8. **Provenance and incidents.**
    - **Bug fixed in `3b2ae85`:** the first closed-loop launch at `9a34b8c` crashed before flying,
-     because Phase 5's selection rows live only under the run directory.
+     because Phase 5's selection rows live only under the run directory. The crash log is not
+     committed; the fix is the diff of `3b2ae85`.
+   - **Flight order against review.** P9-D1 was committed at `9a34b8c`. The closed-loop flights
+     and the batch-1 latency sweep then ran at `3b2ae85`, *before* `privileged-leak-auditor`'s
+     pre-flight review and `results-skeptic`'s review. Both reviewed P9-D1 afterwards and found
+     its body unchanged since `9a34b8c` ("no drift"). The leak review's pre-flight gate covered
+     the latency-arm flight, which ran after it at `ae71f03`.
+   - **Overwritten stage record.** `results/latency/run_info.json` keeps the last invocation per
+     stage, so `stages.latency` now holds the batch-24 invocation (`362e31c`). The batch-1
+     invocation (`3b2ae85`, 63 jobs, dirty only under `results/latency/`) survives in each
+     `jobs/*-b1-*.json` record and in `run_info.json` as committed at `4af6d38`. The scorer
+     reads tree state from the job records (`ila.eval.score.latency_stage_commits`).
    - **Field corrected in `ae71f03`:** `reference_equals_selection_rows` was recorded `false` at
      `3b2ae85` because of a CRLF vs `read_text` comparison. A no-flight byte re-check rewrote that
      field only, keeping `previous: false` in the record.
@@ -3931,12 +3942,16 @@ config changed.
   - GO, no LEAK.
   - R1 (pin `delay.json`), R2 (wrapper scope), N1 (schedule in `chunking.py`) and N2 (CRLF) were
     fixed in `674a201`, `2c78b78`, `eda1989` and `ae71f03`.
-  - The re-review gave GO, with no LEAK and no RISK.
+  - The re-review gave GO, with no LEAK and no RISK (review reports are not committed; the fixes
+    are cited by commit above).
 - **`results-skeptic`, pre-gate, 2026-11-07, at `362e31c`:** nothing BLOCKING.
   - S1: this entry.
   - S2: the batch-24 rows, `a67aff3`.
   - S3–S4 and M4–M6: items 1–5 above, and the hypothesis and report text.
   - M1–M3: items 6 and 8.
+  - Re-review at `b50a42d`, 2026-11-09: nothing BLOCKING or SERIOUS open. Its four MINORs
+    (the "clean tree" wording for `3b2ae85`, the overwritten stage record, the flight order, and
+    two unsourced statements) are fixed in item 8 and in the scorer.
 
 *Consequence.* H5 is scored, and the latency-arm block is flown. Phase 10 inherits these results:
 - `dp`'s measured closed-loop sensitivity, which bears on every `dp` contrast's resolution;

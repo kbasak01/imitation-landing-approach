@@ -570,3 +570,20 @@ def test_full_matrix_scores_every_hypothesis(tmp_path: Path) -> None:
         if r["tag"] == "dp_Ta" and r["Ta"] == "8" and r["ensemble"] == "False"
     ]
     assert shared and all(r["status"] == "shared" and r["rows_from"] for r in shared)
+
+
+def test_latency_stage_commits_read_tree_state_from_job_records(tmp_path: Path) -> None:
+    """A stage record replaced by a later invocation does not hide its commit's tree state."""
+    lat = tmp_path / "latency"
+    (lat / "jobs").mkdir(parents=True)
+    git_new = {"ila_commit": "bbb", "dirty": False, "dirty_outside_results": False}
+    (lat / "run_info.json").write_text(json.dumps({"stages": {"latency": {"git": git_new}}}))
+    (lat / "latency.csv").write_text("label,ila_commit\nx-b1,aaa\ny-b24,bbb\n")
+    git_old = {"ila_commit": "aaa", "dirty": True, "dirty_outside_results": False}
+    (lat / "jobs" / "x-b1.json").write_text(json.dumps({"git": git_old}))
+    stray = {"ila_commit": "zzz", "dirty": True, "dirty_outside_results": True}
+    (lat / "jobs" / "stray.json").write_text(json.dumps({"git": stray}))
+    by = {c["ila_commit"]: c for c in sc.latency_stage_commits(lat)["stage_commits"]}
+    assert set(by) == {"aaa", "bbb"}
+    assert by["aaa"]["dirty_inside_results_only"] and not by["aaa"]["dirty_outside_results"]
+    assert not by["bbb"]["dirty_inside_results_only"]

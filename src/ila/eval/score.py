@@ -1425,6 +1425,19 @@ def latency_stage_commits(latency_dir: Path) -> dict[str, Any]:
             commit = row.get("ila_commit", "")
             if commit:
                 stages.setdefault(commit, set()).add(f"{fname} rows")
+    # Per-job and per-flight records keep their own tree state, which survives a later
+    # invocation replacing the stage record (results-skeptic re-review MINOR 1).
+    for rec_path in sorted(
+        [*latency_dir.glob("jobs/*.json"), *latency_dir.glob("closed_loop/*/*.json")]
+    ):
+        vcs = json.loads(rec_path.read_text(encoding="utf-8")).get("git", {})
+        commit = str(vcs.get("ila_commit", ""))
+        if commit not in stages:
+            continue
+        dirty_out[commit] = dirty_out.get(commit, False) or bool(vcs.get("dirty_outside_results"))
+        dirty_in[commit] = dirty_in.get(commit, False) or (
+            bool(vcs.get("dirty")) and not bool(vcs.get("dirty_outside_results"))
+        )
     return {
         "stage_commits": [
             {

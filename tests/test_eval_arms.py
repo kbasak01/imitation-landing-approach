@@ -271,9 +271,13 @@ def test_committed_phase8_jobs_are_unchanged_and_still_done() -> None:
     (no checkpoint bytes): the latency arm re-expands and re-flies nothing.
     """
     root = ev_matrix.OUT_ROOT
-    sidecars = sorted((root / "rows").rglob("*.json"))
-    if not sidecars:
+    all_sidecars = sorted((root / "rows").rglob("*.json"))
+    if not all_sidecars:
         pytest.skip("results/e08 rows not present")
+    # Phase 9 added the latency arm's 10 sidecars (`__latency-d<d>`, flown with the committed
+    # delay.json; synthetic DELAYS here give other stems, so they are counted, not matched).
+    sidecars = [s for s in all_sidecars if "__latency-d" not in s.name]
+    assert len(all_sidecars) - len(sidecars) in (0, 10)
     m = ev_arms.load_matrix(delays=DELAYS)
     by_path = {j.rel_path.as_posix(): j for j in m.jobs}
     assert len(sidecars) == 351

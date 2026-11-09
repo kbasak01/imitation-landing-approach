@@ -169,7 +169,7 @@
         ]
       },
       {
-        "dirty_inside_results_only": false,
+        "dirty_inside_results_only": true,
         "dirty_outside_results": false,
         "ila_commit": "3b2ae853487678c16d40b9e813f4edb43435983b",
         "stages": [

@@ -44,12 +44,30 @@ from ila.obs.split import ObsContract
 __all__ = [
     "INPUTS_FILE",
     "SelectInputs",
+    "batch_row",
     "draw",
     "load_inputs",
     "record_select_inputs",
 ]
 
 INPUTS_FILE: Final[str] = "select_inputs.npz"
+
+
+def batch_row[T: np.generic](arr: NDArray[T], i: int) -> NDArray[T]:
+    """Input ``i`` of a stacked array as a batch of one, ``arr[i : i + 1]``.
+
+    Slices the leading (batch) axis only. It never selects observation fields: the 13-d
+    proprio of every stored window was already built by ``ObsContract.student_input``
+    (``ila.obs.split``), so the trailing axes pass through untouched.
+
+    Args:
+        arr: Stacked inputs, shape ``(n, ...)``.
+        i: Input index, ``0 <= i < n``.
+
+    Returns:
+        A view of shape ``(1, ...)``.
+    """
+    return arr[i : i + 1]
 
 
 @dataclass(frozen=True)
