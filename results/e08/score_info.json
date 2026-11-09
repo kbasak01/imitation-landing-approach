@@ -156,7 +156,55 @@
     "flown_d": {
       "bc_dagger": 1,
       "dp": 6
-    }
+    },
+    "run_info_sha256": "a79b0b1476d141c611376e801f07bdd1d71006333ae27fb8b6ef9bd34c2b9a9d",
+    "stage_commits": [
+      {
+        "dirty_inside_results_only": false,
+        "dirty_outside_results": false,
+        "ila_commit": "362e31ca3a85a9e61e1773b9276967ab917509e8",
+        "stages": [
+          "latency",
+          "latency.csv rows"
+        ]
+      },
+      {
+        "dirty_inside_results_only": false,
+        "dirty_outside_results": false,
+        "ila_commit": "3b2ae853487678c16d40b9e813f4edb43435983b",
+        "stages": [
+          "closed_loop",
+          "closed_loop.csv rows",
+          "latency.csv rows"
+        ]
+      },
+      {
+        "dirty_inside_results_only": false,
+        "dirty_outside_results": false,
+        "ila_commit": "6d6165e894f4725b844c866fbb528db15c26029c",
+        "stages": [
+          "d0_check"
+        ]
+      },
+      {
+        "dirty_inside_results_only": true,
+        "dirty_outside_results": false,
+        "ila_commit": "cdee30aa14db8fd498b76f8c12624d7e55ab52bd",
+        "stages": [
+          "export",
+          "inputs",
+          "parity"
+        ]
+      },
+      {
+        "dirty_inside_results_only": false,
+        "dirty_outside_results": false,
+        "ila_commit": "efec6283fee07ab357fec3bca94fdf801a892426",
+        "stages": [
+          "closed_loop_recheck"
+        ]
+      }
+    ]
   },
   "rows_files": {
     "rows/R1_lerobot_dp/s0/id__Ta8_K10_ens0.csv.gz": {

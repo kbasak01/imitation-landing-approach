@@ -302,6 +302,10 @@
         {
           "label": "SS6 flip floor",
           "text": "6.6 % of `id` SS6 policy-episodes flip under at least one of 20 one-ulp draws (single-draw median 1.9 %), measured on P8's MLPs, not on these students"
+        },
+        {
+          "label": "dp closed-loop flip rate (Phase 9)",
+          "text": "32/150–44/150 episodes (21.3–29.3 %) change outcome class against the torch_cpu_fp32 reference under numeric perturbations of order 1e-5 (open-loop chunk max-abs <= 2.8e-05), the range over the flown scored fp32 providers (ort_cpu_fp32 33/150, ort_cuda_fp32 44/150, torch_cuda_fp32 32/150); measured on this dp's 150 select episodes in Phase 9 (closed-loop parity), not on a frozen list (seed 0's selected checkpoint; results/latency/closed_loop.csv, parity.csv)"
         }
       ],
       "caveats": [
@@ -429,24 +433,24 @@
         },
         {
           "label": "delay d, bc_dagger",
-          "text": "d = 1 control steps; provider torch_cuda_fp32, p99 4.323704550624825 ms, fallback False"
+          "text": "d = 1 control steps = 1 × 33.3 ms = 33.3 ms of model-scale sim time (1 × 166.7 ms = 166.7 ms at full scale, as sim time); provider torch_cuda_fp32, p99 4.323704550624825 ms wall clock (not scaled), fallback False"
         },
         {
           "label": "delay d, dp",
-          "text": "d = 6 control steps; provider torch_cpu_fp32, p99 181.33390504546696 ms, fallback True"
+          "text": "d = 6 control steps = 6 × 33.3 ms = 200.0 ms of model-scale sim time (6 × 166.7 ms = 1000.0 ms at full scale, as sim time); provider torch_cpu_fp32, p99 181.33390504546696 ms wall clock (not scaled), fallback True"
         }
       ],
       "caveats": [
         "Wall-clock latency of one full replanning call at batch 1 on this machine (RTX A4000, i9-10980XE, WSL2); no embedded target is measured, and nothing here transfers to one (P3-D1 §6 H5).",
         "Parity verdicts are measured on seed 0's selected checkpoint and apply to all five seeds (P3-D1 §3).",
-        "The bound is 33.3 ms as P3-D1 §6 writes it; d uses 33.333 ms (P3-D1 §7; P9-D1 item 9).",
+        "The bound is 33.3 ms, the model-scale 30 Hz control period (166.7 ms full scale), as P3-D1 §6 writes it; d uses 33.333 ms (P3-D1 §7; P9-D1 item 9); the measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is not scaled.",
         "Scored by ila.deploy.latency.score (make bench-score) and read here as written; not re-derived (results/latency/h5a.csv, delay.json)."
       ],
       "ceiling_limited": false,
       "cell": "exported dp (K = 10), dp_e2e, batch 1",
       "ci_hi": null,
       "ci_lo": null,
-      "contrast": "p99(dp_e2e, batch 1) < 33.3 ms on at least one scored provider that passes open- and closed-loop parity (P3-D1 §6 H5(a))",
+      "contrast": "p99(dp_e2e, batch 1) < 33.3 ms, the model-scale 30 Hz control period (166.7 ms full scale), on at least one scored provider that passes open- and closed-loop parity (P3-D1 §6 H5(a)); the p99 is wall clock on this machine and is not scaled",
       "delays": {
         "bc_dagger": {
           "candidates": {
@@ -472,8 +476,14 @@
       "estimate": "nan",
       "hypothesis": "H5(a)",
       "inputs": [
+        "results/latency/closed_loop.csv",
+        "results/latency/closed_loop/dp/ort_cpu_fp32.json",
+        "results/latency/closed_loop/dp/ort_cuda_fp32.json",
+        "results/latency/closed_loop/dp/torch_cuda_fp32.json",
         "results/latency/delay.json",
-        "results/latency/h5a.csv"
+        "results/latency/h5a.csv",
+        "results/latency/latency.csv",
+        "results/latency/parity.csv"
       ],
       "kind": "latency",
       "magnitude": 33.3,
@@ -589,20 +599,34 @@
         }
       ],
       "sources": {
+        "results/latency/closed_loop.csv": "ca5eb34e6a07f31965e466b0db81f5638563298a04364fecbec2a80f2efd9bf3",
+        "results/latency/closed_loop/dp/ort_cpu_fp32.json": "8169463871f0678e9c1e43d4c51770e3b472911e3f9f11f22ad2cb1abe45f840",
+        "results/latency/closed_loop/dp/ort_cuda_fp32.json": "367435995f7c7e08d902e4ab652604164a843d8a1d8c1074a62211a9d68dd25f",
+        "results/latency/closed_loop/dp/torch_cuda_fp32.json": "d2b2761a6d4d1b9d4561836047b6883dffd10aa1b292d747e4fcb6f31439309c",
         "results/latency/delay.json": "846fbf6873b808ef5f8dedad74f33e19c5277f207ff2170acf247908c867dd8f",
-        "results/latency/h5a.csv": "2a599290a9d390a91710071aaa7147ebc5dffdf91b3f2b6100b050df2f062d6c"
+        "results/latency/h5a.csv": "2a599290a9d390a91710071aaa7147ebc5dffdf91b3f2b6100b050df2f062d6c",
+        "results/latency/latency.csv": "cda2a320c6b0a4a18d22664ba4fdebd12cf7383024e0acba03af4a9456f921b1",
+        "results/latency/parity.csv": "0bccd8ee51ba54eef972ec559bea4616ba879b9c63fb8c1b72f85a8d96bb660d"
       },
       "statistic": "p99 of >= 2 000 timed batch-1 calls after >= 200 warm-up calls (P8's latency harness through ila.p8_adapter; P9-D1 item 8)",
       "status": "scored",
       "units": "ms wall clock per call, batch 1, on this machine (RTX A4000, i9-10980XE, WSL2); lowest p99 among scored providers passing open- and closed-loop parity",
       "verdict": "not supported",
-      "verdict_note": "not supported (no scored provider passed both parities and was timed)"
+      "verdict_note": "not supported (no scored provider passed both parities and was timed). dp's closed-loop parity failure reflects outcome sensitivity of this dp, not a provider error: torch_cuda_fp32 runs the identical Python sampler as the torch_cpu_fp32 reference (torch eager, the DPStudent path) and still flips (32/150 > 3); open-loop chunk gaps are <= 2.8e-05 (results/latency/parity.csv); the flips go both ways (successes lost / gained: ort_cpu_fp32 12 / 16, ort_cuda_fp32 19 / 14, torch_cuda_fp32 14 / 12), and the provider success counts lie near the reference (ort_cpu_fp32 67, ort_cuda_fp32 58, torch_cuda_fp32 61 of 150 against 63, within ±5; results/latency/closed_loop.csv). The latency bound also fails independently on every timed scored provider: dp_e2e batch-1 p99 ort_cpu_fp32 122.911 ms, ort_cuda_fp32 52.6441 ms, torch_cuda_fp32 89.3851 ms (results/latency/h5a.csv), all > 33.3 ms, the model-scale 30 Hz control period (166.7 ms full scale); the measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is not scaled; not timed: ort_trt_fp16: refused (open-loop parity not passed). Phase 9 measured this dp's own closed-loop flip rate: 32/150–44/150 episodes (21.3–29.3 %) change outcome class against the torch_cpu_fp32 reference under numeric perturbations of order 1e-5 (open-loop chunk max-abs <= 2.8e-05), the range over the flown scored fp32 providers (ort_cpu_fp32 33/150, ort_cuda_fp32 44/150, torch_cuda_fp32 32/150); measured on this dp's 150 select episodes in Phase 9 (closed-loop parity), not on a frozen list (seed 0's selected checkpoint; results/latency/closed_loop.csv, parity.csv)."
     },
     {
       "beside": [
         {
           "label": "delay",
-          "text": "d = 6 control steps (200.0 ms model scale, 1000 ms full scale); from results/latency/delay.json: provider torch_cpu_fp32, row dp_e2e, batch-1 p99 181.33390504546696 ms on this machine (RTX A4000, WSL2), fallback True"
+          "text": "d = 6 control steps = 6 × 33.3 ms = 200.0 ms of model-scale sim time (6 × 166.7 ms = 1000.0 ms at full scale, as sim time); from results/latency/delay.json: provider torch_cpu_fp32, row dp_e2e, batch-1 p99 181.33390504546696 ms wall clock, fallback True; the measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is not scaled"
+        },
+        {
+          "label": "why d",
+          "text": "d = 6 is the torch_cpu_fp32 (1 thread) fallback delay from results/latency/delay.json (dp_e2e batch-1 p99 181.3 ms wall clock; ceil(181.3 / 33.333) = 6), because no scored provider passed open- and closed-loop parity (P3-D1 §7). Under §7's rule, the fastest open-loop-passing scored provider, ort_cuda_fp32 (dp_e2e batch-1 p99 52.6441 ms, results/latency/h5a.csv), would have given d = ceil(52.6441 / 33.333) = 2 (every open-loop-passing scored provider: ort_cuda_fp32 -> d = 2, torch_cuda_fp32 -> d = 3, ort_cpu_fp32 -> d = 4); those delays were not flown. The verdict is unchanged; the measured wall-clock latency itself is on this machine (RTX A4000, WSL2) and is not scaled"
+        },
+        {
+          "label": "zero-action start",
+          "text": "the contrast includes the d = 6 zero-action steps at the start of every episode (6 × 33.3 ms = 200.0 ms of model-scale sim time (6 × 166.7 ms = 1000.0 ms at full scale, as sim time); P3-D1 §7), which cannot be separated out of the estimate. The verdict is unchanged"
         },
         {
           "label": "success (mean over seeds x episodes)",
@@ -611,6 +635,10 @@
         {
           "label": "outcome classes, seed-episodes",
           "text": "latency arm: crash 23, off_pad 557, hard_landing 133, bounce 85, success 202, timeout 0 (of 1000); synchronous: crash 2, off_pad 462, hard_landing 103, bounce 72, success 361, timeout 0 (of 1000)"
+        },
+        {
+          "label": "dp closed-loop flip rate (Phase 9)",
+          "text": "32/150–44/150 episodes (21.3–29.3 %) change outcome class against the torch_cpu_fp32 reference under numeric perturbations of order 1e-5 (open-loop chunk max-abs <= 2.8e-05), the range over the flown scored fp32 providers (ort_cpu_fp32 33/150, ort_cuda_fp32 44/150, torch_cuda_fp32 32/150); measured on this dp's 150 select episodes in Phase 9 (closed-loop parity), not on a frozen list (seed 0's selected checkpoint; results/latency/closed_loop.csv, parity.csv)"
         }
       ],
       "caveats": [
@@ -619,6 +647,7 @@
         "The delay is simulated: PyBullet does not advance while the network computes; each request's result is computed when it is issued, on the CPU fp32 single-sample path, and held back d control steps (P3-D1 §7; P9-D1 item 10). Both sides fly that same path (P3-D1 §3).",
         "One request in flight at a time; the returned chunk executes from index (To - 1) + d, and past Tp - 1 its last action is held (from d > 7 at To = 2, Tp = 16, Ta = 8); the first action of an episode is zero until the first result lands (P3-D1 §7).",
         "d comes from a p99 measured on this machine (RTX A4000, i9-10980XE, WSL2); no embedded target is measured (P3-D1 §6 H5).",
+        "last_action in proprio carries the applied (delayed) action, a feedback channel the student never saw in training; no teacher-under-delay reference exists to attribute the loss.",
         "Synchronous core dp at Ta = 8 succeeds on 36.1 % (361/1000) at id SS5; 33.8 % (338/1000) at id SS6; 41.0 % (410/1000) at static (mean over seeds x episodes). H5(b) compares this dp, distilled from P8 ppo s0, with itself, so a low baseline does not invalidate the contrast; non-inferiority is relative to that baseline (Phase 9 before-you-start).",
         "No multiplicity correction is applied (P3-D1 §1)."
       ],
