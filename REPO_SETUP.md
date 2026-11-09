@@ -1,5 +1,7 @@
 # REPO_SETUP.md — imitation-landing-approach
 
+*Pre-Phase-0 setup notes, kept as history; the current install is README → Reproducing this.*
+
 How to stand the repository up on the workstation (RTX A4000, i9-10980XE, WSL2 — the machine P8 ran
 on). Claude Code generates `pyproject.toml`, `Makefile` and CI in Phase 0 from this file; **you run
 the `pip` commands yourself.**

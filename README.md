@@ -203,10 +203,11 @@ sees `time_fraction` either, except in the labelled `+clock` ablation.
   shortfall into gaps (H4).
 
 **Rendering does not change physics.** With render on, P8's `pid_feedforward` (2 800 rows) and `ppo`
-seed 0 (400 rows) reproduce bit for bit. This was re-run at `8f4c9e0`
-(`results/reproduce_p8/rerun_phase10/`). Since then, `runner.py`, `render/` and `obs/` are unchanged.
-In Phase 11, `p8_adapter.py` gained only read-only spec accessors and the visual-only outside-view
-grab used for the GIFs (P11-D1).
+seed 0 (400 rows) reproduce bit for bit. This was last re-run at `3cbc039`, after Phase 11's
+additions to `p8_adapter.py`: 3 200/3 200 rows identical, and `comparison.json` byte-identical to
+the committed one (`results/reproduce_p8/rerun_phase11/`). Those additions are read-only spec
+accessors and the visual-only outside-view grab used for the GIFs (P11-D1). `runner.py`, `render/`
+and `obs/` are unchanged since Phase 10.
 
 **Data rules:**
 - **Demonstrations** come from P8's `train` pool only.
@@ -328,7 +329,7 @@ CIs and N are in `docs/figures/conditions.csv`. In simulation.*
 - **`dp` stays low.** In the plotted cells (SS5, SS6 and static), `dp` stays between 29.5 and
   40.8 %. Across all 14 core cells it ranges 29.5–46.8 % (IQM; `results/e08/aggregate.csv`).
 - **The static deck.** On it, `dp` lands 40.8 %, about as often as at `id` SS3–SS4 (unpaired
-  reading), so its loss cannot be attributed to deck motion.
+  reading), so deck motion is not its main source of loss.
 
 ### How episodes end: successes and failures
 
@@ -611,14 +612,15 @@ make model-specs-check                                        # results/readme/m
   `docs/IMPLEMENTATION_PLAN.md`. Long jobs are resumable, and they refuse to start on a dirty tree.
 - **Absolute paths.** Paths inside committed run records are absolute paths on the machine that
   produced them. They record provenance and are not instructions.
-- **Agent instructions.** `CLAUDE.md`, `KICKSTART.md` and `.claude/` hold the instructions the
-  coding agent worked under.
+- **Agent instructions.** `CLAUDE.md`, `KICKSTART.md`, `REPO_SETUP.md`, `VALIDATION_CHECKLIST.md`
+  and `.claude/` hold the instructions the coding agent worked under.
 
 ## How this relates to prior work
 
 The closest prior work is Angelis, Bauersfeld, Scaramuzza and Boukas, *Vision-Based Agile Landing
 on Turbulent Waters* (arXiv:2605.23717). It lands on a moving platform from a downward camera:
-- PPO on 25 sparse keypoints, trained end to end;
+- PPO with an attention encoder on 25 sparse keypoints from a downward camera, trained in
+  simulation (Aerial Gym);
 - sinusoidal per-DoF platform motion;
 - hardware tests;
 - no teacher, demonstrations or distillation.

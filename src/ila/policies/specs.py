@@ -225,8 +225,9 @@ def _encoder_block(enc: VisionEncoder) -> dict[str, Any]:
     c = enc.cfg
     with torch.no_grad():
         trunk_out = enc.trunk(torch.zeros(1, 3, c.crop_px, c.crop_px))
-    widths = [int(m.in_features) for m in enc.proprio_mlp if isinstance(m, nn.Linear)]
-    widths.append(int(c.proprio_mlp[-1]))
+    linears = [m for m in enc.proprio_mlp if isinstance(m, nn.Linear)]
+    widths = [int(m.in_features) for m in linears]
+    widths.append(int(next(reversed(linears)).out_features))
     return {
         "trunk": c.trunk,
         "trunk_impl": "torchvision.models.resnet18(weights=None), conv1..layer4 (no pool, no fc)",
