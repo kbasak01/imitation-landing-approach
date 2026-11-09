@@ -1,7 +1,7 @@
 # LIMITATIONS.md — validation checklist verdicts and known limits
 
-Phase 10 walk of `VALIDATION_CHECKLIST.md`, 2026-11-09, at `8f4c9e0` (= `main` after Phase 9),
-branch `phase-10`. Everything here is **simulation only** (PyBullet physics, PyBullet TinyRenderer).
+Phase 10 walk of `VALIDATION_CHECKLIST.md`, 2026-11-09. First walk at `8f4c9e0` (= `main` after Phase 9);
+re-walked after the Phase 10 fixes on branch `phase-10`. Everything here is **simulation only** (PyBullet physics, PyBullet TinyRenderer).
 
 **How verdicts are assigned.**
 - **met:** a committed artifact, a passing test or a recorded SHA shows the line holds as written.
@@ -11,12 +11,15 @@ branch `phase-10`. Everything here is **simulation only** (PyBullet physics, PyB
 - ★ marks a critical line; an unmet ★ blocks publication.
 
 **Sources of evidence.**
-- Test names are from the `make test` run at `8f4c9e0` in this phase: `make test` at `8f4c9e0`: 1 244 passed, 0 failed (23 min 25 s), on an unchanging tree.
+- The test names are from this phase's full `make test` runs: at `8f4c9e0`, 1 244 passed and 0
+  failed (23 min 25 s) on an unchanging tree. The final-code run is recorded in the Gate 10 entry
+  of `docs/protocol.md`.
 - The checks re-run on the final tree are listed in [Re-runs on the final tree](#re-runs-on-the-final-tree).
 - Reviewer findings are in `docs/audit_report.md`.
 
-**Tally.** 44 lines: MET met, CAV met-with-caveat, UNMET unmet (H6, owned by Phase 11). Every ★
-line is met or met-with-caveat.
+**Tally.** 47 lines (17 ★): 34 met, 13 met-with-caveat, 0 unmet. The 17 ★ lines are 15 met and 2
+met-with-caveat (A1, C2). After the first walk, the open items were closed in this phase (see *Open
+items*).
 
 ## Re-runs on the final tree
 
@@ -29,6 +32,8 @@ line is met or met-with-caveat.
 | `make bench-check` | `results/latency` re-renders byte-identically; `d0_check.json` agrees with its rows files |
 | `make bench-recheck-reference` | Decision unchanged (`reference_equals_selection_rows` re-decided True, same rows SHA-256s). It rewrites only its `ila_commit`/`time_utc` stamps; restored, since it is a write mode, not a check |
 | `scripts/score.py --out <scratch>` + `scripts/above_teacher.py --out <scratch>` | 17/17 files byte-identical to `results/e08/`: `summary`, `baselines`, `aggregate`, `contrasts`, `hypotheses`, `above_teacher`, `missing` and `h2_touchdown_times` CSVs, `hypotheses.json`, `score_info.json`, and `above_teacher/*.json` + `audit.md` |
+| `make sensitivity-check` (Phase 10) | records agree with their rows; `sensitivity.csv` re-renders byte for byte (also runs without `artifacts/`) |
+| `make release-check` (Phase 10) | 86 assets, 16.68 GiB, every SHA-256 equal to its committed record; `results/release/{SHA256SUMS.txt,manifest.json}` identical |
 | `make lint` | ruff clean, format clean (163 files), mypy strict clean (81 source files) |
 | `make test` | `make test` at `8f4c9e0`: 1 244 passed, 0 failed (23 min 25 s), on an unchanging tree |
 
@@ -61,7 +66,7 @@ line is met or met-with-caveat.
 | C2 Selection on `select` only; no frozen list flown before P3-D1 froze | ★ | met-with-caveat | All 478 selection rows files (71 700 rows) have `regime=select`. The σ search used `select` (`results/phase4/dart_tune/sigma_star.json`). `tests/test_render_access.py::test_training_code_reads_no_frozen_list`. P3-D1 froze 2026-10-27/28 (`2b9ae07`, 2026-10-28T01:17Z); e08 began 2026-11-06T01:10Z (`results/e08/run_info.json` `invocations[0].started_utc`). Caveat: before the freeze, frozen lists were flown by scripted actions (Phase 1 tests) and by `pid_feedforward`/`ppo` (the Phase 2 gate), never by a student (P1-D2, P2-D1) |
 | C3 `label[t] == teacher(teacher_obs[t])`, 1 000-step audit per store | | met | `results/demos_summary.json` `relabel_audit`: 1000/1000 identical, max-abs 0.0, for each of the 6 stores. DAgger: 25 × 1000/1000, max-abs 0.0 (`results/phase5/dagger_audits.csv`) |
 | C4 Re-rendering 20 saved states byte for byte | | met-with-caveat | `results/demos_summary.json` `replay_audit`/`refly_audit`: 20/20 frames byte-identical for each of the 6 stores. DAgger: 25 × 20/20 (`results/phase5/dagger_audits.csv`). Caveat: a "saved state" is re-simulated from the listed reset plus the stored `action_exec` (`src/ila/data/audit.py`), not restored from a PyBullet state snapshot |
-| C5 Kept fraction per teacher | | met-with-caveat | P3-D1 table: `ppo` 0.9995, `pid` 0.998, `mix` 0.978. DART is unfiltered by design (would-be kept 995/751/154). `results/demos_summary.json` `kept_fraction_success_filter`. Caveat: not yet in `results/results.md` or the README (Phase 11) |
+| C5 Kept fraction per teacher | | met | P3-D1 table and `results/demos_summary.json` `kept_fraction_success_filter`: `ppo` 0.9995 (1 999/2 000), `pid` 0.998 (998/1 000), `mix` 0.978 (978/1 000). DART is unfiltered by design (would-be kept 995/751/154). The README prints the kept counts (*Setup in brief*) |
 | C6 Labelled-episode counts | ★ | met | Run manifests `labelled_episodes_total`, every seed: `bc_dagger` and `bc_matched` stages 1200/1400/1600/1800/**2000**; `bc` **1000** (999 kept); `bc_dart` **1000**. Labelled frames 616 053 vs 614 365 printed with H1 (P8-D1 item 8) |
 | C7 Stateful DAgger labels by step-wise shadowing with reset | | met-with-caveat | `src/ila/data/dagger.py` resets the teacher per episode and calls it every step before the coin. `tests/test_data_dagger.py::test_recorder_shadows_teacher_and_selects_by_coin` uses a stateful double; the `mix_1000` relabel audit re-labels 725 `gated` steps identically from reset. Caveat: the only DAgger teacher flown is `ppo` (stateless), so the stateful path is exercised in tests, not in a production DAgger run |
 
@@ -94,7 +99,7 @@ line is met or met-with-caveat.
 | F2 Teacher and three baselines beside every student | ★ | met | `results/results.md` §2–§4 and §7a–§7f: teacher, `pid_feedforward`, `pid_track_descend` and `oracle_gated` in every tagged section, from `results/e08/baselines.csv` (P8's committed rows). `oracle_gated` labelled "commit-timing oracle, privileged, not a bound" |
 | F3 Wilson CI and N; six outcome classes; no pooling | | met | `results/e08/summary.csv`: `success_wilson_lo/hi` and `n_episodes` on all 961 rows. All six classes in `results.md` §3 and §7f. No core table pools sea states. The one pooled sentence planned for the README (P8-D1 item 11) must be split per sea state or labelled descriptive (P10-D1 item 4) |
 | F4 H1–H5 scored as frozen in P3-D1; synthetic tests | ★ | met | P3-D1 block hash recomputed `00e22330…3fc5`, as at Gate 3; every §1–§3 config SHA matches. `results/e08/hypotheses.{csv,json}`. Synthetic branch tests in `tests/test_eval_hypotheses.py` (`test_h1_*` … `test_h5a_*`, `test_magnitude_rule`, `test_noninferiority_rule`); `tests/test_deploy_latency.py::test_delay_is_ceil_of_p99_over_the_control_step`; `tests/test_eval_score.py::test_full_matrix_scores_every_hypothesis` |
-| F5 Every SS6 contrast with P8's one-ulp flip rate | | met-with-caveat | `results/e08/contrasts.csv`: 33/33 SS6 rows carry `flip_floor`, and `results.md` §5–§6 print it. Caveats:<br>• Some protocol prose quotes SS6 contrasts without it (P8-D1 item 9, P9-D2 item 5, the Gate 8 row). Quote from `contrasts.csv`/`hypotheses.json`, not from the prose.<br>• `dp`'s own flip rate (21–29 % on `select`, seed 0) is measured only for core `dp`. The `dp_*` ablations (H2's `dp_mix`, `dp_pid`, `dp_minus_last_action`) carry no measured sensitivity (P10-D1 item 3) |
+| F5 Every SS6 contrast with P8's one-ulp flip rate | | met-with-caveat | `results/e08/contrasts.csv`: 33/33 SS6 rows carry `flip_floor`; `results.md` §5–§6 and every SS6 number in the README print it. The `dp_*` ablations' own sensitivity is now measured (`results/phase10/dp_sensitivity/sensitivity.csv`, P10-D2) and quoted beside them in the README (L4). Caveat: older protocol prose (P8-D1 item 9, P9-D2 item 5, the Gate 8 row) quotes some SS6 contrasts without the floor. Rule (P10-D1 item 5): quote from `contrasts.csv`/`hypotheses.json`, never from that prose |
 | F6 Determinism contract met for every configuration | | met-with-caveat | Every e08 row flew the CPU fp32 single-sample path (`results/e08/run_info.json` `inference_path`, P8-D1 item 2), so the GPU re-measurement is moot. Bit-identity is re-checked by the P9-D2 reference re-flights, `results/latency/d0_check.json` (0 flips) and the GIF re-flights. Caveat: `dp` flips 32–44 of 150 `select` episodes under numeric perturbations of order 1e-5 (P9-D2 item 1). Byte-identical `dp`, `dp_*` and R1 rows therefore hold only on this software stack (torch 2.13, CPU fp32, i9-10980XE); another BLAS build would move about a quarter of `dp` outcomes while leaving rates near 58–67 of 150 vs 63 |
 | F7 Above-teacher cells investigated before reporting | | met | `results/e08/above_teacher.csv` (6 cells); `above_teacher/audit.md` and per-cell JSONs (tunnelling, detector disagreement, near-threshold, grace, McNemar); `reviewed.json` (6 released, results-skeptic, 2026-11-06). The scan covers every group, `latency_arm` included |
 | F8 `make report` byte-identical | | met | `make report` at `8f4c9e0`: exit 0, `git diff --exit-code results/results.md` clean |
@@ -113,26 +118,28 @@ line is met or met-with-caveat.
 | Line | ★ | Verdict | Evidence |
 |---|---|---|---|
 | H1 No real-camera/deck/flight/sim-to-real wording | ★ | met | Forbidden-list grep over `README.md`, `results/results.md`, `docs/protocol.md`, `results/e08/gifs/RULE.md`, `results/e08/above_teacher/audit.md`, `results/phase7/diagnostics/verdicts/README.md` and this file. Only ordinal "first", negated "embedded"/"hardware", and software-sense "real" ("real path", "real schedule") in the protocol. Re-check in Phase 11 on the real README |
-| H2 Every README number traces to a committed file | ★ | met-with-caveat | `README.md` is the Phase 0 stub and has no numbers; every file it references exists. Caveat: met trivially. Phase 11's README must pass claim-trace before tagging |
-| H3 Novelty as plan §0; Angelis et al. accurate | | met-with-caveat | `docs/IMPLEMENTATION_PLAN.md` §0 and `SOURCES.md` §3 describe Angelis et al. (arXiv:2605.23717) as PPO on 25 sparse keypoints, no IL/teacher/distillation, sinusoidal per-DoF platform motion, with hardware tests where this repo is simulation-only. They disclaim novelty for distillation, DP and vision landing. Caveat: the public README does not carry it yet (Phase 11) |
-| H4 GIFs labelled hand-picked; re-flown and matched | | met-with-caveat | `results/e08/gifs/RULE.md` was fixed first (its SHA is in `manifest.json`). Every frame is burned with "hand-picked by stated rule · simulation (PyBullet TinyRenderer)". The 4 GIF SHAs match the manifest, and the picks recomputed from the committed rows match. `src/ila/viz/gifs.py` raises before writing on any re-flight mismatch. Caveats: the manifest records no `ila` commit; the contact-dwell frames are background only (L3 below); README captions are Phase 11 |
-| H5 Licences and notices; no demo images in git | | met-with-caveat | MIT `LICENSE`; `THIRD_PARTY_NOTICES.md` covers P8, dmf, gym-pybullet-drones, diffusion_policy (MIT text), diffusers and LeRobot; PyBullet, torch, ORT and TensorRT are in `docs/LICENSES.md`. No demo images at HEAD or in history (`git rev-list --objects --all`): the only images are 6 figure PNGs and 4 GIFs (1.93 MB). Caveat: `THIRD_PARTY_NOTICES.md` still has diffusion_policy commit "(verify)"; the `docs/LICENSES.md` diffusion_policy row is stale; `SOURCES.md` has 5 leftover "(verify)" markers; no line yet saying no pretrained weights are used (`encoder.py` `weights=None`, R1 `pretrained_backbone_weights: null`) |
-| H6 Release assets with `SHA256SUMS.txt` | | **unmet** | No release exists (repo private) and no `SHA256SUMS.txt`. The backing SHAs exist and match local files: `results/latency/graphs.json` (8 ONNX + `meta.json`) and 71 committed `selection.json` checkpoint SHAs. Owned by Phase 11 |
+| H2 Every README number traces to a committed file | ★ | met | Phase 10 README. Every number was traced by `results-skeptic` and `repo-publication-reviewer` against `results/results.md`, `results/e08/*`, `results/latency/*`, `results/demos_summary.json`, `results/phase*/runs_summary.csv`, `results/phase10/dp_sensitivity/` and `results/reproduce_p8/rerun_phase10/`. All BLOCKING and SHOULD FIX items of both reviews were applied; the re-review is recorded in `docs/audit_report.md` §5 |
+| H3 Novelty as plan §0; Angelis et al. accurate | | met | README *How this relates to prior work*. It follows plan §0 and `SOURCES.md` §3: Angelis et al. (arXiv:2605.23717) use PPO on 25 sparse keypoints end to end, with sinusoidal per-DoF platform motion, hardware tests and no teacher, demonstrations or distillation. No novelty is claimed for distillation, Diffusion Policy or vision-based landing, and P8 is credited. The paper was not re-read in Phase 10; the description rests on the 2026-10-23 reading |
+| H4 GIFs labelled hand-picked; re-flown and matched | | met | `results/e08/gifs/RULE.md` was fixed first (its SHA is in `manifest.json`). Every frame is burned with "hand-picked by stated rule · simulation (PyBullet TinyRenderer)". The README gallery is captioned "hand-picked by a stated rule" and links RULE.md. The 4 GIF SHAs match the manifest, and the picks recomputed from the committed rows match. `src/ila/viz/gifs.py` raises before writing on any re-flight mismatch. The contact-dwell background frames are disclosed (L3). The manifest still records no `ila` commit; the evidence is the raise-before-write path plus the matching SHAs |
+| H5 Licences and notices; no demo images in git | | met | MIT `LICENSE`; `THIRD_PARTY_NOTICES.md` covers P8, dmf, gym-pybullet-drones, diffusion_policy (MIT text; upstream `main` at `5ba07ac`, named in the `unet1d.py` header too), diffusers, LeRobot, PyBullet and PyTorch. `docs/LICENSES.md` §3: the Phase 6 rows; no pretrained weights; the release assets are MIT. `SOURCES.md`/`REPO_SETUP.md` "(verify)" markers are resolved. No demo images at HEAD or in history; the only images are 6 PNGs and 4 GIFs (`53b56bd`, P10-D2) |
+| H6 Release assets with `SHA256SUMS.txt` | | met-with-caveat | Draft GitHub release `phase-11-complete` (not public): 86 assets (68 pinned checkpoints as stored, 3 R1 exports × 3 files, 8 Phase 9 graphs + `graphs_meta.json`) plus `SHA256SUMS.txt` and `manifest.json`. Every SHA-256 comes from a committed record (`selection.json` pinned by `selection_pins.json`; `graphs.json`) and was re-hashed (`make release-check`); `sha256sum -c` passes on the staged files. Uploaded sizes equal the manifest; the uploaded `SHA256SUMS.txt`/`manifest.json` are byte-identical to `results/release/`. Caveat: the release is a draft until Phase 11 publishes it with the tag. P8's `ppo` checkpoint is not released (README *Reproducing this*) |
 
 ## Open items
 
-None is critical. Smallest fix and owner:
+All open items from the first walk are closed in Phase 10. The commits are on `phase-10`.
 
-| # | Line(s) | Item | Smallest fix | Owner |
+| # | Line(s) | Item | Fix | Status |
 |---|---|---|---|---|
-| 1 | H6 | No release, no `SHA256SUMS.txt` | Choose the asset set (selected checkpoints as stored, so the `selection.json` SHAs apply; the 8 ONNX graphs + `meta.json`; optionally the GIFs and a 256-frame demo sample). Generate `SHA256SUMS.txt`, verify with `sha256sum -c`, and commit a cross-referencing `results/release_manifest.json` | Phase 11 |
-| 2 | H2, H3, H4, C5 | README is the Phase 0 stub | Write the Phase 11 README: status line, hypothesis verdicts from `hypotheses.json` with caveats, baselines beside students, §0 positioning and Angelis description, GIFs captioned "hand-picked by stated rule", kept fractions, the limitations below. Run claim-trace | Phase 11 |
-| 3 | H5 | "(verify)" markers; stale licence row; no-pretrained-weights line | Resolve the 5 `SOURCES.md` markers, the `REPO_SETUP.md:45` marker and the diffusion_policy commit in `THIRD_PARTY_NOTICES.md` (or "upstream main as of <date>"). Update the `docs/LICENSES.md` diffusion_policy row and add the no-pretrained-weights line | Phase 11 |
-| 4 | D4 | Core `dp` verdict TRUSTWORTHY predates the evidence | Done this phase: P10-D1 item 1 re-rates `dp` s0–s4 CAVEAT; no result changes | Phase 10 ✔ |
-| 5 | C1, C3, C4 | DAgger audits uncommitted; P5-D2 cited a wrong path | Done this phase: `results/phase5/dagger_audits.csv` (25 rows, all clean); path corrected in P10-D1 item 2 | Phase 10 ✔ |
-| 6 | A3, B5 | Reproduction gate not re-run since `5d09486` | Done this phase: re-run at `8f4c9e0`, 3 200/3 200 identical (`results/reproduce_p8/rerun_phase10/`) | Phase 10 ✔ |
-| 7 | F5, F6, G4 | Wording risks for `dp` and SS6 contrasts | README rules in P10-D1 items 3–6 (below) | Phase 11 |
-| 8 | — | CI does not exercise the results path | Add `make report`, `make bench-check` and `make figures && git diff --exit-code results/e08/figures` to `.github/workflows/ci.yml` | Phase 11 |
+| 1 | H6 | No release, no `SHA256SUMS.txt` | `ila.release` + `make release`/`release-check`; `results/release/`; draft release with 86 assets (`53b56bd`) | closed (draft; publish in Phase 11) |
+| 2 | H2, H3, H4, C5 | README was the Phase 0 stub | Phase 10 README, reviewed by `results-skeptic` and `repo-publication-reviewer` | closed |
+| 3 | H5 | "(verify)" markers; stale licence row; no-pretrained-weights line | `53b56bd` and the README commit | closed |
+| 4 | D4 | Core `dp` verdict TRUSTWORTHY predates the evidence | P10-D1 item 1 re-rates `dp` s0–s4 CAVEAT (`a5bd97f`) | closed |
+| 5 | C1, C3, C4 | DAgger audits uncommitted; P5-D2 cited a wrong path | `results/phase5/dagger_audits.csv`; P10-D1 item 2 (`a5bd97f`) | closed |
+| 6 | A3, B5 | Reproduction gate not re-run since `5d09486` | Re-run at `8f4c9e0`, 3 200/3 200 identical (`a5bd97f`) | closed |
+| 7 | F5, F6, G4 | Wording risks for `dp` and SS6 contrasts | README rules (P10-D1 items 3–7) applied in the README | closed |
+| 8 | — | CI does not exercise the results path | CI runs `make report`, `bench-check`, `sensitivity-check`, `figures` + diff (`53b56bd`, `d8a21df`) | closed |
+| 9 | L4, F5 | `dp_*` closed-loop sensitivity not measured | `make sensitivity` (`fa364b1`); results `d8a21df`; P10-D2 | closed |
+| 10 | — (P4-D5 item 2) | The binding `bc_dart` s0 footnote and seeds 1–4 sensitivity row were never produced in Phase 8 (found by both README reviews) | The scorer and report add them from the committed rows; footnote ‡ on every `bc_dart` row in `results/results.md` and the README (P10-D2) | closed |
 
 ## Limitations (for the README)
 
@@ -150,12 +157,15 @@ Every number below traces to the committed file named beside it.
   (`offset_body_m` −0.02 m) sits below the deck surface, and the frame is uniform background until
   the episode ends. This affects no physics or outcome. The same frames are in the demo stores, so
   students see them too. The GIFs show it at every touchdown.
-- **L4 `dp` closed-loop sensitivity.** Seed 0's `dp` flips 32–44 of 150 `select` outcomes under
-  numeric perturbations of order 1e-5 (`results/latency/closed_loop.csv`; P9-D2 item 1), more than
-  10× P8's single-draw floor.
-  - Every `dp` contrast is read with this beside it.
-  - The `dp_*` ablations' sensitivity is not measured.
-  - Byte-identical `dp` rows hold only on this software stack.
+- **L4 Outcome sensitivity of the Diffusion-Policy students.** Seed 0, 150 `select` episodes,
+  torch CPU fp32 reference vs the same sampler in torch on the GPU (numeric differences of order
+  1e-5). The flips are `dp` 32, `dp_mix` 22, `dp_pid` 5, `dp_n100` 43, `dp_n300` 35 and
+  `dp_minus_last_action` 37 of 150 (`results/phase10/dp_sensitivity/sensitivity.csv`, P10-D2).
+  - `dp`'s 32 reproduces Phase 9 exactly, on the same episodes.
+  - Every reference flight equals its selection rows byte for byte.
+  - The ORT providers gave `dp` 33–44 (P9-D2 item 1).
+  - Byte-identical `dp`, `dp_*` and R1 rows hold only on this software stack: torch 2.13.0, CPU
+    fp32 single-sample path; for R1, ONNX Runtime CPU, one thread.
 - **L5 Ceilings and thin margins.** H1's primary is inconclusive and ceiling-limited. H1-SS6 is
   supported by +5.9 [+2.3, +9.7] against a +5 margin (+5.1 with tunnelled successes removed)
   (`results/e08/hypotheses.json`). Lead with the primary.
@@ -171,9 +181,10 @@ Every number below traces to the committed file named beside it.
   seed-0 trials, decided by one episode; `results/phase4/dart_tune/sigma_star.json`). `bc` is
   untuned.
 - **L9 Tunnelled successes.** P8 counts a success even when the touchdown penetration exceeds
-  5 mm (P8's `tunnelled` flag, not reclassified). Core `dp` has 354 such successes of 5 356 (6.6 %),
-  and the latency arm 8.4 % (results-skeptic scan of `results/e08/rows/**`). They favour the Ta = 8
-  side of H3, so H3's direction stands. Every scored contrast prints success minus tunnelled
-  successes beside it (`results/results.md`).
+  5 mm (P8's `tunnelled` flag, not reclassified). Core `dp` has 354 such successes of 5 356
+  (6.6 %), and the latency arm 8.4 % (results-skeptic scan of `results/e08/rows/**`). The H1 and
+  H1-DART contrasts print success minus tunnelled successes beside them
+  (`results/results.md` §5). Tunnelled successes favour the Ta = 8 side of H3, so its direction
+  stands.
 - **L10 Run paths.** Committed run records carry workstation-absolute paths (`/home/kbasak/...`).
   They are provenance, not instructions.

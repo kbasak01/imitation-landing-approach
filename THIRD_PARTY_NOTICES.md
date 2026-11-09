@@ -87,5 +87,8 @@ installed packages' metadata on 2026-10-27.
 | h5py | 3.16.0 | BSD-3-Clause |
 | einops | 0.8.2 | MIT |
 
+PyBullet 3.2.7 (zlib) and PyTorch 2.13.0 (BSD-3-Clause style) come through P8's pins. See
+[`docs/LICENSES.md`](docs/LICENSES.md) and P8's notices.
+
 The reference arm R1 uses **LeRobot** 0.6.1 (Apache-2.0). It is installed only in the separate
 `.venv-lerobot`, never imported from `src/ila`, and not redistributed.

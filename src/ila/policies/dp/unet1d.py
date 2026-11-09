@@ -1,5 +1,7 @@
 # Adapted from real-stanford/diffusion_policy (https://github.com/real-stanford/diffusion_policy),
-# files diffusion_policy/model/diffusion/conditional_unet1d.py, conv1d_components.py and
+# `main` at 5ba07ac6661db573af695b419a7947ecb704690f (the head on the adaptation date; see
+# THIRD_PARTY_NOTICES.md), files diffusion_policy/model/diffusion/conditional_unet1d.py,
+# conv1d_components.py and
 # positional_embedding.py. Changes: type hints and docstrings; global conditioning only (the
 # local-conditioning path is dropped); FiLM (``cond_predict_scale``) fixed on; einops replaced
 # by ``transpose``/``unsqueeze``; a check that the horizon is divisible by the down-sampling

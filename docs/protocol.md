@@ -4070,3 +4070,97 @@ changed. The items below are a verdict correction, committed evidence and wordin
 - `training-run-diagnostician`: 0 EXCLUDE, with item 1;
 - `results-skeptic`: nothing BLOCKING;
 - `repo-publication-reviewer` dry run: HOLD for publication, nothing blocking Gate 10.
+
+### P10-D2: Open items closed in Phase 10, covering `dp_*` sensitivity, the missed `bc_dart` obligation, README and release (2026-11-09)
+
+The user asked for every LIMITATIONS open item to be fixed in this phase. That pulls the README and
+the release assets forward from Phase 11; making the repository public and the tag stay in
+Phase 11.
+
+The user decided two things on 2026-11-09:
+- the release is a draft GitHub release, with the 71 selections as stored;
+- the `dp_*` sensitivity is measured, not only disclosed.
+
+No threshold, list, frozen config, verdict or existing result row changed.
+
+1. **The `dp_*` closed-loop outcome sensitivity** (LIMITATIONS L4; this supersedes P10-D1 item 4's
+   "not measured" wording).
+   - **Code and config.** The stage is `make sensitivity` (`ila.deploy.sensitivity`,
+     `configs/deploy/sensitivity.yaml`, `fa364b1`). `configs/deploy/bench.yaml` is unedited.
+   - **Arms and episodes.** The seed-0 pinned `dp`, `dp_mix`, `dp_pid`, `dp_n100`, `dp_n300` and
+     `dp_minus_last_action` fly the 150 `select` episodes at Ta 8, K 10, without ensembling.
+   - **Reference.** `torch_cpu_fp32`, asserted byte-equal to the selection rows. It is equal for
+     all six arms.
+   - **Perturbation.** `torch_cuda_fp32`, the same sampler.
+   - **Definition.** A flip is a change of P8 outcome class. This is the Phase 9 definition.
+   - **Results, flips of 150:**
+
+     | arm | flips |
+     |---|---|
+     | `dp` | 32 |
+     | `dp_mix` | 22 |
+     | `dp_pid` | 5 |
+     | `dp_n100` | 43 |
+     | `dp_n300` | 35 |
+     | `dp_minus_last_action` | 37 |
+
+     Source: `results/phase10/dp_sensitivity/sensitivity.csv`, flown at `fa364b1` on a clean tree.
+   - **Control.** Core `dp` reproduces Phase 9's 32 on the same episodes, and its perturbed rows are
+     byte-equal to Phase 9's.
+   - **Scope.** This is descriptive: no threshold and no verdict. It covers one seed and one
+     perturbation path. `make sensitivity-check` re-derives every record from its rows, and CI runs
+     it.
+2. **The `bc_dart` s0 obligation (P4-D4; P4-D5 item 2) was never produced in Phase 8.**
+   - **Found by:** both README reviews (results-skeptic B4, repo-publication-reviewer B1). This is a
+     Phase 8 reporting omission, recorded here; the gate for Phase 8 did not check it.
+   - **Fix, by `eval-auditor`:** the scorer writes `results/e08/bc_dart_s1_4.csv` from the
+     committed rows, using the scorer's own functions and seeds, and `results/results.md` carries
+     two additions:
+     - the ◇ footnote on every `bc_dart` row;
+     - the seeds 1–4 rows and bullets, labelled "post hoc: added after `select`, before any
+       frozen-list read". They sit beside the 5-seed results, are never substituted and carry no
+       verdict.
+   - **Seeds 1–4 numbers:**
+     - IQM 99.2 [99.0, 99.5] at `id` SS5 and 97.0 [96.0, 97.5] at SS6;
+     - H1 DART (`bc_dart` s1–s4 − `bc` s0–s4): +3.5 [+1.6, +5.7] at SS5 and +8.0 [+4.3, +11.9] at
+       SS6;
+     - the H4 best end-to-end rule on seeds 1–4 still picks `bc_dart` (99.83 % vs 99.87 % on five
+       seeds).
+   - **Reading:** `bc` keeps its five frozen seeds, which is the reading of "`bc_dart`'s … contrast
+     on seeds 1–4 alone". P8's `paired_bootstrap` resamples seeds per arm.
+   - **Unchanged:** every other `results/e08/` file is byte-identical. One existing report test was
+     narrowed: 5-seed §2 cells still print no N, and the seeds 1–4 cells print N = 800.
+3. **README** (H2, H3, H4, C5). Written in P8's style, following plan §Phase 11, and reviewed in
+   draft by `results-skeptic` (6 BLOCKING, 10 SHOULD FIX) and `repo-publication-reviewer` (2
+   BLOCKING, 16 SHOULD FIX).
+   - **All BLOCKING items were applied:**
+     - the status line;
+     - vision-student wording for `modular` and `bc_state`;
+     - the statistics provenance (three statistics are this repository's);
+     - the `bc_dart` footnote and the seeds 1–4 row;
+     - the flip floor beside every SS6 contrast;
+     - the multiplicity statement;
+     - an honest statement that P8's `ppo` checkpoint is not publicly released.
+   - **Every SHOULD FIX was applied**, except a placement script for the downloaded release assets.
+     Instead the README says where each asset goes (its manifest `source` path).
+4. **The release** (H6).
+   - **Code:** `ila.release` with `make release` / `release-check` (`53b56bd`).
+   - **Assets:** 86 in total:
+     - the 68 pinned `.pt` checkpoints, as stored;
+     - 3 R1 exports × 3 files;
+     - the 8 Phase 9 graphs and `graphs_meta.json`.
+   - **Provenance:** every SHA-256 comes from a committed record and was re-hashed before staging.
+     `results/release/{SHA256SUMS.txt,manifest.json}` are committed.
+   - **Upload:** a draft GitHub release, `phase-11-complete`, not public, targeting `main`. All 86
+     assets plus the two files were uploaded, with sizes equal to the manifest.
+   - **Phase 11** publishes the release after `phase-10` is merged, so that the tag lands on a tree
+     that contains `results/release/`.
+5. **Licences, notices and CI** (H5; `53b56bd` and the README commit).
+   - **diffusion_policy:** upstream resolved to `main` at `5ba07ac` (the head on the adaptation
+     date; the last push was 2024-12-24). It is named in `THIRD_PARTY_NOTICES.md` and in the
+     `unet1d.py` header.
+   - **`docs/LICENSES.md` §3:** the Phase 6 rows, no pretrained weights (and no ImageNet
+     statistics), and the release assets under MIT.
+   - **Markers:** the `SOURCES.md` and `REPO_SETUP.md` "(verify)" markers are resolved.
+   - **CI** now re-renders `results.md`, the latency tables, the sensitivity records and the
+     figures on every push.

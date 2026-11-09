@@ -174,3 +174,52 @@ no NaN, no late spike, LR schedules as configured, EMA ≈ raw at the end.
 
 **NOTE:** `REPO_SETUP.md` starter-kit text; the GIF manifest `ila` commit; the absolute paths in
 records; per-run Phase 6/7 verdict JSONs.
+
+## 5. Addendum: fixes and the second review round (2026-11-09)
+
+The user asked for every open item to be fixed in Phase 10. The resulting work is recorded in
+P10-D2.
+
+- **`dp_*` sensitivity.** `make sensitivity` flew seed 0 of `dp` and each `dp_*` ablation on
+  `select`. Flips of 150:
+
+  | arm | flips |
+  |---|---|
+  | `dp` | 32 (control; reproduces Phase 9 on the same episodes) |
+  | `dp_mix` | 22 |
+  | `dp_pid` | 5 |
+  | `dp_n100` | 43 |
+  | `dp_n300` | 35 |
+  | `dp_minus_last_action` | 37 |
+
+  All six reference flights are byte-equal to their selection rows. `make sensitivity-check`
+  passes, also without `artifacts/`.
+- **Release.** `make release-check`: 86 assets, 16.68 GiB, every SHA-256 equal to its committed
+  record. The draft release `phase-11-complete` holds all 86 assets plus `SHA256SUMS.txt` and
+  `manifest.json`, with sizes equal to the manifest. `repo-publication-reviewer` downloaded the small
+  assets, and they pass `sha256sum -c`.
+- **README draft review, `results-skeptic`.** 6 BLOCKING:
+  - the status line claimed a gate not yet recorded;
+  - `time_fraction`/privileged wording for `modular` and `bc_state`;
+  - "all statistics are P8's";
+  - the missing `bc_dart` s0 footnote and seeds 1–4 row;
+  - the flip floor missing beside SS6 contrasts;
+  - no multiplicity statement.
+
+  It also raised 10 SHOULD FIX and 7 NOTE items. Every BLOCKING and SHOULD FIX item was applied.
+- **README draft review, `repo-publication-reviewer`.** HOLD, on 2 BLOCKING:
+  - the same `bc_dart` obligation;
+  - a pointer to a P8 release that does not exist.
+
+  It also raised 16 SHOULD FIX items on the README and 4 on other files. These were applied, except
+  an asset-placement script; the README instead names each asset's manifest `source` path. Other
+  fixes include the `SOURCES.md` intro and `h5py` row, the PyBullet/PyTorch notice line, the
+  upstream commit in the `unet1d.py` header, and stale LIMITATIONS rows.
+- **The missed Phase 8 obligation** (P4-D4/P4-D5 item 2) is implemented by `eval-auditor`:
+  - `results/e08/bc_dart_s1_4.csv` is new;
+  - `results/results.md` gains the ◇ footnote and the seeds 1–4 rows;
+  - every other `results/e08/` file is byte-identical;
+  - no verdict changed.
+
+A confirmation review of the final README and results, at the gated commit, is recorded in the
+Gate 10 entry of `docs/protocol.md`.

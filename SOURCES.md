@@ -1,7 +1,7 @@
 # SOURCES.md — what this project depends on, checked 2026-10-23
 
-Each entry: what it is, what this project uses it for, licence, and how it was checked. (each such item is resolved in [`docs/LICENSES.md`](docs/LICENSES.md) §2)
-items are Phase 0 checks; resolve them in `docs/LICENSES.md` and protocol P0-D1.
+Each entry: what it is, what this project uses it for, licence, and how it was checked. The Phase 0
+`(verify)` items are resolved in [`docs/LICENSES.md`](docs/LICENSES.md) §2 and protocol P0-D1.
 
 ## 1. Your own projects
 
@@ -35,7 +35,7 @@ Facts from P8 this plan relies on (all from its README / protocol):
 | gymnasium / SB3 / pybullet | 1.3.0 / 2.9.0 / 3.2.7 (P8 pins) | env, PPO teacher loading | MIT / MIT / zlib |
 | gym-pybullet-drones | P8's submodule (`learnsyslab/gym-pybullet-drones` at `7ebad1ec…`) | the aviary | MIT |
 | onnx / onnxruntime-gpu / tensorrt-cu13 | 1.22.0 / 1.29.0 / 10.16.1.11 (P8 pins) | export + latency | Apache-2.0 / MIT / NVIDIA licence |
-| h5py | resolve in Phase 0 | demo store | BSD-3 |
+| h5py | 3.16.0 (`docs/LICENSES.md` §2) | demo store | BSD-3 |
 | **LeRobot** | 0.6.1, released 2026-08-03, Python ≥ 3.12; policies include ACT and Diffusion ([PyPI](https://pypi.org/project/lerobot/)) | reference arm R1 only, separate venv; dataset format v3 (`CODEBASE_VERSION = "v3.0"`, `docs/LICENSES.md` §2) | Apache-2.0 |
 | **diffusion_policy** (reference implementation) — <https://github.com/real-stanford/diffusion_policy> | defaults read from `train_diffusion_unet_hybrid_workspace.yaml`: `horizon 16`, `n_obs_steps 2`, `n_action_steps 8`, DDPM `num_train_timesteps 100`, ε-prediction, `obs_encoder_group_norm True`, `crop_shape [76, 76]`, EMA power 0.75 / max 0.9999, lr 1e-4, batch 64 | architecture reference; ConditionalUnet1D may be adapted with notice | MIT |
 
