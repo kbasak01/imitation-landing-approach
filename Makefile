@@ -81,7 +81,7 @@ train-smoke: ; $(PY) scripts/train_smoke.py $(ARM)
 train-bg: ; $(PY) scripts/train.py $(CFG) --seed $(SEED) $(ARGS)
 # Closed-loop selection on splits/select.parquet, CPU fp32 single-sample path (background).
 #   nohup make select-bg SELECT="--arm bc --seeds 0 1 2 3 4" > artifacts/runs/bc/select.log 2>&1 &
-select-bg: ; $(PY) scripts/select.py $(SELECT)
+select-bg: ; $(PY) scripts/select_checkpoints.py $(SELECT)
 # P3-D1 §5 budget projection from the timing runs -> results/phase4/budget_projection.csv.
 budget: ; $(PY) scripts/budget.py
 # Phase 5 bc_dagger training (background; prepare with /train-job; needs bc s<SEED> finished).

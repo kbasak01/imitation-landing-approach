@@ -4222,3 +4222,21 @@ Second round (§5):
   - the e08 `dp_mix` "not measured" notes predate P10-D2 (item 6).
 - **First task:** `repo-publication-reviewer` full review of `main` after the merge, then make the
   repository public, publish the draft release and tag `phase-11-complete`.
+
+*Addendum to P10-D2 (2026-11-09, after Gate 10, before merge).*
+8. **`scripts/select.py` is renamed `scripts/select_checkpoints.py`.**
+   - **What broke.** The first CI run of the new results steps (run 42675504029) failed in
+     `make report`. Running `python scripts/report.py` puts `scripts/` first on `sys.path`, and on
+     CI's Python `select` is an extension module, not a built-in. So `subprocess` → `import select`
+     loaded `scripts/select.py`, a circular import.
+   - **Why it passed locally.** On the workstation's Python, `select` is built in.
+   - **What could not have been affected.** No result could have been affected: the failure is an
+     import error before anything runs.
+   - **The fix.**
+     - the rename;
+     - `make select-bg` and the training-script scan list (`tests/test_render_access.py`) are
+       updated;
+     - a guard test, `tests/test_script_names.py`, fails if any script name shadows a
+       standard-library module.
+   - **Older references.** Earlier protocol entries and committed run records still name
+     `scripts/select.py`; they are history and are left unchanged.

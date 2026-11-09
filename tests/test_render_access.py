@@ -355,7 +355,7 @@ FROZEN_LIST_NAMES = frozenset(
 TRAIN_SCRIPTS: tuple[str, ...] = (
     "train.py",
     "train_smoke.py",
-    "select.py",
+    "select_checkpoints.py",
     "budget.py",
     "dp_sweeps.py",
     "dp_diagnostics.py",

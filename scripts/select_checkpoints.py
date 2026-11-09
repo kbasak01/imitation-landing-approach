@@ -5,9 +5,9 @@ episodes through the runner's CPU fp32 single-sample path and writes ``selection
 (success, outcome classes, pooled p95 closing speed per candidate; the rule's choice) plus
 per-candidate rows under ``<run>/select/``. ``make select-bg`` wraps it. Examples::
 
-    python scripts/select.py --arm bc --seeds 0 1 2 3 4
-    python scripts/select.py artifacts/runs/bc/s0
-    python scripts/select.py --dart-trials        # the three sigma trials, then sigma*
+    python scripts/select_checkpoints.py --arm bc --seeds 0 1 2 3 4
+    python scripts/select_checkpoints.py artifacts/runs/bc/s0
+    python scripts/select_checkpoints.py --dart-trials        # the three sigma trials, then sigma*
 
 ``--resummarise`` flies nothing: it rebuilds each named run's ``selection.json`` from its stored
 ``select/*_rows.csv`` (adding ``n_tunnelled`` and ``n_detectors_disagree``) and refuses, writing
@@ -16,7 +16,8 @@ nothing, if any candidate's success, outcomes, p95 or the selected checkpoint wo
 to a runs summary whose ``run`` column names run directories under ``--run-root``, after checking
 that its selection columns agree with the rebuilt records::
 
-    python scripts/select.py --resummarise --all --update-summary results/phase4/runs_summary.csv
+    python scripts/select_checkpoints.py --resummarise --all \
+        --update-summary results/phase4/runs_summary.csv
 
 ``--dart-trials`` selects each ``bc_dart`` sigma trial that has no ``selection.json`` yet, then
 applies P3-D1 §4's sigma* rule (ties: the smaller sigma) and writes
