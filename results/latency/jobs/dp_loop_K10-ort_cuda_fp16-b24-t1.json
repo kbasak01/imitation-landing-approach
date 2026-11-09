@@ -1,0 +1,18 @@
+{
+  "git": {
+    "dirty": false,
+    "dirty_outside_results": false,
+    "dirty_paths": [],
+    "ila_commit": "362e31ca3a85a9e61e1773b9276967ab917509e8"
+  },
+  "job": {
+    "batch": 24,
+    "provider": "ort_cuda_fp16",
+    "row": "dp_loop_K10",
+    "threads": 1,
+    "timed": 2000,
+    "warmup": 200
+  },
+  "label": "dp_loop_K10-ort_cuda_fp16-b24-t1",
+  "status": "refused (open-loop parity not passed)"
+}

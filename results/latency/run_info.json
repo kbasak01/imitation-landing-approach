@@ -98,7 +98,7 @@
         "cpu_count": "36",
         "cuda": "13.0",
         "cudnn": "92000",
-        "git_commit": "3b2ae85-dirty",
+        "git_commit": "362e31c-dirty",
         "gpu": "NVIDIA RTX A4000",
         "nvidia_driver": "596.71",
         "onnx": "1.22.0",
@@ -111,37 +111,10 @@
         "torch_default_threads": "1"
       },
       "git": {
-        "dirty": true,
+        "dirty": false,
         "dirty_outside_results": false,
-        "dirty_paths": [
-          " M results/latency/run_info.json",
-          "?? results/latency/closed_loop.csv",
-          "?? results/latency/closed_loop/bc_dagger/ort_cpu_fp32.json",
-          "?? results/latency/closed_loop/bc_dagger/ort_cpu_fp32_rows.csv",
-          "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp16.json",
-          "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp32.json",
-          "?? results/latency/closed_loop/bc_dagger/ort_cuda_fp32_rows.csv",
-          "?? results/latency/closed_loop/bc_dagger/ort_trt_fp16.json",
-          "?? results/latency/closed_loop/bc_dagger/ort_trt_fp32.json",
-          "?? results/latency/closed_loop/bc_dagger/ort_trt_fp32_rows.csv",
-          "?? results/latency/closed_loop/bc_dagger/torch_cpu_fp32.json",
-          "?? results/latency/closed_loop/bc_dagger/torch_cpu_fp32_rows.csv",
-          "?? results/latency/closed_loop/bc_dagger/torch_cuda_fp32.json",
-          "?? results/latency/closed_loop/bc_dagger/torch_cuda_fp32_rows.csv",
-          "?? results/latency/closed_loop/dp/ort_cpu_fp32.json",
-          "?? results/latency/closed_loop/dp/ort_cpu_fp32_rows.csv",
-          "?? results/latency/closed_loop/dp/ort_cuda_fp16.json",
-          "?? results/latency/closed_loop/dp/ort_cuda_fp32.json",
-          "?? results/latency/closed_loop/dp/ort_cuda_fp32_rows.csv",
-          "?? results/latency/closed_loop/dp/ort_trt_fp16.json",
-          "?? results/latency/closed_loop/dp/ort_trt_fp32.json",
-          "?? results/latency/closed_loop/dp/ort_trt_fp32_rows.csv",
-          "?? results/latency/closed_loop/dp/torch_cpu_fp32.json",
-          "?? results/latency/closed_loop/dp/torch_cpu_fp32_rows.csv",
-          "?? results/latency/closed_loop/dp/torch_cuda_fp32.json",
-          "?? results/latency/closed_loop/dp/torch_cuda_fp32_rows.csv"
-        ],
-        "ila_commit": "3b2ae853487678c16d40b9e813f4edb43435983b"
+        "dirty_paths": [],
+        "ila_commit": "362e31ca3a85a9e61e1773b9276967ab917509e8"
       },
       "graphs": {
         "bc_dagger.onnx": "23ce916d05d09865b6a6acb52e24624259bb2cdce96c50619b81c810dddb3294",
@@ -153,9 +126,9 @@
         "dp_encoder.onnx": "2d0001f5fd4cdcae259a9a70c11064265151c51b09ccf9311db24d3bcce1a2ca",
         "dp_encoder_fp16.onnx": "b1c0911d8c074b73fa1ad4783f9dac02818ecf233d5ea5ed9a250f000b5541ef"
       },
-      "jobs_this_invocation": 63,
-      "time_utc": "2026-11-07T16:06:27+00:00",
-      "wall_s": 5919.850066261977
+      "jobs_this_invocation": 54,
+      "time_utc": "2026-11-08T01:55:53+00:00",
+      "wall_s": 23199.343089803995
     },
     "parity": {
       "env": {
