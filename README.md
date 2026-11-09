@@ -48,8 +48,8 @@ ends with ONNX export, latency, and the measured delay put back into the loop.
 
 ## Status
 
-**Phases 0–10 complete, Gate 10 passed 2026-11-09. Phase 11, publication, is in progress on this
-branch.** Every gate is dated in [`docs/protocol.md`](docs/protocol.md):
+**Phases 0–11 complete; Gate 11 (publication) passed 2026-11-09.** Every gate is dated in
+[`docs/protocol.md`](docs/protocol.md):
 
 | gate | first attempt | result | what happened |
 |---|---|---|---|
@@ -64,6 +64,7 @@ branch.** Every gate is dated in [`docs/protocol.md`](docs/protocol.md):
 | 8 evaluation matrix | passed | 2026-11-06 | It passed **without** the `bc_dart` s0 footnote and seeds 1–4 row that P4-D4 required. They were added in Phase 10 (P10-D2 item 2) |
 | 9 deployment | passed | 2026-11-09 | `dp`'s closed-loop export parity **failed**: 32–44 of 150 flips on the scored providers, against a bound of ≤ 3. Recorded as run, as frozen. H5(a) is not supported |
 | 10 validation sweep | passed | 2026-11-09 | Core `dp` seeds 0–4 were re-rated from TRUSTWORTHY to CAVEAT; no number changed |
+| 11 publication | **HOLD** | passed the same day (2026-11-09) | `repo-publication-reviewer` returned HOLD on procedural items: CI had not run on the branch, the status line was stale, the release text still said draft, and the reproduction re-run after the adapter change was not yet recorded. The confirmation review returned SHIP. `results-skeptic` raised 2 BLOCKING items on the README draft, both applied |
 
 <details>
 <summary><b>Recorded deviations</b> (7, each dated with its reason in <code>docs/protocol.md</code>)</summary>
@@ -605,7 +606,7 @@ make model-specs-check                                        # results/readme/m
 | training, all 71 pinned runs plus 3 σ trials (one RTX A4000) | 95.4 GPU-h (17.5 + 7.1 + 19.8 + 51.0) | `results/phase{4,5,6,7}/runs_summary.csv` (`gpu_hours`) |
 | evaluation matrix (`make eval`, CPU, 24 workers) | 22.3 h, summed over jobs | `results/e08/run_info.json` |
 | `dp_*` sensitivity (`make sensitivity`) | 2–4 min per arm (115–253 s) | `results/phase10/dp_sensitivity/run_info.json` |
-| `make test` (full suite, workstation) | 23 min 25 s | `docs/LIMITATIONS.md` |
+| `make test` (full suite, workstation) | 23 min 55 s (1 415 passed, at `6f84c66`) | `docs/protocol.md`, Gate 11 |
 
 **Notes on the run records:**
 - **Order of operations.** The full order is in the `Makefile` and

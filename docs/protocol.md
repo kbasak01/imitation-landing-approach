@@ -4332,3 +4332,33 @@ equality.
      - the teacher line drawn above `bc_state`;
      - the hero badge no longer overlaps its label.
 
+
+### Gate 11 failed, attempt 1: HOLD (2026-11-09)
+
+`repo-publication-reviewer` at `3cbc039` returned **HOLD**. There were no content defects. It found
+four procedural BLOCKING items:
+1. CI had never run on a Phase 11 commit.
+2. The README status line said Phase 11 was in progress.
+3. The draft release text called itself a draft.
+4. The reproduction gate had not been re-run after the Phase 11 `p8_adapter.py` additions.
+
+It also raised 7 SHOULD FIX items. All were applied in `6f84c66`, apart from the status line, which
+was applied in the commit that records this gate.
+
+### Gate 11 passed (2026-11-09)
+
+| Criterion (plan Phase 11) | Measured value / evidence | Result |
+|---|---|---|
+| README in P8's style: status line with every gate's history; the short version with every verdict; headline figure with teacher and baselines; gap decomposition; chunking curve; latency table; camera box; limitations before reproduction; citations | `README.md`, P11-D1. Figures are in `docs/figures/` (CI re-renders them byte-identically) and GIFs in `docs/media/` (16/16 re-flown rows equal) | PASS |
+| Every number traced to a committed file | `results-skeptic` at `273bc3e` checked 812 plotted values (0 mismatches) and every table cell; its 2 BLOCKING and 7 SHOULD FIX items were applied in `0d36da1`. `repo-publication-reviewer` spot-checked the numbers at `3cbc039` and confirmed them at `6f84c66` | PASS |
+| Release assets: student checkpoints, ONNX graphs, `SHA256SUMS.txt` | The draft `phase-11-complete` has 86 assets plus `SHA256SUMS.txt` and `manifest.json`. Names and sizes equal `results/release/manifest.json`, and the two files are byte-identical to the committed ones. `make release-check` at `3cbc039`: all 86 SHA-256s verified. Title and body were finalised; it is published with the tag after the merge | PASS |
+| No demo images in git | `repo-publication-reviewer`: no `data/`, `artifacts/`, `.pt`, `.onnx` or `.h5` files tracked. The only images are the rendered figures and GIFs. No blob in history is over 2 MB | PASS |
+| `repo-publication-reviewer`: SHIP | HOLD at `3cbc039` (above), then **SHIP** at `6f84c66` | PASS |
+| P8 inheritance on the final tree | Reproduction gate re-run at `3cbc039`, after the adapter additions: `pid_feedforward` 2 800/2 800 and `ppo` 400/400 identical, render full, `comparison.json` byte-identical (`results/reproduce_p8/rerun_phase11/`). `runner.py`, `render/` and `obs/` are unchanged | PASS |
+| CPU tests green | `make lint` is clean (86 source files). `make test` at `6f84c66`, the final code commit: 1 415 passed, 0 failed (23 min 55 s) on an unchanging tree. At `3cbc039` it was 1 414 passed and 1 failed: the obs-slice scanner flagged a literal subscript in `src/ila/policies/specs.py`, fixed in `6f84c66`. CI is green on `phase-11` (runs 42716228581, 42716259292), including the two new Phase 11 steps | PASS |
+
+*Deviations this phase.* None. No number, list, threshold, criterion, frozen config, checkpoint or
+verdict changed (P11-D1).
+
+*After the merge.* Three steps remain: make the repository public, tag `phase-11-complete` on the
+merge commit, and publish the draft release on that tag.
